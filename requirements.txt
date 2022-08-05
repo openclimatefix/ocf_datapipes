@@ -6,3 +6,4 @@ einops
 numpy
 pandas
 rioxarray
+pathy

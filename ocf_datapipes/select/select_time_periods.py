@@ -2,6 +2,7 @@ from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
 import xarray as xr
 import pandas as pd
+from typing import Union
 
 @functional_datapipe("select_time_periods")
 class SelectTimePeriodsIterDataPipe(IterDataPipe):
@@ -10,7 +11,7 @@ class SelectTimePeriodsIterDataPipe(IterDataPipe):
         self.time_periods = time_periods
         self.dim_name = dim_name
 
-    def __iter__(self):
+    def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data in self.source_dp:
             new_xr_data = []
             for _, row in self.time_periods.iterrows():
