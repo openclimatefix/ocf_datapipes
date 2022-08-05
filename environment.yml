@@ -1,0 +1,14 @@
+name: datapipes
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - cudatoolkit
+  - pip
+  - pytorch
+  - rioxarray
+  - torchdata
+  - torchvision
+  - xarray
+  - zarr
