@@ -1,0 +1,8 @@
+torch
+xarray
+zarr
+fsspec
+einops
+numpy
+pandas
+rioxarray
