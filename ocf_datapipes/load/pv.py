@@ -121,7 +121,7 @@ def _load_pv_power_watts_and_capacity_wp(
     return pv_power_watts, pv_capacity_wp, pv_system_row_number
 
 
-"""
+"""Filtering to be added in a different IterDataPipe
 
     pv_power_watts = pv_power_watts.clip(lower=0, upper=5e7)
     # Convert the pv_system_id column names from strings to ints:
