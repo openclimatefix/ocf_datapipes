@@ -42,5 +42,5 @@ class OpenNWPIterDataPipe(IterDataPipe):
         time = pd.DatetimeIndex(ukv.init_time_utc)
         assert time.is_unique
         assert time.is_monotonic_increasing
-
-        yield ukv
+        while True:
+            yield ukv

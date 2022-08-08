@@ -82,4 +82,5 @@ class OpenSatelliteDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray:
         data: xr.DataArray = open_sat_data(zarr_path=self.zarr_path)
-        yield data
+        while True:
+            yield data
