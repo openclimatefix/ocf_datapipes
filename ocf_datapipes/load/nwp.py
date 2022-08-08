@@ -10,8 +10,8 @@ import pandas as pd
 
 _log = logging.getLogger(__name__)
 
-@functional_datapipe("load_nwp")
-class LoadNWPIterDataPipe(IterDataPipe):
+@functional_datapipe("open_nwp")
+class OpenNWPIterDataPipe(IterDataPipe):
     def __init__(self, zarr_path: Union[Path, str]):
         self.zarr_path = zarr_path
 
@@ -25,7 +25,7 @@ class LoadNWPIterDataPipe(IterDataPipe):
             chunks="auto",
         )
 
-        ukv = nwp["UKV"]
+        ukv: xr.DataArray = nwp["UKV"]
         del nwp
 
         ukv = ukv.transpose("init_time", "step", "variable", "y", "x")
@@ -43,4 +43,4 @@ class LoadNWPIterDataPipe(IterDataPipe):
         assert time.is_unique
         assert time.is_monotonic_increasing
 
-        return ukv
+        yield ukv

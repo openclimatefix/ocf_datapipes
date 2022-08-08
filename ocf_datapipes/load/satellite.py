@@ -1,4 +1,5 @@
 from torchdata.datapipes.iter import IterDataPipe
+from torchdata.datapipes import functional_datapipe
 import xarray as xr
 from typing import Union
 from pathlib import Path
@@ -73,7 +74,8 @@ def open_sat_data(
 
     return data_array
 
-class LoadSatelliteDataPipe(IterDataPipe):
+@functional_datapipe("open_satellite")
+class OpenSatelliteDataPipe(IterDataPipe):
     def __int__(self, zarr_path: Union[Path, str]) -> None:
         super().__int__()
         self.zarr_path = zarr_path
