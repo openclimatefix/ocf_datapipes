@@ -1,5 +1,8 @@
 import datetime
 
+from pathlib import Path
+from typing import Optional, Union
+
 from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
 import logging
@@ -27,7 +30,9 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.sample_period_duration = sample_period_duration
 
     def __iter__(self):
-        pass
+        data: xr.DataArray = load_everything_into_ram(self.pv_power_filename, self.pv_metadata_filename, self.sample_period_duration)
+        while True:
+            yield data
 
 @functional_datapipe("open_pv_from_db")
 class OpenPVFromDBIterDataPipe(IterDataPipe):
@@ -39,41 +44,34 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
 
 
 
-def load_everything_into_ram(self) -> None:
+def load_everything_into_ram(pv_power_filename, pv_metadata_filename, sample_period_duration) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
     pv_power_watts, pv_capacity_wp, pv_system_row_number = _load_pv_power_watts_and_capacity_wp(
-        self.pv_power_filename,
-        start_date=self.time_periods.iloc[0]["start_dt"],
-        end_date=self.time_periods.iloc[-1]["end_dt"],
+        pv_power_filename,
     )
-    pv_metadata = _load_pv_metadata(self.pv_metadata_filename)
+    pv_metadata = _load_pv_metadata(pv_metadata_filename)
     # Ensure pv_metadata, pv_power_watts, and pv_capacity_wp all have the same set of
     # PV system IDs, in the same order:
     pv_metadata, pv_power_watts = _intersection_of_pv_system_ids(pv_metadata, pv_power_watts)
     pv_capacity_wp = pv_capacity_wp.loc[pv_power_watts.columns]
     pv_system_row_number = pv_system_row_number.loc[pv_power_watts.columns]
 
-    self._data_in_ram = _put_pv_data_into_an_xr_dataarray(
+    data_in_ram = _put_pv_data_into_an_xr_dataarray(
         pv_power_watts=pv_power_watts,
         y_osgb=pv_metadata.y_osgb.astype(np.float32),
         x_osgb=pv_metadata.x_osgb.astype(np.float32),
         capacity_wp=pv_capacity_wp,
         pv_system_row_number=pv_system_row_number,
-        t0_idx=self.t0_idx,
-        sample_period_duration=self.sample_period_duration,
-    )
-
-    self._data_in_ram = select_time_periods(
-        xr_data=self.data_in_ram,
-        time_periods=self.time_periods,
-        dim_name="time_utc",
+        sample_period_duration=sample_period_duration,
     )
 
     # Sanity checks:
-    time_utc = pd.DatetimeIndex(self._data_in_ram.time_utc)
+    time_utc = pd.DatetimeIndex(data_in_ram.time_utc)
     assert time_utc.is_monotonic_increasing
     assert time_utc.is_unique
+
+    return data_in_ram
 
 def _load_pv_power_watts_and_capacity_wp(
     filename: Union[str, Path],
@@ -108,10 +106,22 @@ def _load_pv_power_watts_and_capacity_wp(
     pv_system_row_number = pd.Series(pv_system_row_number, index=all_pv_system_ids)
 
     _log.info(
-        "Before filtering:"
+        "After loading:"
         f" {len(pv_power_watts)} PV power datetimes."
         f" {len(pv_power_watts.columns)} PV power PV system IDs."
     )
+
+    # Sanity checks:
+    assert not pv_power_watts.columns.duplicated().any()
+    assert not pv_power_watts.index.duplicated().any()
+    assert np.isfinite(pv_capacity_wp).all()
+    assert (pv_capacity_wp > 0).all()
+    assert np.isfinite(pv_system_row_number).all()
+    assert np.array_equal(pv_power_watts.columns, pv_capacity_wp.index)
+    return pv_power_watts, pv_capacity_wp, pv_system_row_number
+
+
+"""
 
     pv_power_watts = pv_power_watts.clip(lower=0, upper=5e7)
     # Convert the pv_system_id column names from strings to ints:
@@ -154,16 +164,8 @@ def _load_pv_power_watts_and_capacity_wp(
         f" {len(pv_power_watts.columns)} PV power PV system IDs."
     )
 
-    # Sanity checks:
-    assert not pv_power_watts.columns.duplicated().any()
-    assert not pv_power_watts.index.duplicated().any()
-    assert np.isfinite(pv_capacity_wp).all()
-    assert (pv_capacity_wp > 0).all()
-    assert np.isfinite(pv_system_row_number).all()
-    assert np.array_equal(pv_power_watts.columns, pv_capacity_wp.index)
-    return pv_power_watts, pv_capacity_wp, pv_system_row_number
 
-
+"""
 # Adapted from nowcasting_dataset.data_sources.pv.pv_data_source
 def _load_pv_metadata(filename: str) -> pd.DataFrame:
     """Return pd.DataFrame of PV metadata.
@@ -181,27 +183,6 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
     pv_metadata.dropna(subset=["longitude", "latitude"], how="any", inplace=True)
 
     _log.debug(f"Found {len(pv_metadata)} PV systems with locations")
-
-    pv_metadata["x_osgb"], pv_metadata["y_osgb"] = lat_lon_to_osgb(
-        latitude=pv_metadata["latitude"], longitude=pv_metadata["longitude"]
-    )
-
-    # Remove PV systems outside the geospatial boundary of the satellite data:
-    GEO_BOUNDARY_OSGB = {
-        "WEST": -238_000,
-        "EAST": 856_000,
-        "NORTH": 1_222_000,
-        "SOUTH": -184_000,
-    }
-
-    pv_metadata = pv_metadata[
-        (pv_metadata.x_osgb >= GEO_BOUNDARY_OSGB["WEST"])
-        & (pv_metadata.x_osgb <= GEO_BOUNDARY_OSGB["EAST"])
-        & (pv_metadata.y_osgb <= GEO_BOUNDARY_OSGB["NORTH"])
-        & (pv_metadata.y_osgb >= GEO_BOUNDARY_OSGB["SOUTH"])
-    ]
-
-    _log.info(f"Found {len(pv_metadata)} PV systems after filtering.")
     return pv_metadata
 
 def _intersection_of_pv_system_ids(
@@ -221,7 +202,6 @@ def _put_pv_data_into_an_xr_dataarray(
     x_osgb: pd.Series,
     capacity_wp: pd.Series,
     pv_system_row_number: pd.Series,
-    t0_idx: int,
     sample_period_duration: datetime.timedelta,
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
@@ -252,7 +232,6 @@ def _put_pv_data_into_an_xr_dataarray(
         capacity_wp=("pv_system_id", capacity_wp),
         pv_system_row_number=("pv_system_id", pv_system_row_number),
     )
-    data_array.attrs["t0_idx"] = t0_idx
     # Sample period duration is required so PVDownsample transform knows by how much
     # to change the pv_t0_idx:
     data_array.attrs["sample_period_duration"] = sample_period_duration
