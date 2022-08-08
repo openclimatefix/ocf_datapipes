@@ -4,9 +4,12 @@ import xarray as xr
 import pandas as pd
 from typing import Union
 
+
 @functional_datapipe("select_time_periods")
 class SelectTimePeriodsIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, time_periods: pd.DataFrame, dim_name: str = "time_utc"):
+    def __init__(
+        self, source_dp: IterDataPipe, time_periods: pd.DataFrame, dim_name: str = "time_utc"
+    ):
         self.source_dp = source_dp
         self.time_periods = time_periods
         self.dim_name = dim_name

@@ -1,6 +1,7 @@
 from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
 
+
 @functional_datapipe("location_picker")
 class LocationPickerIterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe):
@@ -9,4 +10,3 @@ class LocationPickerIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         pass
-

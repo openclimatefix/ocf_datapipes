@@ -10,7 +10,6 @@ from pathy import Pathy
 NumpyBatch = dict[BatchKey, np.ndarray]
 
 
-
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     nums = datetimes.astype("datetime64[s]").astype(dtype)
     mask = np.isfinite(datetimes)

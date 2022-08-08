@@ -4,9 +4,17 @@ from numbers import Number
 
 import numpy as np
 
+
 @functional_datapipe("encode_space_time")
 class EncodeSpaceTimeIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, lengths: dict[str, Number] = lambda: dict(x_osgb=480_000, y_osgb=400_000, time_utc=60 * 5 * 37), n_fourier_features_per_dim: int = 8):
+    def __init__(
+        self,
+        source_dp: IterDataPipe,
+        lengths: dict[str, Number] = lambda: dict(
+            x_osgb=480_000, y_osgb=400_000, time_utc=60 * 5 * 37
+        ),
+        n_fourier_features_per_dim: int = 8,
+    ):
         self.source_dp = source_dp
         self.lengths = lengths
         self.n_fourier_features_per_dim = n_fourier_features_per_dim
@@ -14,16 +22,16 @@ class EncodeSpaceTimeIterDataPipe(IterDataPipe):
     def __iter__(self):
         for np_batch in self.source_dp:
             yield get_spatial_and_temporal_fourier_features(
-            np_batch=np_batch,
-            lengths=self.lengths,
-            n_fourier_features_per_dim=self.n_fourier_features_per_dim,
-        )
+                np_batch=np_batch,
+                lengths=self.lengths,
+                n_fourier_features_per_dim=self.n_fourier_features_per_dim,
+            )
 
 
 def get_spatial_and_temporal_fourier_features(
-        np_batch: NumpyBatch,
-        lengths: dict[str, Number],
-        n_fourier_features_per_dim: int = 8,
+    np_batch: NumpyBatch,
+    lengths: dict[str, Number],
+    n_fourier_features_per_dim: int = 8,
 ) -> NumpyBatch:
     """Add fourier features for x_osgb, y_osgb and time_utc."""
 
@@ -40,8 +48,9 @@ def get_spatial_and_temporal_fourier_features(
 
     return np_batch
 
+
 def compute_fourier_features(
-        array: np.ndarray, n_fourier_features: int = 8, min_freq: float = 2, max_freq: float = 8
+    array: np.ndarray, n_fourier_features: int = 8, min_freq: float = 2, max_freq: float = 8
 ) -> np.ndarray:
     """Compute Fourier features for a single dimension, across all examples in a batch.
 
@@ -93,9 +102,10 @@ def compute_fourier_features(
         assert np.isfinite(fourier_features).all()
     return fourier_features
 
+
 def _rescale_coords_for_all_dims_to_approx_0_to_1(
-        np_batch: NumpyBatch,
-        lengths: dict[str, Number],
+    np_batch: NumpyBatch,
+    lengths: dict[str, Number],
 ) -> dict[str, np.ndarray]:
     """Rescale coords for all dimensions, across all modalities.
 
@@ -125,9 +135,10 @@ def _rescale_coords_for_all_dims_to_approx_0_to_1(
         rescaled_coords.update(rescaled_coords_for_dim)
     return rescaled_coords
 
+
 def _rescale_coords_for_single_dim_to_approx_0_to_1(
-        coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray],
-        length: Number,
+    coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray],
+    length: Number,
 ) -> dict[str, np.ndarray]:
     """Rescale the coords for a single dimension, across all modalities.
 
@@ -149,7 +160,7 @@ def _rescale_coords_for_single_dim_to_approx_0_to_1(
         if "satellite" in key.name and "time" not in key.name:
             # Handle 2-dimensional OSGB coords on the satellite imagery
             assert (
-                    len(array.shape) == 3
+                len(array.shape) == 3
             ), f"Expected satellite coord to have 3 dims, not {len(array.shape)} {key.name=}"
             _min_per_example = np.expand_dims(min_per_example, axis=-1)
         else:
@@ -160,8 +171,9 @@ def _rescale_coords_for_single_dim_to_approx_0_to_1(
 
     return rescaled_arrays
 
+
 def _get_min_per_example(
-        coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray]
+    coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray]
 ) -> np.ndarray:
     n_modalities = len(coords_for_dim_from_all_modalities)
     # print(n_modalities)

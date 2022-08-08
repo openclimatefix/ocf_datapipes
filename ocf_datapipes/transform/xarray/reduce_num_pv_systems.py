@@ -3,6 +3,7 @@ from torchdata.datapipes.iter import IterDataPipe
 import numpy as np
 import xarray as xr
 
+
 class ReduceNumPVSystemsIterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe, requested_num_pv_systems: int):
         super().__init__()

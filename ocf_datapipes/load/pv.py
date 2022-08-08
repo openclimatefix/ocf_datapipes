@@ -13,14 +13,19 @@ import pandas as pd
 import xarray as xr
 
 _log = logging.getLogger(__name__)
+
+
 @functional_datapipe("open_pv_netcdf")
 class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
-    def __init__(self, pv_power_filename: str,
-                 pv_metadata_filename: str,
-                 roi_height_meters: int,
-                 roi_width_meters: int,
-                 n_pv_systems_per_example: int,
-                 sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=5)):
+    def __init__(
+        self,
+        pv_power_filename: str,
+        pv_metadata_filename: str,
+        roi_height_meters: int,
+        roi_width_meters: int,
+        n_pv_systems_per_example: int,
+        sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=5),
+    ):
         super().__init__()
         self.pv_power_filename = pv_power_filename
         self.pv_metadata_filename = pv_metadata_filename
@@ -30,9 +35,12 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.sample_period_duration = sample_period_duration
 
     def __iter__(self):
-        data: xr.DataArray = load_everything_into_ram(self.pv_power_filename, self.pv_metadata_filename, self.sample_period_duration)
+        data: xr.DataArray = load_everything_into_ram(
+            self.pv_power_filename, self.pv_metadata_filename, self.sample_period_duration
+        )
         while True:
             yield data
+
 
 @functional_datapipe("open_pv_from_db")
 class OpenPVFromDBIterDataPipe(IterDataPipe):
@@ -43,8 +51,9 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         pass
 
 
-
-def load_everything_into_ram(pv_power_filename, pv_metadata_filename, sample_period_duration) -> xr.DataArray:
+def load_everything_into_ram(
+    pv_power_filename, pv_metadata_filename, sample_period_duration
+) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
     pv_power_watts, pv_capacity_wp, pv_system_row_number = _load_pv_power_watts_and_capacity_wp(
@@ -72,6 +81,7 @@ def load_everything_into_ram(pv_power_filename, pv_metadata_filename, sample_per
     assert time_utc.is_unique
 
     return data_in_ram
+
 
 def _load_pv_power_watts_and_capacity_wp(
     filename: Union[str, Path],
@@ -184,6 +194,7 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
 
     _log.debug(f"Found {len(pv_metadata)} PV systems with locations")
     return pv_metadata
+
 
 def _intersection_of_pv_system_ids(
     pv_metadata: pd.DataFrame, pv_power: pd.DataFrame

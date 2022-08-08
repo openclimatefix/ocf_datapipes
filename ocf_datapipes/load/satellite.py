@@ -10,6 +10,7 @@ import pandas as pd
 
 _log = logging.getLogger(__name__)
 
+
 def open_sat_data(
     zarr_path: Union[Path, str],
 ) -> xr.DataArray:
@@ -73,6 +74,7 @@ def open_sat_data(
     assert (datetime_index == datetime_index.round("5T")).all()
 
     return data_array
+
 
 @functional_datapipe("open_satellite")
 class OpenSatelliteDataPipe(IterDataPipe):

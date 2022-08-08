@@ -10,6 +10,7 @@ import pandas as pd
 
 _log = logging.getLogger(__name__)
 
+
 @functional_datapipe("open_nwp")
 class OpenNWPIterDataPipe(IterDataPipe):
     def __init__(self, zarr_path: Union[Path, str]):

@@ -4,6 +4,7 @@ from torchdata.datapipes import functional_datapipe
 import numpy as np
 import pandas as pd
 
+
 @functional_datapipe("align_gsp_to_5_min")
 class AlignGSPto5MinIterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe, batch_key_for_5_min_datetimes: str):
@@ -22,7 +23,9 @@ class AlignGSPto5MinIterDataPipe(IterDataPipe):
                 time_5_min = np_batch[self.batch_key_for_5_min_datetimes][example_i]
                 time_5_min_dt_index = pd.to_datetime(time_5_min, unit="s")
                 time_30_min_every_5_min_dt_index = time_5_min_dt_index.ceil("30T")
-                time_30_min_every_5_min = datetime64_to_float(time_30_min_every_5_min_dt_index.values)
+                time_30_min_every_5_min = datetime64_to_float(
+                    time_30_min_every_5_min_dt_index.values
+                )
 
                 # Now, find the index into the original 30-minute GSP data for each 5-min timestep:
                 gsp_30_min_time = np_batch[BatchKey.gsp_time_utc][example_i]

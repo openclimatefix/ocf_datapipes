@@ -6,11 +6,17 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 
+
 @functional_datapipe("open_gsp")
 class OpenGSPIterDataPipe(IterDataPipe):
-    def __init__(self, gsp_pv_power_zarr_path: str, gsp_id_to_region_id_filename: str,
-                 sheffield_solar_region_path: str, threshold_mw: int = 0,
-                 sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=30)):
+    def __init__(
+        self,
+        gsp_pv_power_zarr_path: str,
+        gsp_id_to_region_id_filename: str,
+        sheffield_solar_region_path: str,
+        threshold_mw: int = 0,
+        sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=30),
+    ):
         self.gsp_pv_power_zarr_path = gsp_pv_power_zarr_path
         self.gsp_id_to_region_id_filename = gsp_id_to_region_id_filename
         self.sheffield_solar_region_path = sheffield_solar_region_path
@@ -44,6 +50,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
         while True:
             yield data_array
 
+
 def _get_gsp_id_to_shape(
     gsp_id_to_region_id_filename: str, sheffield_solar_region_path: str
 ) -> gpd.GeoDataFrame:
@@ -69,6 +76,7 @@ def _get_gsp_id_to_shape(
     # of those spatial unions. `dissolve(by="gsp_id")` groups by "gsp_id" and gets
     # the spatial union.
     return gsp_id_to_shape.dissolve(by="gsp_id")
+
 
 def _put_gsp_data_into_an_xr_dataarray(
     gsp_pv_power_mw: np.ndarray,
