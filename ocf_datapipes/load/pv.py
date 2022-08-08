@@ -1,16 +1,14 @@
 import datetime
-
+import logging
 from pathlib import Path
 from typing import Optional, Union
-
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-import logging
 
 import fsspec
 import numpy as np
 import pandas as pd
 import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 _log = logging.getLogger(__name__)
 

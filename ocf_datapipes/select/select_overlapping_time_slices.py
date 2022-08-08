@@ -1,6 +1,7 @@
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from typing import Iterable, Union
+
 from torchdata.datapipes import functional_datapipe
-from typing import Union, Iterable
+from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 
 @functional_datapipe("select_overlapping_time_slice")
