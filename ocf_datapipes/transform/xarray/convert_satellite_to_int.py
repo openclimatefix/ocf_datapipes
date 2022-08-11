@@ -4,8 +4,8 @@ from torchdata.datapipes import functional_datapipe
 import xarray as xr
 import numpy as np
 
-@functional_datapipe("convert_satellite_to_int")
-class ConvertSatelliteToInt(IterDataPipe):
+@functional_datapipe("convert_satellite_to_int8")
+class ConvertSatelliteToInt8IterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe):
         self.source_dp = source_dp
 
