@@ -4,7 +4,7 @@ from typing import Union, Iterable
 
 
 @functional_datapipe("select_overlapping_time_slice")
-class SelectOverlappingTimeSlice(IterDataPipe):
+class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
     def __init__(self, source_dps: Iterable[IterDataPipe]):
         super().__init__()
         self.source_dps = source_dps
