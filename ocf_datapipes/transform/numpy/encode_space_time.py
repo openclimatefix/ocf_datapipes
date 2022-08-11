@@ -2,6 +2,11 @@ from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
 from numbers import Number
 
+from ocf_datapipes.utils import NumpyBatch
+from ocf_datapipes.consts import BatchKey
+
+import warnings
+
 import numpy as np
 
 

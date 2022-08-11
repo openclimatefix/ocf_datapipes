@@ -11,7 +11,7 @@ class AddTopographicDataIterDataPipe(IterDataPipe):
         self.source_dp = source_dp
         self.topo_dp = topo_dp
 
-    def __iter__(self):
+    def __iter__(self) -> NumpyBatch:
         for topo in self.topo_dp:
             for np_batch in self.source_dp:
                 if BatchKey.hrvsatellite_x_geostationary in np_batch:
@@ -38,7 +38,6 @@ class AddTopographicDataIterDataPipe(IterDataPipe):
                     hrvsatellite_surface_height = _get_surface_height_for_satellite(
                         surface_height=topo, satellite=hrvsatellite_data_array
                     )
-                    hrvsatellite_surface_height = self._normalise(hrvsatellite_surface_height)
                     np_batch[BatchKey.hrvsatellite_surface_height] = hrvsatellite_surface_height
                 yield np_batch
 
