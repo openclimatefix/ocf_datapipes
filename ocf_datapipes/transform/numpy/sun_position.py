@@ -21,6 +21,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         for np_batch in self.source_dp:
+            # TODO Make work with Lat/Lons instead
             if self.modality_name == "hrvsatellite":
                 y_osgb = np_batch[BatchKey.hrvsatellite_y_osgb]  # example, y, x
                 x_osgb = np_batch[BatchKey.hrvsatellite_x_osgb]  # example, y, x
