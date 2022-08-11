@@ -1,13 +1,12 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
+import warnings
 from numbers import Number
 
-from ocf_datapipes.utils import NumpyBatch
-from ocf_datapipes.consts import BatchKey
-
-import warnings
-
 import numpy as np
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
+from ocf_datapipes.consts import BatchKey
+from ocf_datapipes.utils import NumpyBatch
 
 
 @functional_datapipe("encode_space_time")

@@ -1,11 +1,10 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-
-import xarray as xr
-import pandas as pd
-import numpy as np
-
 from typing import Optional, Union
+
+import numpy as np
+import pandas as pd
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("pv_power_rolling_window")

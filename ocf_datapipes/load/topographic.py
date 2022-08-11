@@ -1,8 +1,9 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-from typing import Union
 from pathlib import Path
+from typing import Union
+
 import rioxarray
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("open_topography")
