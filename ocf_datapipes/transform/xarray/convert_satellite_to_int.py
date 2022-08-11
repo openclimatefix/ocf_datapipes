@@ -1,0 +1,16 @@
+from torchdata.datapipes.iter import IterDataPipe
+from torchdata.datapipes import functional_datapipe
+
+import xarray as xr
+import numpy as np
+
+@functional_datapipe("convert_satellite_to_int")
+class ConvertSatelliteToInt(IterDataPipe):
+    def __init__(self, source_dp: IterDataPipe):
+        self.source_dp = source_dp
+
+    def __iter__(self):
+        for xr_dataset in self.source_dp:
+            xr_dataset = xr_dataset.clip(min=0, max=1023)
+            xr_dataset.data = (xr_dataset.astype(np.float32).data / 4.0).round().astype(np.uint8)
+            yield xr_dataset

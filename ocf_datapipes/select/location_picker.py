@@ -2,6 +2,7 @@ from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
 import numpy as np
 
+
 @functional_datapipe("location_picker")
 class LocationPickerIterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe):

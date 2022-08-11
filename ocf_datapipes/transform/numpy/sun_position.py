@@ -12,6 +12,7 @@ ELEVATION_STD = 12.7
 AZIMUTH_MEAN = 177.7
 AZIMUTH_STD = 41.7
 
+
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe, modality_name: str):
@@ -63,7 +64,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
                 if not np.isfinite([lat, lon]).all():
                     assert (
-                            self.modality_name == "pv"
+                        self.modality_name == "pv"
                     ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
                     # This is PV data, for a location which has no PV systems.
                     must_be_finite = False

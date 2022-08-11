@@ -7,13 +7,18 @@ import numpy as np
 
 from typing import Optional, Union
 
+
 @functional_datapipe("pv_power_rolling_window")
 class PVPowerRollingWindowIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, window: Union[int, pd.tseries.offsets.DateOffset, pd.core.indexers.objects.BaseIndexer] = 3,
-                 min_periods: Optional[int] = 2,
-                 center: bool = True,
-                 win_type: Optional[str] = None,
-                 expect_dataset: bool = True):
+    def __init__(
+        self,
+        source_dp: IterDataPipe,
+        window: Union[int, pd.tseries.offsets.DateOffset, pd.core.indexers.objects.BaseIndexer] = 3,
+        min_periods: Optional[int] = 2,
+        center: bool = True,
+        win_type: Optional[str] = None,
+        expect_dataset: bool = True,
+    ):
         self.source_dp = source_dp
         self.window = window
         self.min_periods = min_periods
@@ -43,7 +48,6 @@ class PVPowerRollingWindowIterDataPipe(IterDataPipe):
                 resampled.attrs[attr_name] = xr_data.attrs[attr_name]
 
             yield resampled
-
 
 
 def set_new_sample_period_and_t0_idx_attrs(xr_data, new_sample_period) -> xr.DataArray:
