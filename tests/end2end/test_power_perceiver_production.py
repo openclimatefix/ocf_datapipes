@@ -29,6 +29,4 @@ def test_power_perceiver_production():
     overlapping_time_datapipe = SelectOverlappingTimeSlice([time_pv, time_nwp, time_gsp, time_sat])
     # Now have overlapping time periods here
 
-
-
     pass

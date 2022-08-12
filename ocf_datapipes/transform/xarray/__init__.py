@@ -1,8 +1,5 @@
 from .convert_satellite_to_int import ConvertSatelliteToInt8IterDataPipe as ConvertSatelliteToInt8
 from .reduce_num_pv_systems import ReduceNumPVSystemsIterDataPipe as ReduceNumPVSystems
-from .select_pv_systems_within_region import (
-    SelectPVSystemsWithinRegionIterDataPipe as SelectPVSystemsWithinRegion,
-)
 
 from .add_contiguous_time_periods import AddContiguousT0TimePeriodsIterDataPipe as AddContiguousT0TimePeriods
 
