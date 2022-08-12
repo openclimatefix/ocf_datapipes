@@ -3,3 +3,6 @@ from .reduce_num_pv_systems import ReduceNumPVSystemsIterDataPipe as ReduceNumPV
 from .select_pv_systems_within_region import (
     SelectPVSystemsWithinRegionIterDataPipe as SelectPVSystemsWithinRegion,
 )
+
+from .add_contiguous_time_periods import AddContiguousT0TimePeriodsIterDataPipe as AddContiguousT0TimePeriods
+

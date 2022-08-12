@@ -9,7 +9,7 @@ from ocf_datapipes.transform.numpy import (
     SaveT0Time,
 )
 from ocf_datapipes.transform.xarray import ReduceNumPVSystems, SelectPVSystemsWithinRegion
-from ocf_datapipes.select import
+from ocf_datapipes.select import SelectTimePeriods, SelectOverlappingTimeSlice
 
 
 def test_power_perceiver_production():
