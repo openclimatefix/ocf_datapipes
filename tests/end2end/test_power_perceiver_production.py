@@ -1,6 +1,7 @@
 import torchdata.datapipes as dp
 
 from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
+from ocf_datapipes.select import SelectOverlappingTimeSlice, SelectTimePeriods
 from ocf_datapipes.transform.numpy import (
     AddSunPosition,
     AddTopographicData,
@@ -8,8 +9,11 @@ from ocf_datapipes.transform.numpy import (
     EncodeSpaceTime,
     SaveT0Time,
 )
-from ocf_datapipes.transform.xarray import ReduceNumPVSystems, SelectPVSystemsWithinRegion, AddContiguousT0TimePeriods
-from ocf_datapipes.select import SelectTimePeriods, SelectOverlappingTimeSlice
+from ocf_datapipes.transform.xarray import (
+    AddContiguousT0TimePeriods,
+    ReduceNumPVSystems,
+    SelectPVSystemsWithinRegion,
+)
 
 
 def test_power_perceiver_production():

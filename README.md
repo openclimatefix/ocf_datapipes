@@ -14,7 +14,7 @@ from torchdata.datapipes import functional_datapipe
 class <PipeletName>IterDataPipe(IterDataPipe):
     def __init__(self):
         pass
-    
+
     def __iter__(self):
         pass
 ```

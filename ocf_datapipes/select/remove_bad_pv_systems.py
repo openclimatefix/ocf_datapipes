@@ -1,7 +1,7 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-
 import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
 
 @functional_datapipe("remove_bad_pv_systems")
 class RemoveBadPVSystemsIterDataPipe(IterDataPipe):

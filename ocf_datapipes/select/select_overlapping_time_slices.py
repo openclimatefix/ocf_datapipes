@@ -1,20 +1,21 @@
 from typing import Iterable, Union
 
+import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
-import pandas as pd
 
 @functional_datapipe("select_overlapping_time_slice")
 class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
     def __init__(self, source_dps: Iterable[IterDataPipe]):
-        """Source DataPipes are from the contiguous_time_period """
+        """Source DataPipes are from the contiguous_time_period"""
         super().__init__()
         self.source_dps = source_dps
 
     def __iter__(self):
         for set_of_pd_datas in Zipper(*self.source_dps):
             yield intersection_of_multiple_dataframes_of_periods(list(*set_of_pd_datas))
+
 
 def intersection_of_multiple_dataframes_of_periods(
     time_periods: list[pd.DataFrame],
@@ -30,6 +31,7 @@ def intersection_of_multiple_dataframes_of_periods(
     for time_period in time_periods[2:]:
         intersection = intersection_of_2_dataframes_of_periods(intersection, time_period)
     return intersection
+
 
 def intersection_of_2_dataframes_of_periods(a: pd.DataFrame, b: pd.DataFrame) -> pd.DataFrame:
     """Find the intersection of two pd.DataFrames of time periods.

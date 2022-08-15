@@ -6,6 +6,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
 
+
 @functional_datapipe("open_config")
 class OpenConfigurationIterDataPipe(IterDataPipe):
     def __init__(self, configuration_filename: str):
