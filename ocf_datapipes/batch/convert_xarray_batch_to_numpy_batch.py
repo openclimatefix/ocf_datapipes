@@ -1,8 +1,10 @@
+import numpy as np
+import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-import xarray as xr
-import numpy as np
+
 from ocf_datapipes.utils import NumpyBatch
+
 
 @functional_datapipe("convert_xarray_batch_to_numpy_batch")
 class ConvertXarrayBatchToNumpyBatch(IterDataPipe):

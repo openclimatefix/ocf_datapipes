@@ -9,10 +9,7 @@ from ocf_datapipes.transform.numpy import (
     EncodeSpaceTime,
     SaveT0Time,
 )
-from ocf_datapipes.transform.xarray import (
-    AddContiguousT0TimePeriods,
-    ReduceNumPVSystems,
-)
+from ocf_datapipes.transform.xarray import AddContiguousT0TimePeriods, ReduceNumPVSystems
 
 
 def test_power_perceiver_production():
