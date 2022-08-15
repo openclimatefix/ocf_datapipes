@@ -12,7 +12,6 @@ from ocf_datapipes.transform.numpy import (
 from ocf_datapipes.transform.xarray import (
     AddContiguousT0TimePeriods,
     ReduceNumPVSystems,
-    SelectPVSystemsWithinRegion,
 )
 
 
