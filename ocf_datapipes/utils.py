@@ -7,8 +7,11 @@ import pandas as pd
 import xarray as xr
 from pathy import Pathy
 
+from ocf_datapipes.consts import BatchKey
+
 NumpyBatch = dict[BatchKey, np.ndarray]
 
+XarrayBatch = dict[BatchKey, Union[xr.DataArray, xr.Dataset]]
 
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     nums = datetimes.astype("datetime64[s]").astype(dtype)

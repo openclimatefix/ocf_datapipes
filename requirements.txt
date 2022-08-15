@@ -8,3 +8,5 @@ pandas
 rioxarray
 pathy
 pyaml_env
+nowcasting_datamodel
+gitpython
