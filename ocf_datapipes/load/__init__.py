@@ -3,6 +3,7 @@ from .nwp import OpenNWPIterDataPipe as OpenNWP
 from .pv import OpenPVFromDBIterDataPipe as OpenPVFromDB
 from .pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromNetCDF
 from .satellite import OpenSatelliteDataPipe as OpenSatellite
+from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
 
 try:
     import rioxarray  # Rioxarray is sometimes a pain to install, so only load this if its installed
