@@ -11,4 +11,3 @@ pyaml_env
 nowcasting_datamodel
 gitpython
 torchdata>=0.4.1
-
