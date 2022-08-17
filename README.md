@@ -18,3 +18,10 @@ class <PipeletName>IterDataPipe(IterDataPipe):
     def __iter__(self):
         pass
 ```
+
+### Experimental DataPipes
+
+For new datapipes being developed for new models or input modalities, to somewhat separate the more experimental and in
+development datapipes from the ones better tested for production purposes, there is an `ocf_datapipes.experimental` namespace for
+developing these more research-y datapipes. These datapipes might not, and probably are not, tested.
+Once the model(s) using them are in production, they should be upgraded to one of the other namespaces and have tests added.
