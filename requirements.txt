@@ -13,3 +13,4 @@ gitpython
 torchdata>=0.4.1
 geopandas
 dask
+pvlib
