@@ -78,10 +78,10 @@ def open_sat_data(
 
 
 @functional_datapipe("open_satellite")
-class OpenSatelliteDataPipe(IterDataPipe):
-    def __int__(self, zarr_path: Union[Path, str]) -> None:
-        super().__int__()
+class OpenSatelliteIterDataPipe(IterDataPipe):
+    def __init__(self, zarr_path: Union[Path, str]):
         self.zarr_path = zarr_path
+        super().__init__()
 
     def __iter__(self) -> xr.DataArray:
         data: xr.DataArray = open_sat_data(zarr_path=self.zarr_path)
