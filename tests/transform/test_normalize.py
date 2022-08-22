@@ -1,4 +1,4 @@
-from ocf_datapipes.load import OpenNWP, OpenSatellite, OpenTopography, OpenGSP, OpenPVFromNetCDF
+from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
 from ocf_datapipes.transform.xarray import Normalize
 
 
@@ -8,14 +8,18 @@ def test_normalize_sat():
     data = next(iter(sat_dp))
     assert data is not None
 
+
 def test_normalize_nwp():
     pass
+
 
 def test_normalize_topo():
     pass
 
+
 def test_normalize_gsp():
     pass
+
 
 def test_normalize_pv():
     pass

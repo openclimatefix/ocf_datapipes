@@ -24,9 +24,7 @@ def test_sat_downsample():
 
 
 def test_topo_downsample():
-    topo_dp = OpenTopography(
-        topo_filename="tests/data/europe_dem_2km_osgb.tif"
-    )
+    topo_dp = OpenTopography(topo_filename="tests/data/europe_dem_2km_osgb.tif")
     topo_dp = Downsample(topo_dp, y_coarsen=16, x_coarsen=16)
     data = next(iter(topo_dp))
     assert data.shape == (176, 272)
