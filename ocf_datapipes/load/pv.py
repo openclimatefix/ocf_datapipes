@@ -2,6 +2,7 @@ import datetime
 import logging
 from pathlib import Path
 from typing import Optional, Union
+
 import fsspec
 import numpy as np
 import pandas as pd
