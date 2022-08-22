@@ -3,7 +3,7 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils import NumpyBatch
+from ocf_datapipes.utils.consts import NumpyBatch
 
 
 @functional_datapipe("convert_xarray_batch_to_numpy_batch")

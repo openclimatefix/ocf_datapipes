@@ -4,7 +4,7 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
-from ocf_datapipes.utils import XarrayBatch
+from ocf_datapipes.utils.consts import XarrayBatch
 
 
 @functional_datapipe("convert_to_xarray_batch")

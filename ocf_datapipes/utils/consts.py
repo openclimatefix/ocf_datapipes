@@ -3,8 +3,9 @@
 from enum import Enum, auto
 from numbers import Number
 from typing import NamedTuple
-
-from pathy import Pathy
+import numpy as np
+import xarray as xr
+from typing import Union
 
 PV_TIME_AXIS = 1
 PV_SYSTEM_AXIS = 2
@@ -285,6 +286,6 @@ class BatchKey(Enum):
     requested_timesteps = auto()  # shape: (n_requested_timesteps)
 
 
-REMOTE_PATH_FOR_DATA_FOR_UNIT_TESTS = Pathy(
-    "gs://ocf-public/data_for_unit_tests/prepared_ML_training_data_v15_v2"
-)
+NumpyBatch = dict[BatchKey, np.ndarray]
+
+XarrayBatch = dict[BatchKey, Union[xr.DataArray, xr.Dataset]]

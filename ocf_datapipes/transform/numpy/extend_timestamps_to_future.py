@@ -3,7 +3,7 @@ import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils import NumpyBatch
+from ocf_datapipes.utils.consts import NumpyBatch
 
 
 @functional_datapipe("extend_timesteps_to_future")

@@ -3,13 +3,13 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils import NumpyBatch
-from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 
 @functional_datapipe("add_topographic_data")
 class AddTopographicDataIterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe, topo_dp: IterDataPipe):
+        super().__init__()
         self.source_dp = source_dp
         self.topo_dp = topo_dp
 
