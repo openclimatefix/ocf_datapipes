@@ -7,7 +7,7 @@ import pandas as pd
 import xarray as xr
 from pathy import Pathy
 
-from ocf_datapipes.consts import BatchKey
+from ocf_datapipes.utils.consts import BatchKey
 
 NumpyBatch = dict[BatchKey, np.ndarray]
 
