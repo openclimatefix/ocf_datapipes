@@ -1,7 +1,6 @@
-from torchdata.datapipes.iter import IterDataPipe
-
 import numpy as np
 import xarray as xr
+from torchdata.datapipes.iter import IterDataPipe
 
 
 class ReduceNumPVSystemsIterDataPipe(IterDataPipe):

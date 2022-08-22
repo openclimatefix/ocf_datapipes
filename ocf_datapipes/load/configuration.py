@@ -1,9 +1,8 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-
 import fsspec
 from pathy import Pathy
 from pyaml_env import parse_config
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("open_config")
