@@ -26,7 +26,9 @@ def sat_15_dp():
 
 @pytest.fixture()
 def topo_dp():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "europe_dem_2km_osgb.tif"
+    filename = (
+        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "europe_dem_2km_osgb.tif"
+    )
     return OpenTopography(topo_filename=filename)
 
 

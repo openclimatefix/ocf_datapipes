@@ -20,8 +20,8 @@ from urllib.request import urlopen
 import geopandas as gpd
 import pandas as pd
 
-from ocf_datapipes.utils.pvlive import get_list_of_gsp_ids
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
+from ocf_datapipes.utils.pvlive import get_list_of_gsp_ids
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +37,7 @@ rename_save_columns = {
 rename_load_columns = {v: k for k, v in rename_save_columns.items()}
 
 
-def get_gsp_metadata_from_eso(
-    load_local_file: bool = True, save_local_file: bool = False
-) -> str:
+def get_gsp_metadata_from_eso(load_local_file: bool = True, save_local_file: bool = False) -> str:
     """
     Get the metadata for the gsp, from ESO.
 

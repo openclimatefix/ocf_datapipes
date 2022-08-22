@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 import geopandas as gpd
 import numpy as np
@@ -7,10 +8,9 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from typing import Optional
-
 try:
     from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
+
     _has_pvlive = True
 except ImportError:
     print("Unable to import PVLive utils, please provide filenames with OpenGSP")
@@ -28,7 +28,11 @@ class OpenGSPIterDataPipe(IterDataPipe):
         sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=30),
     ):
         self.gsp_pv_power_zarr_path = gsp_pv_power_zarr_path
-        if gsp_id_to_region_id_filename is None or sheffield_solar_region_path is None and _has_pvlive:
+        if (
+            gsp_id_to_region_id_filename is None
+            or sheffield_solar_region_path is None
+            and _has_pvlive
+        ):
             self.gsp_id_to_region_id_filename = get_gsp_metadata_from_eso()
             self.sheffield_solar_region_filename = get_gsp_shape_from_eso()
         else:
