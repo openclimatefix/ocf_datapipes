@@ -2,7 +2,6 @@ import datetime
 import logging
 from pathlib import Path
 from typing import Optional, Union
-
 import fsspec
 import numpy as np
 import pandas as pd
@@ -17,8 +16,8 @@ _log = logging.getLogger(__name__)
 class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     def __init__(
         self,
-        pv_power_filename: str,
-        pv_metadata_filename: str,
+        pv_power_filename: Union[str, Path],
+        pv_metadata_filename: Union[str, Path],
         sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=5),
     ):
         super().__init__()
