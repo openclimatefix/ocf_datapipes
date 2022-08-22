@@ -80,4 +80,4 @@ def pvoutput_dp():
 @pytest.fixture()
 def gsp_dp():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "gsp" / "test.zarr"
-    return OpenSatellite(zarr_path=filename)
+    return OpenGSP(zarr_path=filename)
