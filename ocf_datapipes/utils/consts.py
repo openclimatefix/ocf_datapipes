@@ -2,10 +2,10 @@
 
 from enum import Enum, auto
 from numbers import Number
-from typing import NamedTuple
+from typing import NamedTuple, Union
+
 import numpy as np
 import xarray as xr
-from typing import Union
 
 PV_TIME_AXIS = 1
 PV_SYSTEM_AXIS = 2
