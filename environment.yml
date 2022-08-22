@@ -15,3 +15,6 @@ dependencies:
 pip:
   - einops
   - pathy
+  - git+https://github.com/SheffieldSolar/PV_Live-API
+  - pyaml_env
+  - nowcasting_datamodel

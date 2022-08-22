@@ -16,3 +16,4 @@ dask
 pvlib
 jpeg_xl_float_with_nans
 h5netcdf
+tqdm

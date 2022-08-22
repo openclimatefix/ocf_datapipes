@@ -13,7 +13,7 @@ try:
     from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
     _has_pvlive = True
 except ImportError:
-    print("Unable to import PVLive utils, please ")
+    print("Unable to import PVLive utils, please provide filenames with OpenGSP")
     _has_pvlive = False
 
 

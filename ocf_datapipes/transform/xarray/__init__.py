@@ -5,3 +5,4 @@ from .convert_satellite_to_int import ConvertSatelliteToInt8IterDataPipe as Conv
 from .downsample import DownsampleIterDataPipe as Downsample
 from .normalize import NormalizeIterDataPipe as Normalize
 from .reduce_num_pv_systems import ReduceNumPVSystemsIterDataPipe as ReduceNumPVSystems
+from .pv_power_rolling_window import PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow
