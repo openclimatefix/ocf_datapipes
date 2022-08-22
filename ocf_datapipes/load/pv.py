@@ -19,13 +19,11 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self,
         pv_power_filename: str,
         pv_metadata_filename: str,
-        n_pv_systems_per_example: int,
         sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=5),
     ):
         super().__init__()
         self.pv_power_filename = pv_power_filename
         self.pv_metadata_filename = pv_metadata_filename
-        self.n_pv_systems_per_example = n_pv_systems_per_example
         self.sample_period_duration = sample_period_duration
 
     def __iter__(self):
