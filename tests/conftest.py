@@ -77,7 +77,7 @@ def pvoutput_dp():
     return OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
 
 
-# @pytest.fixture()
-# def gsp_dp():
-#    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data.zarr"
-#    return OpenSatellite(zarr_path=filename)
+@pytest.fixture()
+def gsp_dp():
+    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "gsp" / "test.zarr"
+    return OpenSatellite(zarr_path=filename)
