@@ -98,6 +98,7 @@ def _load_pv_power_watts_and_capacity_wp(
         del pv_power_ds
 
     pv_capacity_wp.index = [np.int32(col) for col in pv_capacity_wp.index]
+    pv_power_watts.columns = pv_power_watts.columns.astype(np.int64)
 
     # Create pv_system_row_number. We use the index of `pv_capacity_wp` because that includes
     # the PV system IDs for the entire dataset (independent of `start_date` and `end_date`).
@@ -117,7 +118,7 @@ def _load_pv_power_watts_and_capacity_wp(
     assert not pv_power_watts.columns.duplicated().any()
     assert not pv_power_watts.index.duplicated().any()
     assert np.isfinite(pv_capacity_wp).all()
-    assert (pv_capacity_wp > 0).all()
+    assert (pv_capacity_wp >= 0).all()
     assert np.isfinite(pv_system_row_number).all()
     assert np.array_equal(pv_power_watts.columns, pv_capacity_wp.index)
     return pv_power_watts, pv_capacity_wp, pv_system_row_number

@@ -1,5 +1,6 @@
 import datetime
-from typing import Optional
+from typing import Optional, Union
+from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
@@ -7,10 +8,9 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-
+from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
 try:
     from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
-
     _has_pvlive = True
 except ImportError:
     print("Unable to import PVLive utils, please provide filenames with OpenGSP")
@@ -21,7 +21,7 @@ except ImportError:
 class OpenGSPIterDataPipe(IterDataPipe):
     def __init__(
         self,
-        gsp_pv_power_zarr_path: str,
+        gsp_pv_power_zarr_path: Union[str, Path],
         gsp_id_to_region_id_filename: Optional[str] = None,
         sheffield_solar_region_path: Optional[str] = None,
         threshold_mw: int = 0,
@@ -34,10 +34,10 @@ class OpenGSPIterDataPipe(IterDataPipe):
             and _has_pvlive
         ):
             self.gsp_id_to_region_id_filename = get_gsp_metadata_from_eso()
-            self.sheffield_solar_region_filename = get_gsp_shape_from_eso()
+            self.sheffield_solar_region_path = get_gsp_shape_from_eso()
         else:
             self.gsp_id_to_region_id_filename = gsp_id_to_region_id_filename
-            self.sheffield_solar_region_filename = sheffield_solar_region_path
+            self.sheffield_solar_region_path = sheffield_solar_region_path
         self.threshold_mw = threshold_mw
         self.sample_period_duration = sample_period_duration
 

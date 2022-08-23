@@ -6,3 +6,4 @@ from .downsample import DownsampleIterDataPipe as Downsample
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv_power_rolling_window import PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow
 from .reduce_num_pv_systems import ReduceNumPVSystemsIterDataPipe as ReduceNumPVSystems
+from .add_t0idx_and_sample_period_duration import AddT0IdxAndSamplePeriodDurationIterDataPipe as AddT0IdxAndSamplePeriodDuration
