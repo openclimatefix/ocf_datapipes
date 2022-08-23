@@ -9,24 +9,11 @@ from ocf_datapipes.transform.numpy import (
     EncodeSpaceTime,
     SaveT0Time,
 )
-from ocf_datapipes.transform.xarray import AddContiguousT0TimePeriods, ReduceNumPVSystems
+from ocf_datapipes.transform.xarray import AddContiguousT0TimePeriods, ReduceNumPVSystems, ConvertSatelliteToInt8, Downsample
 
 
-def test_power_perceiver_production():
-
-    sat_datapipe = OpenSatellite()
-    pv_datapipe = OpenPVFromNetCDF()
-    gsp_datapipe = OpenGSP()
-    nwp_datapipe = OpenNWP()
-    topo_datapipe = OpenTopography()
-
-    # Selecting overlapping time slices
-    time_sat = AddContiguousT0TimePeriods(sat_datapipe)
-    time_pv = AddContiguousT0TimePeriods(pv_datapipe)
-    time_gsp = AddContiguousT0TimePeriods(gsp_datapipe)
-    time_nwp = AddContiguousT0TimePeriods(nwp_datapipe)
-
-    overlapping_time_datapipe = SelectOverlappingTimeSlice([time_pv, time_nwp, time_gsp, time_sat])
-    # Now have overlapping time periods here
+def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_dp):
+    sat_hrv_dp = ConvertSatelliteToInt8(sat_hrv_dp)
+    nwp_dp = Downsample(nwp_dp, y_coarsen=16, x_coarsen=16)
 
     pass
