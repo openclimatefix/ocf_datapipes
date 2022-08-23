@@ -15,7 +15,10 @@ class LocationPickerIterDataPipe(IterDataPipe):
             if self.return_all_locations:
                 # Iterate through all locations in dataset
                 for location_idx in range(len(xr_dataset["x_osgb"])):
-                    location = (xr_dataset["x_osgb"][location_idx], xr_dataset["y_osgb"][location_idx])
+                    location = (
+                        xr_dataset["x_osgb"][location_idx],
+                        xr_dataset["y_osgb"][location_idx],
+                    )
                     yield location
             else:
                 # Assumes all datasets have osgb coordinates for selecting locations

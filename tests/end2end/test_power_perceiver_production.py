@@ -9,7 +9,12 @@ from ocf_datapipes.transform.numpy import (
     EncodeSpaceTime,
     SaveT0Time,
 )
-from ocf_datapipes.transform.xarray import AddContiguousT0TimePeriods, ReduceNumPVSystems, ConvertSatelliteToInt8, Downsample
+from ocf_datapipes.transform.xarray import (
+    AddContiguousT0TimePeriods,
+    ConvertSatelliteToInt8,
+    Downsample,
+    ReduceNumPVSystems,
+)
 
 
 def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_dp):

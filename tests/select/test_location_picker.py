@@ -1,5 +1,7 @@
-from ocf_datapipes.select import LocationPicker
 import numpy as np
+
+from ocf_datapipes.select import LocationPicker
+
 
 def test_location_picker_single_location(gsp_dp):
     location_dp = LocationPicker(gsp_dp)
