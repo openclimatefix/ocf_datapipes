@@ -1,9 +1,11 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
+import warnings
+
 import numpy as np
 import pandas as pd
 import pvlib
-import warnings
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
 from ocf_datapipes.consts import BatchKey
 from ocf_datapipes.geospatial import osgb_to_lat_lon
 
@@ -11,6 +13,7 @@ ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
 AZIMUTH_MEAN = 177.7
 AZIMUTH_STD = 41.7
+
 
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
@@ -63,7 +66,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
                 if not np.isfinite([lat, lon]).all():
                     assert (
-                            self.modality_name == "pv"
+                        self.modality_name == "pv"
                     ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
                     # This is PV data, for a location which has no PV systems.
                     must_be_finite = False

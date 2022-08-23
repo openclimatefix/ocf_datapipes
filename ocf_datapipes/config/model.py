@@ -20,8 +20,6 @@ import git
 import numpy as np
 import pandas as pd
 from nowcasting_datamodel.models.pv import providers, pv_output, solar_sheffield_passiv
-from pathy import Pathy
-from pydantic import BaseModel, Field, root_validator, validator
 
 # nowcasting_dataset imports
 from nowcasting_dataset.consts import (
@@ -31,6 +29,8 @@ from nowcasting_dataset.consts import (
     SAT_VARIABLE_NAMES,
 )
 from nowcasting_dataset.dataset.split import split
+from pathy import Pathy
+from pydantic import BaseModel, Field, root_validator, validator
 
 IMAGE_SIZE_PIXELS = 64
 IMAGE_SIZE_PIXELS_FIELD = Field(
