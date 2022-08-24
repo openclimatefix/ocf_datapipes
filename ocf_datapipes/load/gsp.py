@@ -55,7 +55,9 @@ class OpenGSPIterDataPipe(IterDataPipe):
 
         # Have to remove ID 0 (National one) for rest to work
         # TODO Do filtering later, deal with national here for now
-        gsp_pv_power_mw_ds = gsp_pv_power_mw_ds.isel(gsp_id=slice(1,len(gsp_pv_power_mw_ds.gsp_id)))
+        gsp_pv_power_mw_ds = gsp_pv_power_mw_ds.isel(
+            gsp_id=slice(1, len(gsp_pv_power_mw_ds.gsp_id))
+        )
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_ds.gsp_id]
