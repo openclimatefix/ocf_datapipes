@@ -193,22 +193,6 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
         latitude=pv_metadata["latitude"], longitude=pv_metadata["longitude"]
     )
 
-    # Remove PV systems outside the geospatial boundary of the satellite data:
-    GEO_BOUNDARY_OSGB = {
-        "WEST": -238_000,
-        "EAST": 856_000,
-        "NORTH": 1_222_000,
-        "SOUTH": -184_000,
-    }
-
-    pv_metadata = pv_metadata[
-        (pv_metadata.x_osgb >= GEO_BOUNDARY_OSGB["WEST"])
-        & (pv_metadata.x_osgb <= GEO_BOUNDARY_OSGB["EAST"])
-        & (pv_metadata.y_osgb <= GEO_BOUNDARY_OSGB["NORTH"])
-        & (pv_metadata.y_osgb >= GEO_BOUNDARY_OSGB["SOUTH"])
-    ]
-
-    _log.info(f"Found {len(pv_metadata)} PV systems after filtering.")
     return pv_metadata
 
 
