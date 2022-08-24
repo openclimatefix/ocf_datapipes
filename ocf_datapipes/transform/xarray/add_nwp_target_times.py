@@ -6,7 +6,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 
-@functional_datapipe("add_t0_idx_and_sample_period_duration")
+@functional_datapipe("add_nwp_target_time")
 class AddNWPTargetTimeIterDataPipe(IterDataPipe):
     def __init__(
         self,
