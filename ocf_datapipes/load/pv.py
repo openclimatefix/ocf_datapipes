@@ -206,7 +206,7 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
         & (pv_metadata.x_osgb <= GEO_BOUNDARY_OSGB["EAST"])
         & (pv_metadata.y_osgb <= GEO_BOUNDARY_OSGB["NORTH"])
         & (pv_metadata.y_osgb >= GEO_BOUNDARY_OSGB["SOUTH"])
-        ]
+    ]
 
     _log.info(f"Found {len(pv_metadata)} PV systems after filtering.")
     return pv_metadata

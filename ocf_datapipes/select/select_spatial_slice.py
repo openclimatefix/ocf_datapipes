@@ -1,9 +1,9 @@
 from typing import Union
 
+import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
-import numpy as np
 
 from ocf_datapipes.utils.consts import Location
 
@@ -19,7 +19,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         roi_height_pixels: int,
         roi_width_pixels: int,
         y_dim_name: str = "y",
-        x_dim_name: str = "x"
+        x_dim_name: str = "x",
     ):
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
@@ -31,9 +31,19 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
             if "geostationary" in self.x_dim_name:
-                center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(xr_data=xr_data, center_osgb=location, x_dim_name=self.x_dim_name, y_dim_name=self.y_dim_name)
+                center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
+                    xr_data=xr_data,
+                    center_osgb=location,
+                    x_dim_name=self.x_dim_name,
+                    y_dim_name=self.y_dim_name,
+                )
             else:
-                center_idx: Location = _get_idx_of_pixel_closest_to_poi(xr_data=xr_data, center_osgb=location, x_dim_name=self.x_dim_name, y_dim_name=self.y_dim_name)
+                center_idx: Location = _get_idx_of_pixel_closest_to_poi(
+                    xr_data=xr_data,
+                    center_osgb=location,
+                    x_dim_name=self.x_dim_name,
+                    y_dim_name=self.y_dim_name,
+                )
 
             # Compute the index for left and right:
             half_height = self.roi_height_pixels // 2
@@ -67,7 +77,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
 class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
     """Select spatial slice based off meters from point of interest
 
-        Currently assumes that there is pv_system_id to use isel on
+    Currently assumes that there is pv_system_id to use isel on
     """
 
     def __init__(
@@ -95,17 +105,19 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
 
             # Select data in the region of interest:
             id_mask = (
-                    (left <= xr_data.x_osgb)
-                    & (xr_data.x_osgb <= right)
-                    & (xr_data.y_osgb <= top)
-                    & (bottom <= xr_data.y_osgb)
+                (left <= xr_data.x_osgb)
+                & (xr_data.x_osgb <= right)
+                & (xr_data.y_osgb <= top)
+                & (bottom <= xr_data.y_osgb)
             )
 
             selected = xr_data.isel(pv_system_id=id_mask)
             yield selected
 
 
-def _get_idx_of_pixel_closest_to_poi(xr_data: xr.DataArray, center_osgb: Location, y_dim_name: str = "y", x_dim_name: str = "x") -> Location:
+def _get_idx_of_pixel_closest_to_poi(
+    xr_data: xr.DataArray, center_osgb: Location, y_dim_name: str = "y", x_dim_name: str = "x"
+) -> Location:
     """Return x and y index location of pixel at center of region of interest."""
     y_index = xr_data.get_index(y_dim_name)
     x_index = xr_data.get_index(x_dim_name)
@@ -114,8 +126,12 @@ def _get_idx_of_pixel_closest_to_poi(xr_data: xr.DataArray, center_osgb: Locatio
         x=x_index.get_indexer([center_osgb.x], method="nearest")[0],
     )
 
+
 def _get_idx_of_pixel_closest_to_poi_geostationary(
-    xr_data: xr.DataArray, center_osgb: Location, x_dim_name="x_geostationary", y_dim_name="y_geostationary"
+    xr_data: xr.DataArray,
+    center_osgb: Location,
+    x_dim_name="x_geostationary",
+    y_dim_name="y_geostationary",
 ) -> Location:
     """Return x and y index location of pixel at center of region of interest."""
     _osgb_to_geostationary = _load_geostationary_area_definition_and_transform(xr_data)
@@ -125,20 +141,21 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     )
 
     # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:
-    x_index_at_center = (
-        np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
-    )
+    x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
     # y_geostationary is in descending order:
     y_index_at_center = len(xr_data[y_dim_name]) - (
         np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
     )
     return Location(x=x_index_at_center, y=y_index_at_center)
 
+
 def _load_geostationary_area_definition_and_transform(xr_data):
     # Only load these if using geostationary projection
-    import pyresample
     import pyproj
+    import pyresample
+
     from ocf_datapipes.utils.geospatial import OSGB36
+
     area_definition_yaml = xr_data.attrs["area"]
     geostationary_area_definition = pyresample.area_config.load_area_from_string(
         area_definition_yaml
