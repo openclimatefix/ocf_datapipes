@@ -63,10 +63,10 @@ def _get_surface_height_for_satellite(
             .to_array()
             .squeeze()
             .reset_coords("variable", drop=True)
+            .rename(
+                {"y_geostationary": "y", "x_geostationary": "x"}
+            ).rename("sat")
         )
-        satellite_example = satellite_example.rename(
-            {"y_geostationary": "y", "x_geostationary": "x"}
-        ).rename("sat")
         surface_height_for_example = surface_height.sel(
             y=slice(
                 satellite_example.y[0],
