@@ -13,7 +13,7 @@ class EncodeSpaceTimeIterDataPipe(IterDataPipe):
     def __init__(
         self,
         source_dp: IterDataPipe,
-        lengths: dict[str, Number] = lambda: dict(
+        lengths: dict[str, Number] = dict(
             x_osgb=480_000, y_osgb=400_000, time_utc=60 * 5 * 37
         ),
         n_fourier_features_per_dim: int = 8,
