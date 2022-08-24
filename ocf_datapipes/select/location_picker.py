@@ -1,6 +1,7 @@
 import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
 from ocf_datapipes.utils.consts import Location
 
 
@@ -25,5 +26,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 # Assumes all datasets have osgb coordinates for selecting locations
                 # Pick 1 random location from the input dataset
                 location_idx = np.random.randint(0, len(xr_dataset["x_osgb"]))
-                location = Location(x=xr_dataset["x_osgb"][location_idx], y=xr_dataset["y_osgb"][location_idx])
+                location = Location(
+                    x=xr_dataset["x_osgb"][location_idx], y=xr_dataset["y_osgb"][location_idx]
+                )
                 yield location

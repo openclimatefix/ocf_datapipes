@@ -1,11 +1,19 @@
-from torchdata.datapipes.iter import IterDataPipe, Zipper
-from torchdata.datapipes import functional_datapipe
-import xarray as xr
 from typing import Union
+
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe, Zipper
+
 
 @functional_datapipe("select_time_slice")
 class SelectTimeSliceIterDataPipe(IterDataPipe):
-    def __init__(self, source_datapipe: IterDataPipe, t0_datapipe: IterDataPipe, history_duration, forecast_duration):
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        t0_datapipe: IterDataPipe,
+        history_duration,
+        forecast_duration,
+    ):
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
         self.history_duration = history_duration
@@ -13,5 +21,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
-            xr_data = xr_data.sel(time_utc=slice(t0-self.history_duration, t0+self.forecast_duration))
+            xr_data = xr_data.sel(
+                time_utc=slice(t0 - self.history_duration, t0 + self.forecast_duration)
+            )
             yield xr_data
