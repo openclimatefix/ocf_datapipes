@@ -25,7 +25,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
-            center_idx = _get_idx_of_pixel_closest_to_poi(xr_data=xr_data, center_osgb=location)
+            center_idx: Location = _get_idx_of_pixel_closest_to_poi(xr_data=xr_data, center_osgb=location)
 
             # Compute the index for left and right:
             half_height = self.roi_height_pixels // 2
@@ -57,7 +57,10 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
 
 @functional_datapipe("select_spatial_slice_meters")
 class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
-    """Select spatial slice based off meters from point of interest"""
+    """Select spatial slice based off meters from point of interest
+
+        Currently assumes that there is pv_system_id to use isel on
+    """
 
     def __init__(
         self,
@@ -77,17 +80,20 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             half_height = self.roi_height_meters // 2
             half_width = self.roi_width_meters // 2
 
-            left_idx = location.x - half_width
-            right_idx = location.x + half_width
-            top_idx = location.y - half_height
-            bottom_idx = location.y + half_height
+            left = location.x - half_width
+            right = location.x + half_width
+            top = location.y - half_height
+            bottom = location.y + half_height
 
-            selected = xr_data.isel(
-                {
-                    "x": slice(left_idx, right_idx),
-                    "y": slice(top_idx, bottom_idx),
-                }
+            # Select data in the region of interest:
+            id_mask = (
+                    (left <= xr_data.x_osgb)
+                    & (xr_data.x_osgb <= right)
+                    & (xr_data.y_osgb <= top)
+                    & (bottom <= xr_data.y_osgb)
             )
+
+            selected = xr_data.isel(pv_system_id=id_mask)
             yield selected
 
 

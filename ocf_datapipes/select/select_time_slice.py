@@ -3,6 +3,7 @@ from typing import Union
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+from datetime import timedelta
 
 
 @functional_datapipe("select_time_slice")
@@ -11,8 +12,8 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         t0_datapipe: IterDataPipe,
-        history_duration,
-        forecast_duration,
+        history_duration: timedelta,
+        forecast_duration: timedelta,
     ):
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
