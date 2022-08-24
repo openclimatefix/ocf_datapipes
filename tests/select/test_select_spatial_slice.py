@@ -7,5 +7,11 @@ def test_select_spatial_slice_meters_passiv(passiv_dp):
     print(data)
     assert data is not None
 
-def test_select_spatial_slice_pixels_hrv(sat_hrv_dp):
-    pass
+def test_select_spatial_slice_pixels_hrv(sat_hrv_dp, passiv_dp):
+    loc_dp = LocationPicker(passiv_dp)
+    sat_hrv_dp = SelectSpatialSlicePixels(sat_hrv_dp, location_datapipe=loc_dp, roi_width_pixels=256,
+                                        roi_height_pixels=128,
+                                          y_dim_name="y_geostationary",
+                                          x_dim_name="x_geostationary")
+    data = next(iter(sat_hrv_dp))
+    print(data)
