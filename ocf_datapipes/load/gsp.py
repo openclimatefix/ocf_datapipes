@@ -53,6 +53,10 @@ class OpenGSPIterDataPipe(IterDataPipe):
         # Load GSP generation xr.Dataset:
         gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
 
+        # Have to remove ID 0 (National one) for rest to work
+        # TODO Do filtering later, deal with national here for now
+        gsp_pv_power_mw_ds = gsp_pv_power_mw_ds.isel(gsp_id=slice(1,len(gsp_pv_power_mw_ds.gsp_id)))
+
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_ds.gsp_id]
 
@@ -64,7 +68,6 @@ class OpenGSPIterDataPipe(IterDataPipe):
             x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
             y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
             capacity_mwp=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(np.float32),
-            t0_idx=self.t0_idx,
         )
 
         del gsp_id_to_shape, gsp_pv_power_mw_ds
@@ -106,7 +109,6 @@ def _put_gsp_data_into_an_xr_dataarray(
     x_osgb: np.ndarray,
     y_osgb: np.ndarray,
     capacity_mwp: np.ndarray,
-    t0_idx: int,
 ) -> xr.DataArray:
     # Convert to xr.DataArray:
     data_array = xr.DataArray(
@@ -119,5 +121,4 @@ def _put_gsp_data_into_an_xr_dataarray(
         y_osgb=("gsp_id", y_osgb),
         capacity_mwp=(("time_utc", "gsp_id"), capacity_mwp),
     )
-    data_array.attrs["t0_idx"] = t0_idx
     return data_array
