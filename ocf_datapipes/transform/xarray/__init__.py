@@ -10,3 +10,4 @@ from .normalize import NormalizeIterDataPipe as Normalize
 from .pv_power_rolling_window import PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow
 from .reduce_num_pv_systems import ReduceNumPVSystemsIterDataPipe as ReduceNumPVSystems
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+from .add_nwp_target_times import AddNWPTargetTimeIterDataPipe as AddNWPTargetTime
