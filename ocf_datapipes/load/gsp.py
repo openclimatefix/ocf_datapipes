@@ -1,6 +1,6 @@
 import datetime
-from typing import Optional, Union
 from pathlib import Path
+from typing import Optional, Union
 
 import geopandas as gpd
 import numpy as np
@@ -8,9 +8,12 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
 from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
+
 try:
     from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
+
     _has_pvlive = True
 except ImportError:
     print("Unable to import PVLive utils, please provide filenames with OpenGSP")
