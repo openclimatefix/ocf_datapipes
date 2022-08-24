@@ -14,6 +14,12 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> NumpyBatch:
         for xr_data in self.source_dp:
+            xr_data = xr_data.isel(
+                {
+                    "x_geostationary": slice(200, 456),
+                    "y_geostationary": slice(300, 428),
+                }
+            )
             if self.is_hrv:
                 example: NumpyBatch = {
                     BatchKey.hrvsatellite_actual: xr_data.values,
