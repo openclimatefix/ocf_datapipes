@@ -21,29 +21,22 @@ def sat_hrv_np_dp():
 @pytest.fixture()
 def sat_np_dp():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data.zarr"
-    return OpenSatellite(zarr_path=filename)
-
-
-@pytest.fixture()
-def sat_15_np_dp():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data_15.zarr"
-    return OpenSatellite(zarr_path=filename)
-
-
-@pytest.fixture()
-def topo_np_dp():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "europe_dem_2km_osgb.tif"
-    )
-    return OpenTopography(topo_filename=filename)
-
+    dp = OpenSatellite(zarr_path=filename)
+    dp = ConvertSatelliteToInt8(dp)
+    dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=5),
+                                         history_duration=timedelta(minutes=60))
+    dp = ConvertSatelliteToNumpyBatch(dp, is_hrv=False)
+    return dp
 
 @pytest.fixture()
 def nwp_np_dp():
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "nwp_data" / "test.zarr"
     )
-    return OpenNWP(zarr_path=filename)
+    dp = OpenNWP(zarr_path=filename)
+    dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2))
+    # TODO Need to add t0 DataPipe before can make Numpy NWP
+    return dp
 
 
 @pytest.fixture()
@@ -59,7 +52,11 @@ def passiv_np_dp():
         / "passiv"
         / "UK_PV_metadata.csv"
     )
-    return OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+    dp = OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+    dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=5),
+                                         history_duration=timedelta(minutes=60))
+    dp = ConvertPVToNumpyBatch(dp)
+    return dp
 
 
 @pytest.fixture()
@@ -80,10 +77,18 @@ def pvoutput_np_dp():
         / "pvoutput"
         / "UK_PV_metadata.csv"
     )
-    return OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+    dp = OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+    dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=5),
+                                         history_duration=timedelta(minutes=60))
+    dp = ConvertPVToNumpyBatch(dp)
+    return dp
 
 
 @pytest.fixture()
 def gsp_np_dp():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "gsp" / "test.zarr"
-    return OpenGSP(gsp_pv_power_zarr_path=filename)
+    dp = OpenGSP(gsp_pv_power_zarr_path=filename)
+    dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=30),
+                                         history_duration=timedelta(hours=2))
+    dp = ConvertGSPToNumpyBatch(dp)
+    return dp
