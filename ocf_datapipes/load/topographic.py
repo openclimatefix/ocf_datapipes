@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Union
 
-import rioxarray
 import cartopy.crs as ccrs
 import numpy as np
 import pyproj

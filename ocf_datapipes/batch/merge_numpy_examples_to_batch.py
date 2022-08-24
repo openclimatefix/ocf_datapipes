@@ -1,5 +1,6 @@
-from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
 from ocf_datapipes.utils.consts import NumpyBatch
 from ocf_datapipes.utils.utils import stack_np_examples_into_batch
 
