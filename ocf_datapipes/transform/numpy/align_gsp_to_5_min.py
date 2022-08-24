@@ -9,7 +9,7 @@ from ocf_datapipes.utils.utils import datetime64_to_float, stack_np_examples_int
 
 @functional_datapipe("align_gsp_to_5_min")
 class AlignGSPto5MinIterDataPipe(IterDataPipe):
-    def __init__(self, source_datapipe: IterDataPipe, batch_key_for_5_min_datetimes: str):
+    def __init__(self, source_datapipe: IterDataPipe, batch_key_for_5_min_datetimes: BatchKey):
         self.source_dp = source_datapipe
         self.batch_key_for_5_min_datetimes = batch_key_for_5_min_datetimes
 

@@ -7,6 +7,7 @@ from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite
 from ocf_datapipes.transform.xarray import AddNWPTargetTime, AddT0IdxAndSamplePeriodDuration, ReprojectTopography, ConvertSatelliteToInt8
 from datetime import timedelta
 from ocf_datapipes.convert import ConvertSatelliteToNumpyBatch, ConvertGSPToNumpyBatch, ConvertNWPToNumpyBatch, ConvertPVToNumpyBatch
+from ocf_datapipes.batch import MergeNumpyExamplesToBatch
 
 @pytest.fixture()
 def sat_hrv_np_dp():
@@ -15,6 +16,7 @@ def sat_hrv_np_dp():
     dp = ConvertSatelliteToInt8(dp)
     dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60))
     dp = ConvertSatelliteToNumpyBatch(dp, is_hrv=True)
+    dp = MergeNumpyExamplesToBatch(dp, n_examples_per_batch=4)
     return dp
 
 
@@ -26,6 +28,7 @@ def sat_np_dp():
     dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=5),
                                          history_duration=timedelta(minutes=60))
     dp = ConvertSatelliteToNumpyBatch(dp, is_hrv=False)
+    dp = MergeNumpyExamplesToBatch(dp, n_examples_per_batch=4)
     return dp
 
 @pytest.fixture()
@@ -36,6 +39,7 @@ def nwp_np_dp():
     dp = OpenNWP(zarr_path=filename)
     dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2))
     # TODO Need to add t0 DataPipe before can make Numpy NWP
+    # dp = MergeNumpyExamplesToBatch(dp, n_examples_per_batch=4)
     return dp
 
 
@@ -56,6 +60,7 @@ def passiv_np_dp():
     dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=5),
                                          history_duration=timedelta(minutes=60))
     dp = ConvertPVToNumpyBatch(dp)
+    dp = MergeNumpyExamplesToBatch(dp, n_examples_per_batch=4)
     return dp
 
 
@@ -81,6 +86,7 @@ def pvoutput_np_dp():
     dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=5),
                                          history_duration=timedelta(minutes=60))
     dp = ConvertPVToNumpyBatch(dp)
+    dp = MergeNumpyExamplesToBatch(dp, n_examples_per_batch=4)
     return dp
 
 
@@ -91,4 +97,5 @@ def gsp_np_dp():
     dp = AddT0IdxAndSamplePeriodDuration(dp, sample_period_duration=timedelta(minutes=30),
                                          history_duration=timedelta(hours=2))
     dp = ConvertGSPToNumpyBatch(dp)
+    dp = MergeNumpyExamplesToBatch(dp, n_examples_per_batch=4)
     return dp
