@@ -7,7 +7,7 @@ def test_select_spatial_slice_meters_passiv(passiv_dp):
         passiv_dp, location_datapipe=loc_dp, roi_width_meters=96_000, roi_height_meters=96_000
     )
     data = next(iter(passiv_dp))
-    assert data is not None
+    assert len(data.pv_system_id) == 1
 
 
 def test_select_spatial_slice_pixels_hrv(sat_hrv_dp, passiv_dp):
