@@ -27,11 +27,10 @@ class AddNWPTargetTimeIterDataPipe(IterDataPipe):
             t0_datetime_utc = pd.Timestamp(t0)
             start_dt = t0_datetime_utc - self.history_duration
             end_dt = t0_datetime_utc + self.forecast_duration
-
             target_times = pd.date_range(
                 start_dt.ceil(self.sample_period_duration),
                 end_dt.ceil(self.sample_period_duration),
                 freq=self.sample_period_duration,
             )
-            xr_data.coords["target_time_utc"] = target_times
+            xr_data.attrs["target_time_utc"] = target_times
             yield xr_data

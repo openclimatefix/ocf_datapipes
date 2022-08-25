@@ -1,4 +1,4 @@
-from .add_contiguous_time_periods import (
+from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )
 from .add_nwp_target_times import AddNWPTargetTimeIterDataPipe as AddNWPTargetTime
