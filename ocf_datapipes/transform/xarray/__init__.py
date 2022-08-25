@@ -1,4 +1,4 @@
-from .add_nwp_target_times import ConvertToNWPTargetTimeIterDataPipe as ConvertToNWPTargetTime
+from .convert_to_nwp_target_times import ConvertToNWPTargetTimeIterDataPipe as ConvertToNWPTargetTime
 from .add_t0idx_and_sample_period_duration import (
     AddT0IdxAndSamplePeriodDurationIterDataPipe as AddT0IdxAndSamplePeriodDuration,
 )
