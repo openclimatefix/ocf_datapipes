@@ -100,9 +100,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
 
             left = location.x - half_width
             right = location.x + half_width
-            top = location.y - half_height
-            bottom = location.y + half_height
-
+            bottom = location.y - half_height
+            top = location.y + half_height
             # Select data in the region of interest:
             id_mask = (
                 (left <= xr_data.x_osgb)
