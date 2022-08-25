@@ -18,6 +18,8 @@ from ocf_datapipes.select import (
     SelectSpatialSliceMeters,
     SelectSpatialSlicePixels,
     SelectTimeSlice,
+    SelectLiveT0Time,
+SelectLiveTimeSlice
 )
 from ocf_datapipes.transform.xarray import (
     ConvertToNWPTargetTime,
@@ -25,6 +27,7 @@ from ocf_datapipes.transform.xarray import (
     ConvertSatelliteToInt8,
     EnsureNPVSystemsPerExample,
     ReprojectTopography,
+Downsample
 )
 
 
@@ -43,10 +46,10 @@ class GSPIterator(IterDataPipe):
 @pytest.fixture()
 def all_loc_np_dp():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "hrv_sat_data.zarr"
-    dp = OpenSatellite(zarr_path=filename)
-    dp = ConvertSatelliteToInt8(dp)
+    sat_dp = OpenSatellite(zarr_path=filename)
+    sat_dp = ConvertSatelliteToInt8(sat_dp)
     sat_dp = AddT0IdxAndSamplePeriodDuration(
-        dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        sat_dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
     )
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
@@ -69,23 +72,48 @@ def all_loc_np_dp():
     gsp_dp = AddT0IdxAndSamplePeriodDuration(
         gsp_dp, sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
     )
+    filename = (
+            Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "nwp_data" / "test.zarr"
+    )
+    nwp_dp = OpenNWP(zarr_path=filename)
+    nwp_dp = AddT0IdxAndSamplePeriodDuration(
+        nwp_dp, sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2)
+    )
 
-    location_dp1, location_dp2 = Forker(
-        LocationPicker(gsp_dp, return_all_locations=True), 2
-    )  # Its in order then
-    # TODO Add t0 selector
+    location_dp1, location_dp2, location_dp3 = LocationPicker(gsp_dp, return_all_locations=True).fork(3) # Its in order then
     pv_dp = SelectSpatialSliceMeters(
         pv_dp, location_datapipe=location_dp1, roi_width_meters=960_000, roi_height_meters=960_000
     )  # Has to be large as test PV systems aren't in first 20 GSPs it seems
-    pv_dp = EnsureNPVSystemsPerExample(pv_dp, n_pv_systems_per_example=8)
-    sat_dp = SelectSpatialSlicePixels(
+    pv_dp, pv_t0_dp = EnsureNPVSystemsPerExample(pv_dp, n_pv_systems_per_example=8).fork(2)
+    sat_dp, sat_t0_dp = SelectSpatialSlicePixels(
         sat_dp,
         location_datapipe=location_dp2,
         roi_width_pixels=256,
         roi_height_pixels=128,
         y_dim_name="y_geostationary",
         x_dim_name="x_geostationary",
-    )
+    ).fork(2)
+    nwp_dp, nwp_t0_dp = SelectSpatialSlicePixels(
+        nwp_dp,
+        location_datapipe=location_dp3,
+        roi_width_pixels=64,
+        roi_height_pixels=64,
+        y_dim_name="y_osgb",
+        x_dim_name="x_osgb"
+    ).fork(2)
+    nwp_dp = Downsample(nwp_dp, y_coarsen=16, x_coarsen=16)
+    nwp_t0_dp = SelectLiveT0Time(nwp_t0_dp, dim_name="init_time_utc")
+    nwp_dp = ConvertToNWPTargetTime(nwp_dp, t0_datapipe=nwp_t0_dp, sample_period_duration=timedelta(hours=1),
+                                    history_duration=timedelta(hours=2),
+                                    forecast_duration=timedelta(hours=3))
+    gsp_t0_dp = SelectLiveT0Time(gsp_dp)
+    gsp_dp = SelectLiveTimeSlice(gsp_dp, t0_datapipe=gsp_t0_dp,
+                                 history_duration=timedelta(hours=2), )
+    sat_t0_dp = SelectLiveT0Time(sat_t0_dp)
+    sat_dp = SelectLiveTimeSlice(sat_dp, t0_datapipe=sat_t0_dp, history_duration=timedelta(hours=1),)
+    passiv_t0_dp = SelectLiveT0Time(pv_t0_dp)
+    pv_dp = SelectLiveTimeSlice(pv_dp, t0_datapipe=passiv_t0_dp,
+                                    history_duration=timedelta(hours=1), )
     gsp_dp = GSPIterator(gsp_dp)
     sat_dp = ConvertSatelliteToNumpyBatch(sat_dp, is_hrv=True)
     sat_dp = MergeNumpyExamplesToBatch(sat_dp, n_examples_per_batch=4)
@@ -93,7 +121,9 @@ def all_loc_np_dp():
     pv_dp = MergeNumpyExamplesToBatch(pv_dp, n_examples_per_batch=4)
     gsp_dp = ConvertGSPToNumpyBatch(gsp_dp)
     gsp_dp = MergeNumpyExamplesToBatch(gsp_dp, n_examples_per_batch=4)
-    combined_dp = MergeNumpyModalities([gsp_dp, pv_dp, sat_dp])
+    nwp_dp = ConvertNWPToNumpyBatch(nwp_dp)
+    nwp_dp = MergeNumpyExamplesToBatch(nwp_dp, n_examples_per_batch=4)
+    combined_dp = MergeNumpyModalities([gsp_dp, pv_dp, sat_dp, nwp_dp])
 
     return combined_dp
 

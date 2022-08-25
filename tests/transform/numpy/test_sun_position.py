@@ -21,8 +21,7 @@ def test_add_sun_position_all(all_loc_np_dp):
     combined_dp = AddSunPosition(combined_dp, modality_name="pv")
     combined_dp = AddSunPosition(combined_dp, modality_name="gsp")
     combined_dp = AddSunPosition(combined_dp, modality_name="gsp_5_min")
-    # TODO Add NWP target time here
-    # TODO Need a locationPicker here to bring down to a few specific locations, GSP has too many locations for this
+    combined_dp = AddSunPosition(combined_dp, modality_name="nwp_target_time")
     data = next(iter(combined_dp))
 
 

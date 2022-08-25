@@ -30,6 +30,8 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
+            print(xr_data)
+            print(location)
             if "geostationary" in self.x_dim_name:
                 center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
                     xr_data=xr_data,
@@ -120,6 +122,8 @@ def _get_idx_of_pixel_closest_to_poi(
     """Return x and y index location of pixel at center of region of interest."""
     y_index = xr_data.get_index(y_dim_name)
     x_index = xr_data.get_index(x_dim_name)
+    print(y_index)
+    print(x_index)
     return Location(
         y=y_index.get_indexer([center_osgb.y], method="nearest")[0],
         x=x_index.get_indexer([center_osgb.x], method="nearest")[0],
