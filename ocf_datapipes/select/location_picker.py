@@ -27,6 +27,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 # Pick 1 random location from the input dataset
                 location_idx = np.random.randint(0, len(xr_dataset["x_osgb"]))
                 location = Location(
-                    x=xr_dataset["x_osgb"][location_idx].values, y=xr_dataset["y_osgb"][location_idx].values
+                    x=xr_dataset["x_osgb"][location_idx].values,
+                    y=xr_dataset["y_osgb"][location_idx].values,
                 )
                 yield location

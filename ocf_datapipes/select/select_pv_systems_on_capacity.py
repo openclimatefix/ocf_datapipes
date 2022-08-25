@@ -12,15 +12,22 @@
 
 """
 
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-import xarray as xr
-import numpy as np
 from typing import Union
+
+import numpy as np
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
 
 @functional_datapipe("select_pv_systems_on_capacity")
 class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
-    def __init__(self, source_datapipe: IterDataPipe, min_capacity_watts: Union[int, float] = 0.0, max_capacity_watts: Union[int, float] = np.inf):
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        min_capacity_watts: Union[int, float] = 0.0,
+        max_capacity_watts: Union[int, float] = np.inf,
+    ):
         self.source_datapipe = source_datapipe
         self.min_capacity_watts = min_capacity_watts
         self.max_capaciity_watts = max_capacity_watts

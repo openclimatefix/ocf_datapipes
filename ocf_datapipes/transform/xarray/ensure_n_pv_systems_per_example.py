@@ -1,12 +1,12 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-import xarray as xr
 import numpy as np
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("ensure_n_pv_systems_per_example")
 class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
-    def __init__(self, source_datapipe: IterDataPipe, n_pv_systems_per_example: int, seed = None):
+    def __init__(self, source_datapipe: IterDataPipe, n_pv_systems_per_example: int, seed=None):
         self.source_datapipe = source_datapipe
         self.n_pv_systems_per_example = n_pv_systems_per_example
         self.rng = np.random.default_rng(seed=seed)

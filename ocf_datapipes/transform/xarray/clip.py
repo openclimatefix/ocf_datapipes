@@ -4,15 +4,23 @@ pv_power_watts = pv_power_watts.clip(lower=0, upper=5e7)
 
 """
 
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-import xarray as xr
-import numpy as np
 from typing import Union
+
+import numpy as np
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
 
 @functional_datapipe("clip")
 class ClipIterDataPipe(IterDataPipe):
-    def __init__(self, source_datapipe: IterDataPipe, data_name: str, min: Union[int, float] = 0.0, max: Union[int, float] = np.inf):
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        data_name: str,
+        min: Union[int, float] = 0.0,
+        max: Union[int, float] = np.inf,
+    ):
         self.source_datapipe = source_datapipe
         self.min = min
         self.max = max
