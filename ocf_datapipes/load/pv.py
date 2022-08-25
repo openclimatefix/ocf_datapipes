@@ -99,7 +99,7 @@ def _load_pv_power_watts_and_capacity_wp(
         pv_power_watts = pv_power_watts.astype(np.float32)
         del pv_power_ds
 
-    if "passiv" not in filename:
+    if "passiv" not in str(filename):
         _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
         pv_power_watts = (
             pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)

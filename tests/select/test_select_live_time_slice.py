@@ -1,7 +1,5 @@
 from datetime import timedelta
 
-from freezegun import freeze_time
-
 from ocf_datapipes.select import SelectLiveT0Time, SelectLiveTimeSlice
 from ocf_datapipes.transform.xarray import AddNWPTargetTime
 
@@ -22,7 +20,6 @@ def test_select_gsp(gsp_dp):
     assert len(data.time_utc.values) < time_len
 
 
-@freeze_time("2020-04-01 12:00:00")  # Date in middle of NWP time
 def test_select_nwp(nwp_dp):
     t0_dp = SelectLiveT0Time(nwp_dp, dim_name="init_time_utc")
     nwp_dp = AddNWPTargetTime(
@@ -30,7 +27,7 @@ def test_select_nwp(nwp_dp):
         t0_dp,
         sample_period_duration=timedelta(hours=1),
         history_duration=timedelta(hours=2),
-        forecast_duration=timedelta(hours=8),
+        forecast_duration=timedelta(hours=4),
     )
     data = next(iter(nwp_dp))
     print(data)

@@ -1,47 +1,28 @@
-from datetime import timedelta
+from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes import functional_datapipe
 from typing import Optional
 
 import numpy as np
 import pandas as pd
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+import numpy as np
+import xarray as xr
+from datetime import timedelta
 
-
-@functional_datapipe("select_live_t0_time_slice")
+@functional_datapipe("select_live_time_slice")
 class SelectLiveTimeSliceIterDataPipe(IterDataPipe):
     """Select the history for the live data"""
-
-    def __init__(
-        self,
-        source_datapipe: IterDataPipe,
-        history_duration: timedelta,
-        forecast_duration: Optional[timedelta] = None,
-        dim_name: str = "time_utc",
-    ):
+    def __init__(self, source_datapipe: IterDataPipe, t0_datapipe: IterDataPipe, history_duration: timedelta, dim_name: str = "time_utc"):
         self.source_datapipe = source_datapipe
+        self.t0_datapipe = t0_datapipe
         self.history_duration = np.timedelta64(history_duration)
-        self.forecast_duration = (
-            forecast_duration if forecast_duration is None else np.timedelta64(forecast_duration)
-        )
         self.dim_name = dim_name
 
     def __iter__(self):
-        for xr_data in self.source_datapipe:
-            # Get most recent time in data
-            # Select the history that goes back that far
-            # TODO Add support for NWP, whose time should go into the future, although NWP target time might already do that
-            latest_time_idx = pd.DatetimeIndex(xr_data[self.dim_name].values).get_loc(
-                pd.Timestamp.utcnow(), method="pad"
-            )
-            latest_time = xr_data[self.dim_name].values[latest_time_idx]
-            xr_data = xr_data.sel(
-                {
-                    self.dim_name: slice(
-                        latest_time - self.history_duration,
-                        latest_time
-                        if self.forecast_duration is not None
-                        else latest_time + self.forecast_duration,
-                    )
-                }
+        for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
+            xr_data = xr_data.sel({
+                self.dim_name: slice(
+                    t0 - self.history_duration,
+                    t0
+                )}
             )
             yield xr_data

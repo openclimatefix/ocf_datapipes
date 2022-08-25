@@ -20,7 +20,7 @@ from ocf_datapipes.select import (
     SelectTimeSlice,
 )
 from ocf_datapipes.transform.xarray import (
-    AddNWPTargetTime,
+    ConvertToNWPTargetTime,
     AddT0IdxAndSamplePeriodDuration,
     ConvertSatelliteToInt8,
     EnsureNPVSystemsPerExample,
