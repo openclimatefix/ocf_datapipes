@@ -1,5 +1,5 @@
 from .add_contiguous_time_periods import (
-    AddContiguousT0TimePeriodsIterDataPipe as AddContiguousT0TimePeriods,
+    GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )
 from .add_nwp_target_times import AddNWPTargetTimeIterDataPipe as AddNWPTargetTime
 from .add_t0idx_and_sample_period_duration import (

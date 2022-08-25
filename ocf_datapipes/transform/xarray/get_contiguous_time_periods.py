@@ -7,7 +7,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("add_contiguous_time_periods")
-class AddContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
+class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
     def __init__(
         self, source_dp: IterDataPipe, history_duration, forecast_duration, sample_period_duration
     ):

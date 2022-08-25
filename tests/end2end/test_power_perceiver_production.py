@@ -10,7 +10,7 @@ from ocf_datapipes.transform.numpy import (
     SaveT0Time,
 )
 from ocf_datapipes.transform.xarray import (
-    AddContiguousT0TimePeriods,
+    GetContiguousT0TimePeriods,
     ConvertSatelliteToInt8,
     Downsample,
     ReduceNumPVSystems,
