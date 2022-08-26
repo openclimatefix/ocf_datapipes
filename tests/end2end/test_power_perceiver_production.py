@@ -121,26 +121,26 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
     #####################################
 
     sat_dp = ConvertSatelliteToNumpyBatch(sat_dp, is_hrv=True)
-    sat_dp = MergeNumpyExamplesToBatch(sat_dp, n_examples_per_batch=4)
     sat_dp = ExtendTimestepsToFuture(
         sat_dp,
         forecast_duration=timedelta(hours=2),
         sample_period_duration=timedelta(minutes=5),
     )
+    sat_dp = MergeNumpyExamplesToBatch(sat_dp, n_examples_per_batch=4)
     pv_dp = ConvertPVToNumpyBatch(pv_dp)
-    pv_dp = MergeNumpyExamplesToBatch(pv_dp, n_examples_per_batch=4)
     pv_dp = ExtendTimestepsToFuture(
         pv_dp,
         forecast_duration=timedelta(hours=2),
         sample_period_duration=timedelta(minutes=5),
     )
+    pv_dp = MergeNumpyExamplesToBatch(pv_dp, n_examples_per_batch=4)
     gsp_dp = ConvertGSPToNumpyBatch(gsp_dp)
-    gsp_dp = MergeNumpyExamplesToBatch(gsp_dp, n_examples_per_batch=4)
     gsp_dp = ExtendTimestepsToFuture(
         gsp_dp,
         forecast_duration=timedelta(hours=8),
         sample_period_duration=timedelta(minutes=30),
     )
+    gsp_dp = MergeNumpyExamplesToBatch(gsp_dp, n_examples_per_batch=4)
     # Don't need to do NWP as it does go into the future
     nwp_dp = ConvertNWPToNumpyBatch(nwp_dp)
     nwp_dp = MergeNumpyExamplesToBatch(nwp_dp, n_examples_per_batch=4)
@@ -160,5 +160,17 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
 
     batch = next(iter(combined_dp))
 
-    assert len(batch[BatchKey.hrvsatellite_time_utc]) == 37
+    assert len(batch[BatchKey.hrvsatellite_time_utc]) == 4
+    assert len(batch[BatchKey.hrvsatellite_time_utc][0]) == 37
+    assert len(batch[BatchKey.nwp_target_time_utc][0]) == 6
+    assert len(batch[BatchKey.nwp_init_time_utc][0]) == 6
+    assert len(batch[BatchKey.pv_time_utc][0]) == 37
+    assert len(batch[BatchKey.gsp_time_utc][0]) == 21
+
+    assert batch[BatchKey.hrvsatellite_actual].shape == (4, 13, 1, 128, 256)
+    assert batch[BatchKey.nwp].shape == (4, 6, 1, 4, 4)
+    assert batch[BatchKey.pv].shape == (4, 13, 8)
+    assert batch[BatchKey.gsp].shape == (4, 5, 1)
+    assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 128, 256)
+
 
