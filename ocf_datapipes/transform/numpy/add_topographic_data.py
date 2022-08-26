@@ -3,13 +3,13 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.consts import BatchKey
-from ocf_datapipes.utils import NumpyBatch
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 
 @functional_datapipe("add_topographic_data")
 class AddTopographicDataIterDataPipe(IterDataPipe):
     def __init__(self, source_dp: IterDataPipe, topo_dp: IterDataPipe):
+        super().__init__()
         self.source_dp = source_dp
         self.topo_dp = topo_dp
 
@@ -40,7 +40,9 @@ class AddTopographicDataIterDataPipe(IterDataPipe):
                     hrvsatellite_surface_height = _get_surface_height_for_satellite(
                         surface_height=topo, satellite=hrvsatellite_data_array
                     )
-                    np_batch[BatchKey.hrvsatellite_surface_height] = hrvsatellite_surface_height
+                    np_batch[BatchKey.hrvsatellite_surface_height] = np.nan_to_num(
+                        hrvsatellite_surface_height, nan=0.0
+                    )
                 yield np_batch
 
 
@@ -55,10 +57,17 @@ def _get_surface_height_for_satellite(
         msg = "Satellite imagery must start in the top-left!"
         assert satellite_example.y_geostationary[0] > satellite_example.y_geostationary[-1], msg
         assert satellite_example.x_geostationary[0] < satellite_example.x_geostationary[-1], msg
-
-        satellite_example = satellite_example.rename(
-            {"y_geostationary": "y", "x_geostationary": "x"}
-        ).rename("sat")
+        # This is needed to get the x and y to be dimension coordinates for the combine_by_coords to work
+        satellite_example = (
+            satellite_example.rename("sat")
+            .reset_coords(["x_geostationary", "y_geostationary"])
+            .swap_dims({"y": "y_geostationary", "x": "x_geostationary"})
+            .to_array()
+            .squeeze()
+            .reset_coords("variable", drop=True)
+            .rename({"y_geostationary": "y", "x_geostationary": "x"})
+            .rename("sat")
+        )
         surface_height_for_example = surface_height.sel(
             y=slice(
                 satellite_example.y[0],

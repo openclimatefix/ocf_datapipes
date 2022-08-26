@@ -1,0 +1,202 @@
+{
+    "metadata": {
+        ".zattrs": {},
+        ".zgroup": {
+            "zarr_format": 2
+        },
+        "data/.zarray": {
+            "chunks": [
+                7,
+                223,
+                461
+            ],
+            "compressor": {
+                "id": "bz2",
+                "level": 5
+            },
+            "dtype": "<i2",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                25,
+                891,
+                1843
+            ],
+            "zarr_format": 2
+        },
+        "data/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "y",
+                "x"
+            ],
+            "_satpy_id": "!!python/object/apply:satpy.dataset.dataid._unpickle\n- calibration:\n    enum:\n    - reflectance\n    - brightness_temperature\n    - radiance\n    - counts\n    transitive: true\n  modifiers:\n    default: !!python/object/new:satpy.dataset.dataid.ModifierTuple\n    - !!python/tuple []\n    type: !!python/name:satpy.dataset.dataid.ModifierTuple ''\n  name:\n    required: true\n  resolution:\n    transitive: false\n  wavelength:\n    type: !!python/name:satpy.dataset.dataid.WavelengthRange ''\n- calibration: reflectance\n  modifiers: !!python/object/new:satpy.dataset.dataid.ModifierTuple\n  - !!python/tuple []\n  name: HRV\n  resolution: 1000.134348869\n  wavelength: !!python/object/new:satpy.dataset.dataid.WavelengthRange\n  - 0.5\n  - 0.7\n  - 0.9\n  - \"\\xB5m\"\n",
+            "ancillary_variables": [],
+            "area": "msg_seviri_rss_1km:\n  description: MSG SEVIRI Rapid Scanning Service area definition with 1 km resolution\n  projection:\n    proj: geos\n    lon_0: 9.5\n    h: 35785831\n    x_0: 0\n    y_0: 0\n    a: 6378169\n    rf: 295.488065897014\n    no_defs: null\n    type: crs\n  shape:\n    height: 891\n    width: 1843\n  area_extent:\n    lower_left_xy: [28503.828942775726, 5088183.4998726845]\n    upper_right_xy: [-1814743.776023388, 4197063.795030117]\n    units: m\n",
+            "calibration": "reflectance",
+            "coordinates": "x_osgb y_osgb",
+            "georef_offset_corrected": "True",
+            "modifiers": [],
+            "name": "HRV",
+            "orbital_parameters": "projection_altitude: 35785831.0\nprojection_latitude: 0.0\nprojection_longitude: 9.5\nsatellite_actual_altitude: 35785318.36137774\nsatellite_actual_latitude: 0.93420926835795\nsatellite_actual_longitude: 9.32427158542414\nsatellite_nominal_latitude: 0.0\nsatellite_nominal_longitude: 9.5\n",
+            "platform_name": "Meteosat-10",
+            "reader": "seviri_l1b_native",
+            "resolution": 1000.134348869,
+            "sensor": "seviri",
+            "standard_name": "toa_bidirectional_reflectance",
+            "sun_earth_distance_correction_applied": "True",
+            "sun_earth_distance_correction_factor": 1.0282367454433767,
+            "wavelength": [
+                0.5,
+                0.7,
+                0.9,
+                "\u00b5m"
+            ]
+        },
+        "time/.zarray": {
+            "chunks": [
+                25
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<i8",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                25
+            ],
+            "zarr_format": 2
+        },
+        "time/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time"
+            ],
+            "calendar": "proleptic_gregorian",
+            "units": "nanoseconds since 1970-01-01"
+        },
+        "x/.zarray": {
+            "chunks": [
+                1843
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                1843
+            ],
+            "zarr_format": 2
+        },
+        "x/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "x"
+            ],
+            "coordinate_reference_system": "geostationary",
+            "units": "meter"
+        },
+        "x_osgb/.zarray": {
+            "chunks": [
+                891,
+                1843
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                891,
+                1843
+            ],
+            "zarr_format": 2
+        },
+        "x_osgb/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "y",
+                "x"
+            ],
+            "coordinate_reference_system": "OSGB",
+            "name": "Easting",
+            "units": "meter"
+        },
+        "y/.zarray": {
+            "chunks": [
+                891
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                891
+            ],
+            "zarr_format": 2
+        },
+        "y/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "y"
+            ],
+            "coordinate_reference_system": "geostationary",
+            "units": "meter"
+        },
+        "y_osgb/.zarray": {
+            "chunks": [
+                891,
+                1843
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                891,
+                1843
+            ],
+            "zarr_format": 2
+        },
+        "y_osgb/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "y",
+                "x"
+            ],
+            "coordinate_reference_system": "OSGB",
+            "name": "Northing",
+            "units": "meter"
+        }
+    },
+    "zarr_consolidated_format": 1
+}

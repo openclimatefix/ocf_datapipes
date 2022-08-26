@@ -42,7 +42,6 @@ def open_sat_data(
     elif "channel" not in dataset:
         # This is HRV version 3, which doesn't have a channels dim.  So add one.
         dataset = dataset.expand_dims(dim={"channel": ["HRV"]}, axis=1)
-
     # Rename coords to be more explicit about exactly what some coordinates hold:
     # Note that `rename` renames *both* the coordinates and dimensions, and keeps
     # the connection between the dims and coordinates, so we don't have to manually
@@ -65,6 +64,7 @@ def open_sat_data(
     assert data_array.x_osgb[0, 0] < data_array.x_osgb[0, -1]
 
     # Sanity checks!
+    data_array = data_array.transpose("time_utc", "channel", "y_geostationary", "x_geostationary")
     assert data_array.dims == ("time_utc", "channel", "y_geostationary", "x_geostationary")
     datetime_index = pd.DatetimeIndex(data_array.time_utc)
     assert datetime_index.is_unique
@@ -78,10 +78,10 @@ def open_sat_data(
 
 
 @functional_datapipe("open_satellite")
-class OpenSatelliteDataPipe(IterDataPipe):
-    def __int__(self, zarr_path: Union[Path, str]) -> None:
-        super().__int__()
+class OpenSatelliteIterDataPipe(IterDataPipe):
+    def __init__(self, zarr_path: Union[Path, str]):
         self.zarr_path = zarr_path
+        super().__init__()
 
     def __iter__(self) -> xr.DataArray:
         data: xr.DataArray = open_sat_data(zarr_path=self.zarr_path)

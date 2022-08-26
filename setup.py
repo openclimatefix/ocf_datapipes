@@ -19,7 +19,6 @@ setup(
     install_requires=install_requires,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    package_data={"config": ["ocf_datapipes/config/*.yaml"]},
     include_package_data=True,
     packages=find_packages(),
 )

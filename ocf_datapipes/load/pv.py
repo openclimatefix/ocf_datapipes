@@ -10,6 +10,8 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
+
 _log = logging.getLogger(__name__)
 
 
@@ -17,20 +19,16 @@ _log = logging.getLogger(__name__)
 class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     def __init__(
         self,
-        pv_power_filename: str,
-        pv_metadata_filename: str,
-        n_pv_systems_per_example: int,
-        sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=5),
+        pv_power_filename: Union[str, Path],
+        pv_metadata_filename: Union[str, Path],
     ):
         super().__init__()
         self.pv_power_filename = pv_power_filename
         self.pv_metadata_filename = pv_metadata_filename
-        self.n_pv_systems_per_example = n_pv_systems_per_example
-        self.sample_period_duration = sample_period_duration
 
     def __iter__(self):
         data: xr.DataArray = load_everything_into_ram(
-            self.pv_power_filename, self.pv_metadata_filename, self.sample_period_duration
+            self.pv_power_filename, self.pv_metadata_filename
         )
         while True:
             yield data
@@ -45,9 +43,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         pass
 
 
-def load_everything_into_ram(
-    pv_power_filename, pv_metadata_filename, sample_period_duration
-) -> xr.DataArray:
+def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
     pv_power_watts, pv_capacity_wp, pv_system_row_number = _load_pv_power_watts_and_capacity_wp(
@@ -66,7 +62,6 @@ def load_everything_into_ram(
         x_osgb=pv_metadata.x_osgb.astype(np.float32),
         capacity_wp=pv_capacity_wp,
         pv_system_row_number=pv_system_row_number,
-        sample_period_duration=sample_period_duration,
     )
 
     # Sanity checks:
@@ -99,7 +94,14 @@ def _load_pv_power_watts_and_capacity_wp(
         pv_power_watts = pv_power_watts.astype(np.float32)
         del pv_power_ds
 
+    if "passiv" not in str(filename):
+        _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
+        pv_power_watts = (
+            pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
+        )
+
     pv_capacity_wp.index = [np.int32(col) for col in pv_capacity_wp.index]
+    pv_power_watts.columns = pv_power_watts.columns.astype(np.int64)
 
     # Create pv_system_row_number. We use the index of `pv_capacity_wp` because that includes
     # the PV system IDs for the entire dataset (independent of `start_date` and `end_date`).
@@ -115,11 +117,43 @@ def _load_pv_power_watts_and_capacity_wp(
         f" {len(pv_power_watts.columns)} PV power PV system IDs."
     )
 
+    pv_power_watts = pv_power_watts.clip(lower=0, upper=5e7)
+    pv_power_watts = _drop_pv_systems_which_produce_overnight(pv_power_watts)
+
+    # Resample to 5-minutely and interpolate up to 15 minutes ahead.
+    # TODO: Issue #74: Give users the option to NOT resample (because Perceiver IO
+    # doesn't need all the data to be perfectly aligned).
+    pv_power_watts = pv_power_watts.resample("5T").interpolate(method="time", limit=3)
+    pv_power_watts.dropna(axis="index", how="all", inplace=True)
+    pv_power_watts.dropna(axis="columns", how="all", inplace=True)
+
+    # Drop any PV systems whose PV capacity is too low:
+    PV_CAPACITY_THRESHOLD_W = 100
+    pv_systems_to_drop = pv_capacity_wp.index[pv_capacity_wp <= PV_CAPACITY_THRESHOLD_W]
+    pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
+    _log.info(
+        f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
+        f" {PV_CAPACITY_THRESHOLD_W}"
+    )
+    pv_power_watts.drop(columns=pv_systems_to_drop, inplace=True)
+
+    # Ensure that capacity and pv_system_row_num use the same PV system IDs as the power DF:
+    pv_system_ids = pv_power_watts.columns
+    pv_capacity_wp = pv_capacity_wp.loc[pv_system_ids]
+    pv_system_row_number = pv_system_row_number.loc[pv_system_ids]
+
+    _log.info(
+        "After filtering & resampling to 5 minutes:"
+        f" pv_power = {pv_power_watts.values.nbytes / 1e6:,.1f} MBytes."
+        f" {len(pv_power_watts)} PV power datetimes."
+        f" {len(pv_power_watts.columns)} PV power PV system IDs."
+    )
+
     # Sanity checks:
     assert not pv_power_watts.columns.duplicated().any()
     assert not pv_power_watts.index.duplicated().any()
     assert np.isfinite(pv_capacity_wp).all()
-    assert (pv_capacity_wp > 0).all()
+    assert (pv_capacity_wp >= 0).all()
     assert np.isfinite(pv_system_row_number).all()
     assert np.array_equal(pv_power_watts.columns, pv_capacity_wp.index)
     return pv_power_watts, pv_capacity_wp, pv_system_row_number
@@ -187,6 +221,11 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
     pv_metadata.dropna(subset=["longitude", "latitude"], how="any", inplace=True)
 
     _log.debug(f"Found {len(pv_metadata)} PV systems with locations")
+
+    pv_metadata["x_osgb"], pv_metadata["y_osgb"] = lat_lon_to_osgb(
+        latitude=pv_metadata["latitude"], longitude=pv_metadata["longitude"]
+    )
+
     return pv_metadata
 
 
@@ -207,7 +246,6 @@ def _put_pv_data_into_an_xr_dataarray(
     x_osgb: pd.Series,
     capacity_wp: pd.Series,
     pv_system_row_number: pd.Series,
-    sample_period_duration: datetime.timedelta,
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
 
@@ -239,5 +277,23 @@ def _put_pv_data_into_an_xr_dataarray(
     )
     # Sample period duration is required so PVDownsample transform knows by how much
     # to change the pv_t0_idx:
-    data_array.attrs["sample_period_duration"] = sample_period_duration
     return data_array
+
+
+def _drop_pv_systems_which_produce_overnight(pv_power_watts: pd.DataFrame) -> pd.DataFrame:
+    """Drop systems which produce power over night.
+
+    Args:
+        pv_power_watts: Un-normalised.
+    """
+    # TODO: Of these bad systems, 24647, 42656, 42807, 43081, 51247, 59919
+    # might have some salvagable data?
+    NIGHT_YIELD_THRESHOLD = 0.4
+    night_hours = [22, 23, 0, 1, 2]
+    pv_power_normalised = pv_power_watts / pv_power_watts.max()
+    night_mask = pv_power_normalised.index.hour.isin(night_hours)
+    pv_power_at_night_normalised = pv_power_normalised.loc[night_mask]
+    pv_above_threshold_at_night = (pv_power_at_night_normalised > NIGHT_YIELD_THRESHOLD).any()
+    bad_systems = pv_power_normalised.columns[pv_above_threshold_at_night]
+    _log.info(f"{len(bad_systems)} bad PV systems found and removed!")
+    return pv_power_watts.drop(columns=bad_systems)

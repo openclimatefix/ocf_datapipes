@@ -6,8 +6,8 @@ import pvlib
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.consts import BatchKey
-from ocf_datapipes.geospatial import osgb_to_lat_lon
+from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7

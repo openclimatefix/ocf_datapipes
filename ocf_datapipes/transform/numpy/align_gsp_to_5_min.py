@@ -3,14 +3,14 @@ import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.consts import BatchKey
-from ocf_datapipes.utils import NumpyBatch, datetime64_to_float, stack_np_examples_into_batch
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+from ocf_datapipes.utils.utils import datetime64_to_float, stack_np_examples_into_batch
 
 
 @functional_datapipe("align_gsp_to_5_min")
 class AlignGSPto5MinIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, batch_key_for_5_min_datetimes: str):
-        self.source_dp = source_dp
+    def __init__(self, source_datapipe: IterDataPipe, batch_key_for_5_min_datetimes: BatchKey):
+        self.source_dp = source_datapipe
         self.batch_key_for_5_min_datetimes = batch_key_for_5_min_datetimes
 
     def __iter__(self):
