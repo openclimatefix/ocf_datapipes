@@ -1,7 +1,9 @@
 import torchdata.datapipes as dp
 from torchdata.datapipes.iter import IterDataPipe
+import xarray
+xarray.set_options(keep_attrs=True)
 
-from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.utils.consts import BatchKey, SAT_MEAN, SAT_STD, NWP_STD, NWP_MEAN
 from ocf_datapipes.transform.numpy import (
     AddSunPosition,
     AddTopographicData,
@@ -31,6 +33,7 @@ from ocf_datapipes.transform.xarray import (
     ConvertSatelliteToInt8,
     EnsureNPVSystemsPerExample,
     ReprojectTopography,
+Normalize,
 Downsample
 )
 from datetime import timedelta
@@ -52,7 +55,9 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
     # Equivalent to PP's loading and filtering methods
     #
     #####################################
-
+    # Normalize GSP and PV on whole dataset here
+    pv_dp = Normalize(passiv_dp, normalize_fn=lambda x: x / x.capacity_wp)
+    gsp_dp = Normalize(gsp_dp, normalize_fn=lambda x: x / x.capacity_mwp)
     # TODO Do the PV filtering here
     topo_dp = ReprojectTopography(topo_dp)
     sat_dp = ConvertSatelliteToInt8(sat_hrv_dp)
@@ -60,7 +65,7 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
         sat_dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
     )
     pv_dp = AddT0IdxAndSamplePeriodDuration(
-        passiv_dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        pv_dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
     )
     gsp_dp = AddT0IdxAndSamplePeriodDuration(
         gsp_dp, sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
@@ -112,7 +117,9 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
                                 history_duration=timedelta(hours=1), )
     gsp_dp = GSPIterator(gsp_dp)
 
-    # TODO Normalize the data
+    sat_dp = Normalize(sat_dp, mean=SAT_MEAN["HRV"]/4, std=SAT_STD["HRV"]/4)
+    nwp_dp = Normalize(nwp_dp, mean=NWP_MEAN, std=NWP_STD)
+    topo_dp = Normalize(topo_dp, calculate_mean_std_from_example=True)
 
     ####################################
     #
