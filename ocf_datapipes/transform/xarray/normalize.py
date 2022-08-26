@@ -5,7 +5,15 @@ from torchdata.datapipes.iter import IterDataPipe
 
 @functional_datapipe("normalize")
 class NormalizeIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, mean = None, std = None, max_value = None, calculate_mean_std_from_example: bool = False, normalize_fn =lambda x: x / x.capacity_wp):
+    def __init__(
+        self,
+        source_dp: IterDataPipe,
+        mean=None,
+        std=None,
+        max_value=None,
+        calculate_mean_std_from_example: bool = False,
+        normalize_fn=lambda x: x / x.capacity_wp,
+    ):
         self.source_dp = source_dp
         self.mean = mean
         self.std = std

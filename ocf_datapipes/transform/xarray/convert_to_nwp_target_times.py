@@ -40,7 +40,7 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
 
             # For the 'future' portion of the example, replace all the NWP
             # init times with the NWP init time most recent to t0.
-            init_times[self.t0_idx:] = init_time_t0
+            init_times[self.t0_idx :] = init_time_t0
 
             steps = target_times - init_times
 
