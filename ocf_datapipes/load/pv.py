@@ -21,16 +21,14 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self,
         pv_power_filename: Union[str, Path],
         pv_metadata_filename: Union[str, Path],
-        sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=5),
     ):
         super().__init__()
         self.pv_power_filename = pv_power_filename
         self.pv_metadata_filename = pv_metadata_filename
-        self.sample_period_duration = sample_period_duration
 
     def __iter__(self):
         data: xr.DataArray = load_everything_into_ram(
-            self.pv_power_filename, self.pv_metadata_filename, self.sample_period_duration
+            self.pv_power_filename, self.pv_metadata_filename
         )
         while True:
             yield data
@@ -46,7 +44,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
 
 
 def load_everything_into_ram(
-    pv_power_filename, pv_metadata_filename, sample_period_duration
+    pv_power_filename, pv_metadata_filename
 ) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
@@ -66,7 +64,6 @@ def load_everything_into_ram(
         x_osgb=pv_metadata.x_osgb.astype(np.float32),
         capacity_wp=pv_capacity_wp,
         pv_system_row_number=pv_system_row_number,
-        sample_period_duration=sample_period_duration,
     )
 
     # Sanity checks:
@@ -251,7 +248,6 @@ def _put_pv_data_into_an_xr_dataarray(
     x_osgb: pd.Series,
     capacity_wp: pd.Series,
     pv_system_row_number: pd.Series,
-    sample_period_duration: datetime.timedelta,
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
 
@@ -283,7 +279,6 @@ def _put_pv_data_into_an_xr_dataarray(
     )
     # Sample period duration is required so PVDownsample transform knows by how much
     # to change the pv_t0_idx:
-    data_array.attrs["sample_period_duration"] = sample_period_duration
     return data_array
 
 
