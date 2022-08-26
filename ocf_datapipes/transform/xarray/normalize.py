@@ -23,7 +23,6 @@ class NormalizeIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         for xr_data in self.source_dp:
-            print(xr_data)
             if self.mean is not None and self.std is not None:
                 xr_data = xr_data - self.mean
                 xr_data = xr_data / self.std
@@ -35,5 +34,4 @@ class NormalizeIterDataPipe(IterDataPipe):
                 xr_data /= xr_data.std().item()
             else:
                 xr_data = self.normalize_fn(xr_data)
-            print(xr_data)
             yield xr_data

@@ -40,7 +40,7 @@ class AddTopographicDataIterDataPipe(IterDataPipe):
                     hrvsatellite_surface_height = _get_surface_height_for_satellite(
                         surface_height=topo, satellite=hrvsatellite_data_array
                     )
-                    np_batch[BatchKey.hrvsatellite_surface_height] = hrvsatellite_surface_height
+                    np_batch[BatchKey.hrvsatellite_surface_height] = np.nan_to_num(hrvsatellite_surface_height, nan=0.0)
                 yield np_batch
 
 

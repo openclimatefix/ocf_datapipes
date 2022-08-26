@@ -122,6 +122,38 @@ def _load_pv_power_watts_and_capacity_wp(
         f" {len(pv_power_watts.columns)} PV power PV system IDs."
     )
 
+    pv_power_watts = pv_power_watts.clip(lower=0, upper=5e7)
+    pv_power_watts = _drop_pv_systems_which_produce_overnight(pv_power_watts)
+
+    # Resample to 5-minutely and interpolate up to 15 minutes ahead.
+    # TODO: Issue #74: Give users the option to NOT resample (because Perceiver IO
+    # doesn't need all the data to be perfectly aligned).
+    pv_power_watts = pv_power_watts.resample("5T").interpolate(method="time", limit=3)
+    pv_power_watts.dropna(axis="index", how="all", inplace=True)
+    pv_power_watts.dropna(axis="columns", how="all", inplace=True)
+
+    # Drop any PV systems whose PV capacity is too low:
+    PV_CAPACITY_THRESHOLD_W = 100
+    pv_systems_to_drop = pv_capacity_wp.index[pv_capacity_wp <= PV_CAPACITY_THRESHOLD_W]
+    pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
+    _log.info(
+        f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
+        f" {PV_CAPACITY_THRESHOLD_W}"
+    )
+    pv_power_watts.drop(columns=pv_systems_to_drop, inplace=True)
+
+    # Ensure that capacity and pv_system_row_num use the same PV system IDs as the power DF:
+    pv_system_ids = pv_power_watts.columns
+    pv_capacity_wp = pv_capacity_wp.loc[pv_system_ids]
+    pv_system_row_number = pv_system_row_number.loc[pv_system_ids]
+
+    _log.info(
+        "After filtering & resampling to 5 minutes:"
+        f" pv_power = {pv_power_watts.values.nbytes / 1e6:,.1f} MBytes."
+        f" {len(pv_power_watts)} PV power datetimes."
+        f" {len(pv_power_watts.columns)} PV power PV system IDs."
+    )
+
     # Sanity checks:
     assert not pv_power_watts.columns.duplicated().any()
     assert not pv_power_watts.index.duplicated().any()
@@ -253,3 +285,22 @@ def _put_pv_data_into_an_xr_dataarray(
     # to change the pv_t0_idx:
     data_array.attrs["sample_period_duration"] = sample_period_duration
     return data_array
+
+
+def _drop_pv_systems_which_produce_overnight(pv_power_watts: pd.DataFrame) -> pd.DataFrame:
+    """Drop systems which produce power over night.
+
+    Args:
+        pv_power_watts: Un-normalised.
+    """
+    # TODO: Of these bad systems, 24647, 42656, 42807, 43081, 51247, 59919
+    # might have some salvagable data?
+    NIGHT_YIELD_THRESHOLD = 0.4
+    night_hours = [22, 23, 0, 1, 2]
+    pv_power_normalised = pv_power_watts / pv_power_watts.max()
+    night_mask = pv_power_normalised.index.hour.isin(night_hours)
+    pv_power_at_night_normalised = pv_power_normalised.loc[night_mask]
+    pv_above_threshold_at_night = (pv_power_at_night_normalised > NIGHT_YIELD_THRESHOLD).any()
+    bad_systems = pv_power_normalised.columns[pv_above_threshold_at_night]
+    _log.info(f"{len(bad_systems)} bad PV systems found and removed!")
+    return pv_power_watts.drop(columns=bad_systems)
