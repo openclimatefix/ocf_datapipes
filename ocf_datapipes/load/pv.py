@@ -43,9 +43,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         pass
 
 
-def load_everything_into_ram(
-    pv_power_filename, pv_metadata_filename
-) -> xr.DataArray:
+def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
     pv_power_watts, pv_capacity_wp, pv_system_row_number = _load_pv_power_watts_and_capacity_wp(
