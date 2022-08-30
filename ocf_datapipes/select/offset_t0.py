@@ -21,4 +21,3 @@ class OffsetT0IterDataPipe(IterDataPipe):
         for xr_data in self.source_datapipe:
 
             yield xr_data
-
