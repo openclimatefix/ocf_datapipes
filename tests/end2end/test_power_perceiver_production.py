@@ -140,7 +140,9 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
     )
     gsp_dp = GSPIterator(gsp_dp)
 
-    sat_dp = Normalize(sat_dp, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4).map(lambda x: x.resample(time="5T").interpolate("linear")) # Interplate to 5 minutes incase its 15 minutes
+    sat_dp = Normalize(sat_dp, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4).map(
+        lambda x: x.resample(time="5T").interpolate("linear")
+    )  # Interplate to 5 minutes incase its 15 minutes
     nwp_dp = Normalize(nwp_dp, mean=NWP_MEAN, std=NWP_STD)
     topo_dp = Normalize(topo_dp, calculate_mean_std_from_example=True)
 
@@ -284,7 +286,9 @@ def test_power_perceiver_production_functional(sat_hrv_dp, passiv_dp, topo_dp, g
             history_duration=timedelta(hours=1),
         )
         .normalize(mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4)
-        .map(lambda x: x.resample(time="5T").interpolate("linear")) # Interplate to 5 minutes incase its 15 minutes
+        .map(
+            lambda x: x.resample(time="5T").interpolate("linear")
+        )  # Interplate to 5 minutes incase its 15 minutes
         .convert_satellite_to_numpy_batch(is_hrv=True)
         .extend_timesteps_to_future(
             forecast_duration=timedelta(hours=2),
