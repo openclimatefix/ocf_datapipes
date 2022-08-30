@@ -9,13 +9,16 @@ from torchdata.datapipes.iter import IterDataPipe
 class OffsetT0IterDataPipe(IterDataPipe):
     def __init__(
         self,
-        source_dp: IterDataPipe,
+        source_datapipe: IterDataPipe,
         max_t0_offset_minutes: Union[float, int],
         min_t0_offset_minutes: Union[float, int] = 0.0,
     ):
-        self.source_dp = source_dp
+        self.source_datapipe = source_datapipe
         self.max_t0_offset_minutes = max_t0_offset_minutes
         self.min_t0_offset_minutes = min_t0_offset_minutes
 
     def __iter__(self):
-        pass
+        for xr_data in self.source_datapipe:
+
+            yield xr_data
+
