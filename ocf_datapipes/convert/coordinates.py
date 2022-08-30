@@ -1,6 +1,12 @@
-from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
-from ocf_datapipes.utils.geospatial import lat_lon_to_osgb, osgb_to_lat_lon, load_geostationary_area_definition_and_transform_latlon
+from torchdata.datapipes.iter import IterDataPipe
+
+from ocf_datapipes.utils.geospatial import (
+    lat_lon_to_osgb,
+    load_geostationary_area_definition_and_transform_latlon,
+    osgb_to_lat_lon,
+)
+
 
 @functional_datapipe("convert_latlon_to_osgb")
 class ConvertLatLonToOSGBIterDataPipe(IterDataPipe):
