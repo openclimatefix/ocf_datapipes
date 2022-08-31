@@ -1,13 +1,18 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
+from typing import Iterable, Union
+
 import xarray as xr
-from typing import Union, Iterable
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("check_vars_and_dims")
 class CheckVarsAndDimsIterDataPipe(IterDataPipe):
-
-    def __init__(self, source_datapipe: IterDataPipe, expected_dimensions: Iterable[str], expected_data_vars: Iterable[str]):
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        expected_dimensions: Iterable[str],
+        expected_data_vars: Iterable[str],
+    ):
         """
         Checks data vars and dimensions for validation
 
@@ -27,7 +32,10 @@ class CheckVarsAndDimsIterDataPipe(IterDataPipe):
             xr_data = validate_coords(xr_data, self.expected_dimensions)
             yield xr_data
 
-def validate_data_vars(xr_data: Union[xr.DataArray, xr.Dataset], expected_data_vars: Iterable[str]) -> Union[xr.DataArray, xr.Dataset]:
+
+def validate_data_vars(
+    xr_data: Union[xr.DataArray, xr.Dataset], expected_data_vars: Iterable[str]
+) -> Union[xr.DataArray, xr.Dataset]:
     """
     Validate the data variables in the Xarray dataset
 
@@ -40,12 +48,13 @@ def validate_data_vars(xr_data: Union[xr.DataArray, xr.Dataset], expected_data_v
     """
     data_var_names = xr_data.data_vars
     for data_var in expected_data_vars:
-        assert (
-                data_var in data_var_names
-        ), f"{data_var} is not in all data_vars ({data_var_names})!"
+        assert data_var in data_var_names, f"{data_var} is not in all data_vars ({data_var_names})!"
     return xr_data
 
-def validate_coords(xr_data: Union[xr.DataArray, xr.Dataset], expected_dimensions: Iterable[str]) -> Union[xr.DataArray, xr.Dataset]:
+
+def validate_coords(
+    xr_data: Union[xr.DataArray, xr.Dataset], expected_dimensions: Iterable[str]
+) -> Union[xr.DataArray, xr.Dataset]:
     """
     Validates that the coordinates exist and are not 0-length in the dataset
 
@@ -60,7 +69,11 @@ def validate_coords(xr_data: Union[xr.DataArray, xr.Dataset], expected_dimension
         coord = xr_data.coords[f"{dim}"]
         assert len(coord) > 0, f"{dim} is empty!"
     return xr_data
-def validate_dims(xr_data: Union[xr.DataArray, xr.Dataset], expected_dimensions: Iterable[str]) -> Union[xr.DataArray, xr.Dataset]:
+
+
+def validate_dims(
+    xr_data: Union[xr.DataArray, xr.Dataset], expected_dimensions: Iterable[str]
+) -> Union[xr.DataArray, xr.Dataset]:
     """
     Validate the dimensions exist
 
@@ -71,11 +84,7 @@ def validate_dims(xr_data: Union[xr.DataArray, xr.Dataset], expected_dimensions:
     Returns:
         The original Xarray Dataset
     """
-    assert all(
-        dim in expected_dimensions
-        for dim in xr_data.dims
-        if dim != "example"
-    ), (
+    assert all(dim in expected_dimensions for dim in xr_data.dims if dim != "example"), (
         f"dims is wrong! "
         f"dims is {xr_data.dims}. "
         f"But we expected {expected_dimensions}."
