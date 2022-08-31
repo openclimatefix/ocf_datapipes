@@ -56,7 +56,7 @@ class CheckNotEqualToIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         value: int,
         dataset_name: Optional[str] = None,
-        raise_error: bool = true,
+        raise_error: bool = True,
     ):
         self.source_datapipe = source_datapipe
         self.value = value
