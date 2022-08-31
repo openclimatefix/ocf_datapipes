@@ -3,11 +3,13 @@ import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Mapper
+from torchdata.datapipes.utils import to_graph
 
 xarray.set_options(keep_attrs=True)
 
 from datetime import timedelta
 
+from ocf_datapipes.experimental import SetSystemIDsToOne
 from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
 from ocf_datapipes.convert import (
     ConvertGSPToNumpyBatch,
@@ -287,7 +289,7 @@ def test_power_perceiver_production_functional(sat_hrv_dp, passiv_dp, topo_dp, g
         )
         .normalize(mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4)
         .map(
-            lambda x: x.resample(time="5T").interpolate("linear")
+            lambda x: x.resample(time_utc="5T").interpolate("linear")
         )  # Interplate to 5 minutes incase its 15 minutes
         .convert_satellite_to_numpy_batch(is_hrv=True)
         .extend_timesteps_to_future(
@@ -336,6 +338,7 @@ def test_power_perceiver_production_functional(sat_hrv_dp, passiv_dp, topo_dp, g
         .add_sun_position(modality_name="gsp_5_min")
         .add_sun_position(modality_name="nwp_target_time")
         .add_topographic_data(topo_dp)
+        .set_system_ids_to_one()
     )
 
     batch = next(iter(combined_dp))

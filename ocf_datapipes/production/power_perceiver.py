@@ -3,11 +3,12 @@ import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Mapper
-from torchdata.datapipes.utils import to_graph
 
 xarray.set_options(keep_attrs=True)
 
 from datetime import timedelta
+
+from ocf_datapipes.experimental import SetSystemIDsToOne
 
 from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
@@ -227,6 +228,7 @@ def power_perceiver_production_datapipe(configuration_filename):
         .add_sun_position(modality_name="gsp_5_min")
         .add_sun_position(modality_name="nwp_target_time")
         .add_topographic_data(topo_dp)
+        .set_system_ids_to_one()
     )
 
     return combined_dp
