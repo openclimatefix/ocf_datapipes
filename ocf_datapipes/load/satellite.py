@@ -68,7 +68,6 @@ def open_sat_data(
     assert data_array.x_osgb[0, 0] < data_array.x_osgb[0, -1]
 
     # Sanity checks!
-    print(data_array)
     data_array = data_array.transpose("time_utc", "channel", "y_geostationary", "x_geostationary")
     assert data_array.dims == ("time_utc", "channel", "y_geostationary", "x_geostationary")
     datetime_index = pd.DatetimeIndex(data_array.time_utc)
