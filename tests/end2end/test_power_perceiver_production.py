@@ -191,6 +191,7 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
     combined_dp = AddSunPosition(combined_dp, modality_name="gsp_5_min")
     combined_dp = AddSunPosition(combined_dp, modality_name="nwp_target_time")
     combined_dp = AddTopographicData(combined_dp, topo_dp)
+    combined_dp = SetSystemIDsToOne(combined_dp)
 
     batch = next(iter(combined_dp))
 
