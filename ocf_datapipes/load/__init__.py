@@ -1,4 +1,4 @@
-# from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
+from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
 from .gsp import OpenGSPIterDataPipe as OpenGSP
 from .nwp import OpenNWPIterDataPipe as OpenNWP
 from .pv import OpenPVFromDBIterDataPipe as OpenPVFromDB
