@@ -6,12 +6,27 @@ import numpy as np
 
 @functional_datapipe("check_nans")
 class CheckNaNsIterDataPipe(IterDataPipe):
+    """ Checks, and optionally fills, NaNs in Xarray Dataset"""
     def __init__(self, source_datapipe: IterDataPipe, variable_name: str = None, fill_nans: bool = False):
+        """
+        Checks and optionally fills NaNs in the data
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray Datasets
+            variable_name: Optional variable name for debugging
+            fill_nans: Whether to fill NaNs with 0 or not
+        """
         self.source_datapipe = source_datapipe
         self.variable_name = variable_name
         self.fill_nans = fill_nans
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        """
+        Checks for NaNs in data
+
+        Returns:
+            Original Xarray Dataset, after validation, and potentially with NaNs filled
+        """
         for xr_data in self.source_datapipe:
             if self.fill_nans:
                 xr_data = check_nan_and_fill_warning(data=xr_data, variable_name=self.variable_name)
