@@ -20,6 +20,8 @@ import git
 import numpy as np
 import pandas as pd
 from nowcasting_datamodel.models.pv import providers, pv_output, solar_sheffield_passiv
+from pathy import Pathy
+from pydantic import BaseModel, Field, root_validator, validator
 
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
@@ -28,12 +30,14 @@ from ocf_datapipes.utils.consts import (
     NWP_VARIABLE_NAMES,
     SAT_VARIABLE_NAMES,
 )
+from ocf_datapipes.utils.split import split
 
 IMAGE_SIZE_PIXELS = 64
 IMAGE_SIZE_PIXELS_FIELD = Field(
     IMAGE_SIZE_PIXELS, description="The number of pixels of the region of interest."
 )
 METERS_PER_PIXEL_FIELD = Field(2000, description="The number of meters per pixel.")
+METERS_PER_ROI = Field(128_000, description="The number of meters of region of interest.")
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +128,8 @@ class DataSourceMixin(Base):
 class TimeResolutionMixin(Base):
     """Time resolution mix in"""
 
-    sample_period_minutes: int = Field(
+    # TODO: Issue #584: Rename to `sample_period_minutes`
+    time_resolution_minutes: int = Field(
         5,
         description="The temporal resolution (in minutes) of the satellite images."
         "Note that this needs to be divisible by 5.",
@@ -206,9 +211,8 @@ class PV(DataSourceMixin, StartEndDatetimeMixin):
         description="The number of PV systems samples per example. "
         "If there are less in the ROI then the data is padded with zeros. ",
     )
-    pv_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
-    pv_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
-    pv_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
+    pv_image_size_meters_height: int = METERS_PER_ROI
+    pv_image_size_meters_width: int = METERS_PER_ROI
     get_center: bool = Field(
         False,
         description="If the batches are centered on one PV system (or not). "
@@ -617,6 +621,14 @@ class Process(Base):
             " still produce valid examples.  For example, if a half-hourly DataSource is asked for"
             " an example with t0=12:05, history_minutes=60, forecast_minutes=60, then it will"
             " return data at 11:30, 12:00, 12:30, and 13:00."
+        ),
+    )
+    split_method: split.SplitMethod = Field(
+        split.SplitMethod.DAY_RANDOM_TEST_DATE,
+        description=(
+            "The method used to split the t0 datetimes into train, validation and test sets."
+            " If the split method produces no t0 datetimes for any split_name, then"
+            " n_<split_name>_batches must also be set to 0."
         ),
     )
 

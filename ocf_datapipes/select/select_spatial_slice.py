@@ -6,6 +6,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
 
 
 @functional_datapipe("select_spatial_slice_pixels")
@@ -133,7 +134,7 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     y_dim_name="y_geostationary",
 ) -> Location:
     """Return x and y index location of pixel at center of region of interest."""
-    _osgb_to_geostationary = _load_geostationary_area_definition_and_transform(xr_data)
+    _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
     center_geostationary_tuple = _osgb_to_geostationary(xx=center_osgb.x, yy=center_osgb.y)
     center_geostationary = Location(
         x=center_geostationary_tuple[0], y=center_geostationary_tuple[1]
@@ -146,21 +147,3 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
         np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
     )
     return Location(x=x_index_at_center, y=y_index_at_center)
-
-
-def _load_geostationary_area_definition_and_transform(xr_data):
-    # Only load these if using geostationary projection
-    import pyproj
-    import pyresample
-
-    from ocf_datapipes.utils.geospatial import OSGB36
-
-    area_definition_yaml = xr_data.attrs["area"]
-    geostationary_area_definition = pyresample.area_config.load_area_from_string(
-        area_definition_yaml
-    )
-    geostationary_crs = geostationary_area_definition.crs
-    osgb_to_geostationary = pyproj.Transformer.from_crs(
-        crs_from=OSGB36, crs_to=geostationary_crs
-    ).transform
-    return osgb_to_geostationary

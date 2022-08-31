@@ -2,6 +2,10 @@
 OCF's DataPipe based dataloader for training and inference
 
 
+## Usage
+
+
+
 ## Adding a new DataPipe
 A general outline for a new DataPipe should go something
 like this:
@@ -25,3 +29,18 @@ For new datapipes being developed for new models or input modalities, to somewha
 development datapipes from the ones better tested for production purposes, there is an `ocf_datapipes.experimental` namespace for
 developing these more research-y datapipes. These datapipes might not, and probably are not, tested.
 Once the model(s) using them are in production, they should be upgraded to one of the other namespaces and have tests added.
+
+## Citation
+
+If you find this code useful, please cite the following:
+
+```
+@misc{ocf_datapipes,
+  author = {Bieker, Jacob, and Dudfield, Peter, and Kelly, Jack},
+  title = {OCF Datapipes},
+  year = {2022},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/openclimatefix/ocf_datapipes}},
+}
+```
