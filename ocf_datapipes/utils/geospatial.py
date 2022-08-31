@@ -41,3 +41,35 @@ def lat_lon_to_osgb(
     Return: 2-tuple of OSGB x, y.
     """
     return _lat_lon_to_osgb(xx=latitude, yy=longitude)
+
+
+def load_geostationary_area_definition_and_transform_osgb(xr_data):
+    # Only load these if using geostationary projection
+    import pyproj
+    import pyresample
+
+    area_definition_yaml = xr_data.attrs["area"]
+    geostationary_area_definition = pyresample.area_config.load_area_from_string(
+        area_definition_yaml
+    )
+    geostationary_crs = geostationary_area_definition.crs
+    osgb_to_geostationary = pyproj.Transformer.from_crs(
+        crs_from=OSGB36, crs_to=geostationary_crs
+    ).transform
+    return osgb_to_geostationary
+
+
+def load_geostationary_area_definition_and_transform_latlon(xr_data):
+    # Only load these if using geostationary projection
+    import pyproj
+    import pyresample
+
+    area_definition_yaml = xr_data.attrs["area"]
+    geostationary_area_definition = pyresample.area_config.load_area_from_string(
+        area_definition_yaml
+    )
+    geostationary_crs = geostationary_area_definition.crs
+    latlon_to_geostationary = pyproj.Transformer.from_crs(
+        crs_from=WGS84, crs_to=geostationary_crs
+    ).transform
+    return latlon_to_geostationary

@@ -293,6 +293,8 @@ class BatchKey(Enum):
     # batches, or the SunPosition np_batch_processor for the RawDataset.
     hrvsatellite_solar_azimuth = auto()
     hrvsatellite_solar_elevation = auto()
+    satellite_solar_azimuth = auto()
+    satellite_solar_elevation = auto()
     gsp_solar_azimuth = auto()
     gsp_solar_elevation = auto()
     gsp_5_min_solar_azimuth = auto()

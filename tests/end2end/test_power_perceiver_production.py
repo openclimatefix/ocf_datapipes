@@ -3,6 +3,7 @@ import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Mapper
+from torchdata.datapipes.utils import to_graph
 
 xarray.set_options(keep_attrs=True)
 
@@ -15,6 +16,7 @@ from ocf_datapipes.convert import (
     ConvertPVToNumpyBatch,
     ConvertSatelliteToNumpyBatch,
 )
+from ocf_datapipes.experimental import EnsureNNWPVariables, SetSystemIDsToOne
 from ocf_datapipes.select import (
     LocationPicker,
     SelectLiveT0Time,
@@ -140,7 +142,9 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
     )
     gsp_dp = GSPIterator(gsp_dp)
 
-    sat_dp = Normalize(sat_dp, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4)
+    sat_dp = Normalize(sat_dp, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4).map(
+        lambda x: x.resample(time_utc="5T").interpolate("linear")
+    )  # Interplate to 5 minutes incase its 15 minutes
     nwp_dp = Normalize(nwp_dp, mean=NWP_MEAN, std=NWP_STD)
     topo_dp = Normalize(topo_dp, calculate_mean_std_from_example=True)
 
@@ -187,6 +191,7 @@ def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_
     combined_dp = AddSunPosition(combined_dp, modality_name="gsp_5_min")
     combined_dp = AddSunPosition(combined_dp, modality_name="nwp_target_time")
     combined_dp = AddTopographicData(combined_dp, topo_dp)
+    combined_dp = SetSystemIDsToOne(combined_dp)
 
     batch = next(iter(combined_dp))
 
@@ -284,6 +289,9 @@ def test_power_perceiver_production_functional(sat_hrv_dp, passiv_dp, topo_dp, g
             history_duration=timedelta(hours=1),
         )
         .normalize(mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4)
+        .map(
+            lambda x: x.resample(time_utc="5T").interpolate("linear")
+        )  # Interplate to 5 minutes incase its 15 minutes
         .convert_satellite_to_numpy_batch(is_hrv=True)
         .extend_timesteps_to_future(
             forecast_duration=timedelta(hours=2),
@@ -331,6 +339,8 @@ def test_power_perceiver_production_functional(sat_hrv_dp, passiv_dp, topo_dp, g
         .add_sun_position(modality_name="gsp_5_min")
         .add_sun_position(modality_name="nwp_target_time")
         .add_topographic_data(topo_dp)
+        .set_system_ids_to_one()
+        .ensure_n_nwp_variables(num_variables=10)
     )
 
     batch = next(iter(combined_dp))
@@ -343,7 +353,7 @@ def test_power_perceiver_production_functional(sat_hrv_dp, passiv_dp, topo_dp, g
     assert len(batch[BatchKey.gsp_time_utc][0]) == 21
 
     assert batch[BatchKey.hrvsatellite_actual].shape == (4, 13, 1, 128, 256)
-    assert batch[BatchKey.nwp].shape == (4, 6, 1, 4, 4)
+    assert batch[BatchKey.nwp].shape == (4, 6, 10, 4, 4)
     assert batch[BatchKey.pv].shape == (4, 13, 8)
     assert batch[BatchKey.gsp].shape == (4, 5, 1)
     assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 128, 256)

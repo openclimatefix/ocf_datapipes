@@ -5,9 +5,6 @@ from .select_live_time_slice import SelectLiveTimeSliceIterDataPipe as SelectLiv
 from .select_overlapping_time_slices import (
     SelectOverlappingTimeSliceIterDataPipe as SelectOverlappingTimeSlice,
 )
-from .select_pv_systems_within_region import (
-    SelectPVSystemsWithinRegionIterDataPipe as SelectPVSystemsWithinRegion,
-)
 from .select_spatial_slice import SelectSpatialSliceMetersIterDataPipe as SelectSpatialSliceMeters
 from .select_spatial_slice import SelectSpatialSlicePixelsIterDataPipe as SelectSpatialSlicePixels
 from .select_time_periods import SelectTimePeriodsIterDataPipe as SelectTimePeriods

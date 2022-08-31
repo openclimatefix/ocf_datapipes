@@ -1,3 +1,6 @@
+from .coordinates import ConvertGeostationaryToLatLonIterDataPipe as ConvertGeostationaryToLatLon
+from .coordinates import ConvertLatLonToOSGBIterDataPipe as ConvertLatLonToOSGB
+from .coordinates import ConvertOSGBToLatLonIterDataPipe as ConvertOSGBToLatLon
 from .gsp import ConvertGSPToNumpyBatchIterDataPipe as ConvertGSPToNumpyBatch
 from .nwp import ConvertNWPToNumpyBatchIterDataPipe as ConvertNWPToNumpyBatch
 from .pv import ConvertPVToNumpyBatchIterDataPipe as ConvertPVToNumpyBatch
