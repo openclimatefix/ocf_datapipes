@@ -8,6 +8,7 @@ from torchdata.datapipes.utils import to_graph
 xarray.set_options(keep_attrs=True)
 
 from datetime import timedelta
+from ocf_datapipes.config.model import Configuration
 
 from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
 from ocf_datapipes.convert import (
@@ -16,7 +17,7 @@ from ocf_datapipes.convert import (
     ConvertPVToNumpyBatch,
     ConvertSatelliteToNumpyBatch,
 )
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromDB, OpenSatellite, OpenTopography
+from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromDB, OpenSatellite, OpenTopography, OpenConfiguration
 from ocf_datapipes.select import (
     LocationPicker,
     SelectLiveT0Time,
@@ -58,24 +59,26 @@ class GSPIterator(IterDataPipe):
                 yield xr_dataset.isel(gsp_id=slice(location_idx, location_idx + 1))
 
 
-def power_perceiver_production_datapipe(configuration):
+def power_perceiver_production_datapipe(configuration_filename):
     ####################################
     #
     # Equivalent to PP's loading and filtering methods
     #
     #####################################
     # Normalize GSP and PV on whole dataset here
-    sat_hrv_dp = OpenSatellite()
-    passiv_dp = OpenPVFromDB()
-    nwp_dp = OpenNWP()
-    topo_dp = OpenTopography()
-
-    gsp_dp = OpenGSP()
+    config_dp = OpenConfiguration(configuration_filename)
+    # TODO Pass the configuration through all the datapipes instead?
+    configuration: Configuration = next(iter(config_dp))
+    sat_hrv_dp = OpenSatellite(zarr_path=configuration.input_data.hrvsatellite.hrvsatellite_zarr_path)
+    passiv_dp = OpenPVFromDB(pv_power_filename=configuration.input_data.pv.pv_filename, pv_metadata_filename=configuration.input_data.pv.pv_metadata_filename)
+    nwp_dp = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+    topo_dp = OpenTopography(configuration.input_data.topographic.topographic_filename)
+    gsp_dp = OpenGSP(configuration.input_data.gsp.gsp_zarr_path)
 
     gsp_dp = gsp_dp.normalize(
         normalize_fn=lambda x: x / x.capacity_mwp
     ).add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
+        sample_period_duration=timedelta(minutes=30), history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes)
     )
     location_dp1, location_dp2, location_dp3 = gsp_dp.location_picker(
         return_all_locations=True
@@ -84,24 +87,24 @@ def power_perceiver_production_datapipe(configuration):
     passiv_dp, pv_t0_dp = (
         passiv_dp.normalize(normalize_fn=lambda x: x / x.capacity_wp)
         .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+            sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes)
         )
         .select_spatial_slice_meters(
-            location_datapipe=location_dp1, roi_width_meters=960_000, roi_height_meters=960_000
+            location_datapipe=location_dp1, roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width, roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height
         )
-        .ensure_n_pv_systems_per_example(n_pv_systems_per_example=8)
+        .ensure_n_pv_systems_per_example(n_pv_systems_per_example=configuration.input_data.pv.n_pv_systems_per_example)
         .fork(2)
     )
     topo_dp = topo_dp.reproject_topography().normalize(calculate_mean_std_from_example=True)
     sat_hrv_dp, sat_t0_dp = (
         sat_hrv_dp.convert_satellite_to_int8()
         .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+            sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=configuration.input_data.hrvsatellite.history_minutes)
         )
         .select_spatial_slice_pixels(
             location_datapipe=location_dp2,
-            roi_width_pixels=256,
-            roi_height_pixels=128,
+            roi_width_pixels=configuration.input_data.hrvsatellite.hrvsatellite_image_size_pixels_width,
+            roi_height_pixels=configuration.input_data.hrvsatellite.hrvsatellite_image_size_pixels_height,
             y_dim_name="y_geostationary",
             x_dim_name="x_geostationary",
         )
@@ -110,12 +113,12 @@ def power_perceiver_production_datapipe(configuration):
 
     nwp_dp, nwp_t0_dp = (
         nwp_dp.add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2)
+            sample_period_duration=timedelta(hours=1), history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes)
         )
         .select_spatial_slice_pixels(
             location_datapipe=location_dp3,
-            roi_width_pixels=64,
-            roi_height_pixels=64,
+            roi_width_pixels=configuration.input_data.nwp.nwp_image_size_pixels_width * 16, # TODO What to do here with configurations and such
+            roi_height_pixels=configuration.input_data.nwp.nwp_image_size_pixels_height * 16,
             y_dim_name="y_osgb",
             x_dim_name="x_osgb",
         )
@@ -129,19 +132,19 @@ def power_perceiver_production_datapipe(configuration):
     pv_t0_dp = pv_t0_dp.select_live_t0_time()
 
     gsp_dp = (
-        gsp_dp.select_live_time_slice(t0_datapipe=gsp_t0_dp, history_duration=timedelta(hours=2))
+        gsp_dp.select_live_time_slice(t0_datapipe=gsp_t0_dp, history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes))
         .gsp_iterator()
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(
-            forecast_duration=timedelta(hours=8),
+            forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
             sample_period_duration=timedelta(minutes=30),
         )
-        .merge_numpy_examples_to_batch(n_examples_per_batch=4)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
     sat_hrv_dp = (
         sat_hrv_dp.select_live_time_slice(
             t0_datapipe=sat_t0_dp,
-            history_duration=timedelta(hours=1),
+            history_duration=timedelta(minutes=configuration.input_data.hrvsatellite.history_minutes),
         )
         .normalize(mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4)
         .map(
@@ -149,33 +152,33 @@ def power_perceiver_production_datapipe(configuration):
         )  # Interplate to 5 minutes incase its 15 minutes
         .convert_satellite_to_numpy_batch(is_hrv=True)
         .extend_timesteps_to_future(
-            forecast_duration=timedelta(hours=2),
+            forecast_duration=timedelta(minutes=configuration.input_data.hrvsatellite.forecast_minutes),
             sample_period_duration=timedelta(minutes=5),
         )
-        .merge_numpy_examples_to_batch(n_examples_per_batch=4)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
     passiv_dp = (
         passiv_dp.select_live_time_slice(
             t0_datapipe=pv_t0_dp,
-            history_duration=timedelta(hours=1),
+            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
         .convert_pv_to_numpy_batch()
         .extend_timesteps_to_future(
-            forecast_duration=timedelta(hours=2),
+            forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
             sample_period_duration=timedelta(minutes=5),
         )
-        .merge_numpy_examples_to_batch(n_examples_per_batch=4)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
     nwp_dp = (
         nwp_dp.convert_to_nwp_target_time(
             t0_datapipe=nwp_t0_dp,
             sample_period_duration=timedelta(hours=1),
-            history_duration=timedelta(hours=2),
-            forecast_duration=timedelta(hours=3),
+            history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+            forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
         )
         .normalize(mean=NWP_MEAN, std=NWP_STD)
         .convert_nwp_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=4)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
 
     ####################################

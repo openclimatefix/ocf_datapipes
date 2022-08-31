@@ -210,9 +210,8 @@ class PV(DataSourceMixin, StartEndDatetimeMixin):
         description="The number of PV systems samples per example. "
         "If there are less in the ROI then the data is padded with zeros. ",
     )
-    pv_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
-    pv_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
-    pv_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
+    pv_image_size_meters_height: int = IMAGE_SIZE_PIXELS_FIELD * METERS_PER_PIXEL_FIELD
+    pv_image_size_meters_width: int = IMAGE_SIZE_PIXELS_FIELD * METERS_PER_PIXEL_FIELD
     get_center: bool = Field(
         False,
         description="If the batches are centered on one PV system (or not). "
