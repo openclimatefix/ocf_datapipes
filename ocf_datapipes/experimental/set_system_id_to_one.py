@@ -1,7 +1,9 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 import numpy as np
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+
 
 @functional_datapipe("set_system_ids_to_one")
 class SetSystemIDsToOneIterDataPipe(IterDataPipe):
