@@ -9,7 +9,6 @@ xarray.set_options(keep_attrs=True)
 
 from datetime import timedelta
 
-from ocf_datapipes.experimental import SetSystemIDsToOne
 from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
 from ocf_datapipes.convert import (
     ConvertGSPToNumpyBatch,
@@ -17,6 +16,7 @@ from ocf_datapipes.convert import (
     ConvertPVToNumpyBatch,
     ConvertSatelliteToNumpyBatch,
 )
+from ocf_datapipes.experimental import SetSystemIDsToOne
 from ocf_datapipes.select import (
     LocationPicker,
     SelectLiveT0Time,
