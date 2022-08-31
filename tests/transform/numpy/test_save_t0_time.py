@@ -8,6 +8,6 @@ def test_save_t0_time(sat_hrv_np_dp, passiv_np_dp, gsp_np_dp):
     combined_dp = AlignGSPto5Min(
         combined_dp, batch_key_for_5_min_datetimes=BatchKey.hrvsatellite_time_utc
     )
-    combined_dp = EncodeSpaceTime(combined_dp)
+    combined_dp = EncodeSpaceTime(combined_dp, n_fourier_features_per_dim=2)
     combined_dp = SaveT0Time(combined_dp)
     data = next(iter(combined_dp))
