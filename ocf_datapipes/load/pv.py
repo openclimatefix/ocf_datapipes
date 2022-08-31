@@ -214,7 +214,15 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
             latitude, longitude, system_id, x_osgb, y_osgb
     """
     _log.info(f"Loading PV metadata from {filename}")
-    pv_metadata = pd.read_csv(filename, index_col="ss_id").drop(columns="Unnamed: 0")
+    if 'passiv' in str(filename):
+        index_col = 'ss_id'
+    else:
+        index_col = 'system_id'
+    pv_metadata = pd.read_csv(filename, index_col=index_col)
+
+    if "Unnamed: 0" in pv_metadata.columns:
+        pv_metadata.drop(columns="Unnamed: 0", inplace=True)
+
     _log.info(f"Found {len(pv_metadata)} PV systems in {filename}")
 
     # drop any systems with no lon or lat:
