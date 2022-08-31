@@ -1,4 +1,4 @@
-from typing import Iterable, Union, Optional
+from typing import Iterable, Optional, Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -12,7 +12,7 @@ class CheckVarsAndDimsIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         expected_dimensions: Iterable[str],
         expected_data_vars: Iterable[str],
-        dataset_name: Optional[str] = None
+        dataset_name: Optional[str] = None,
     ):
         """
         Checks data vars and dimensions for validation
@@ -42,9 +42,15 @@ class CheckVarsAndDimsIterDataPipe(IterDataPipe):
                 xr_data = validate_dims(xr_data, self.expected_dimensions)
                 xr_data = validate_coords(xr_data, self.expected_dimensions)
             else:
-                xr_data[self.dataset_name] = validate_data_vars(xr_data[self.dataset_name], self.expected_data_vars)
-                xr_data[self.dataset_name] = validate_dims(xr_data[self.dataset_name], self.expected_dimensions)
-                xr_data[self.dataset_name] = validate_coords(xr_data[self.dataset_name], self.expected_dimensions)
+                xr_data[self.dataset_name] = validate_data_vars(
+                    xr_data[self.dataset_name], self.expected_data_vars
+                )
+                xr_data[self.dataset_name] = validate_dims(
+                    xr_data[self.dataset_name], self.expected_dimensions
+                )
+                xr_data[self.dataset_name] = validate_coords(
+                    xr_data[self.dataset_name], self.expected_dimensions
+                )
             yield xr_data
 
 

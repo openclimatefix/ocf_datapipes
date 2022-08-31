@@ -37,8 +37,12 @@ class CheckNaNsIterDataPipe(IterDataPipe):
                 if self.dataset_name is None:
                     xr_data = check_nan_and_fill_warning(data=xr_data)
                 else:
-                    xr_data[self.dataset_name] = check_nan_and_fill_warning(data=xr_data[self.dataset_name])
-            check_nan_and_inf(data=xr_data if self.dataset_name is None else xr_data[self.dataset_name])
+                    xr_data[self.dataset_name] = check_nan_and_fill_warning(
+                        data=xr_data[self.dataset_name]
+                    )
+            check_nan_and_inf(
+                data=xr_data if self.dataset_name is None else xr_data[self.dataset_name]
+            )
             yield xr_data
 
 
