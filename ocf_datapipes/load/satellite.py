@@ -30,29 +30,33 @@ def open_sat_data(
     # Open the data
     dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
 
-    # Flip coordinates to top-left first
-    dataset = dataset.reindex(y=dataset.y[::-1])
-    dataset = dataset.reindex(x=dataset.x[::-1])
-
     # Rename
     # These renamings will no longer be necessary when the Zarr uses the 'correct' names,
     # see https://github.com/openclimatefix/Satip/issues/66
     if "variable" in dataset:
         dataset = dataset.rename({"variable": "channel"})
+    if "channels" in dataset:
+        dataset = dataset.rename({"channels": "channel"})
     elif "channel" not in dataset:
         # This is HRV version 3, which doesn't have a channels dim.  So add one.
         dataset = dataset.expand_dims(dim={"channel": ["HRV"]}, axis=1)
+
     # Rename coords to be more explicit about exactly what some coordinates hold:
     # Note that `rename` renames *both* the coordinates and dimensions, and keeps
     # the connection between the dims and coordinates, so we don't have to manually
     # use `data_array.set_index()`.
-    dataset = dataset.rename(
-        {
-            "time": "time_utc",
-            "y": "y_geostationary",
-            "x": "x_geostationary",
-        }
-    )
+    dataset = dataset.rename({"time": "time_utc",})
+    if "y" in dataset.coords.keys():
+        dataset = dataset.rename({"y": "y_geostationary",})
+
+    if "x" in dataset.coords.keys():
+        dataset = dataset.rename({"x": "x_geostationary",})
+
+    # Flip coordinates to top-left first
+    if dataset.y_geostationary[0] < dataset.y_geostationary[-1]:
+        dataset = dataset.reindex(y_geostationary=dataset.y_geostationary[::-1])
+    if dataset.x_geostationary[0] > dataset.x_geostationary[-1]:
+        dataset = dataset.reindex(x_geostationary=dataset.x_geostationary[::-1])
 
     data_array = dataset["data"]
     del dataset
@@ -64,6 +68,7 @@ def open_sat_data(
     assert data_array.x_osgb[0, 0] < data_array.x_osgb[0, -1]
 
     # Sanity checks!
+    print(data_array)
     data_array = data_array.transpose("time_utc", "channel", "y_geostationary", "x_geostationary")
     assert data_array.dims == ("time_utc", "channel", "y_geostationary", "x_geostationary")
     datetime_index = pd.DatetimeIndex(data_array.time_utc)
