@@ -37,6 +37,7 @@ IMAGE_SIZE_PIXELS_FIELD = Field(
     IMAGE_SIZE_PIXELS, description="The number of pixels of the region of interest."
 )
 METERS_PER_PIXEL_FIELD = Field(2000, description="The number of meters per pixel.")
+METERS_PER_ROI = Field(128_000, description="The number of meters of region of interest.")
 
 logger = logging.getLogger(__name__)
 
@@ -210,8 +211,8 @@ class PV(DataSourceMixin, StartEndDatetimeMixin):
         description="The number of PV systems samples per example. "
         "If there are less in the ROI then the data is padded with zeros. ",
     )
-    pv_image_size_meters_height: int = IMAGE_SIZE_PIXELS_FIELD * METERS_PER_PIXEL_FIELD
-    pv_image_size_meters_width: int = IMAGE_SIZE_PIXELS_FIELD * METERS_PER_PIXEL_FIELD
+    pv_image_size_meters_height: int = METERS_PER_ROI
+    pv_image_size_meters_width: int = METERS_PER_ROI
     get_center: bool = Field(
         False,
         description="If the batches are centered on one PV system (or not). "
