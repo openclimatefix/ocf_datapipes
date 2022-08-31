@@ -1,13 +1,18 @@
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-import xarray as xr
 from typing import Union
+
 import numpy as np
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
 
 @functional_datapipe("check_nans")
 class CheckNaNsIterDataPipe(IterDataPipe):
-    """ Checks, and optionally fills, NaNs in Xarray Dataset"""
-    def __init__(self, source_datapipe: IterDataPipe, variable_name: str = None, fill_nans: bool = False):
+    """Checks, and optionally fills, NaNs in Xarray Dataset"""
+
+    def __init__(
+        self, source_datapipe: IterDataPipe, variable_name: str = None, fill_nans: bool = False
+    ):
         """
         Checks and optionally fills NaNs in the data
 
@@ -32,6 +37,7 @@ class CheckNaNsIterDataPipe(IterDataPipe):
                 xr_data = check_nan_and_fill_warning(data=xr_data, variable_name=self.variable_name)
             check_nan_and_inf(data=xr_data, variable_name=self.variable_name)
             yield xr_data
+
 
 def check_nan_and_inf(data: xr.Dataset, variable_name: str = None):
     """Check that all values are non NaNs and not infinite"""

@@ -1,2 +1,2 @@
-from .check_vars_and_dims import CheckVarsAndDimsIterDataPipe as CheckVarsAndDims
 from .check_for_nans import CheckNaNsIterDataPipe as CheckNaNs
+from .check_vars_and_dims import CheckVarsAndDimsIterDataPipe as CheckVarsAndDims
