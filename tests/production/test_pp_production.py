@@ -3,7 +3,9 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def test_pp_production_datapipe():
-    pp_dp = power_perceiver_production_datapipe("/home/jacob/Development/ocf_datapipes/tests/config/test.yaml")
+    pp_dp = power_perceiver_production_datapipe(
+        "/home/jacob/Development/ocf_datapipes/tests/config/test.yaml"
+    )
     batch = next(iter(pp_dp))
 
     assert len(batch[BatchKey.hrvsatellite_time_utc]) == 4
