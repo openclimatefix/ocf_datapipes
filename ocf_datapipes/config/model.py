@@ -23,7 +23,6 @@ from nowcasting_datamodel.models.pv import providers, pv_output, solar_sheffield
 from pathy import Pathy
 from pydantic import BaseModel, Field, root_validator, validator
 
-
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
     DEFAULT_N_GSP_PER_EXAMPLE,

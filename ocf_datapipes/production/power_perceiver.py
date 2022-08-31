@@ -8,7 +8,6 @@ from torchdata.datapipes.utils import to_graph
 xarray.set_options(keep_attrs=True)
 
 from datetime import timedelta
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromDB, OpenSatellite, OpenTopography
 
 from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
 from ocf_datapipes.convert import (
@@ -17,6 +16,7 @@ from ocf_datapipes.convert import (
     ConvertPVToNumpyBatch,
     ConvertSatelliteToNumpyBatch,
 )
+from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromDB, OpenSatellite, OpenTopography
 from ocf_datapipes.select import (
     LocationPicker,
     SelectLiveT0Time,
@@ -43,6 +43,7 @@ from ocf_datapipes.transform.xarray import (
     ReprojectTopography,
 )
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
+
 
 @functional_datapipe("gsp_iterator")
 class GSPIterator(IterDataPipe):
