@@ -26,6 +26,13 @@ class CheckVarsAndDimsIterDataPipe(IterDataPipe):
         self.expected_data_vars = expected_data_vars
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        """
+        Validate the data and return the validated xarray dataset
+
+        Returns:
+            Xarray dataset
+
+        """
         for xr_data in self.source_datapipe:
             xr_data = validate_data_vars(xr_data, self.expected_data_vars)
             xr_data = validate_dims(xr_data, self.expected_dimensions)
