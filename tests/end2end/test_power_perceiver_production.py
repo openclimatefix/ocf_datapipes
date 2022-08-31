@@ -43,19 +43,7 @@ from ocf_datapipes.transform.xarray import (
     ReprojectTopography,
 )
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
-
-
-@functional_datapipe("gsp_iterator")
-class GSPIterator(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe):
-        super().__init__()
-        self.source_dp = source_dp
-
-    def __iter__(self):
-        for xr_dataset in self.source_dp:
-            # Iterate through all locations in dataset
-            for location_idx in range(len(xr_dataset["x_osgb"])):
-                yield xr_dataset.isel(gsp_id=slice(location_idx, location_idx + 1))
+from ocf_datapipes.production.power_perceiver import GSPIterator
 
 
 def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_dp):
