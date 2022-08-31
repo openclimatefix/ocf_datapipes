@@ -14,7 +14,7 @@ class EnsureNNWPVariables(IterDataPipe):
 
     def __iter__(self):
         for np_batch in self.source_datapipe:
-            num_tiles = int(np.ceil(self.num_variables / np_batch[BatchKey.nwp_channel_names]))
+            num_tiles = int(np.ceil(self.num_variables / len(np_batch[BatchKey.nwp_channel_names])))
             np_batch[BatchKey.nwp_channel_names] = np.tile(
                 np_batch[BatchKey.nwp_channel_names], num_tiles
             )[: self.num_variables]
