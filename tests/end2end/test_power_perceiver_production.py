@@ -16,7 +16,7 @@ from ocf_datapipes.convert import (
     ConvertPVToNumpyBatch,
     ConvertSatelliteToNumpyBatch,
 )
-from ocf_datapipes.experimental import SetSystemIDsToOne, EnsureNNWPVariables
+from ocf_datapipes.experimental import EnsureNNWPVariables, SetSystemIDsToOne
 from ocf_datapipes.select import (
     LocationPicker,
     SelectLiveT0Time,
