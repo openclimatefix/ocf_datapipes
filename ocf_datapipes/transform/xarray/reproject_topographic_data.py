@@ -1,13 +1,17 @@
 from pathlib import Path
 from typing import Union
 
-import cartopy.crs as ccrs
 import numpy as np
 import pyproj
 import pyresample
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+try:
+    import cartopy.crs as ccrs
+except:
+    pass
 
 
 @functional_datapipe("reproject_topography")
