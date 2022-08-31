@@ -1,8 +1,8 @@
 # from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
 from .gsp import OpenGSPIterDataPipe as OpenGSP
 from .nwp import OpenNWPIterDataPipe as OpenNWP
-from .pv import OpenPVFromDBIterDataPipe as OpenPVFromDB
-from .pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromNetCDF
+from ocf_datapipes.load.pv.live import OpenPVFromDBIterDataPipe as OpenPVFromDB
+from ocf_datapipes.load.pv.pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromNetCDF
 from .satellite import OpenSatelliteIterDataPipe as OpenSatellite
 
 try:

@@ -10,6 +10,7 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.load.pv.utils import intersection_of_pv_system_ids, put_pv_data_into_an_xr_dataarray
 from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
 
 _log = logging.getLogger(__name__)
@@ -34,15 +35,6 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
             yield data
 
 
-@functional_datapipe("open_pv_from_db")
-class OpenPVFromDBIterDataPipe(IterDataPipe):
-    def __init__(self):
-        super().__init__()
-
-    def __iter__(self):
-        pass
-
-
 def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
@@ -52,11 +44,11 @@ def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.Data
     pv_metadata = _load_pv_metadata(pv_metadata_filename)
     # Ensure pv_metadata, pv_power_watts, and pv_capacity_wp all have the same set of
     # PV system IDs, in the same order:
-    pv_metadata, pv_power_watts = _intersection_of_pv_system_ids(pv_metadata, pv_power_watts)
+    pv_metadata, pv_power_watts = intersection_of_pv_system_ids(pv_metadata, pv_power_watts)
     pv_capacity_wp = pv_capacity_wp.loc[pv_power_watts.columns]
     pv_system_row_number = pv_system_row_number.loc[pv_power_watts.columns]
 
-    data_in_ram = _put_pv_data_into_an_xr_dataarray(
+    data_in_ram = put_pv_data_into_an_xr_dataarray(
         pv_power_watts=pv_power_watts,
         y_osgb=pv_metadata.y_osgb.astype(np.float32),
         x_osgb=pv_metadata.x_osgb.astype(np.float32),
@@ -227,57 +219,6 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
     )
 
     return pv_metadata
-
-
-def _intersection_of_pv_system_ids(
-    pv_metadata: pd.DataFrame, pv_power: pd.DataFrame
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Only pick PV systems for which we have metadata."""
-    pv_system_ids = pv_metadata.index.intersection(pv_power.columns)
-    pv_system_ids = np.sort(pv_system_ids)
-    pv_power = pv_power[pv_system_ids]
-    pv_metadata = pv_metadata.loc[pv_system_ids]
-    return pv_metadata, pv_power
-
-
-def _put_pv_data_into_an_xr_dataarray(
-    pv_power_watts: pd.DataFrame,
-    y_osgb: pd.Series,
-    x_osgb: pd.Series,
-    capacity_wp: pd.Series,
-    pv_system_row_number: pd.Series,
-) -> xr.DataArray:
-    """Convert to an xarray DataArray.
-
-    Args:
-        pv_power_watts: pd.DataFrame where the columns are PV systems (and the column names are
-            ints), and the index is UTC datetime.
-        x_osgb: The x location. Index = PV system ID ints.
-        y_osgb: The y location. Index = PV system ID ints.
-        capacity_wp: The max power output of each PV system in Watts. Index = PV system ID ints.
-        pv_system_row_number: The integer position of the PV system in the metadata.
-            Used to create the PV system ID embedding.
-    """
-    # Sanity check!
-    pv_system_ids = pv_power_watts.columns
-    for series in (x_osgb, y_osgb, capacity_wp, pv_system_row_number):
-        assert np.array_equal(series.index, pv_system_ids, equal_nan=True)
-
-    data_array = xr.DataArray(
-        data=pv_power_watts.values,
-        coords=(("time_utc", pv_power_watts.index), ("pv_system_id", pv_power_watts.columns)),
-        name="pv_power_watts",
-    ).astype(np.float32)
-
-    data_array = data_array.assign_coords(
-        x_osgb=("pv_system_id", x_osgb),
-        y_osgb=("pv_system_id", y_osgb),
-        capacity_wp=("pv_system_id", capacity_wp),
-        pv_system_row_number=("pv_system_id", pv_system_row_number),
-    )
-    # Sample period duration is required so PVDownsample transform knows by how much
-    # to change the pv_t0_idx:
-    return data_array
 
 
 def _drop_pv_systems_which_produce_overnight(pv_power_watts: pd.DataFrame) -> pd.DataFrame:
