@@ -23,6 +23,8 @@ from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle
 
 from ocf_datapipes.load.pv.utils import put_pv_data_into_an_xr_dataarray
 
+from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
+
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -56,16 +58,28 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             history_duration=self.history_duration,
             interpolate_minutes=self.interpolate_minutes,
             load_extra_minutes=self.load_extra_minutes,
-            load_extra_minutes_and_keep=self.load_extra_minutes_and_keep,
         )
 
-        pv_system_row_number = pd.Series([1]*len(pv_power.columns))
+        pv_system_row_number = pd.Series([1] * len(pv_power.columns), index=pv_power.columns)
+
+        # select metadata that is in pv_power
+        logger.debug(
+            f"There are currently {len(pv_metadata.index)} pv system in the metadata, "
+            f"before joining together with power"
+        )
+        logger.debug(
+            f"There are currently {len(pv_power.columns)} pv system in the power data, "
+            f"before joining together with metadata"
+        )
+        pv_metadata = pv_metadata[pv_metadata.index.isin(pv_power.columns)]
+        logger.debug(f"There are now {len(pv_metadata.index)} pv system in the metadata")
+        logger.debug(f"There are now {len(pv_power.columns)} pv system in the power data")
 
         data_xr = put_pv_data_into_an_xr_dataarray(
             pv_power_watts=pv_power,
             y_osgb=pv_metadata.y_osgb.astype(np.float32),
             x_osgb=pv_metadata.x_osgb.astype(np.float32),
-            capacity_wp=pv_power.capacity_wp,
+            capacity_wp=pv_metadata.capacity_wp,
             pv_system_row_number=pv_system_row_number,
         )
 
@@ -119,6 +133,16 @@ def get_metadata_from_database(providers: List[str] = None) -> pd.DataFrame:
     pv_system_all_df = pd.concat(pv_system_all_df)
 
     logger.debug(f"Found {len(pv_system_all_df)} pv systems")
+
+    # add x_osgb and y_osgb
+    x_osgb, y_osgb = lat_lon_to_osgb(
+        latitude=pv_system_all_df["latitude"], longitude=pv_system_all_df["longitude"]
+    )
+    pv_system_all_df["x_osgb"] = x_osgb
+    pv_system_all_df["y_osgb"] = y_osgb
+
+    pv_system_all_df["capacity_kw"] = pv_system_all_df["installed_capacity_kw"]
+    pv_system_all_df["capacity_wp"] = pv_system_all_df["capacity_kw"] * 1000
 
     return pv_system_all_df
 
@@ -190,7 +214,7 @@ def get_pv_power_from_database(
     # get the system id from 'pv_system_id=xxxx provider=.....'
     pv_yields_df["pv_system_id"] = (
         pv_yields_df["pv_system"].astype(str).str.split(" ").str[0].str.split("=").str[-1]
-    )
+    ).astype(int)
 
     pv_yields_df["provider"] = (
         pv_yields_df["pv_system"]

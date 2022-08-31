@@ -3,9 +3,13 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 
+import logging
+
 from typing import List
 
 from nowcasting_datamodel.models.pv import providers
+
+logger = logging.getLogger(__name__)
 
 
 def intersection_of_pv_system_ids(
@@ -79,6 +83,6 @@ def encode_label(indexes: List[str], label: str) -> List[str]:
     assert len(providers) < 10
 
     label_index = providers.index(label)
-    new_index = [str(int(col) * 10 + label_index) for col in indexes]
+    new_index = [int(int(col) * 10 + label_index) for col in indexes]
 
     return new_index
