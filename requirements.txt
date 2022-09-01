@@ -1,3 +1,4 @@
+cartopy
 torch
 xarray
 zarr
