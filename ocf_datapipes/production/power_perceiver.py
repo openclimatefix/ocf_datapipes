@@ -1,4 +1,7 @@
+"""Wrapper for Power Perceiver Production Data Pipeline"""
 import logging
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 import torchdata.datapipes as dp
@@ -59,18 +62,36 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("gsp_iterator")
 class GSPIterator(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe):
+    """GSP iterator for live that goes one by one through GSPs"""
+
+    def __init__(self, source_datapipe: IterDataPipe):
+        """
+        GSP iterator for live that goes one by one through GSPs
+
+        Args:
+            source_datapipe: Source datapipe to use
+        """
         super().__init__()
-        self.source_dp = source_dp
+        self.source_datapipe = source_datapipe
 
     def __iter__(self):
-        for xr_dataset in self.source_dp:
+        """GSP iterator for live that goes one by one through GSPs"""
+        for xr_dataset in self.source_datapipe:
             # Iterate through all locations in dataset
             for location_idx in range(len(xr_dataset["x_osgb"])):
                 yield xr_dataset.isel(gsp_id=slice(location_idx, location_idx + 1))
 
 
-def power_perceiver_production_datapipe(configuration_filename):
+def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
+    """
+    Create the Power Perceiver production pipeline using a configuration
+
+    Args:
+        configuration_filename: Name of the configuration
+
+    Returns:
+        DataPipe ready to be put in a Dataloader for production
+    """
     ####################################
     #
     # Equivalent to PP's loading and filtering methods

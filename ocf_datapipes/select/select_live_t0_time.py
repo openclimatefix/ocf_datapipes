@@ -1,3 +1,4 @@
+"""Select the history for the live data"""
 import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe

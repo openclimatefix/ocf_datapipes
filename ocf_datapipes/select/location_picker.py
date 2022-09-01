@@ -1,3 +1,4 @@
+"""Pick locations from a dataset"""
 import logging
 
 import numpy as np

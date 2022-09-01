@@ -1,17 +1,28 @@
+"""Extends timestamps into the future"""
 import numpy as np
-import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
-from ocf_datapipes.utils.utils import datetime64_to_float
 
 
 @functional_datapipe("extend_timesteps_to_future")
 class ExtendTimestepsToFutureIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, forecast_duration, sample_period_duration):
-        """This assumes that the current time_utc array only covers history + now, so just extends it further into the future"""
-        self.source_dp = source_dp
+    """Extends timestamps into the future"""
+
+    def __init__(self, source_datapipe: IterDataPipe, forecast_duration, sample_period_duration):
+        """
+        Extends timestamps into the future
+
+        This assumes that the current time_utc array only covers history + now,
+        so just extends it further into the future
+
+        Args:
+            source_datapipe: Datapipe of NumpyBatch
+            forecast_duration: Forecast duration time
+            sample_period_duration: Sample period for forecast
+        """
+        self.source_dp = source_datapipe
         self.forecast_duration = forecast_duration
         self.sample_period_duration = sample_period_duration
         self.num_future_timesteps = int(self.forecast_duration / self.sample_period_duration)
