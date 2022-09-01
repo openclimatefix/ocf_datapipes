@@ -54,7 +54,10 @@ def put_pv_data_into_an_xr_dataarray(
 
     data_array = xr.DataArray(
         data=pv_power_watts.values,
-        coords=(("time_utc", pv_power_watts.index.values), ("pv_system_id", pv_power_watts.columns)),
+        coords=(
+            ("time_utc", pv_power_watts.index.values),
+            ("pv_system_id", pv_power_watts.columns),
+        ),
         name="pv_power_watts",
     ).astype(np.float32)
 

@@ -51,7 +51,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
         )
         self._gsp_id_to_shape = gsp_id_to_shape  # Save, mostly for plotting to check all is fine!
 
-        logger.debug('Getting GSP data')
+        logger.debug("Getting GSP data")
 
         # Load GSP generation xr.Dataset:
         gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
@@ -74,7 +74,6 @@ class OpenGSPIterDataPipe(IterDataPipe):
             y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
             capacity_mwp=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(np.float32),
         )
-
 
         del gsp_id_to_shape, gsp_pv_power_mw_ds
         while True:

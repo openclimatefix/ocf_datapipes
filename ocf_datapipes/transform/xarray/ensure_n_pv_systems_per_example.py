@@ -1,10 +1,9 @@
+import logging
+
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
     def __iter__(self):
         for xr_data in self.source_datapipe:
             if len(xr_data.pv_system_id) > self.n_pv_systems_per_example:
-                logger.debug(f'Reducing PV systems to  {self.n_pv_systems_per_example}')
+                logger.debug(f"Reducing PV systems to  {self.n_pv_systems_per_example}")
                 # More PV systems are available than we need. Reduce by randomly sampling:
                 subset_of_pv_system_ids = self.rng.choice(
                     xr_data.pv_system_id,
@@ -28,13 +27,14 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
                 )
                 xr_data = xr_data.sel(pv_system_id=subset_of_pv_system_ids)
             elif len(xr_data.pv_system_id) < self.n_pv_systems_per_example:
-                logger.debug('Padding out PV systems')
+                logger.debug("Padding out PV systems")
                 # If we just used `choice(replace=True)` then there's a high chance
                 # that the output won't include every available PV system but instead
                 # will repeat some PV systems at the expense of leaving some on the table.
                 # TODO: Don't repeat PV systems. Instead, pad with NaNs and mask the loss. Issue #73.
-                assert len(xr_data.pv_system_id) > 0, 'There are no PV systems at all. ' \
-                                                      'We need at least one in an example'
+                assert len(xr_data.pv_system_id) > 0, (
+                    "There are no PV systems at all. " "We need at least one in an example"
+                )
                 n_random_pv_systems = self.n_pv_systems_per_example - len(xr_data.pv_system_id)
                 allow_replacement = n_random_pv_systems > len(xr_data.pv_system_id)
                 random_pv_system_ids = self.rng.choice(

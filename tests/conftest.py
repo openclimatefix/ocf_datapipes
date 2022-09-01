@@ -5,8 +5,15 @@ from pathlib import Path
 
 import pytest
 from nowcasting_datamodel.connection import DatabaseConnection
-from nowcasting_datamodel.models import Base_Forecast, Base_PV, PVSystemSQL, PVSystem, solar_sheffield_passiv, \
-    pv_output, PVYield
+from nowcasting_datamodel.models import (
+    Base_Forecast,
+    Base_PV,
+    PVSystem,
+    PVSystemSQL,
+    PVYield,
+    pv_output,
+    solar_sheffield_passiv,
+)
 
 import ocf_datapipes
 from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography

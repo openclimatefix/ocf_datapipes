@@ -1,10 +1,10 @@
-import numpy as np
 import logging
+
+import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import Location
-
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
 
-            logger.debug(f'Getting locations for {xr_dataset}')
+            logger.debug(f"Getting locations for {xr_dataset}")
 
             if self.return_all_locations:
                 # Iterate through all locations in dataset
@@ -38,7 +38,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                         x=xr_dataset["x_osgb"][location_idx].values,
                         y=xr_dataset["y_osgb"][location_idx].values,
                     )
-                    logger.debug(f'Got all locations {location}')
+                    logger.debug(f"Got all locations {location}")
                     yield location
             else:
                 # Assumes all datasets have osgb coordinates for selecting locations

@@ -70,9 +70,8 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         logger.debug(f"There are now {len(pv_metadata.index)} pv system in the metadata")
         logger.debug(f"There are now {len(pv_power.columns)} pv system in the power data")
 
-
         data_xr = put_pv_data_into_an_xr_dataarray(
-            pv_power_watts=pv_power, # TODO check this is watts
+            pv_power_watts=pv_power,  # TODO check this is watts
             y_osgb=pv_metadata.y_osgb.astype(np.float32),
             x_osgb=pv_metadata.x_osgb.astype(np.float32),
             capacity_wp=pv_metadata.capacity_wp,

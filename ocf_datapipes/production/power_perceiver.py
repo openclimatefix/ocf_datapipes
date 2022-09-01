@@ -54,7 +54,6 @@ from ocf_datapipes.transform.xarray import (
 )
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -82,7 +81,7 @@ def power_perceiver_production_datapipe(configuration_filename):
     # TODO Pass the configuration through all the datapipes instead?
     configuration: Configuration = next(iter(config_dp))
 
-    logger.debug('Opening Datasets')
+    logger.debug("Opening Datasets")
     sat_hrv_dp = OpenSatellite(
         zarr_path=configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
     )
@@ -95,21 +94,21 @@ def power_perceiver_production_datapipe(configuration_filename):
     topo_dp = OpenTopography(configuration.input_data.topographic.topographic_filename)
     gsp_dp = OpenGSP(configuration.input_data.gsp.gsp_zarr_path)
 
-    logger.debug('Normalize GSP data')
+    logger.debug("Normalize GSP data")
     gsp_dp = gsp_dp.normalize(
         normalize_fn=lambda x: x / x.capacity_mwp
     ).add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
     )
-    logger.debug('Getting locations')
+    logger.debug("Getting locations")
     location_dp1, location_dp2, location_dp3 = gsp_dp.location_picker(
         return_all_locations=True
     ).fork(3)
 
-    logger.debug('Got locations')
+    logger.debug("Got locations")
 
-    logger.debug('Making PV space slice')
+    logger.debug("Making PV space slice")
     passiv_dp, pv_t0_dp = (
         passiv_dp.normalize(normalize_fn=lambda x: x / x.capacity_wp)
         .add_t0_idx_and_sample_period_duration(
@@ -145,7 +144,7 @@ def power_perceiver_production_datapipe(configuration_filename):
         .fork(2)
     )
 
-    logger.debug('Making NWP space slice')
+    logger.debug("Making NWP space slice")
     nwp_dp, nwp_t0_dp = (
         nwp_dp.add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(hours=1),
@@ -168,7 +167,7 @@ def power_perceiver_production_datapipe(configuration_filename):
     sat_t0_dp = sat_t0_dp.select_live_t0_time()
     pv_t0_dp = pv_t0_dp.select_live_t0_time()
 
-    logger.debug('Making GSP Time slices')
+    logger.debug("Making GSP Time slices")
     gsp_dp = (
         gsp_dp.select_live_time_slice(
             t0_datapipe=gsp_t0_dp,
@@ -182,7 +181,7 @@ def power_perceiver_production_datapipe(configuration_filename):
         )
         .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
-    logger.debug('Making Sat Time slices')
+    logger.debug("Making Sat Time slices")
     sat_hrv_dp = (
         sat_hrv_dp.select_live_time_slice(
             t0_datapipe=sat_t0_dp,
@@ -232,7 +231,7 @@ def power_perceiver_production_datapipe(configuration_filename):
     # Equivalent to PP's np_batch_processors
     #
     #####################################
-    logger.debug('Combine all the data sources')
+    logger.debug("Combine all the data sources")
     combined_dp = (
         MergeNumpyModalities([gsp_dp, passiv_dp, sat_hrv_dp, nwp_dp])
         .align_gsp_to_5_min(batch_key_for_5_min_datetimes=BatchKey.hrvsatellite_time_utc)

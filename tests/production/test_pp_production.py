@@ -23,7 +23,13 @@ def test_pp_production_datapipe(pv_yields_and_systems):
     assert len(batch[BatchKey.pv_time_utc][0]) == 19
     assert len(batch[BatchKey.gsp_time_utc][0]) == 4  # 1 history + now + 2 future = 4
 
-    assert batch[BatchKey.hrvsatellite_actual].shape == (4, 7, 1, 64, 64)  # 2nd dim is 6 history + now
+    assert batch[BatchKey.hrvsatellite_actual].shape == (
+        4,
+        7,
+        1,
+        64,
+        64,
+    )  # 2nd dim is 6 history + now
     assert batch[BatchKey.nwp].shape == (4, 3, 1, 2, 2)  # 2nd dim is 1 history + now + 1 future
     assert batch[BatchKey.pv].shape == (4, 7, 32)  # 2nd dim is 6 history + now
     assert batch[BatchKey.gsp].shape == (4, 2, 1)  # 2nd dim is 1 history + now
