@@ -2,9 +2,7 @@ from datetime import timedelta
 
 from ocf_datapipes.convert import ConvertSatelliteToNumpyBatch
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration
-
 from ocf_datapipes.utils.consts import BatchKey
-
 
 
 def test_convert_satellite_to_numpy_batch(sat_dp):

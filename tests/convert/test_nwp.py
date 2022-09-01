@@ -3,7 +3,6 @@ from datetime import timedelta
 from ocf_datapipes.convert import ConvertNWPToNumpyBatch
 from ocf_datapipes.select import SelectLiveT0Time
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration, ConvertToNWPTargetTime
-
 from ocf_datapipes.utils.consts import BatchKey
 
 
