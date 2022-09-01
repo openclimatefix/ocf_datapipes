@@ -1,3 +1,4 @@
+"""Remove bad PV systems from the dataset"""
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe

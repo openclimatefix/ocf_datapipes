@@ -1,3 +1,4 @@
+"""Selects time slice"""
 from datetime import timedelta
 from typing import Union
 
@@ -10,6 +11,7 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 @functional_datapipe("select_time_slice")
 class SelectTimeSliceIterDataPipe(IterDataPipe):
+    """Selects time slice"""
     def __init__(
         self,
         source_datapipe: IterDataPipe,
@@ -18,6 +20,16 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         forecast_duration: timedelta,
         sample_period_duration: timedelta,
     ):
+        """
+        Selects time slice
+
+        Args:
+            source_datapipe: Datapipe of Xarray objects
+            t0_datapipe: Datapipe of t0 times
+            history_duration: History time used
+            forecast_duration: Forecast time used
+            sample_period_duration: Sample period of xarray data
+        """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
         self.history_duration = np.timedelta64(history_duration)

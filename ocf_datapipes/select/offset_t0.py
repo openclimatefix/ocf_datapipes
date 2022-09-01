@@ -1,3 +1,4 @@
+"""Offset T0 for training to more realistically match production"""
 from typing import Union
 
 import numpy as np

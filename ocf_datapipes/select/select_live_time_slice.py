@@ -1,3 +1,4 @@
+"""Select the history for the live data"""
 from datetime import timedelta
 from typing import Optional
 
