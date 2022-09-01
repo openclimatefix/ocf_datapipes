@@ -1,3 +1,4 @@
+"""GSP Loader"""
 import datetime
 from pathlib import Path
 from typing import Optional, Union
@@ -8,8 +9,6 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-
-# from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
 
 try:
     from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
@@ -22,6 +21,7 @@ except ImportError:
 
 @functional_datapipe("open_gsp")
 class OpenGSPIterDataPipe(IterDataPipe):
+    """Get and open the GSP data"""
     def __init__(
         self,
         gsp_pv_power_zarr_path: Union[str, Path],
@@ -30,6 +30,16 @@ class OpenGSPIterDataPipe(IterDataPipe):
         threshold_mw: int = 0,
         sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=30),
     ):
+        """
+        Get and open the GSP data
+
+        Args:
+            gsp_pv_power_zarr_path: Path to the Zarr for GSP PV Power
+            gsp_id_to_region_id_filename: Path to the file containing the mapping of ID ot region
+            sheffield_solar_region_path: Path to the Sheffield Solar region data
+            threshold_mw: Threshold to drop GSPs by
+            sample_period_duration: Sample period of the GSP data
+        """
         self.gsp_pv_power_zarr_path = gsp_pv_power_zarr_path
         if (
             gsp_id_to_region_id_filename is None
@@ -44,7 +54,8 @@ class OpenGSPIterDataPipe(IterDataPipe):
         self.threshold_mw = threshold_mw
         self.sample_period_duration = sample_period_duration
 
-    def __iter__(self):
+    def __iter__(self) -> xr.DataArray:
+        """Get and return GSP data"""
         gsp_id_to_shape = _get_gsp_id_to_shape(
             self.gsp_id_to_region_id_filename, self.sheffield_solar_region_path
         )
@@ -80,6 +91,16 @@ class OpenGSPIterDataPipe(IterDataPipe):
 def _get_gsp_id_to_shape(
     gsp_id_to_region_id_filename: str, sheffield_solar_region_path: str
 ) -> gpd.GeoDataFrame:
+    """
+    Get the GSP ID to the shape
+
+    Args:
+        gsp_id_to_region_id_filename: Filename of the mapping file
+        sheffield_solar_region_path: Path to the region shaps
+
+    Returns:
+        GeoDataFrame containing the mapping from ID to shape
+    """
     # Load mapping from GSP ID to Sheffield Solar region ID:
     gsp_id_to_region_id = pd.read_csv(
         gsp_id_to_region_id_filename,
@@ -112,6 +133,20 @@ def _put_gsp_data_into_an_xr_dataarray(
     y_osgb: np.ndarray,
     capacity_mwp: np.ndarray,
 ) -> xr.DataArray:
+    """
+    Converts the GSP data to Xarray DataArray
+
+    Args:
+        gsp_pv_power_mw: GSP PV Power
+        time_utc: Time in UTC
+        gsp_id: Id of the GSPs
+        x_osgb: OSGB X coordinates
+        y_osgb: OSGB y coordinates
+        capacity_mwp: Capacity of each GSP
+
+    Returns:
+        Xarray DataArray of the GSP data
+    """
     # Convert to xr.DataArray:
     data_array = xr.DataArray(
         gsp_pv_power_mw,

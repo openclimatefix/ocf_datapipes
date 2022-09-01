@@ -1,3 +1,4 @@
+"""Load Topographic data"""
 from pathlib import Path
 from typing import Union
 
@@ -8,10 +9,18 @@ from torchdata.datapipes.iter import IterDataPipe
 
 @functional_datapipe("open_topography")
 class OpenTopographyIterDataPipe(IterDataPipe):
+    """Load topographic data"""
     def __init__(self, topo_filename: Union[Path, str]):
+        """
+        Load topographic data
+
+        Args:
+            topo_filename: Filename to open
+        """
         self.topo_filename = topo_filename
 
     def __iter__(self):
+        """Load topo data and return it"""
         topo = rioxarray.open_rasterio(
             filename=self.topo_filename, parse_coordinates=True, masked=True
         )
