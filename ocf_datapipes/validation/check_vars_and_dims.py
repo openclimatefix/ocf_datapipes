@@ -8,6 +8,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("check_vars_and_dims")
 class CheckVarsAndDimsIterDataPipe(IterDataPipe):
     """Check that the variables and dims exist"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,

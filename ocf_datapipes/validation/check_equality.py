@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 @functional_datapipe("check_greater_than_or_equal_to")
 class CheckGreaterThanOrEqualToIterDataPipe(IterDataPipe):
     """Check greater than or equal to"""
+
     def __init__(
         self, source_datapipe: IterDataPipe, min_value: int, dataset_name: Optional[str] = None
     ):
@@ -42,6 +43,7 @@ class CheckGreaterThanOrEqualToIterDataPipe(IterDataPipe):
 @functional_datapipe("check_less_than_or_equal_to")
 class CheckLessThanOrEqualToIterDataPipe(IterDataPipe):
     """Check less than or equal to equality"""
+
     def __init__(
         self, source_datapipe: IterDataPipe, max_value: int, dataset_name: Optional[str] = None
     ):
@@ -72,6 +74,7 @@ class CheckLessThanOrEqualToIterDataPipe(IterDataPipe):
 @functional_datapipe("check_not_equal_to")
 class CheckNotEqualToIterDataPipe(IterDataPipe):
     """Check not equal to equality"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,
