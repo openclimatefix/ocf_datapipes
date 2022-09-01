@@ -1,6 +1,7 @@
+import numpy as np
+
 from ocf_datapipes.transform.xarray import Normalize
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD
-import numpy as np
 
 
 def test_normalize_sat(sat_dp):

@@ -1,9 +1,10 @@
-from ocf_datapipes.production.power_perceiver import power_perceiver_production_datapipe
-from ocf_datapipes.utils.consts import BatchKey
+import os
+
+import pytest
 
 import ocf_datapipes
-import os
-import pytest
+from ocf_datapipes.production.power_perceiver import power_perceiver_production_datapipe
+from ocf_datapipes.utils.consts import BatchKey
 
 
 @pytest.mark.skip("Need to set up laod PV from database first")

@@ -1,8 +1,8 @@
-from ocf_datapipes.convert import ConvertNWPToNumpyBatch
-from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration, ConvertToNWPTargetTime
-from ocf_datapipes.select import SelectLiveT0Time
-
 from datetime import timedelta
+
+from ocf_datapipes.convert import ConvertNWPToNumpyBatch
+from ocf_datapipes.select import SelectLiveT0Time
+from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration, ConvertToNWPTargetTime
 
 
 def test_convert_nwp_to_numpy_batch(nwp_dp):

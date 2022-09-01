@@ -1,6 +1,7 @@
+import logging
+
 import fsspec
 from pathy import Pathy
-import logging
 from pyaml_env import parse_config
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe

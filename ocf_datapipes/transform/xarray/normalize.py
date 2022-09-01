@@ -1,6 +1,7 @@
-import xarray as xr
+from typing import Callable, Optional, Union
+
 import numpy as np
-from typing import Optional, Union, Callable
+import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 

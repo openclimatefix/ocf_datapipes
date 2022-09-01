@@ -1,8 +1,9 @@
-import pandas as pd
+from datetime import timedelta
+
 import numpy as np
+import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from datetime import timedelta
 
 
 @functional_datapipe("add_contiguous_time_periods")

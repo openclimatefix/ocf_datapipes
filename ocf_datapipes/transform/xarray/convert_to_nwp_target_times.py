@@ -1,5 +1,5 @@
-from typing import Union
 from datetime import timedelta
+from typing import Union
 
 import pandas as pd
 import xarray as xr
