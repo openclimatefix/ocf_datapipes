@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from ocf_datapipes.convert import ConvertGSPToNumpyBatch
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration
-
 from ocf_datapipes.utils.consts import BatchKey
 
 
