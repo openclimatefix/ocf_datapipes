@@ -10,6 +10,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 @functional_datapipe("add_topographic_data")
 class AddTopographicDataIterDataPipe(IterDataPipe):
     """Datapipe to add topographic data to NumpyBatch"""
+
     def __init__(self, source_datapipe: IterDataPipe, topo_datapipe: IterDataPipe):
         """
         Datapipe to add topographic data to NumpyBatch

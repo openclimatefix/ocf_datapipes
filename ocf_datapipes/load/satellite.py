@@ -96,6 +96,7 @@ def open_sat_data(
 @functional_datapipe("open_satellite")
 class OpenSatelliteIterDataPipe(IterDataPipe):
     """Open Satellite Zarr"""
+
     def __init__(self, zarr_path: Union[Path, str]):
         """
         Opens the satellite Zarr

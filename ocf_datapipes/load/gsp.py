@@ -22,6 +22,7 @@ except ImportError:
 @functional_datapipe("open_gsp")
 class OpenGSPIterDataPipe(IterDataPipe):
     """Get and open the GSP data"""
+
     def __init__(
         self,
         gsp_pv_power_zarr_path: Union[str, Path],

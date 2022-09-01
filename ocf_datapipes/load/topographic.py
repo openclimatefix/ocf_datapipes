@@ -10,6 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("open_topography")
 class OpenTopographyIterDataPipe(IterDataPipe):
     """Load topographic data"""
+
     def __init__(self, topo_filename: Union[Path, str]):
         """
         Load topographic data

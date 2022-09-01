@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 @functional_datapipe("open_config")
 class OpenConfigurationIterDataPipe(IterDataPipe):
     """Open and return the configuration data"""
+
     def __init__(self, configuration_filename: str):
         """
         Open and return config data

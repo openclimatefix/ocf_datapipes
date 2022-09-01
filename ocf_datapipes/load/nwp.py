@@ -15,6 +15,7 @@ _log = logging.getLogger(__name__)
 @functional_datapipe("open_nwp")
 class OpenNWPIterDataPipe(IterDataPipe):
     """Opens NWP Zarr and yields it"""
+
     def __init__(self, zarr_path: Union[Path, str]):
         """
         Opens NWP Zarr and yields it

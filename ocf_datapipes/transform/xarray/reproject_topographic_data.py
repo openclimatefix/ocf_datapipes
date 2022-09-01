@@ -11,6 +11,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 try:
     import cartopy.crs as ccrs
+
     _has_cartopy = True
 except ImportError:
     _has_cartopy = False
@@ -19,6 +20,7 @@ except ImportError:
 @functional_datapipe("reproject_topography")
 class ReprojectTopographyIterDataPipe(IterDataPipe):
     """Reproject Topographic data to OSGB"""
+
     def __init__(self, topo_datapipe: Union[Path, str]):
         """
         Reproject topo data to OSGB
