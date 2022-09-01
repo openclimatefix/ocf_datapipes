@@ -14,4 +14,4 @@ jobs:
       pytest_cov_dir: "ocf_datapipes"
       # extra things to install
       sudo_apt_install: "libgeos++-dev libproj-dev proj-data proj-bin"
-      brew_install: "proj geos librttopo"
+#      brew_install: "proj geos librttopo"
