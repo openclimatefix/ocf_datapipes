@@ -20,7 +20,8 @@ class LocationPickerIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe emitting Xarray Dataset
-            return_all_locations: Whether to return all locations, if True, also returns them in order
+            return_all_locations: Whether to return all locations,
+            if True, also returns them in order
         """
         super().__init__()
         self.source_datapipe = source_datapipe

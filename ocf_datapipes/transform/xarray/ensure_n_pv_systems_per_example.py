@@ -42,7 +42,7 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
                 # If we just used `choice(replace=True)` then there's a high chance
                 # that the output won't include every available PV system but instead
                 # will repeat some PV systems at the expense of leaving some on the table.
-                # TODO: Don't repeat PV systems. Instead, pad with NaNs and mask the loss. Issue #73.
+                # TODO: Don't repeat PV systems. Pad with NaNs and mask the loss. Issue #73.
                 assert len(xr_data.pv_system_id) > 0, (
                     "There are no PV systems at all. " "We need at least one in an example"
                 )

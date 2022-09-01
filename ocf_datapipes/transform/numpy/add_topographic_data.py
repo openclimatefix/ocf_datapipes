@@ -77,7 +77,8 @@ def _get_surface_height_for_satellite(
         msg = "Satellite imagery must start in the top-left!"
         assert satellite_example.y_geostationary[0] > satellite_example.y_geostationary[-1], msg
         assert satellite_example.x_geostationary[0] < satellite_example.x_geostationary[-1], msg
-        # This is needed to get the x and y to be dimension coordinates for the combine_by_coords to work
+        # This is needed to get the x and y to be dimension coordinates
+        # for the combine_by_coords to work
         satellite_example = (
             satellite_example.rename("sat")
             .reset_coords(["x_geostationary", "y_geostationary"])

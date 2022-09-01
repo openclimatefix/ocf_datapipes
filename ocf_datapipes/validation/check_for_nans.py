@@ -51,7 +51,7 @@ def check_nan_and_inf(data: xr.Dataset):
     """Check that all values are non NaNs and not infinite"""
 
     if np.isnan(data).any():
-        message = f"Some data values are NaNs. "
+        message = "Some data values are NaNs. "
 
         # find out which example has nans in it
         for i in range(data.shape[0]):
@@ -60,7 +60,7 @@ def check_nan_and_inf(data: xr.Dataset):
         raise Exception(message)
 
     if np.isinf(data).any():
-        message = f"Some data values are Infinite"
+        message = "Some data values are Infinite"
         raise Exception(message)
 
 

@@ -22,9 +22,10 @@ repos:
         args:
           [
             --convention=google,
-            "--add-ignore=D200,D202,D210,D212,D415",
+            "--add-ignore=D200,D202,D210,D212,D415,D105",
             "ocf_datapipes",
           ]
+        files: ^ocf_datapipes/
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:
@@ -38,6 +39,7 @@ repos:
             "__init__.py:F401",
             "ocf_datapipes",
           ]
+        files: ^ocf_datapipes/
   - repo: https://github.com/PyCQA/isort
     rev: 5.10.1
     hooks:

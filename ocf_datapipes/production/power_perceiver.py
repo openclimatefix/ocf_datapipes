@@ -1,27 +1,16 @@
 """Wrapper for Power Perceiver Production Data Pipeline"""
 import logging
+from datetime import timedelta
 from pathlib import Path
 from typing import Union
 
-import numpy as np
-import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Mapper
+from torchdata.datapipes.iter import IterDataPipe
 
-xarray.set_options(keep_attrs=True)
-
-from datetime import timedelta
-
-from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
+import ocf_datapipes  # noqa
+from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.convert import (
-    ConvertGSPToNumpyBatch,
-    ConvertNWPToNumpyBatch,
-    ConvertPVToNumpyBatch,
-    ConvertSatelliteToNumpyBatch,
-)
-from ocf_datapipes.experimental import SetSystemIDsToOne
 from ocf_datapipes.load import (
     OpenConfiguration,
     OpenGSP,
@@ -30,34 +19,10 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.select import (
-    LocationPicker,
-    SelectLiveT0Time,
-    SelectLiveTimeSlice,
-    SelectSpatialSliceMeters,
-    SelectSpatialSlicePixels,
-    SelectTimeSlice,
-)
-from ocf_datapipes.transform.numpy import (
-    AddSunPosition,
-    AddTopographicData,
-    AlignGSPto5Min,
-    EncodeSpaceTime,
-    ExtendTimestepsToFuture,
-    SaveT0Time,
-)
-from ocf_datapipes.transform.xarray import (
-    AddT0IdxAndSamplePeriodDuration,
-    ConvertSatelliteToInt8,
-    ConvertToNWPTargetTime,
-    Downsample,
-    EnsureNPVSystemsPerExample,
-    Normalize,
-    ReprojectTopography,
-)
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
 
 logger = logging.getLogger(__name__)
+xarray.set_options(keep_attrs=True)
 
 
 @functional_datapipe("gsp_iterator")
@@ -157,8 +122,8 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
         )
         .select_spatial_slice_pixels(
             location_datapipe=location_dp2,
-            roi_width_pixels=configuration.input_data.hrvsatellite.hrvsatellite_image_size_pixels_width,
-            roi_height_pixels=configuration.input_data.hrvsatellite.hrvsatellite_image_size_pixels_height,
+            roi_width_pixels=configuration.input_data.hrvsatellite.hrvsatellite_image_size_pixels_width,  # noqa
+            roi_height_pixels=configuration.input_data.hrvsatellite.hrvsatellite_image_size_pixels_height,  # noqa
             y_dim_name="y_geostationary",
             x_dim_name="x_geostationary",
         )
