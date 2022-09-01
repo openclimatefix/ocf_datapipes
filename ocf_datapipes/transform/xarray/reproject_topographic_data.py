@@ -1,3 +1,4 @@
+"""Reproject Topographic data to OSGB"""
 from pathlib import Path
 from typing import Union
 
@@ -10,16 +11,25 @@ from torchdata.datapipes.iter import IterDataPipe
 
 try:
     import cartopy.crs as ccrs
-except:
-    pass
+    _has_cartopy = True
+except ImportError:
+    _has_cartopy = False
 
 
 @functional_datapipe("reproject_topography")
 class ReprojectTopographyIterDataPipe(IterDataPipe):
+    """Reproject Topographic data to OSGB"""
     def __init__(self, topo_datapipe: Union[Path, str]):
+        """
+        Reproject topo data to OSGB
+
+        Args:
+            topo_datapipe: Datapipe emitting topographic data
+        """
         self.topo_datapipe = topo_datapipe
 
-    def __iter__(self):
+    def __iter__(self) -> xr.DataArray:
+        """Reproject topographic data"""
         for topo in self.topo_datapipe:
             # Select Western Europe:
             topo = topo.sel(x_osgb=slice(-300_000, 1_500_000), y_osgb=slice(1_300_000, -800_000))
@@ -32,6 +42,15 @@ class ReprojectTopographyIterDataPipe(IterDataPipe):
 
 
 def reproject_topo_data_from_osgb_to_geostationary(topo: xr.DataArray) -> xr.DataArray:
+    """
+    Reproject topographic data from osgb to geostationary
+
+    Args:
+        topo: Topographic Xarray DataArray
+
+    Returns:
+        Reprojected Topographic Xarray DataArray
+    """
     topo_osgb_area_def = _get_topo_osgb_area_def(topo)
     topo_geostationary_area_def = _get_topo_geostationary_area_def(topo)
     topo_image = pyresample.image.ImageContainerQuick(topo.values, topo_osgb_area_def)
@@ -40,7 +59,18 @@ def reproject_topo_data_from_osgb_to_geostationary(topo: xr.DataArray) -> xr.Dat
 
 
 def _get_topo_osgb_area_def(topo: xr.DataArray) -> pyresample.geometry.AreaDefinition:
+    """
+    Get the area definition for resampling for OSGB
+
+    Args:
+        topo: Topographic Xarray DataArray
+
+    Returns:
+        AreaDefinition for OSGB
+    """
     # Get AreaDefinition of the OSGB topographical data:
+    if not _has_cartopy:
+        raise Exception("Please install `cartopy` before using ReprojectTopography")
     osgb = ccrs.OSGB(approx=False)
     return pyresample.create_area_def(
         area_id="OSGB",
@@ -56,6 +86,15 @@ def _get_topo_osgb_area_def(topo: xr.DataArray) -> pyresample.geometry.AreaDefin
 
 
 def _get_topo_geostationary_area_def(topo: xr.DataArray) -> pyresample.geometry.AreaDefinition:
+    """
+    Get the geostationary area definition for Topographic data
+
+    Args:
+        topo: Topographic Xarray DataArray
+
+    Returns:
+        AreaDefinition for geostationary area of RSS imagery
+    """
     # Get the geostationary boundaries of the topo data:
     OSGB_EPSG_CODE = 27700
     GEOSTATIONARY_PROJ = {
@@ -87,6 +126,15 @@ def _get_topo_geostationary_area_def(topo: xr.DataArray) -> pyresample.geometry.
 def _get_data_array_of_resampled_topo_image(
     topo_image_resampled: pyresample.image.ImageContainer,
 ) -> xr.DataArray:
+    """
+    Put resampled data into a DataArray
+
+    Args:
+        topo_image_resampled: Resampled data
+
+    Returns:
+        Xarray DataArray containing the resampled data
+    """
     (
         lower_left_x,
         lower_left_y,

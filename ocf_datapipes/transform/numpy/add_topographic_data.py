@@ -1,54 +1,73 @@
+"""Datapipe to add topographic data to NumpyBatch"""
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 
 @functional_datapipe("add_topographic_data")
 class AddTopographicDataIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, topo_dp: IterDataPipe):
+    """Datapipe to add topographic data to NumpyBatch"""
+    def __init__(self, source_datapipe: IterDataPipe, topo_datapipe: IterDataPipe):
+        """
+        Datapipe to add topographic data to NumpyBatch
+
+        Args:
+            source_datapipe: Datapipe of satellite data
+            topo_datapipe: Datapipe of topographic data
+        """
         super().__init__()
-        self.source_dp = source_dp
-        self.topo_dp = topo_dp
+        self.source_datapipe = source_datapipe
+        self.topo_datapipe = topo_datapipe
 
     def __iter__(self) -> NumpyBatch:
-        for topo in self.topo_dp:
-            for np_batch in self.source_dp:
-                if BatchKey.hrvsatellite_x_geostationary in np_batch:
-                    # Recreate an xr.DataArray of the satellite data. This is required so we can
-                    # use xr.combine_by_coords to align the topo data with the satellite data.
-                    hrvsatellite_data_array = xr.DataArray(
-                        # We're not actually interested in the image. But xarray won't make an
-                        # empty DataArray without data in the right shape.
-                        # There's nothing special about the x_osgb data. It's just convenient because
-                        # it's the right shape!
-                        np_batch[BatchKey.hrvsatellite_x_osgb],
-                        dims=("example", "y", "x"),
-                        coords={
-                            "y_geostationary": (
-                                ("example", "y"),
-                                np_batch[BatchKey.hrvsatellite_y_geostationary],
-                            ),
-                            "x_geostationary": (
-                                ("example", "x"),
-                                np_batch[BatchKey.hrvsatellite_x_geostationary],
-                            ),
-                        },
-                    )
-                    hrvsatellite_surface_height = _get_surface_height_for_satellite(
-                        surface_height=topo, satellite=hrvsatellite_data_array
-                    )
-                    np_batch[BatchKey.hrvsatellite_surface_height] = np.nan_to_num(
-                        hrvsatellite_surface_height, nan=0.0
-                    )
-                yield np_batch
+        """Datapipe to add topographic data to NumpyBatch"""
+        for topo, np_batch in Zipper(self.topo_datapipe, self.source_datapipe):
+            if BatchKey.hrvsatellite_x_geostationary in np_batch:
+                # Recreate an xr.DataArray of the satellite data. This is required so we can
+                # use xr.combine_by_coords to align the topo data with the satellite data.
+                hrvsatellite_data_array = xr.DataArray(
+                    # We're not actually interested in the image. But xarray won't make an
+                    # empty DataArray without data in the right shape.
+                    # There's nothing special about the x_osgb data. It's just convenient because
+                    # it's the right shape!
+                    np_batch[BatchKey.hrvsatellite_x_osgb],
+                    dims=("example", "y", "x"),
+                    coords={
+                        "y_geostationary": (
+                            ("example", "y"),
+                            np_batch[BatchKey.hrvsatellite_y_geostationary],
+                        ),
+                        "x_geostationary": (
+                            ("example", "x"),
+                            np_batch[BatchKey.hrvsatellite_x_geostationary],
+                        ),
+                    },
+                )
+                hrvsatellite_surface_height = _get_surface_height_for_satellite(
+                    surface_height=topo, satellite=hrvsatellite_data_array
+                )
+                np_batch[BatchKey.hrvsatellite_surface_height] = np.nan_to_num(
+                    hrvsatellite_surface_height, nan=0.0
+                )
+            yield np_batch
 
 
 def _get_surface_height_for_satellite(
     surface_height: xr.DataArray, satellite: xr.DataArray
 ) -> np.ndarray:
+    """
+    Get the surface height for the satellite data
+
+    Args:
+        surface_height: Topographic data
+        satellite: Satellite data
+
+    Returns:
+        The topographic data for each satellite pixel
+    """
     num_examples = satellite.shape[0]
     surface_height = surface_height.rename("surface_height")
     surface_height_for_batch = np.full_like(satellite.values, fill_value=np.NaN)
