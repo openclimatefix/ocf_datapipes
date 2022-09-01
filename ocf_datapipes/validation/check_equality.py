@@ -11,14 +11,24 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("check_greater_than_or_equal_to")
 class CheckGreaterThanOrEqualToIterDataPipe(IterDataPipe):
+    """Check greater than or equal to"""
     def __init__(
         self, source_datapipe: IterDataPipe, min_value: int, dataset_name: Optional[str] = None
     ):
+        """
+        Check greater than or equal to check
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray object
+            min_value: Minimum value
+            dataset_name: Optional dataset name if checking a subset
+        """
         self.source_datapipe = source_datapipe
         self.min_value = min_value
         self.dataset_name = dataset_name
 
-    def __iter__(self):
+    def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
+        """Check equality"""
         for xr_data in self.source_datapipe:
             if self.dataset_name is not None:
                 check_dataset_greater_than_or_equal_to(
@@ -31,14 +41,24 @@ class CheckGreaterThanOrEqualToIterDataPipe(IterDataPipe):
 
 @functional_datapipe("check_less_than_or_equal_to")
 class CheckLessThanOrEqualToIterDataPipe(IterDataPipe):
+    """Check less than or equal to equality"""
     def __init__(
         self, source_datapipe: IterDataPipe, max_value: int, dataset_name: Optional[str] = None
     ):
+        """
+        Check less than or equal to equality
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray object
+            max_value: Max value
+            dataset_name: Optioanl dataset name if checking a subset
+        """
         self.source_datapipe = source_datapipe
         self.max_value = max_value
         self.dataset_name = dataset_name
 
-    def __iter__(self):
+    def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
+        """Check equality"""
         for xr_data in self.source_datapipe:
             if self.dataset_name is not None:
                 check_dataset_less_than_or_equal_to(
@@ -51,6 +71,7 @@ class CheckLessThanOrEqualToIterDataPipe(IterDataPipe):
 
 @functional_datapipe("check_not_equal_to")
 class CheckNotEqualToIterDataPipe(IterDataPipe):
+    """Check not equal to equality"""
     def __init__(
         self,
         source_datapipe: IterDataPipe,
@@ -58,12 +79,22 @@ class CheckNotEqualToIterDataPipe(IterDataPipe):
         dataset_name: Optional[str] = None,
         raise_error: bool = True,
     ):
+        """
+        Checks not equal to equality on the data
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray object
+            value: Value to check
+            dataset_name: Optional dataset name if checkinga subset
+            raise_error: Whether to raise an error or not
+        """
         self.source_datapipe = source_datapipe
         self.value = value
         self.dataset_name = dataset_name
         self.raise_error = raise_error
 
-    def __iter__(self):
+    def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
+        """Check not equal equality"""
         for xr_data in self.source_datapipe:
             if self.dataset_name is not None:
                 check_dataset_not_equal(
