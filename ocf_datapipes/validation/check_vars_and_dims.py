@@ -13,8 +13,8 @@ class CheckVarsAndDimsIterDataPipe(IterDataPipe):
     def __init__(
         self,
         source_datapipe: IterDataPipe,
-        expected_dimensions: Iterable[str],
-        expected_data_vars: Iterable[str],
+        expected_dimensions: Optional[Iterable[str]] = None,
+        expected_data_vars: Optional[Iterable[str]] = None,
         dataset_name: Optional[str] = None,
     ):
         """
@@ -41,19 +41,23 @@ class CheckVarsAndDimsIterDataPipe(IterDataPipe):
         """
         for xr_data in self.source_datapipe:
             if self.dataset_name is None:
-                xr_data = validate_data_vars(xr_data, self.expected_data_vars)
-                xr_data = validate_dims(xr_data, self.expected_dimensions)
-                xr_data = validate_coords(xr_data, self.expected_dimensions)
+                if self.expected_data_vars is not None:
+                    xr_data = validate_data_vars(xr_data, self.expected_data_vars)
+                if self.expected_dimensions is not None:
+                    xr_data = validate_dims(xr_data, self.expected_dimensions)
+                    xr_data = validate_coords(xr_data, self.expected_dimensions)
             else:
-                xr_data[self.dataset_name] = validate_data_vars(
-                    xr_data[self.dataset_name], self.expected_data_vars
-                )
-                xr_data[self.dataset_name] = validate_dims(
-                    xr_data[self.dataset_name], self.expected_dimensions
-                )
-                xr_data[self.dataset_name] = validate_coords(
-                    xr_data[self.dataset_name], self.expected_dimensions
-                )
+                if self.expected_data_vars is not None:
+                    xr_data[self.dataset_name] = validate_data_vars(
+                        xr_data[self.dataset_name], self.expected_data_vars
+                    )
+                if self.expected_dimensions is not None:
+                    xr_data[self.dataset_name] = validate_dims(
+                        xr_data[self.dataset_name], self.expected_dimensions
+                    )
+                    xr_data[self.dataset_name] = validate_coords(
+                        xr_data[self.dataset_name], self.expected_dimensions
+                    )
             yield xr_data
 
 
