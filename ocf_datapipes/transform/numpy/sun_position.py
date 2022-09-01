@@ -19,6 +19,7 @@ AZIMUTH_STD = 41.7
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
     """Adds the sun position to the NumpyBatch"""
+
     def __init__(self, source_datapipe: IterDataPipe, modality_name: str):
         """
         Adds the sun position to the NumpyBatch
@@ -29,7 +30,14 @@ class AddSunPositionIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
         self.modality_name = modality_name
-        assert self.modality_name in ["hrvsatellite", "gsp", "gsp_5_min", "pv", "nwp_target_time", "satellite"]
+        assert self.modality_name in [
+            "hrvsatellite",
+            "gsp",
+            "gsp_5_min",
+            "pv",
+            "nwp_target_time",
+            "satellite",
+        ]
 
     def __iter__(self):
         for np_batch in self.source_datapipe:

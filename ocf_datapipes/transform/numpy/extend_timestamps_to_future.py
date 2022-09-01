@@ -9,6 +9,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 @functional_datapipe("extend_timesteps_to_future")
 class ExtendTimestepsToFutureIterDataPipe(IterDataPipe):
     """Extends timestamps into the future"""
+
     def __init__(self, source_datapipe: IterDataPipe, forecast_duration, sample_period_duration):
         """
         Extends timestamps into the future

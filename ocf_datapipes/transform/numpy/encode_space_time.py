@@ -12,6 +12,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 @functional_datapipe("encode_space_time")
 class EncodeSpaceTimeIterDataPipe(IterDataPipe):
     """Encodes the Fourier features for space and time"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,

@@ -11,6 +11,7 @@ from ocf_datapipes.utils.utils import datetime64_to_float, stack_np_examples_int
 @functional_datapipe("align_gsp_to_5_min")
 class AlignGSPto5MinIterDataPipe(IterDataPipe):
     """Aligns the GSP data to 5 minutely as well"""
+
     def __init__(self, source_datapipe: IterDataPipe, batch_key_for_5_min_datetimes: BatchKey):
         """
         Aligns the GSP data to 5 minutely
