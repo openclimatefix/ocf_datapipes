@@ -214,10 +214,10 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
             latitude, longitude, system_id, x_osgb, y_osgb
     """
     _log.info(f"Loading PV metadata from {filename}")
-    if 'passiv' in str(filename):
-        index_col = 'ss_id'
+    if "passiv" in str(filename):
+        index_col = "ss_id"
     else:
-        index_col = 'system_id'
+        index_col = "system_id"
     pv_metadata = pd.read_csv(filename, index_col=index_col)
 
     if "Unnamed: 0" in pv_metadata.columns:

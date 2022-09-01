@@ -1,3 +1,4 @@
+"""Selection datapipes"""
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .offset_t0 import OffsetT0IterDataPipe as OffsetT0
 from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Time

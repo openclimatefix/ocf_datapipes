@@ -1,6 +1,5 @@
 from typing import Optional, Union
 
-import numpy as np
 import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -9,24 +8,61 @@ from torchdata.datapipes.iter import IterDataPipe
 
 @functional_datapipe("pv_power_rolling_window")
 class PVPowerRollingWindowIterDataPipe(IterDataPipe):
+    """Compute rolling mean of PV power."""
+
     def __init__(
         self,
-        source_dp: IterDataPipe,
+        source_datapipe: IterDataPipe,
         window: Union[int, pd.tseries.offsets.DateOffset, pd.core.indexers.objects.BaseIndexer] = 3,
         min_periods: Optional[int] = 2,
         center: bool = True,
         win_type: Optional[str] = None,
         expect_dataset: bool = True,
     ):
-        self.source_dp = source_dp
+        """
+        Compute the rolling mean of PV power data
+
+        Args:
+            source_datapipe: Datapipe emitting PV Xarray object
+
+            window: Size of the moving window.
+            If an integer, the fixed number of observations used for each window.
+
+            If an offset, the time period of each window. Each window will be a variable sized
+            based on the observations included in the time-period. This is only valid for
+            datetimelike indexes. To learn more about the offsets & frequency strings, please see:
+            https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
+
+            If a BaseIndexer subclass, the window boundaries based on the defined
+            `get_window_bounds` method. Additional rolling keyword arguments,
+            namely `min_periods` and `center` will be passed to `get_window_bounds`.
+
+            min_periods: Minimum number of observations in window required to have a value;
+            otherwise, result is `np.nan`.
+
+            To avoid NaNs at the start and end of the timeseries, this should be <= ceil(window/2).
+
+            For a window that is specified by an offset, `min_periods` will default to 1.
+
+            For a window that is specified by an integer, `min_periods` will default to the size of
+            the window.
+
+            center: If False, set the window labels as the right edge of the window index.
+            If True, set the window labels as the center of the window index.
+
+            win_type: Window type
+            expect_dataset: Whether to expect a dataset or DataArray
+        """
+        self.source_datapipe = source_datapipe
         self.window = window
         self.min_periods = min_periods
         self.center = center
         self.win_type = win_type
         self.expect_dataset = expect_dataset
 
-    def __iter__(self):
-        for xr_data in self.source_dp:
+    def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        """Compute rolling mean of PV power"""
+        for xr_data in self.source_datapipe:
             if self.expect_dataset:
                 data_to_resample = xr_data["power_w"]
             else:
@@ -47,22 +83,3 @@ class PVPowerRollingWindowIterDataPipe(IterDataPipe):
                 resampled.attrs[attr_name] = xr_data.attrs[attr_name]
 
             yield resampled
-
-
-def set_new_sample_period_and_t0_idx_attrs(xr_data, new_sample_period) -> xr.DataArray:
-    orig_sample_period = xr_data.attrs["sample_period_duration"]
-    orig_t0_idx = xr_data.attrs["t0_idx"]
-    new_sample_period = pd.Timedelta(new_sample_period)
-    assert new_sample_period >= orig_sample_period
-    new_t0_idx = orig_t0_idx / (new_sample_period / orig_sample_period)
-    np.testing.assert_almost_equal(
-        int(new_t0_idx),
-        new_t0_idx,
-        err_msg=(
-            "The original t0_idx must be exactly divisible by"
-            " (new_sample_period / orig_sample_period)"
-        ),
-    )
-    xr_data.attrs["sample_period_duration"] = new_sample_period
-    xr_data.attrs["t0_idx"] = int(new_t0_idx)
-    return xr_data

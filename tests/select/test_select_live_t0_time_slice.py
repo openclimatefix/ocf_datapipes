@@ -58,7 +58,7 @@ def test_select_passiv(passiv_dp):
 
 def test_select_pvoutput(pvoutput_dp):
     time_len = len(next(iter(pvoutput_dp)).time_utc.values)
-    t0_dp = SelectLiveT0Time(pvoutput_dp, dim_name='time_utc')
+    t0_dp = SelectLiveT0Time(pvoutput_dp, dim_name="time_utc")
     pvoutput_dp = SelectLiveTimeSlice(
         pvoutput_dp,
         t0_datapipe=t0_dp,

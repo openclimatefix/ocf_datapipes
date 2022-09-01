@@ -17,6 +17,7 @@ from ocf_datapipes.convert import (
     ConvertSatelliteToNumpyBatch,
 )
 from ocf_datapipes.experimental import EnsureNNWPVariables, SetSystemIDsToOne
+from ocf_datapipes.production.power_perceiver import GSPIterator
 from ocf_datapipes.select import (
     LocationPicker,
     SelectLiveT0Time,
@@ -43,7 +44,6 @@ from ocf_datapipes.transform.xarray import (
     ReprojectTopography,
 )
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
-from ocf_datapipes.production.power_perceiver import GSPIterator
 
 
 def test_power_perceiver_production(sat_hrv_dp, passiv_dp, topo_dp, gsp_dp, nwp_dp):

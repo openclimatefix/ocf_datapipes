@@ -1,3 +1,4 @@
+"""Various utilites that didn't fit elsewhere"""
 from pathlib import Path
 from typing import Sequence, Union
 

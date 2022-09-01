@@ -1,12 +1,13 @@
+import os
+
+import pytest
+
+import ocf_datapipes
 from ocf_datapipes.production.power_perceiver import power_perceiver_production_datapipe
 from ocf_datapipes.utils.consts import BatchKey
 
-import ocf_datapipes
-import os
-import pytest
 
-
-@pytest.mark.skip('Need to set up laod PV from database first')
+@pytest.mark.skip("Need to set up laod PV from database first")
 def test_pp_production_datapipe():
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")

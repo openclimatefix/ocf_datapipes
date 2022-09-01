@@ -1,3 +1,4 @@
+"""Various validation datapipes"""
 from .check_equality import CheckGreaterThanOrEqualToIterDataPipe as CheckGreaterThanOrEqualTo
 from .check_equality import CheckLessThanOrEqualToIterDataPipe as CheckLessThanOrEqualTo
 from .check_equality import CheckNotEqualToIterDataPipe as CheckNotEqualTo
