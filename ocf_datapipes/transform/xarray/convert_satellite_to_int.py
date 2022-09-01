@@ -8,6 +8,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("convert_satellite_to_int8")
 class ConvertSatelliteToInt8IterDataPipe(IterDataPipe):
     """Converts satellite to int8"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Converts satellite to int8

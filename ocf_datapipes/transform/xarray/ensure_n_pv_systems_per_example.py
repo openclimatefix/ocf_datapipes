@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 @functional_datapipe("ensure_n_pv_systems_per_example")
 class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
     """Ensure there is N PV systems per example"""
+
     def __init__(self, source_datapipe: IterDataPipe, n_pv_systems_per_example: int, seed=None):
         """
         Ensure there is N PV systems per example
