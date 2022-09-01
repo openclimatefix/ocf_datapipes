@@ -12,6 +12,7 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 @functional_datapipe("select_time_slice")
 class SelectTimeSliceIterDataPipe(IterDataPipe):
     """Selects time slice"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,

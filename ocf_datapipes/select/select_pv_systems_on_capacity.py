@@ -10,6 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("select_pv_systems_on_capacity")
 class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
     """Select PV systems based off their capacity"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,
@@ -31,7 +32,7 @@ class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data in self.source_datapipe:
             # Drop based off capacity here
-            #TODO Do
+            # TODO Do
             yield xr_data
 
 

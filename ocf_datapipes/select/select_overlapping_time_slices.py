@@ -9,6 +9,7 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 @functional_datapipe("select_overlapping_time_slice")
 class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
     """Source DataPipes are from the contiguous_time_period"""
+
     def __init__(self, source_datapipes: Iterable[IterDataPipe]):
         """
         Source DataPipes are from the contiguous_time_period

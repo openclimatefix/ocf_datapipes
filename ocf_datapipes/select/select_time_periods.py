@@ -10,6 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("select_time_periods")
 class SelectTimePeriodsIterDataPipe(IterDataPipe):
     """Select time periods"""
+
     def __init__(
         self, source_datapipe: IterDataPipe, time_periods: pd.DataFrame, dim_name: str = "time_utc"
     ):

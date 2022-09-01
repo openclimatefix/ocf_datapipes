@@ -1,8 +1,7 @@
 """Wrapper for Power Perceiver Production Data Pipeline"""
+import logging
 from pathlib import Path
 from typing import Union
-
-import logging
 
 import numpy as np
 import torchdata.datapipes as dp
