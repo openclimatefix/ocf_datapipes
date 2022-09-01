@@ -1,7 +1,6 @@
 """Offset T0 for training to more realistically match production"""
 from typing import Union
 
-import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -9,6 +8,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("offset_t0")
 class OffsetT0IterDataPipe(IterDataPipe):
     """Offset T0 for training to more realistically match production"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,
