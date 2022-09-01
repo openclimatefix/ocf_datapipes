@@ -1,3 +1,4 @@
+"""Encodes the Fourier features for space and time"""
 import warnings
 from numbers import Number
 
@@ -10,13 +11,22 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 @functional_datapipe("encode_space_time")
 class EncodeSpaceTimeIterDataPipe(IterDataPipe):
+    """Encodes the Fourier features for space and time"""
     def __init__(
         self,
-        source_dp: IterDataPipe,
+        source_datapipe: IterDataPipe,
         lengths: dict[str, Number] = dict(x_osgb=480_000, y_osgb=400_000, time_utc=60 * 5 * 37),
         n_fourier_features_per_dim: int = 8,
     ):
-        self.source_dp = source_dp
+        """
+        Encodes the space and time fourier features
+
+        Args:
+            source_datapipe: Datapipe of NumpyBatch
+            lengths: Lengths for the distance
+            n_fourier_features_per_dim: Number of Fourier features per dimension
+        """
+        self.source_dp = source_datapipe
         self.lengths = lengths
         self.n_fourier_features_per_dim = n_fourier_features_per_dim
 

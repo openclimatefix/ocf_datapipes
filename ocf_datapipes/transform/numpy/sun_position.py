@@ -1,3 +1,4 @@
+"""Datapipes to add Sun position to NumpyBatch"""
 import warnings
 
 import numpy as np
@@ -17,13 +18,21 @@ AZIMUTH_STD = 41.7
 
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, modality_name: str):
-        self.source_dp = source_dp
+    """Adds the sun position to the NumpyBatch"""
+    def __init__(self, source_datapipe: IterDataPipe, modality_name: str):
+        """
+        Adds the sun position to the NumpyBatch
+
+        Args:
+            source_datapipe: Datapipe of NumpyBatch
+            modality_name: modality to add the sun position for
+        """
+        self.source_datapipe = source_datapipe
         self.modality_name = modality_name
-        assert self.modality_name in ["hrvsatellite", "gsp", "gsp_5_min", "pv", "nwp_target_time"]
+        assert self.modality_name in ["hrvsatellite", "gsp", "gsp_5_min", "pv", "nwp_target_time", "satellite"]
 
     def __iter__(self):
-        for np_batch in self.source_dp:
+        for np_batch in self.source_datapipe:
             # TODO Make work with Lat/Lons instead
             if self.modality_name == "hrvsatellite":
                 y_osgb = np_batch[BatchKey.hrvsatellite_y_osgb]  # example, y, x

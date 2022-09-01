@@ -1,3 +1,4 @@
+"""Aligns the GSP data to 5 minutely as well"""
 import numpy as np
 import pandas as pd
 from torchdata.datapipes import functional_datapipe
@@ -9,7 +10,15 @@ from ocf_datapipes.utils.utils import datetime64_to_float, stack_np_examples_int
 
 @functional_datapipe("align_gsp_to_5_min")
 class AlignGSPto5MinIterDataPipe(IterDataPipe):
+    """Aligns the GSP data to 5 minutely as well"""
     def __init__(self, source_datapipe: IterDataPipe, batch_key_for_5_min_datetimes: BatchKey):
+        """
+        Aligns the GSP data to 5 minutely
+
+        Args:
+            source_datapipe: Datapipe of NumpyBatch
+            batch_key_for_5_min_datetimes: What batch key to use for the 5 minute timestamps
+        """
         self.source_dp = source_datapipe
         self.batch_key_for_5_min_datetimes = batch_key_for_5_min_datetimes
 
