@@ -1,5 +1,6 @@
 """GSP Loader"""
 import datetime
+import logging
 from pathlib import Path
 from typing import Optional, Union
 
@@ -9,6 +10,8 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+logger = logging.getLogger(__name__)
 
 try:
     from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
@@ -61,6 +64,8 @@ class OpenGSPIterDataPipe(IterDataPipe):
             self.gsp_id_to_region_id_filename, self.sheffield_solar_region_path
         )
         self._gsp_id_to_shape = gsp_id_to_shape  # Save, mostly for plotting to check all is fine!
+
+        logger.debug("Getting GSP data")
 
         # Load GSP generation xr.Dataset:
         gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")

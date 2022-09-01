@@ -1,9 +1,12 @@
+import logging
 from typing import Callable, Optional, Union
 
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("normalize")
@@ -41,6 +44,9 @@ class NormalizeIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
         """Normalize the data depending on the init arguments"""
+
+        logger.debug("Normalizing data")
+
         for xr_data in self.source_datapipe:
             if self.mean is not None and self.std is not None:
                 xr_data = xr_data - self.mean

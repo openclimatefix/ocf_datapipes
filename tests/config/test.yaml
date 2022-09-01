@@ -22,6 +22,9 @@ input_data:
         pv_filename: tests/data/pv/pvoutput/test.nc
         pv_metadata_filename: tests/data/pv/pvoutput/UK_PV_metadata.csv
     get_center: false
+    pv_image_size_meters_height: 10000000
+    pv_image_size_meters_width: 10000000
+    n_pv_systems_per_example: 32
   satellite:
     satellite_channels:
       - IR_016
@@ -53,7 +56,7 @@ input_data:
 output_data:
   filepath: not used by unittests!
 process:
-  batch_size: 20
+  batch_size: 4
   local_temp_path: ~/temp/
   seed: 1234
   upload_every_n_batches: 16
