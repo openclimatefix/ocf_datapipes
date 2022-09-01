@@ -7,13 +7,22 @@ from ocf_datapipes.utils.consts import Location
 
 @functional_datapipe("location_picker")
 class LocationPickerIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, return_all_locations: bool = False):
+    """Picks locations from a dataset and returns them"""
+    def __init__(self, source_datapipe: IterDataPipe, return_all_locations: bool = False):
+        """
+        Picks locations from a dataset and returns them
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray Dataset
+            return_all_locations: Whether to return all locations, if True, also returns them in order
+        """
         super().__init__()
-        self.source_dp = source_dp
+        self.source_datapipe = source_datapipe
         self.return_all_locations = return_all_locations
 
     def __iter__(self) -> Location:
-        for xr_dataset in self.source_dp:
+        """Returns locations from the inputs datapipe"""
+        for xr_dataset in self.source_datapipe:
             if self.return_all_locations:
                 # Iterate through all locations in dataset
                 for location_idx in range(len(xr_dataset["x_osgb"])):
