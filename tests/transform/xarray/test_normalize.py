@@ -1,28 +1,50 @@
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
 from ocf_datapipes.transform.xarray import Normalize
-
+from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD
+import numpy as np
 
 def test_normalize_sat(sat_dp):
-    sat_dp = Normalize(sat_dp, mean=[0.5], std=[0.5])
+    sat_dp = Normalize(sat_dp, mean=SAT_MEAN['HRV'], std=SAT_STD['HRV'])
     data = next(iter(sat_dp))
-    assert data is not None
+    assert np.all(data <= 1.0)
+    assert np.all(data >= -1.0)
 
 
 def test_normalize_nwp(nwp_dp):
-    pass
+    nwp_dp = Normalize(nwp_dp, mean=NWP_MEAN, std=NWP_STD)
+    data = next(iter(nwp_dp))
+    assert np.all(data <= 1.0)
+    assert np.all(data >= -1.0)
 
 
 def test_normalize_topo(topo_dp):
-    pass
+    topo_dp = topo_dp.reproject_topography().normalize(calculate_mean_std_from_example=True)
+    data = next(iter(topo_dp))
+    assert np.all(data >= -1.0)
+    assert np.all(data <= 1.0)
 
 
-def test_normalize_gsp():
-    pass
+def test_normalize_gsp(gsp_dp):
+    gsp_dp = gsp_dp.normalize(
+        normalize_fn=lambda x: x / x.capacity_mwp
+    )
+    data = next(iter(gsp_dp))
+    assert np.min(data) >= 0.0
+    assert np.max(data) <= 1.0
 
 
 def test_normalize_passiv(passiv_dp):
-    pass
+    passiv_dp = passiv_dp.normalize(
+        normalize_fn=lambda x: x / x.capacity_wp
+    )
+    data = next(iter(passiv_dp))
+    assert np.min(data) >= 0.0
+    assert np.max(data) <= 1.0
 
 
 def test_normalize_pvoutput(pvoutput_dp):
-    pass
+    pvoutput_dp = pvoutput_dp.normalize(
+        normalize_fn=lambda x: x / x.capacity_wp
+    )
+    data = next(iter(pvoutput_dp))
+    assert np.min(data) >= 0.0
+    assert np.max(data) <= 1.0
