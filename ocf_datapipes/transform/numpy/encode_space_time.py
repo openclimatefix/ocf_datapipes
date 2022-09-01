@@ -132,6 +132,7 @@ def _rescale_coords_for_all_dims_to_approx_0_to_1(
             If we didn't do that, a spatial encoding of 1 would represent different "real world"
             distances across examples. This would almost certainly be harmful, especially
             because we're expecting the model to learn to do some basic geometry!
+        np_batch: NumpyBatch
     """
     rescaled_coords: dict[str, np.ndarray] = {}
     for dim_name in ("x_osgb", "y_osgb", "time_utc"):
