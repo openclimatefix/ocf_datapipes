@@ -8,12 +8,20 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 
 @functional_datapipe("convert_pv_to_numpy_batch")
 class ConvertPVToNumpyBatchIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe):
+    """Convert PV Xarray to NumpyBatch"""
+    def __init__(self, source_datapipe: IterDataPipe):
+        """
+        Convert PV Xarray objects to NumpyBatch objects
+
+        Args:
+            source_datapipe: Datapipe emitting PV Xarray objects
+        """
         super().__init__()
-        self.source_dp = source_dp
+        self.source_datapipe = source_datapipe
 
     def __iter__(self) -> NumpyBatch:
-        for xr_data in self.source_dp:
+        """Iterate and convert PV Xarray to NumpyBatch"""
+        for xr_data in self.source_datapipe:
             example: NumpyBatch = {
                 BatchKey.pv: xr_data.values,
                 BatchKey.pv_t0_idx: xr_data.attrs["t0_idx"],
