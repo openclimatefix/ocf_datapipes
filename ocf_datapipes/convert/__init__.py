@@ -1,3 +1,4 @@
+"""Various conversion datapipes"""
 from .coordinates import ConvertGeostationaryToLatLonIterDataPipe as ConvertGeostationaryToLatLon
 from .coordinates import ConvertLatLonToOSGBIterDataPipe as ConvertLatLonToOSGB
 from .coordinates import ConvertOSGBToLatLonIterDataPipe as ConvertOSGBToLatLon

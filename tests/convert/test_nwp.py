@@ -4,6 +4,8 @@ from ocf_datapipes.convert import ConvertNWPToNumpyBatch
 from ocf_datapipes.select import SelectLiveT0Time
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration, ConvertToNWPTargetTime
 
+from ocf_datapipes.utils.consts import BatchKey
+
 
 def test_convert_nwp_to_numpy_batch(nwp_dp):
     nwp_dp = AddT0IdxAndSamplePeriodDuration(
@@ -20,4 +22,5 @@ def test_convert_nwp_to_numpy_batch(nwp_dp):
     )
     nwp_dp = ConvertNWPToNumpyBatch(nwp_dp)
     data = next(iter(nwp_dp))
-    assert data is not None
+    assert BatchKey.nwp in data
+    assert BatchKey.nwp_channel_names in data

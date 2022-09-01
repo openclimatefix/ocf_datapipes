@@ -1,24 +1,40 @@
-import datetime
+from datetime import timedelta
 
+import numpy as np
 import pandas as pd
-import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("add_contiguous_time_periods")
 class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
+    """Get contiguous time periods for training"""
+
     def __init__(
-        self, source_dp: IterDataPipe, history_duration, forecast_duration, sample_period_duration
+        self,
+        source_datapipe: IterDataPipe,
+        history_duration: timedelta,
+        forecast_duration: timedelta,
+        sample_period_duration: timedelta,
     ):
-        self.source_dp = source_dp
+        """
+        Get contiguous time periods for use in determing t0 times for training
+
+        Args:
+            source_datapipe: Datapipe emitting a Xarray dataset
+            history_duration: Amount of time for the history of an example
+            forecast_duration: Amount of time for the forecast of an example
+            sample_period_duration: The sampling period of the data source
+        """
+        self.source_datapipe = source_datapipe
         self.history_duration = history_duration
         self.forecast_duration = forecast_duration
         self.total_duration = history_duration + forecast_duration
         self.sample_period_duration = sample_period_duration
 
     def __iter__(self) -> pd.DataFrame:
-        for xr_data in self.source_dp:
+        """Calculate contiguous time periods and return a dataframe containing them"""
+        for xr_data in self.source_datapipe:
             contiguous_time_periods = get_contiguous_time_periods(
                 datetimes=pd.DatetimeIndex(xr_data["time_utc"]),
                 min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
@@ -33,7 +49,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
 
 
 def get_contiguous_t0_time_periods(
-    contiguous_time_periods, history_duration, forecast_duration
+    contiguous_time_periods: pd.DataFrame, history_duration: timedelta, forecast_duration: timedelta
 ) -> pd.DataFrame:
     """Get all time periods which contain valid t0 datetimes.
 
@@ -52,7 +68,7 @@ def get_contiguous_t0_time_periods(
 def get_contiguous_time_periods(
     datetimes: pd.DatetimeIndex,
     min_seq_length: int,
-    max_gap_duration: datetime.timedelta,
+    max_gap_duration: timedelta,
 ) -> pd.DataFrame:
     """Return a pd.DataFrame where each row records the boundary of a contiguous time period.
 

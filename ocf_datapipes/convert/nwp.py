@@ -8,12 +8,21 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 
 @functional_datapipe("convert_nwp_to_numpy_batch")
 class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe):
+    """Convert NWP Xarray objects to NumpyBatch ones"""
+
+    def __init__(self, source_datapipe: IterDataPipe):
+        """
+        Convert NWP Xarray objecs to NumpyBatch ones
+
+        Args:
+            source_datapipe: Datapipe emitting NWP Xarray objects
+        """
         super().__init__()
-        self.source_dp = source_dp
+        self.source_datapipe = source_datapipe
 
     def __iter__(self) -> NumpyBatch:
-        for xr_data in self.source_dp:
+        """Convert from Xarray to NumpyBatch"""
+        for xr_data in self.source_datapipe:
             example: NumpyBatch = {
                 BatchKey.nwp: xr_data.values,
                 BatchKey.nwp_t0_idx: xr_data.attrs["t0_idx"],

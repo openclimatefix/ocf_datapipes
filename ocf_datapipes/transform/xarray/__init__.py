@@ -1,3 +1,4 @@
+"""Xarray transforms"""
 from .add_t0idx_and_sample_period_duration import (
     AddT0IdxAndSamplePeriodDurationIterDataPipe as AddT0IdxAndSamplePeriodDuration,
 )

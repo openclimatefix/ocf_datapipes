@@ -7,13 +7,23 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 
 @functional_datapipe("convert_satellite_to_numpy_batch")
 class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
-    def __init__(self, source_dp: IterDataPipe, is_hrv: bool = False):
+    """Converts Xarray Satellite to NumpyBatch object"""
+
+    def __init__(self, source_datapipe: IterDataPipe, is_hrv: bool = False):
+        """
+        Converts Xarray satellite object to NumpyBatch object
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray satellite objects
+            is_hrv: Whether this is HRV satellite data or non-HRV data
+        """
         super().__init__()
-        self.source_dp = source_dp
+        self.source_datapipe = source_datapipe
         self.is_hrv = is_hrv
 
     def __iter__(self) -> NumpyBatch:
-        for xr_data in self.source_dp:
+        """Convert each example to a NumpyBatch object"""
+        for xr_data in self.source_datapipe:
             if self.is_hrv:
                 example: NumpyBatch = {
                     BatchKey.hrvsatellite_actual: xr_data.values,
