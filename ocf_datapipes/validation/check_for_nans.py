@@ -1,3 +1,4 @@
+"""Datapipe to check and optionally fill NaNs in data"""
 from typing import Union
 
 import numpy as np

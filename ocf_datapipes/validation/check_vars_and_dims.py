@@ -1,3 +1,4 @@
+"""Datapipe to check variable and dimension names exist"""
 from typing import Iterable, Optional, Union
 
 import xarray as xr

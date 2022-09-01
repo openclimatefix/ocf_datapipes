@@ -1,3 +1,4 @@
+"""Datapipes to check equalities"""
 import logging
 from typing import Optional, Union
 
