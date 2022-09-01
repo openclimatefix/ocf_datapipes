@@ -207,7 +207,7 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
     """
     _log.info(f"Loading PV metadata from {filename}")
 
-    if 'passiv' in filename:
+    if 'passiv' in str(filename):
         index_col = 'ss_id'
     else:
         index_col = 'system_id'
@@ -216,6 +216,7 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
 
     if "Unnamed: 0" in pv_metadata.columns:
         pv_metadata.drop(columns="Unnamed: 0", inplace=True)
+
     _log.info(f"Found {len(pv_metadata)} PV systems in {filename}")
 
     # drop any systems with no lon or lat:
