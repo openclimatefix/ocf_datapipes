@@ -1,3 +1,4 @@
+"""Convert NWP data to the target time"""
 from datetime import timedelta
 from typing import Union
 

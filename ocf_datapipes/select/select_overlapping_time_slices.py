@@ -1,3 +1,4 @@
+"""Select overlapping time slices for training"""
 from typing import Iterable, Union
 
 import pandas as pd
@@ -7,13 +8,20 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 @functional_datapipe("select_overlapping_time_slice")
 class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
-    def __init__(self, source_dps: Iterable[IterDataPipe]):
-        """Source DataPipes are from the contiguous_time_period"""
-        super().__init__()
-        self.source_dps = source_dps
+    """Source DataPipes are from the contiguous_time_period"""
 
-    def __iter__(self):
-        for set_of_pd_datas in Zipper(*self.source_dps):
+    def __init__(self, source_datapipes: Iterable[IterDataPipe]):
+        """
+        Source DataPipes are from the contiguous_time_period
+
+        Args:
+            source_datapipes: Datapipes to compute the intersection of
+        """
+        super().__init__()
+        self.source_datapipes = source_datapipes
+
+    def __iter__(self) -> pd.DataFrame:
+        for set_of_pd_datas in Zipper(*self.source_datapipes):
             yield intersection_of_multiple_dataframes_of_periods(list(*set_of_pd_datas))
 
 

@@ -1,8 +1,8 @@
+"""NWP Loader"""
 import logging
 from pathlib import Path
 from typing import Union
 
-import dask
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -14,17 +14,35 @@ _log = logging.getLogger(__name__)
 
 @functional_datapipe("open_nwp")
 class OpenNWPIterDataPipe(IterDataPipe):
+    """Opens NWP Zarr and yields it"""
+
     def __init__(self, zarr_path: Union[Path, str]):
+        """
+        Opens NWP Zarr and yields it
+
+        Args:
+            zarr_path: Path to the Zarr file
+        """
         self.zarr_path = zarr_path
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        """Opens the NWP data"""
         _log.debug("Opening NWP data: %s", self.zarr_path)
         ukv = open_nwp(self.zarr_path)
         while True:
             yield ukv
 
 
-def open_nwp(zarr_path):
+def open_nwp(zarr_path) -> xr.DataArray:
+    """
+    Opens the NWP data
+
+    Args:
+        zarr_path: Path to the zarr to open
+
+    Returns:
+        Xarray DataArray of the NWP data
+    """
     nwp = xr.open_dataset(
         zarr_path,
         engine="zarr",

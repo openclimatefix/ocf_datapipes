@@ -1,3 +1,4 @@
+"""Geospatial functions"""
 from datetime import datetime
 from numbers import Number
 from typing import Union
@@ -75,6 +76,15 @@ def calculate_azimuth_and_elevation_angle(
 
 
 def load_geostationary_area_definition_and_transform_osgb(xr_data):
+    """
+    Loads geostationary area and transformation from OSGB to geostationaery
+
+    Args:
+        xr_data: Xarray object with geostationary area
+
+    Returns:
+        The transform
+    """
     # Only load these if using geostationary projection
     import pyproj
     import pyresample
@@ -91,6 +101,15 @@ def load_geostationary_area_definition_and_transform_osgb(xr_data):
 
 
 def load_geostationary_area_definition_and_transform_latlon(xr_data):
+    """
+    Loads geostationary area and transformation from Latlon to geostationaery
+
+    Args:
+        xr_data: Xarray object with geostationary area
+
+    Returns:
+        The transform
+    """
     # Only load these if using geostationary projection
     import pyproj
     import pyresample

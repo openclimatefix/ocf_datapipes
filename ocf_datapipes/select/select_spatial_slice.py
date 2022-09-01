@@ -1,3 +1,4 @@
+"""Select spatial slices"""
 from typing import Union
 
 import numpy as np
@@ -22,6 +23,17 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         y_dim_name: str = "y",
         x_dim_name: str = "x",
     ):
+        """
+        Select spatial slice based off pixels from point of interest
+
+        Args:
+            source_datapipe: Datapipe of Xarray data
+            location_datapipe: Location datapipe
+            roi_height_pixels: ROI height in pixels
+            roi_width_pixels: ROI width in pixels
+            y_dim_name: Dimension name for Y
+            x_dim_name: Dimension name for X
+        """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
         self.roi_height_pixels = roi_height_pixels
@@ -88,6 +100,15 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         roi_height_meters: int,
         roi_width_meters: int,
     ):
+        """
+        Select spatial slice based off pixels from point of interest
+
+        Args:
+            source_datapipe: Datapipe of Xarray data
+            location_datapipe: Location datapipe
+            roi_height_meters: ROI height in meters
+            roi_width_meters: ROI width in meters
+        """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
         self.roi_height_meters = roi_height_meters
@@ -118,7 +139,18 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
 def _get_idx_of_pixel_closest_to_poi(
     xr_data: xr.DataArray, center_osgb: Location, y_dim_name: str = "y", x_dim_name: str = "x"
 ) -> Location:
-    """Return x and y index location of pixel at center of region of interest."""
+    """
+    Return x and y index location of pixel at center of region of interest.
+
+    Args:
+        xr_data: Xarray dataset
+        center_osgb: Center in OSGB coordinates
+        y_dim_name: Y dimension name
+        x_dim_name: X dimension name
+
+    Returns:
+        The Location for the center pixel
+    """
     y_index = xr_data.get_index(y_dim_name)
     x_index = xr_data.get_index(x_dim_name)
     return Location(
@@ -133,7 +165,18 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     x_dim_name="x_geostationary",
     y_dim_name="y_geostationary",
 ) -> Location:
-    """Return x and y index location of pixel at center of region of interest."""
+    """
+    Return x and y index location of pixel at center of region of interest.
+
+    Args:
+        xr_data: Xarray dataset
+        center_osgb: Center in OSGB coordinates
+        x_dim_name: X dimension name
+        y_dim_name: Y dimension name
+
+    Returns:
+        Location for the center pixel in geostationary coordinates
+    """
     _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
     center_geostationary_tuple = _osgb_to_geostationary(xx=center_osgb.x, yy=center_osgb.y)
     center_geostationary = Location(
