@@ -12,12 +12,29 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
+    """
+    Converts datetime64 to floats
+
+    Args:
+        datetimes: Array of datetimes
+        dtype: Dtype to convert to
+
+    Returns:
+        Converted datetimes to floats
+    """
     nums = datetimes.astype("datetime64[s]").astype(dtype)
     mask = np.isfinite(datetimes)
     return np.where(mask, nums, np.NaN)
 
 
-def assert_num_dims(tensor, num_expected_dims: int):
+def assert_num_dims(tensor, num_expected_dims: int) -> None:
+    """
+    Asserts the tensor shape is correct
+
+    Args:
+        tensor: Tensor to check
+        num_expected_dims: Number of expected dims
+    """
     assert len(tensor.shape) == num_expected_dims, (
         f"Expected tensor to have {num_expected_dims} dims." f" Instead, shape={tensor.shape}"
     )
@@ -90,6 +107,15 @@ def set_fsspec_for_multiprocess() -> None:
 
 
 def stack_np_examples_into_batch(np_examples: Sequence[NumpyBatch]) -> NumpyBatch:
+    """
+    Stacks Numpy examples into a batch
+
+    Args:
+        np_examples: Numpy examples to stack
+
+    Returns:
+        The stacked NumpyBatch object
+    """
     np_batch: NumpyBatch = {}
     batch_keys = np_examples[0]  # Batch keys should be the same across all examples.
     for batch_key in batch_keys:
@@ -105,6 +131,17 @@ def stack_np_examples_into_batch(np_examples: Sequence[NumpyBatch]) -> NumpyBatc
 def select_time_periods(
     xr_data: Union[xr.DataArray, xr.Dataset], time_periods: pd.DataFrame, dim_name: str = "time_utc"
 ) -> Union[xr.DataArray, xr.Dataset]:
+    """
+    Selects time periods from Xarray object
+
+    Args:
+        xr_data: Xarray object
+        time_periods: Time periods to select
+        dim_name: Dimension name for time
+
+    Returns:
+        The subselected Xarray object
+    """
     new_xr_data = []
     for _, row in time_periods.iterrows():
         start_dt = row["start_dt"]
@@ -116,6 +153,15 @@ def select_time_periods(
 def pandas_periods_to_our_periods_dt(
     periods: Union[Sequence[pd.Period], pd.PeriodIndex]
 ) -> pd.DataFrame:
+    """
+    Converts Pandas periods to new periods
+
+    Args:
+        periods: Pandas periods to convert
+
+    Returns:
+        Converted pandas periods
+    """
     new_periods = []
     for period in periods:
         new_periods.append(dict(start_dt=period.start_time, end_dt=period.end_time))
