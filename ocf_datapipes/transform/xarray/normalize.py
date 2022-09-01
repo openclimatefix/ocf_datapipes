@@ -8,12 +8,13 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("normalize")
 class NormalizeIterDataPipe(IterDataPipe):
     """Normalize the data in various methods"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,
-        mean: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]]=None,
-        std: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]]=None,
-        max_value: Optional[Union[int, float]]=None,
+        mean: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]] = None,
+        std: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]] = None,
+        max_value: Optional[Union[int, float]] = None,
         calculate_mean_std_from_example: bool = False,
         normalize_fn: Optional[Callable] = None,
     ):

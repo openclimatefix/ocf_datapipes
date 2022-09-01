@@ -10,6 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 @functional_datapipe("convert_to_nwp_target_time")
 class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
     """Converts NWP Xarray to use the target time"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,

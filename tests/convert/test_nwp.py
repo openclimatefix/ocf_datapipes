@@ -9,7 +9,7 @@ def test_convert_nwp_to_numpy_batch(nwp_dp):
     nwp_dp = AddT0IdxAndSamplePeriodDuration(
         nwp_dp, sample_period_duration=timedelta(minutes=60), history_duration=timedelta(minutes=60)
     )
-    t0_dp = SelectLiveT0Time(nwp_dp, dim_name='init_time_utc')
+    t0_dp = SelectLiveT0Time(nwp_dp, dim_name="init_time_utc")
 
     nwp_dp = ConvertToNWPTargetTime(
         nwp_dp,

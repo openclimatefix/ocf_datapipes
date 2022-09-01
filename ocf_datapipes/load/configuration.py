@@ -16,11 +16,11 @@ class OpenConfigurationIterDataPipe(IterDataPipe):
         self.configuration_filename = configuration_filename
 
     def __iter__(self):
-        logger.debug(f'Going to open {self.configuration_filename}')
+        logger.debug(f"Going to open {self.configuration_filename}")
         with fsspec.open(self.configuration_filename, mode="r") as stream:
             configuration = parse_config(data=stream)
 
-        logger.debug(f'Converting to Configuration ({configuration})')
+        logger.debug(f"Converting to Configuration ({configuration})")
         configuration = Configuration(**configuration)
 
         while True:

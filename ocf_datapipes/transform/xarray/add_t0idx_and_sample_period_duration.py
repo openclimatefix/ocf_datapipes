@@ -5,10 +5,17 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 from datetime import timedelta
 
+
 @functional_datapipe("add_t0_idx_and_sample_period_duration")
 class AddT0IdxAndSamplePeriodDurationIterDataPipe(IterDataPipe):
     """Add t0_idx and sample_period_duration attributes to datasets for downstream tasks"""
-    def __init__(self, source_datapipe: IterDataPipe, sample_period_duration: timedelta, history_duration: timedelta):
+
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        sample_period_duration: timedelta,
+        history_duration: timedelta,
+    ):
         """
         Adds two attributes, t0_idx, and sample_period_duration for downstream datapipes to use
 

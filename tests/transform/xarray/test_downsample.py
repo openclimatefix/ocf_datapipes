@@ -10,7 +10,13 @@ def test_nwp_downsample(nwp_dp):
 
 
 def test_sat_downsample(sat_dp):
-    sat_dp = Downsample(sat_dp, y_coarsen=16, x_coarsen=16, y_dim_name="y_geostationary", x_dim_name="x_geostationary")
+    sat_dp = Downsample(
+        sat_dp,
+        y_coarsen=16,
+        x_coarsen=16,
+        y_dim_name="y_geostationary",
+        x_dim_name="x_geostationary",
+    )
     data = next(iter(sat_dp))
     assert data.shape[-1] == 38
     assert data.shape[-2] == 18

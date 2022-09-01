@@ -9,6 +9,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("pv_power_rolling_window")
 class PVPowerRollingWindowIterDataPipe(IterDataPipe):
     """Compute rolling mean of PV power."""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,

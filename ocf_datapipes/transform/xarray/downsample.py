@@ -5,7 +5,15 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("downsample")
 class DownsampleIterDataPipe(IterDataPipe):
     """Downsample Xarray dataset with coarsen"""
-    def __init__(self, source_datapipe: IterDataPipe, y_coarsen: int, x_coarsen: int, x_dim_name: str = "x_osgb", y_dim_name: str = "y_osgb"):
+
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        y_coarsen: int,
+        x_coarsen: int,
+        x_dim_name: str = "x_osgb",
+        y_dim_name: str = "y_osgb",
+    ):
         """
         Downsample xarray dataset/dataarrays with coarsen
 
@@ -25,8 +33,10 @@ class DownsampleIterDataPipe(IterDataPipe):
     def __iter__(self):
         """Coarsen the data on the specified dimensions"""
         for xr_data in self.source_datapipe:
-            yield xr_data.coarsen({
-                self.y_dim_name: self.y_coarsen,
-                self.x_dim_name: self.x_coarsen,},
+            yield xr_data.coarsen(
+                {
+                    self.y_dim_name: self.y_coarsen,
+                    self.x_dim_name: self.x_coarsen,
+                },
                 boundary="trim",
             ).mean()
