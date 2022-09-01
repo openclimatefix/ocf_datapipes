@@ -41,12 +41,20 @@ def put_pv_data_into_an_xr_dataarray(
     """
     # Sanity check!
     pv_system_ids = pv_power_watts.columns
-    for series in (x_osgb, y_osgb, capacity_wp, pv_system_row_number):
-        assert np.array_equal(series.index, pv_system_ids, equal_nan=True)
+    for name, series in (
+        ("x_osgb", x_osgb),
+        ("y_osgb", y_osgb),
+        ("capacity_wp", capacity_wp),
+        ("pv_system_row_number", pv_system_row_number),
+    ):
+        logger.debug(f"Checking {name}")
+        if not np.array_equal(series.index, pv_system_ids, equal_nan=True):
+            logger.debug(f"Index of {name} does not equal {pv_system_ids}. Index is {series.index}")
+            assert np.array_equal(series.index, pv_system_ids, equal_nan=True)
 
     data_array = xr.DataArray(
         data=pv_power_watts.values,
-        coords=(("time_utc", pv_power_watts.index), ("pv_system_id", pv_power_watts.columns)),
+        coords=(("time_utc", pv_power_watts.index.values), ("pv_system_id", pv_power_watts.columns)),
         name="pv_power_watts",
     ).astype(np.float32)
 
