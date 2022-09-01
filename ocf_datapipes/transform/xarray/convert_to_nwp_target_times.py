@@ -1,4 +1,5 @@
 from typing import Union
+from datetime import timedelta
 
 import pandas as pd
 import xarray as xr
@@ -8,14 +9,25 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 @functional_datapipe("convert_to_nwp_target_time")
 class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
+    """Converts NWP Xarray to use the target time"""
     def __init__(
         self,
         source_datapipe: IterDataPipe,
         t0_datapipe: IterDataPipe,
-        sample_period_duration,
-        history_duration,
-        forecast_duration,
+        sample_period_duration: timedelta,
+        history_duration: timedelta,
+        forecast_duration: timedelta,
     ):
+        """
+        Convert NWP Xarray dataset to use target time as indexer, instead of combination of step + init_time
+
+        Args:
+            source_datapipe: Datapipe emitting a Xarray Dataset with step and init_time_utc indexers
+            t0_datapipe: Datapipe emitting t0 times for indexing off of, choosing the closest previous init_time_utc
+            sample_period_duration: How long the sampling period is
+            history_duration: How long the history time should cover
+            forecast_duration: How long the forecast time should cover
+        """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
         self.sample_period_duration = sample_period_duration
@@ -24,6 +36,7 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         self.t0_idx = int(self.history_duration / self.sample_period_duration)
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        """Iterate through both datapipes and convert Xarray dataset"""
         for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
             t0_datetime_utc = pd.Timestamp(t0)
             start_dt = t0_datetime_utc - self.history_duration
