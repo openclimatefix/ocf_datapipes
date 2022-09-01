@@ -8,6 +8,7 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 @functional_datapipe("convert_gsp_to_numpy_batch")
 class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
     """Convert GSP Xarray to NumpyBatch"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Convert GSP Xarray to NumpyBatch object

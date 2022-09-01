@@ -1,7 +1,8 @@
+from typing import Union
+
+import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-import xarray as xr
-from typing import Union
 
 from ocf_datapipes.utils.geospatial import (
     lat_lon_to_osgb,
@@ -13,6 +14,7 @@ from ocf_datapipes.utils.geospatial import (
 @functional_datapipe("convert_latlon_to_osgb")
 class ConvertLatLonToOSGBIterDataPipe(IterDataPipe):
     """Convert from Lat/Lon object to OSGB"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Convert from Lat/Lon to OSGB
@@ -34,6 +36,7 @@ class ConvertLatLonToOSGBIterDataPipe(IterDataPipe):
 @functional_datapipe("convert_osgb_to_latlon")
 class ConvertOSGBToLatLonIterDataPipe(IterDataPipe):
     """Convert from OSGB to Lat/Lon"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Convert from OSGB to Lat/Lon
@@ -55,6 +58,7 @@ class ConvertOSGBToLatLonIterDataPipe(IterDataPipe):
 @functional_datapipe("convert_geostationary_to_latlon")
 class ConvertGeostationaryToLatLonIterDataPipe(IterDataPipe):
     """Convert from geostationary to Lat/Lon points"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Convert from Geostationary to Lat/Lon points and add to Xarray object

@@ -8,6 +8,7 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 @functional_datapipe("convert_satellite_to_numpy_batch")
 class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
     """Converts Xarray Satellite to NumpyBatch object"""
+
     def __init__(self, source_datapipe: IterDataPipe, is_hrv: bool = False):
         """
         Converts Xarray satellite object to NumpyBatch object

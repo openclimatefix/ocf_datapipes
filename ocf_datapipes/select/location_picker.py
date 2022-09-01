@@ -8,6 +8,7 @@ from ocf_datapipes.utils.consts import Location
 @functional_datapipe("location_picker")
 class LocationPickerIterDataPipe(IterDataPipe):
     """Picks locations from a dataset and returns them"""
+
     def __init__(self, source_datapipe: IterDataPipe, return_all_locations: bool = False):
         """
         Picks locations from a dataset and returns them
