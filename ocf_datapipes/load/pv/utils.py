@@ -1,12 +1,10 @@
 """ Util functions for PV data source"""
-import pandas as pd
-import numpy as np
-import xarray as xr
-
 import logging
-
 from typing import List
 
+import numpy as np
+import pandas as pd
+import xarray as xr
 from nowcasting_datamodel.models.pv import providers
 
 logger = logging.getLogger(__name__)

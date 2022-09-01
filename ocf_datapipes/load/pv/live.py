@@ -4,8 +4,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from nowcasting_datamodel.connection import DatabaseConnection
 from nowcasting_datamodel.models.base import Base_PV
 from nowcasting_datamodel.models.pv import (
@@ -17,16 +17,11 @@ from nowcasting_datamodel.models.pv import (
     solar_sheffield_passiv,
 )
 from nowcasting_datamodel.read.read_pv import get_pv_systems, get_pv_yield
-
-from ocf_datapipes.load.pv.utils import encode_label
-from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle
-
-from ocf_datapipes.load.pv.utils import put_pv_data_into_an_xr_dataarray
-
-from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
-
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+from ocf_datapipes.load.pv.utils import encode_label, put_pv_data_into_an_xr_dataarray
+from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle, lat_lon_to_osgb
 
 logger = logging.getLogger(__name__)
 

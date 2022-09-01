@@ -10,7 +10,10 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.load.pv.utils import intersection_of_pv_system_ids, put_pv_data_into_an_xr_dataarray
+from ocf_datapipes.load.pv.utils import (
+    intersection_of_pv_system_ids,
+    put_pv_data_into_an_xr_dataarray,
+)
 from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
 
 _log = logging.getLogger(__name__)
@@ -207,10 +210,10 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
     """
     _log.info(f"Loading PV metadata from {filename}")
 
-    if 'passiv' in str(filename):
-        index_col = 'ss_id'
+    if "passiv" in str(filename):
+        index_col = "ss_id"
     else:
-        index_col = 'system_id'
+        index_col = "system_id"
 
     pv_metadata = pd.read_csv(filename, index_col=index_col)
 

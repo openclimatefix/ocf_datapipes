@@ -1,12 +1,11 @@
+from datetime import datetime
 from numbers import Number
 from typing import Union
 
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
-import pyproj
 import pvlib
+import pyproj
 
 # OSGB is also called "OSGB 1936 / British National Grid -- United
 # Kingdom Ordnance Survey".  OSGB is used in many UK electricity
@@ -45,7 +44,6 @@ def lat_lon_to_osgb(
     Return: 2-tuple of OSGB x, y.
     """
     return _lat_lon_to_osgb(xx=latitude, yy=longitude)
-
 
 
 def calculate_azimuth_and_elevation_angle(

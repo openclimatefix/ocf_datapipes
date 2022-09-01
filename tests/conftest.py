@@ -120,4 +120,3 @@ def db_session(db_connection):
 
     t.rollback()
     connection.close()
-
