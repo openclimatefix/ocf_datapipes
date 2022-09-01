@@ -8,6 +8,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 @functional_datapipe("save_t0_time")
 class SaveT0TimeIterDataPipe(IterDataPipe):
     """Save out t0 time"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Save out t0 time
