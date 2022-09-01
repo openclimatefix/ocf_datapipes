@@ -9,6 +9,7 @@ from ocf_datapipes.utils.utils import stack_np_examples_into_batch
 @functional_datapipe("merge_numpy_examples_to_batch")
 class MergeNumpyExamplesToBatchIterDataPipe(IterDataPipe):
     """Merge individual examples into a batch"""
+
     def __init__(self, source_datapipe: IterDataPipe, n_examples_per_batch: int):
         """
         Merge individual examples into a batch

@@ -9,6 +9,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 @functional_datapipe("set_system_ids_to_one")
 class SetSystemIDsToOneIterDataPipe(IterDataPipe):
     """Set system IDs to all 1"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Set all system IDs to 1 as a temp measure for PP production

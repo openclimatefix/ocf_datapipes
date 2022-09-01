@@ -9,6 +9,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 @functional_datapipe("ensure_n_nwp_variables")
 class EnsureNNWPVariables(IterDataPipe):
     """Ensure there are N NWP variables by tiling the data"""
+
     def __init__(self, source_datapipe: IterDataPipe, num_variables: int):
         """
         Ensure there are N NWP variables by tiling the data

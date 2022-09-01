@@ -1,11 +1,12 @@
 """Wrapper for Power Perceiver Production Data Pipeline"""
+from pathlib import Path
+from typing import Union
+
 import numpy as np
 import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Mapper
-from typing import Union
-from pathlib import Path
 
 xarray.set_options(keep_attrs=True)
 
@@ -59,10 +60,11 @@ from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, Bat
 @functional_datapipe("gsp_iterator")
 class GSPIterator(IterDataPipe):
     """GSP iterator for live that goes one by one through GSPs"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         GSP iterator for live that goes one by one through GSPs
-        
+
         Args:
             source_datapipe: Source datapipe to use
         """

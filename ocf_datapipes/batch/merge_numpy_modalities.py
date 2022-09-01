@@ -8,6 +8,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 @functional_datapipe("merge_numpy_modalities")
 class MergeNumpyModalitiesIterDataPipe(IterDataPipe):
     """Merge multiple modalities together in NumpyBatch"""
+
     def __init__(self, source_datapipes: [IterDataPipe]):
         """
         Merge multiple modalities together in NumpyBatch
