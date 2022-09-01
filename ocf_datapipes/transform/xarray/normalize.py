@@ -24,8 +24,9 @@ class NormalizeIterDataPipe(IterDataPipe):
         normalize_fn: Optional[Callable] = None,
     ):
         """
-        Normalize the data with either given mean/std, calculated from the example itself, or a function
+        Normalize the data with either given mean/std,
 
+        calculated from the example itself, or a function
         This is essentially a nice wrapper instead of using the Map DataPipe
 
         Args:
@@ -33,7 +34,8 @@ class NormalizeIterDataPipe(IterDataPipe):
             mean: Means
             std: Standard Deviations
             max_value: Max value for dividing the entire example by
-            calculate_mean_std_from_example: Whether to calculate the mean/std from the input data or not
+            calculate_mean_std_from_example: Whether to calculate the
+                mean/std from the input data or not
             normalize_fn: Callable function to apply to the data to normalize it
         """
         self.source_datapipe = source_datapipe

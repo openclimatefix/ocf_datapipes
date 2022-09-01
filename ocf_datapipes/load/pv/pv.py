@@ -23,6 +23,7 @@ _log = logging.getLogger(__name__)
 @functional_datapipe("open_pv_netcdf")
 class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     """Datapipe to load NetCDF"""
+
     def __init__(
         self,
         pv_power_filename: Union[str, Path],
@@ -208,6 +209,8 @@ def _load_pv_power_watts_and_capacity_wp(
 
 
 """
+
+
 # Adapted from nowcasting_dataset.data_sources.pv.pv_data_source
 def _load_pv_metadata(filename: str) -> pd.DataFrame:
     """Return pd.DataFrame of PV metadata.

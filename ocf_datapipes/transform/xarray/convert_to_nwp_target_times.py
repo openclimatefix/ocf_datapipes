@@ -21,11 +21,13 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         forecast_duration: timedelta,
     ):
         """
-        Convert NWP Xarray dataset to use target time as indexer, instead of combination of step + init_time
+        Convert NWP Xarray dataset to use target time as indexer
 
         Args:
-            source_datapipe: Datapipe emitting a Xarray Dataset with step and init_time_utc indexers
-            t0_datapipe: Datapipe emitting t0 times for indexing off of, choosing the closest previous init_time_utc
+            source_datapipe: Datapipe emitting a Xarray Dataset
+                with step and init_time_utc indexers
+            t0_datapipe: Datapipe emitting t0 times for indexing off of
+                choosing the closest previous init_time_utc
             sample_period_duration: How long the sampling period is
             history_duration: How long the history time should cover
             forecast_duration: How long the forecast time should cover

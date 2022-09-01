@@ -28,8 +28,10 @@ class AlignGSPto5MinIterDataPipe(IterDataPipe):
             gsp_5_min_for_all_examples: list[NumpyBatch] = []
             n_examples = np_batch[BatchKey.gsp].shape[0]
             for example_i in range(n_examples):
-                # Find the corresponding GSP 30 minute timestep for each 5 minute satellite timestep.
-                # We do this by taking the `ceil("30T")` of each 5 minute satellite timestep.
+                # Find the corresponding GSP 30 minute timestep
+                # for each 5 minute satellite timestep.
+                # We do this by taking the `ceil("30T")`
+                # of each 5 minute satellite timestep.
                 # Most of the code below is just converting to Pandas and back
                 # so we can use `pd.DatetimeIndex.ceil` on each datetime:
                 time_5_min = np_batch[self.batch_key_for_5_min_datetimes][example_i]

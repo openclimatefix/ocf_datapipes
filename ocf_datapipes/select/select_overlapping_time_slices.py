@@ -1,5 +1,5 @@
 """Select overlapping time slices for training"""
-from typing import Iterable, Union
+from typing import Iterable
 
 import pandas as pd
 from torchdata.datapipes import functional_datapipe

@@ -2,7 +2,7 @@
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+from ocf_datapipes.utils.consts import NumpyBatch
 
 
 @functional_datapipe("merge_numpy_modalities")
