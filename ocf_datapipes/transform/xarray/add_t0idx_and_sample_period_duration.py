@@ -1,3 +1,4 @@
+"""Adds useful t0_idx and sample period attributes"""
 from datetime import timedelta
 from typing import Union
 

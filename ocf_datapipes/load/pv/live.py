@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("open_pv_from_db")
 class OpenPVFromDBIterDataPipe(IterDataPipe):
+    """ Data pipes and utils for getting PV data from database"""
     def __init__(
         self,
         providers: List[str],
@@ -35,6 +36,15 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         load_extra_minutes: int = 60,
         history_minutes: int = 30,
     ):
+        """
+        Datapipe to get PV from database
+
+        Args:
+            providers: Providers to use
+            interpolate_minutes: How many minutes to interpolate
+            load_extra_minutes: How many extra minutes to load
+            history_minutes: How many history minutes to use
+        """
 
         super().__init__()
 
