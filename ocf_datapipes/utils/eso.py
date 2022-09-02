@@ -16,6 +16,7 @@ Peter Dudfield
 import logging
 import os
 from urllib.request import urlopen
+from typing import Union
 
 import geopandas as gpd
 import pandas as pd
@@ -89,7 +90,7 @@ def get_gsp_shape_from_eso(
     load_local_file: bool = True,
     save_local_file: bool = False,
     return_filename: bool = True,
-) -> str | gpd.GeoDataFrame:
+) -> Union[str,gpd.GeoDataFrame]:
     """
     Get the the gsp shape file from ESO (or a local file)
 
