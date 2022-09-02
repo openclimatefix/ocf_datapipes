@@ -1,7 +1,7 @@
 """Adds useful t0_idx and sample period attributes"""
+import logging
 from datetime import timedelta
 from typing import Union
-import logging
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
