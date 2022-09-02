@@ -2,8 +2,7 @@
 import logging
 import os
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import List, Optional, Union
+from typing import List
 
 import pandas as pd
 import xarray as xr
@@ -18,8 +17,8 @@ from nowcasting_datamodel import N_GSP
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray, get_gsp_id_to_shape
-from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
+from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray
+from ocf_datapipes.utils.eso import get_gsp_shape_from_eso
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        history_duration: timedelta = timedelta(minutes=90),
+        history_minutes: int = 90,
         interpolate_minutes: int = 60,
         load_extra_minutes: int = 60,
     ):
@@ -38,14 +37,14 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
         Get and open the GSP data
 
         Args:
-            history_duration: How many history minutes to use
+            history_minutes: How many history minutes to use
             interpolate_minutes:  How many minutes to interpolate
             load_extra_minutes: How many extra minutes to load
         """
 
         self.interpolate_minutes = interpolate_minutes
         self.load_extra_minutes = load_extra_minutes
-        self.history_duration = history_duration
+        self.history_duration = timedelta(minutes=history_minutes)
 
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""

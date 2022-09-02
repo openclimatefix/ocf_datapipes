@@ -4,6 +4,7 @@ from ocf_datapipes.load.pv.pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromN
 
 from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
 from ocf_datapipes.load.gsp.gsp import OpenGSPIterDataPipe as OpenGSP
+from ocf_datapipes.load.gsp.database import OpenGSPFromDatabaseIterDataPipe as OpenGSPFromDatabase
 from .nwp import OpenNWPIterDataPipe as OpenNWP
 from .satellite import OpenSatelliteIterDataPipe as OpenSatellite
 

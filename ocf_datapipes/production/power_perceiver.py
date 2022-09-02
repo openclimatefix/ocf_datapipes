@@ -13,7 +13,7 @@ from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
     OpenConfiguration,
-    OpenGSP,
+    OpenGSPFromDatabase,
     OpenNWP,
     OpenPVFromDB,
     OpenSatellite,
@@ -78,7 +78,11 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
     )
     nwp_dp = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
     topo_dp = OpenTopography(configuration.input_data.topographic.topographic_filename)
-    gsp_dp = OpenGSP(configuration.input_data.gsp.gsp_zarr_path)
+    gsp_dp = OpenGSPFromDatabase(
+        history_minutes=configuration.input_data.gsp.history_minutes,
+        interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
+        load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
+    )
 
     logger.debug("Normalize GSP data")
     gsp_dp = gsp_dp.normalize(
