@@ -59,14 +59,11 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
         gsp_id_to_shape = get_gsp_shape_from_eso(return_filename=False)
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
-        logger.debug(gsp_pv_power_mw_df.columns)
-        logger.debug(gsp_pv_power_mw_df)
-        logger.debug(gsp_id_to_shape)
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_df.columns]
 
         data_array = put_gsp_data_into_an_xr_dataarray(
             gsp_pv_power_mw=gsp_pv_power_mw_df.astype(np.float32),
-            time_utc=gsp_pv_power_mw_df.index,
+            time_utc=gsp_pv_power_mw_df.index.values,
             gsp_id=gsp_pv_power_mw_df.columns,
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
             x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
@@ -76,6 +73,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
         del gsp_id_to_shape, gsp_pv_power_mw_df
         while True:
+            logger.debug(data_array)
             yield data_array
 
 
@@ -98,6 +96,8 @@ def get_gsp_power_from_database(
 
     logger.info("Loading GSP data from database")
     logger.debug(f"{history_duration=}")
+    logger.debug(f"{interpolate_minutes=}")
+    logger.debug(f"{load_extra_minutes=}")
 
     extra_duration = timedelta(minutes=load_extra_minutes)
     now = pd.to_datetime(datetime.now(tz=timezone.utc)).floor("30T")
@@ -153,10 +153,12 @@ def get_gsp_power_from_database(
         ["datetime_utc", "gsp_id", "solar_generation_mw", "installed_capacity_mw"]
     ]
     logger.debug(gsp_yields_df.columns)
+    logger.debug(gsp_yields_df.index)
     gsp_yields_df.drop_duplicates(
         ["datetime_utc", "gsp_id", "solar_generation_mw"], keep="last", inplace=True
     )
     logger.debug(gsp_yields_df.columns)
+    logger.debug(gsp_yields_df.index)
     gsp_power_df = gsp_yields_df.pivot(
         index="datetime_utc", columns="gsp_id", values="solar_generation_mw"
     )
