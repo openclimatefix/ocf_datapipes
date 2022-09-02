@@ -15,8 +15,8 @@ Peter Dudfield
 
 import logging
 import os
-from urllib.request import urlopen
 from typing import Union
+from urllib.request import urlopen
 
 import geopandas as gpd
 import pandas as pd

@@ -4,16 +4,14 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import List
 
+import numpy as np
 import pandas as pd
 import xarray as xr
-import numpy as np
+from nowcasting_datamodel import N_GSP
 from nowcasting_datamodel.connection import DatabaseConnection
 from nowcasting_datamodel.models.base import Base_Forecast
 from nowcasting_datamodel.models.gsp import GSPYield, GSPYieldSQL, Location
 from nowcasting_datamodel.read.read_gsp import get_gsp_yield
-
-from nowcasting_datamodel import N_GSP
-
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 

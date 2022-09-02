@@ -9,7 +9,7 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray, get_gsp_id_to_shape
+from ocf_datapipes.load.gsp.utils import get_gsp_id_to_shape, put_gsp_data_into_an_xr_dataarray
 
 logger = logging.getLogger(__name__)
 
