@@ -27,7 +27,9 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
                 BatchKey.gsp: xr_data.values,
                 BatchKey.gsp_t0_idx: xr_data.attrs["t0_idx"],
                 BatchKey.gsp_id: xr_data.gsp_id.values,
-                BatchKey.gsp_capacity_megawatt_power: xr_data.isel(time_utc=0)["capacity_megawatt_power"].values,
+                BatchKey.gsp_capacity_megawatt_power: xr_data.isel(time_utc=0)[
+                    "capacity_megawatt_power"
+                ].values,
                 BatchKey.gsp_time_utc: datetime64_to_float(xr_data["time_utc"].values),
             }
 

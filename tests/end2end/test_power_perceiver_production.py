@@ -46,7 +46,9 @@ from ocf_datapipes.transform.xarray import (
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
 
 
-def test_power_perceiver_production(sat_hrv_datapipe, passiv_datapipe, topo_datapipe, gsp_datapipe, nwp_datapipe):
+def test_power_perceiver_production(
+    sat_hrv_datapipe, passiv_datapipe, topo_datapipe, gsp_datapipe, nwp_datapipe
+):
     ####################################
     #
     # Equivalent to PP's loading and filtering methods
@@ -58,13 +60,19 @@ def test_power_perceiver_production(sat_hrv_datapipe, passiv_datapipe, topo_data
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_datapipe = ConvertSatelliteToInt8(sat_hrv_datapipe)
     sat_datapipe = AddT0IdxAndSamplePeriodDuration(
-        sat_datapipe, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        sat_datapipe,
+        sample_period_duration=timedelta(minutes=5),
+        history_duration=timedelta(minutes=60),
     )
     pv_datapipe = AddT0IdxAndSamplePeriodDuration(
-        pv_datapipe, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        pv_datapipe,
+        sample_period_duration=timedelta(minutes=5),
+        history_duration=timedelta(minutes=60),
     )
     gsp_datapipe = AddT0IdxAndSamplePeriodDuration(
-        gsp_datapipe, sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
+        gsp_datapipe,
+        sample_period_duration=timedelta(minutes=30),
+        history_duration=timedelta(hours=2),
     )
     nwp_datapipe = AddT0IdxAndSamplePeriodDuration(
         nwp_datapipe, sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2)
@@ -82,9 +90,14 @@ def test_power_perceiver_production(sat_hrv_datapipe, passiv_datapipe, topo_data
         3
     )  # Its in order then
     pv_datapipe = SelectSpatialSliceMeters(
-        pv_datapipe, location_datapipe=location_datapipe1, roi_width_meters=960_000, roi_height_meters=960_000
+        pv_datapipe,
+        location_datapipe=location_datapipe1,
+        roi_width_meters=960_000,
+        roi_height_meters=960_000,
     )  # Has to be large as test PV systems aren't in first 20 GSPs it seems
-    pv_datapipe, pv_t0_datapipe = EnsureNPVSystemsPerExample(pv_datapipe, n_pv_systems_per_example=8).fork(2)
+    pv_datapipe, pv_t0_datapipe = EnsureNPVSystemsPerExample(
+        pv_datapipe, n_pv_systems_per_example=8
+    ).fork(2)
     sat_datapipe, sat_t0_datapipe = SelectSpatialSlicePixels(
         sat_datapipe,
         location_datapipe=location_datapipe2,
@@ -166,7 +179,9 @@ def test_power_perceiver_production(sat_hrv_datapipe, passiv_datapipe, topo_data
     # Don't need to do NWP as it does go into the future
     nwp_datapipe = ConvertNWPToNumpyBatch(nwp_datapipe)
     nwp_datapipe = MergeNumpyExamplesToBatch(nwp_datapipe, n_examples_per_batch=4)
-    combined_datapipe = MergeNumpyModalities([gsp_datapipe, pv_datapipe, sat_datapipe, nwp_datapipe])
+    combined_datapipe = MergeNumpyModalities(
+        [gsp_datapipe, pv_datapipe, sat_datapipe, nwp_datapipe]
+    )
 
     combined_datapipe = AlignGSPto5Min(
         combined_datapipe, batch_key_for_5_min_datetimes=BatchKey.hrvsatellite_time_utc
@@ -197,7 +212,9 @@ def test_power_perceiver_production(sat_hrv_datapipe, passiv_datapipe, topo_data
     assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 128, 256)
 
 
-def test_power_perceiver_production_functional(sat_hrv_datapipe, passiv_datapipe, topo_datapipe, gsp_datapipe, nwp_datapipe):
+def test_power_perceiver_production_functional(
+    sat_hrv_datapipe, passiv_datapipe, topo_datapipe, gsp_datapipe, nwp_datapipe
+):
     ####################################
     #
     # Equivalent to PP's loading and filtering methods
@@ -220,12 +237,16 @@ def test_power_perceiver_production_functional(sat_hrv_datapipe, passiv_datapipe
             sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
         )
         .select_spatial_slice_meters(
-            location_datapipe=location_datapipe1, roi_width_meters=960_000, roi_height_meters=960_000
+            location_datapipe=location_datapipe1,
+            roi_width_meters=960_000,
+            roi_height_meters=960_000,
         )
         .ensure_n_pv_systems_per_example(n_pv_systems_per_example=8)
         .fork(2)
     )
-    topo_datapipe = topo_datapipe.reproject_topography().normalize(calculate_mean_std_from_example=True)
+    topo_datapipe = topo_datapipe.reproject_topography().normalize(
+        calculate_mean_std_from_example=True
+    )
     sat_hrv_datapipe, sat_t0_datapipe = (
         sat_hrv_datapipe.convert_satellite_to_int8()
         .add_t0_idx_and_sample_period_duration(
@@ -262,7 +283,9 @@ def test_power_perceiver_production_functional(sat_hrv_datapipe, passiv_datapipe
     pv_t0_datapipe = pv_t0_datapipe.select_live_t0_time()
 
     gsp_datapipe = (
-        gsp_datapipe.select_live_time_slice(t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2))
+        gsp_datapipe.select_live_time_slice(
+            t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2)
+        )
         .gsp_iterator()
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(

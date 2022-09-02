@@ -49,7 +49,9 @@ def all_loc_np_datapipe():
     sat_datapipe = OpenSatellite(zarr_path=filename)
     sat_datapipe = ConvertSatelliteToInt8(sat_datapipe)
     sat_datapipe = AddT0IdxAndSamplePeriodDuration(
-        sat_datapipe, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        sat_datapipe,
+        sample_period_duration=timedelta(minutes=5),
+        history_duration=timedelta(minutes=60),
     )
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
@@ -62,15 +64,21 @@ def all_loc_np_datapipe():
         / "passiv"
         / "UK_PV_metadata.csv"
     )
-    pv_datapipe = OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+    pv_datapipe = OpenPVFromNetCDF(
+        pv_power_filename=filename, pv_metadata_filename=filename_metadata
+    )
     pv_datapipe = AddT0IdxAndSamplePeriodDuration(
-        pv_datapipe, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        pv_datapipe,
+        sample_period_duration=timedelta(minutes=5),
+        history_duration=timedelta(minutes=60),
     )
 
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "gsp" / "test.zarr"
     gsp_datapipe = OpenGSP(gsp_pv_power_zarr_path=filename)
     gsp_datapipe = AddT0IdxAndSamplePeriodDuration(
-        gsp_datapipe, sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
+        gsp_datapipe,
+        sample_period_duration=timedelta(minutes=30),
+        history_duration=timedelta(hours=2),
     )
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "nwp_data" / "test.zarr"
@@ -86,9 +94,14 @@ def all_loc_np_datapipe():
         3
     )  # Its in order then
     pv_datapipe = SelectSpatialSliceMeters(
-        pv_datapipe, location_datapipe=location_datapipe1, roi_width_meters=960_000, roi_height_meters=960_000
+        pv_datapipe,
+        location_datapipe=location_datapipe1,
+        roi_width_meters=960_000,
+        roi_height_meters=960_000,
     )  # Has to be large as test PV systems aren't in first 20 GSPs it seems
-    pv_datapipe, pv_t0_datapipe = EnsureNPVSystemsPerExample(pv_datapipe, n_pv_systems_per_example=8).fork(2)
+    pv_datapipe, pv_t0_datapipe = EnsureNPVSystemsPerExample(
+        pv_datapipe, n_pv_systems_per_example=8
+    ).fork(2)
     sat_datapipe, sat_t0_datapipe = SelectSpatialSlicePixels(
         sat_datapipe,
         location_datapipe=location_datapipe2,
@@ -141,7 +154,9 @@ def all_loc_np_datapipe():
     gsp_datapipe = MergeNumpyExamplesToBatch(gsp_datapipe, n_examples_per_batch=4)
     nwp_datapipe = ConvertNWPToNumpyBatch(nwp_datapipe)
     nwp_datapipe = MergeNumpyExamplesToBatch(nwp_datapipe, n_examples_per_batch=4)
-    combined_datapipe = MergeNumpyModalities([gsp_datapipe, pv_datapipe, sat_datapipe, nwp_datapipe])
+    combined_datapipe = MergeNumpyModalities(
+        [gsp_datapipe, pv_datapipe, sat_datapipe, nwp_datapipe]
+    )
 
     return combined_datapipe
 

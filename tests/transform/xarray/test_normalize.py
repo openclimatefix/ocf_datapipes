@@ -20,7 +20,9 @@ def test_normalize_nwp(nwp_datapipe):
 
 
 def test_normalize_topo(topo_datapipe):
-    topo_datapipe = topo_datapipe.reproject_topography().normalize(calculate_mean_std_from_example=True)
+    topo_datapipe = topo_datapipe.reproject_topography().normalize(
+        calculate_mean_std_from_example=True
+    )
     data = next(iter(topo_datapipe))
     assert np.all(data >= -1.0)
     # TODO Check why this normalization is ends up with a max of 11ish instead
@@ -42,7 +44,9 @@ def test_normalize_passiv(passiv_datapipe):
 
 
 def test_normalize_pvoutput(pvoutput_datapipe):
-    pvoutput_datapipe = pvoutput_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
+    pvoutput_datapipe = pvoutput_datapipe.normalize(
+        normalize_fn=lambda x: x / x.capacity_watt_power
+    )
     data = next(iter(pvoutput_datapipe))
     assert np.min(data) >= 0.0
     assert np.max(data) <= 1.0

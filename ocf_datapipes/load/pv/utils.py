@@ -35,7 +35,8 @@ def put_pv_data_into_an_xr_dataarray(
             ints), and the index is UTC datetime.
         x_osgb: The x location. Index = PV system ID ints.
         y_osgb: The y location. Index = PV system ID ints.
-        capacity_watt_power: The max power output of each PV system in Watts. Index = PV system ID ints.
+        capacity_watt_power: The max power output of each PV system in Watts.
+         Index = PV system ID ints.
         pv_system_row_number: The integer position of the PV system in the metadata.
             Used to create the PV system ID embedding.
     """

@@ -14,7 +14,9 @@ def test_check_vars_and_dims_sat(sat_datapipe):
 
 
 def test_check_vars_and_dim_passiv(passiv_datapipe):
-    passiv_datapipe = passiv_datapipe.check_vars_and_dims(expected_dimensions=("time_utc", "pv_system_id"))
+    passiv_datapipe = passiv_datapipe.check_vars_and_dims(
+        expected_dimensions=("time_utc", "pv_system_id")
+    )
     next(iter(passiv_datapipe))
 
 

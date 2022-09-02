@@ -18,7 +18,9 @@ def test_select_hrv(sat_hrv_datapipe):
 def test_select_gsp(gsp_datapipe):
     time_len = len(next(iter(gsp_datapipe)).time_utc.values)
     t0_datapipe = SelectLiveT0Time(gsp_datapipe, dim_name="time_utc")
-    gsp_datapipe = SelectLiveTimeSlice(gsp_datapipe, history_duration=timedelta(minutes=120), t0_datapipe=t0_datapipe)
+    gsp_datapipe = SelectLiveTimeSlice(
+        gsp_datapipe, history_duration=timedelta(minutes=120), t0_datapipe=t0_datapipe
+    )
     data = next(iter(gsp_datapipe))
     assert len(data.time_utc.values) == 5
     assert len(data.time_utc.values) < time_len

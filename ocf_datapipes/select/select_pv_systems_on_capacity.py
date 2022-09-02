@@ -40,7 +40,8 @@ class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
 
 # Drop any PV systems whose PV capacity is too low:
     PV_CAPACITY_THRESHOLD_W = 100
-    pv_systems_to_drop = pv_capacity_watt_power.index[pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W]
+    pv_systems_to_drop =
+    pv_capacity_watt_power.index[pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W]
     pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
     _log.info(
         f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"

@@ -8,7 +8,9 @@ from ocf_datapipes.utils.consts import BatchKey
 def test_convert_satellite_to_numpy_batch(sat_datapipe):
 
     sat_datapipe = AddT0IdxAndSamplePeriodDuration(
-        sat_datapipe, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        sat_datapipe,
+        sample_period_duration=timedelta(minutes=5),
+        history_duration=timedelta(minutes=60),
     )
     sat_datapipe = ConvertSatelliteToNumpyBatch(sat_datapipe, is_hrv=False)
     data = next(iter(sat_datapipe))
@@ -20,7 +22,9 @@ def test_convert_satellite_to_numpy_batch(sat_datapipe):
 
 def test_convert_hrvsatellite_to_numpy_batch(sat_datapipe):
     sat_datapipe = AddT0IdxAndSamplePeriodDuration(
-        sat_datapipe, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
+        sat_datapipe,
+        sample_period_duration=timedelta(minutes=5),
+        history_duration=timedelta(minutes=60),
     )
     sat_datapipe = ConvertSatelliteToNumpyBatch(sat_datapipe, is_hrv=True)
     data = next(iter(sat_datapipe))

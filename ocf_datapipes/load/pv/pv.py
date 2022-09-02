@@ -51,7 +51,11 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
 def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
-    pv_power_watts, pv_capacity_watt_power, pv_system_row_number = _load_pv_power_watts_and_capacity_watt_power(
+    (
+        pv_power_watts,
+        pv_capacity_watt_power,
+        pv_system_row_number,
+    ) = _load_pv_power_watts_and_capacity_watt_power(
         pv_power_filename,
     )
     pv_metadata = _load_pv_metadata(pv_metadata_filename)
@@ -108,7 +112,8 @@ def _load_pv_power_watts_and_capacity_watt_power(
     pv_capacity_watt_power.index = [np.int32(col) for col in pv_capacity_watt_power.index]
     pv_power_watts.columns = pv_power_watts.columns.astype(np.int64)
 
-    # Create pv_system_row_number. We use the index of `pv_capacity_watt_power` because that includes
+    # Create pv_system_row_number. We use the index of
+    # `pv_capacity_watt_power` because that includes
     # the PV system IDs for the entire dataset (independent of `start_date` and `end_date`).
     # We use `float32` for the ID because we use NaN to indicate a missing PV system,
     # or that this whole example doesn't include PV.
@@ -134,7 +139,9 @@ def _load_pv_power_watts_and_capacity_watt_power(
 
     # Drop any PV systems whose PV capacity is too low:
     PV_CAPACITY_THRESHOLD_W = 100
-    pv_systems_to_drop = pv_capacity_watt_power.index[pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W]
+    pv_systems_to_drop = pv_capacity_watt_power.index[
+        pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W
+    ]
     pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
     _log.info(
         f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
@@ -162,53 +169,6 @@ def _load_pv_power_watts_and_capacity_watt_power(
     assert np.isfinite(pv_system_row_number).all()
     assert np.array_equal(pv_power_watts.columns, pv_capacity_watt_power.index)
     return pv_power_watts, pv_capacity_watt_power, pv_system_row_number
-
-
-"""Filtering to be added in a different IterDataPipe
-
-    pv_power_watts = pv_power_watts.clip(lower=0, upper=5e7)
-    # Convert the pv_system_id column names from strings to ints:
-    pv_power_watts.columns = [np.int32(col) for col in pv_power_watts.columns]
-
-    if "passiv" not in filename:
-        _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
-        pv_power_watts = (
-            pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
-        )
-
-    pv_power_watts = _drop_pv_systems_which_produce_overnight(pv_power_watts)
-
-    # Resample to 5-minutely and interpolate up to 15 minutes ahead.
-    # TODO: Issue #74: Give users the option to NOT resample (because Perceiver IO
-    # doesn't need all the data to be perfectly aligned).
-    pv_power_watts = pv_power_watts.resample("5T").interpolate(method="time", limit=3)
-    pv_power_watts.dropna(axis="index", how="all", inplace=True)
-    pv_power_watts.dropna(axis="columns", how="all", inplace=True)
-
-    # Drop any PV systems whose PV capacity is too low:
-    PV_CAPACITY_THRESHOLD_W = 100
-    pv_systems_to_drop = pv_capacity_watt_power.index[pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W]
-    pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
-    _log.info(
-        f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
-        f" {PV_CAPACITY_THRESHOLD_W}"
-    )
-    pv_power_watts.drop(columns=pv_systems_to_drop, inplace=True)
-
-    # Ensure that capacity and pv_system_row_num use the same PV system IDs as the power DF:
-    pv_system_ids = pv_power_watts.columns
-    pv_capacity_watt_power = pv_capacity_watt_power.loc[pv_system_ids]
-    pv_system_row_number = pv_system_row_number.loc[pv_system_ids]
-
-    _log.info(
-        "After filtering & resampling to 5 minutes:"
-        f" pv_power = {pv_power_watts.values.nbytes / 1e6:,.1f} MBytes."
-        f" {len(pv_power_watts)} PV power datetimes."
-        f" {len(pv_power_watts.columns)} PV power PV system IDs."
-    )
-
-
-"""
 
 
 # Adapted from nowcasting_dataset.data_sources.pv.pv_data_source

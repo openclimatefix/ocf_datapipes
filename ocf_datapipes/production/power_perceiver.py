@@ -111,7 +111,9 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
         )
         .fork(2)
     )
-    topo_datapipe = topo_datapipe.reproject_topography().normalize(calculate_mean_std_from_example=True)
+    topo_datapipe = topo_datapipe.reproject_topography().normalize(
+        calculate_mean_std_from_example=True
+    )
     sat_hrv_datapipe, sat_t0_datapipe = (
         sat_hrv_datapipe.convert_satellite_to_int8()
         .add_t0_idx_and_sample_period_duration(
