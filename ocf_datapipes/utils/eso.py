@@ -95,6 +95,7 @@ def get_gsp_shape_from_eso(
             together to give one entry.
         load_local_file: Load from a local file, not from ESO
         save_local_file: Save to a local file, only need to do this is Data is updated.
+        return_filename: option to return location of the file, or geo pandas dataframe
 
     Returns: Path to local file of GSP shape data
     """

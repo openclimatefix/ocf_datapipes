@@ -6,7 +6,10 @@ import pytest
 from freezegun import freeze_time
 
 
-from ocf_datapipes.load.gsp.database import get_gsp_power_from_database, OpenGSPFromDatabaseIterDataPipe
+from ocf_datapipes.load.gsp.database import (
+    get_gsp_power_from_database,
+    OpenGSPFromDatabaseIterDataPipe,
+)
 
 
 @freeze_time("2022-01-01 01:00")
@@ -34,4 +37,3 @@ def test_open_pv_datasource_from_database(gsp_yields):
     pv_dp = OpenGSPFromDatabaseIterDataPipe()
     data = next(iter(pv_dp))
     assert data is not None
-

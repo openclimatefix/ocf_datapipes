@@ -30,25 +30,22 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        threshold_mw: int = 0,
-        sample_period_duration: timedelta = timedelta(minutes=30),
         history_duration: timedelta = timedelta(minutes=90),
-        live_interpolate_minutes: int = 60,
-        live_load_extra_minutes: int = 60,
+        interpolate_minutes: int = 60,
+        load_extra_minutes: int = 60,
     ):
         """
         Get and open the GSP data
 
         Args:
-            threshold_mw: Threshold to drop GSPs by
-            sample_period_duration: Sample period of the GSP data
+            history_duration: How many history minutes to use
+            interpolate_minutes:  How many minutes to interpolate
+            load_extra_minutes: How many extra minutes to load
         """
 
-        self.threshold_mw = threshold_mw
-        self.sample_period_duration = sample_period_duration
-        self.live_interpolate_minutes = live_interpolate_minutes
-        self.live_load_extra_minutes = live_load_extra_minutes
-        self.history_duration=history_duration
+        self.interpolate_minutes = interpolate_minutes
+        self.load_extra_minutes = load_extra_minutes
+        self.history_duration = history_duration
 
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""
@@ -57,13 +54,12 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
         gsp_pv_power_mw_df, gsp_capacity = get_gsp_power_from_database(
             history_duration=self.history_duration,
-            interpolate_minutes=self.live_interpolate_minutes,
-            load_extra_minutes=self.live_load_extra_minutes,
+            interpolate_minutes=self.interpolate_minutes,
+            load_extra_minutes=self.load_extra_minutes,
         )
 
         # get shape file
         gsp_id_to_shape = get_gsp_shape_from_eso(return_filename=False)
-
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
         logger.debug(gsp_pv_power_mw_df.columns)

@@ -92,5 +92,3 @@ class OpenGSPIterDataPipe(IterDataPipe):
         del gsp_id_to_shape, gsp_pv_power_mw_ds
         while True:
             yield data_array
-
-
