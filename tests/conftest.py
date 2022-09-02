@@ -228,13 +228,16 @@ def gsp_yields(db_session):
     """Make fake GSP data"""
 
     gsp_yield_sqls = []
-    for gsp_id in range(1,5):
-        gsp_sql_1: LocationSQL = Location(gsp_id=gsp_id, label="GSP_1", installed_capacity_mw=1).to_orm()
+    for gsp_id in range(1, 5):
+        gsp_sql_1: LocationSQL = Location(
+            gsp_id=gsp_id, label="GSP_1", installed_capacity_mw=1
+        ).to_orm()
 
         for hour in range(0, 8):
             for minute in range(0, 60, 30):
                 gsp_yield_1 = GSPYield(
-                    datetime_utc=datetime(2022, 1, 1, hour, minute), solar_generation_kw=hour + minute
+                    datetime_utc=datetime(2022, 1, 1, hour, minute),
+                    solar_generation_kw=hour + minute,
                 )
                 gsp_yield_1_sql = gsp_yield_1.to_orm()
                 gsp_yield_1_sql.location = gsp_sql_1

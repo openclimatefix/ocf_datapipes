@@ -5,10 +5,9 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 
-
 from ocf_datapipes.load.gsp.database import (
-    get_gsp_power_from_database,
     OpenGSPFromDatabaseIterDataPipe,
+    get_gsp_power_from_database,
 )
 
 
