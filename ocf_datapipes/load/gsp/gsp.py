@@ -78,7 +78,6 @@ class OpenGSPIterDataPipe(IterDataPipe):
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_ds.gsp_id]
-
         data_array = put_gsp_data_into_an_xr_dataarray(
             gsp_pv_power_mw=gsp_pv_power_mw_ds.generation_mw.data.astype(np.float32),
             time_utc=gsp_pv_power_mw_ds.datetime_gmt.data,
@@ -86,7 +85,9 @@ class OpenGSPIterDataPipe(IterDataPipe):
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
             x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
             y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
-            capacity_mwp=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(np.float32),
+            capacity_megawatt_power=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(  # noqa
+                np.float32
+            ),
         )
 
         del gsp_id_to_shape, gsp_pv_power_mw_ds

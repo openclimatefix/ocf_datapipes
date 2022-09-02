@@ -4,13 +4,13 @@ import pytest
 from ocf_datapipes.validation import CheckNaNs
 
 
-def test_check_nans_fail_dataarray(topo_dp):
-    topo_dp = CheckNaNs(topo_dp)
+def test_check_nans_fail_dataarray(topo_datapipe):
+    topo_datapipe = CheckNaNs(topo_datapipe)
     with pytest.raises(Exception):
-        next(iter(topo_dp))
+        next(iter(topo_datapipe))
 
 
-def test_check_nans_fill(topo_dp):
-    topo_dp = CheckNaNs(topo_dp, fill_nans=True)
-    data = next(iter(topo_dp))
+def test_check_nans_fill(topo_datapipe):
+    topo_datapipe = CheckNaNs(topo_datapipe, fill_nans=True)
+    data = next(iter(topo_datapipe))
     assert np.all(data != np.nan)

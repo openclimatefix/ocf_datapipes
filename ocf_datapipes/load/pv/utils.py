@@ -25,7 +25,7 @@ def put_pv_data_into_an_xr_dataarray(
     pv_power_watts: pd.DataFrame,
     y_osgb: pd.Series,
     x_osgb: pd.Series,
-    capacity_wp: pd.Series,
+    capacity_watt_power: pd.Series,
     pv_system_row_number: pd.Series,
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
@@ -35,7 +35,8 @@ def put_pv_data_into_an_xr_dataarray(
             ints), and the index is UTC datetime.
         x_osgb: The x location. Index = PV system ID ints.
         y_osgb: The y location. Index = PV system ID ints.
-        capacity_wp: The max power output of each PV system in Watts. Index = PV system ID ints.
+        capacity_watt_power: The max power output of each PV system in Watts.
+         Index = PV system ID ints.
         pv_system_row_number: The integer position of the PV system in the metadata.
             Used to create the PV system ID embedding.
     """
@@ -44,7 +45,7 @@ def put_pv_data_into_an_xr_dataarray(
     for name, series in (
         ("x_osgb", x_osgb),
         ("y_osgb", y_osgb),
-        ("capacity_wp", capacity_wp),
+        ("capacity_watt_power", capacity_watt_power),
         ("pv_system_row_number", pv_system_row_number),
     ):
         logger.debug(f"Checking {name}")
@@ -64,7 +65,7 @@ def put_pv_data_into_an_xr_dataarray(
     data_array = data_array.assign_coords(
         x_osgb=("pv_system_id", x_osgb),
         y_osgb=("pv_system_id", y_osgb),
-        capacity_wp=("pv_system_id", capacity_wp),
+        capacity_watt_power=("pv_system_id", capacity_watt_power),
         pv_system_row_number=("pv_system_id", pv_system_row_number),
     )
     # Sample period duration is required so PVDownsample transform knows by how much

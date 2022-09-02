@@ -12,9 +12,18 @@ dependencies:
   - xarray
   - fsspec
   - zarr
+  - cartopy
+  - dask
+  - pyproj
+  - pyresample
+  - geopandas
+  - h5netcdf
 pip:
   - einops
   - pathy
   - git+https://github.com/SheffieldSolar/PV_Live-API
   - pyaml_env
   - nowcasting_datamodel
+  - gitpython
+  - tqdm
+  - bottleneck

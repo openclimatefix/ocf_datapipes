@@ -27,12 +27,12 @@ class EncodeSpaceTimeIterDataPipe(IterDataPipe):
             lengths: Lengths for the distance
             n_fourier_features_per_dim: Number of Fourier features per dimension
         """
-        self.source_dp = source_datapipe
+        self.source_datapipe = source_datapipe
         self.lengths = lengths
         self.n_fourier_features_per_dim = n_fourier_features_per_dim
 
     def __iter__(self):
-        for np_batch in self.source_dp:
+        for np_batch in self.source_datapipe:
             yield get_spatial_and_temporal_fourier_features(
                 np_batch=np_batch,
                 lengths=self.lengths,

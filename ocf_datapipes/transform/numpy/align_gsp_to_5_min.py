@@ -20,11 +20,11 @@ class AlignGSPto5MinIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe of NumpyBatch
             batch_key_for_5_min_datetimes: What batch key to use for the 5 minute timestamps
         """
-        self.source_dp = source_datapipe
+        self.source_datapipe = source_datapipe
         self.batch_key_for_5_min_datetimes = batch_key_for_5_min_datetimes
 
     def __iter__(self):
-        for np_batch in self.source_dp:
+        for np_batch in self.source_datapipe:
             gsp_5_min_for_all_examples: list[NumpyBatch] = []
             n_examples = np_batch[BatchKey.gsp].shape[0]
             for example_i in range(n_examples):

@@ -23,25 +23,25 @@ from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite
 
 
 @pytest.fixture()
-def sat_hrv_dp():
+def sat_hrv_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "hrv_sat_data.zarr"
     return OpenSatellite(zarr_path=filename)
 
 
 @pytest.fixture()
-def sat_dp():
+def sat_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data.zarr"
     return OpenSatellite(zarr_path=filename)
 
 
 @pytest.fixture()
-def sat_15_dp():
+def sat_15_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data_15.zarr"
     return OpenSatellite(zarr_path=filename)
 
 
 @pytest.fixture()
-def topo_dp():
+def topo_datapipe():
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "europe_dem_2km_osgb.tif"
     )
@@ -49,7 +49,7 @@ def topo_dp():
 
 
 @pytest.fixture()
-def nwp_dp():
+def nwp_datapipe():
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "nwp_data" / "test.zarr"
     )
@@ -57,7 +57,7 @@ def nwp_dp():
 
 
 @pytest.fixture()
-def passiv_dp():
+def passiv_datapipe():
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
     )
@@ -73,7 +73,7 @@ def passiv_dp():
 
 
 @pytest.fixture()
-def pvoutput_dp():
+def pvoutput_datapipe():
     filename = (
         Path(ocf_datapipes.__file__).parent.parent
         / "tests"
@@ -94,7 +94,7 @@ def pvoutput_dp():
 
 
 @pytest.fixture()
-def gsp_dp():
+def gsp_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "gsp" / "test.zarr"
     return OpenGSP(gsp_pv_power_zarr_path=filename)
 

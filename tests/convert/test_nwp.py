@@ -6,20 +6,22 @@ from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration, Conv
 from ocf_datapipes.utils.consts import BatchKey
 
 
-def test_convert_nwp_to_numpy_batch(nwp_dp):
-    nwp_dp = AddT0IdxAndSamplePeriodDuration(
-        nwp_dp, sample_period_duration=timedelta(minutes=60), history_duration=timedelta(minutes=60)
+def test_convert_nwp_to_numpy_batch(nwp_datapipe):
+    nwp_datapipe = AddT0IdxAndSamplePeriodDuration(
+        nwp_datapipe,
+        sample_period_duration=timedelta(minutes=60),
+        history_duration=timedelta(minutes=60),
     )
-    t0_dp = SelectLiveT0Time(nwp_dp, dim_name="init_time_utc")
+    t0_datapipe = SelectLiveT0Time(nwp_datapipe, dim_name="init_time_utc")
 
-    nwp_dp = ConvertToNWPTargetTime(
-        nwp_dp,
-        t0_datapipe=t0_dp,
+    nwp_datapipe = ConvertToNWPTargetTime(
+        nwp_datapipe,
+        t0_datapipe=t0_datapipe,
         sample_period_duration=timedelta(minutes=60),
         history_duration=timedelta(minutes=60),
         forecast_duration=timedelta(minutes=60),
     )
-    nwp_dp = ConvertNWPToNumpyBatch(nwp_dp)
-    data = next(iter(nwp_dp))
+    nwp_datapipe = ConvertNWPToNumpyBatch(nwp_datapipe)
+    data = next(iter(nwp_datapipe))
     assert BatchKey.nwp in data
     assert BatchKey.nwp_channel_names in data

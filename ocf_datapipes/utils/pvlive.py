@@ -105,7 +105,7 @@ def load_pv_gsp_raw_data_from_pvlive(
                     end=end_chunk,
                     entity_type="gsp",
                     entity_id=gsp_id,
-                    extra_fields="installedcapacity_mwp",
+                    extra_fields="installedcapacity_megawatt_power",
                     dataframe=True,
                 )
 
@@ -126,7 +126,7 @@ def load_pv_gsp_raw_data_from_pvlive(
             if normalize_data:
                 one_chunk_one_gsp_gsp_data_df["generation_mw"] = (
                     one_chunk_one_gsp_gsp_data_df["generation_mw"]
-                    / one_chunk_one_gsp_gsp_data_df["installedcapacity_mwp"]
+                    / one_chunk_one_gsp_gsp_data_df["installedcapacity_megawatt_power"]
                 )
 
             # append to longer list
@@ -181,7 +181,7 @@ def get_installed_capacity(
         d = pvl.at_time(
             start,
             entity_type="gsp",
-            extra_fields="installedcapacity_mwp",
+            extra_fields="installedcapacity_megawatt_power",
             dataframe=True,
             entity_id=gsp_id,
         )
@@ -193,4 +193,4 @@ def get_installed_capacity(
     # set gsp_id as index
     data_df.set_index("gsp_id", inplace=True)
 
-    return data_df["installedcapacity_mwp"]
+    return data_df["installedcapacity_megawatt_power"]

@@ -237,9 +237,9 @@ class BatchKey(Enum):
     pv_system_row_number = auto()  # shape: (batch_size, n_pv_systems)
     pv_id = auto()  # shape: (batch_size, n_pv_systems)
     # PV AC system capacity in watts peak.
-    # Warning: In v15, pv_capacity_wp is sometimes 0. This will be fixed in
+    # Warning: In v15, pv_capacity_watt_power is sometimes 0. This will be fixed in
     # https://github.com/openclimatefix/nowcasting_dataset/issues/622
-    pv_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
+    pv_capacity_watt_power = auto()  # shape: (batch_size, n_pv_systems)
     #: pv_mask is True for good PV systems in each example.
     # The RawPVDataSource doesn't use pv_mask. Instead is sets missing PV systems to NaN
     # across all PV batch keys.
@@ -270,7 +270,7 @@ class BatchKey(Enum):
     gsp_y_osgb = auto()
     gsp_x_osgb = auto()
     gsp_time_utc = auto()  # Seconds since UNIX epoch (1970-01-01). (batch_size, time)
-    gsp_capacity_mwp = auto()  # (batch_size)
+    gsp_capacity_megawatt_power = auto()  # (batch_size)
 
     # GSP Fourier coordinates:
     # Each has shape: (batch_size, 1, n_fourier_features_per_dim),
