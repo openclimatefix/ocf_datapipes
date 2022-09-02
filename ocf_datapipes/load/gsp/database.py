@@ -18,20 +18,21 @@ from nowcasting_datamodel import N_GSP
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray
+from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray, get_gsp_id_to_shape
 from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
 
 logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("open_gsp_from_database")
-class OpenGSPIterDataPipe(IterDataPipe):
+class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
     """Get and open the GSP data"""
 
     def __init__(
         self,
         threshold_mw: int = 0,
         sample_period_duration: timedelta = timedelta(minutes=30),
+        history_duration: timedelta = timedelta(minutes=90),
         live_interpolate_minutes: int = 60,
         live_load_extra_minutes: int = 60,
     ):
@@ -47,6 +48,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
         self.sample_period_duration = sample_period_duration
         self.live_interpolate_minutes = live_interpolate_minutes
         self.live_load_extra_minutes = live_load_extra_minutes
+        self.history_duration=history_duration
 
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""
@@ -59,25 +61,24 @@ class OpenGSPIterDataPipe(IterDataPipe):
             load_extra_minutes=self.live_load_extra_minutes,
         )
 
-        gsp_id_to_shape = get_gsp_shape_from_eso()
+        # get shape file
+        gsp_id_to_shape = get_gsp_shape_from_eso(return_filename=False)
 
-        # Have to remove ID 0 (National one) for rest to work
-        # TODO Do filtering later, deal with national here for now
-        # gsp_pv_power_mw_ds = gsp_pv_power_mw_ds.isel(
-        #     gsp_id=slice(1, len(gsp_pv_power_mw_ds.gsp_id))
-        # )
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
-        gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_df.gsp_id]
+        logger.debug(gsp_pv_power_mw_df.columns)
+        logger.debug(gsp_pv_power_mw_df)
+        logger.debug(gsp_id_to_shape)
+        gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_df.columns]
 
         data_array = put_gsp_data_into_an_xr_dataarray(
-            gsp_pv_power_mw=gsp_pv_power_mw_df.data.astype(np.float32),
+            gsp_pv_power_mw=gsp_pv_power_mw_df.astype(np.float32),
             time_utc=gsp_pv_power_mw_df.index,
             gsp_id=gsp_pv_power_mw_df.columns,
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
             x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
             y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
-            capacity_mwp=gsp_capacity.data.astype(np.float32),
+            capacity_mwp=gsp_capacity.astype(np.float32),
         )
 
         del gsp_id_to_shape, gsp_pv_power_mw_df

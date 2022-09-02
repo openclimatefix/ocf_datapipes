@@ -85,8 +85,8 @@ def get_gsp_metadata_from_eso(load_local_file: bool = True, save_local_file: boo
 
 
 def get_gsp_shape_from_eso(
-    join_duplicates: bool = True, load_local_file: bool = True, save_local_file: bool = False
-) -> str:
+    join_duplicates: bool = True, load_local_file: bool = True, save_local_file: bool = False, return_filename:bool = True
+) -> str| gpd.GeoDataFrame:
     """
     Get the the gsp shape file from ESO (or a local file)
 
@@ -181,4 +181,7 @@ def get_gsp_shape_from_eso(
         shape_gpd.reset_index(inplace=True, drop=True)
         shape_gpd["RegionID"] = range(1, len(shape_gpd) + 1)
 
-    return local_file
+    if return_filename:
+        return local_file
+
+    return shape_gpd
