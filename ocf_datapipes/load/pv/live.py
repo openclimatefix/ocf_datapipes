@@ -85,7 +85,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             pv_power_watts=pv_power,  # TODO check this is watts
             y_osgb=pv_metadata.y_osgb.astype(np.float32),
             x_osgb=pv_metadata.x_osgb.astype(np.float32),
-            capacity_wp=pv_metadata.capacity_wp,
+            capacity_watt_power=pv_metadata.capacity_watt_power,
             pv_system_row_number=pv_system_row_number,
         )
 
@@ -148,7 +148,7 @@ def get_metadata_from_database(providers: List[str] = None) -> pd.DataFrame:
     pv_system_all_df["y_osgb"] = y_osgb
 
     pv_system_all_df["capacity_kw"] = pv_system_all_df["installed_capacity_kw"]
-    pv_system_all_df["capacity_wp"] = pv_system_all_df["capacity_kw"] * 1000
+    pv_system_all_df["capacity_watt_power"] = pv_system_all_df["capacity_kw"] * 1000
 
     # sort index
     pv_system_all_df = pv_system_all_df.sort_index()

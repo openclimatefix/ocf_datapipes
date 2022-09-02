@@ -51,21 +51,21 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
 def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.DataArray:
     """Open AND load PV data into RAM."""
     # Load pd.DataFrame of power and pd.Series of capacities:
-    pv_power_watts, pv_capacity_wp, pv_system_row_number = _load_pv_power_watts_and_capacity_wp(
+    pv_power_watts, pv_capacity_watt_power, pv_system_row_number = _load_pv_power_watts_and_capacity_watt_power(
         pv_power_filename,
     )
     pv_metadata = _load_pv_metadata(pv_metadata_filename)
-    # Ensure pv_metadata, pv_power_watts, and pv_capacity_wp all have the same set of
+    # Ensure pv_metadata, pv_power_watts, and pv_capacity_watt_power all have the same set of
     # PV system IDs, in the same order:
     pv_metadata, pv_power_watts = intersection_of_pv_system_ids(pv_metadata, pv_power_watts)
-    pv_capacity_wp = pv_capacity_wp.loc[pv_power_watts.columns]
+    pv_capacity_watt_power = pv_capacity_watt_power.loc[pv_power_watts.columns]
     pv_system_row_number = pv_system_row_number.loc[pv_power_watts.columns]
 
     data_in_ram = put_pv_data_into_an_xr_dataarray(
         pv_power_watts=pv_power_watts,
         y_osgb=pv_metadata.y_osgb.astype(np.float32),
         x_osgb=pv_metadata.x_osgb.astype(np.float32),
-        capacity_wp=pv_capacity_wp,
+        capacity_watt_power=pv_capacity_watt_power,
         pv_system_row_number=pv_system_row_number,
     )
 
@@ -77,12 +77,12 @@ def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.Data
     return data_in_ram
 
 
-def _load_pv_power_watts_and_capacity_wp(
+def _load_pv_power_watts_and_capacity_watt_power(
     filename: Union[str, Path],
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
-    """Return pv_power_watts, pv_capacity_wp, pv_system_row_number.
+    """Return pv_power_watts, pv_capacity_watt_power, pv_system_row_number.
 
     The capacities and pv_system_row_number are computed across the *entire* dataset,
     and so is independent of the `start_date` and `end_date`. This ensures the PV system
@@ -94,7 +94,7 @@ def _load_pv_power_watts_and_capacity_wp(
     # Load data in a way that will work in the cloud and locally:
     with fsspec.open(filename, mode="rb") as file:
         pv_power_ds = xr.open_dataset(file, engine="h5netcdf")
-        pv_capacity_wp = pv_power_ds.max().to_pandas().astype(np.float32)
+        pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
         pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
         pv_power_watts = pv_power_watts.astype(np.float32)
         del pv_power_ds
@@ -105,14 +105,14 @@ def _load_pv_power_watts_and_capacity_wp(
             pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
         )
 
-    pv_capacity_wp.index = [np.int32(col) for col in pv_capacity_wp.index]
+    pv_capacity_watt_power.index = [np.int32(col) for col in pv_capacity_watt_power.index]
     pv_power_watts.columns = pv_power_watts.columns.astype(np.int64)
 
-    # Create pv_system_row_number. We use the index of `pv_capacity_wp` because that includes
+    # Create pv_system_row_number. We use the index of `pv_capacity_watt_power` because that includes
     # the PV system IDs for the entire dataset (independent of `start_date` and `end_date`).
     # We use `float32` for the ID because we use NaN to indicate a missing PV system,
     # or that this whole example doesn't include PV.
-    all_pv_system_ids = pv_capacity_wp.index
+    all_pv_system_ids = pv_capacity_watt_power.index
     pv_system_row_number = np.arange(start=0, stop=len(all_pv_system_ids), dtype=np.float32)
     pv_system_row_number = pd.Series(pv_system_row_number, index=all_pv_system_ids)
 
@@ -134,7 +134,7 @@ def _load_pv_power_watts_and_capacity_wp(
 
     # Drop any PV systems whose PV capacity is too low:
     PV_CAPACITY_THRESHOLD_W = 100
-    pv_systems_to_drop = pv_capacity_wp.index[pv_capacity_wp <= PV_CAPACITY_THRESHOLD_W]
+    pv_systems_to_drop = pv_capacity_watt_power.index[pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W]
     pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
     _log.info(
         f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
@@ -144,7 +144,7 @@ def _load_pv_power_watts_and_capacity_wp(
 
     # Ensure that capacity and pv_system_row_num use the same PV system IDs as the power DF:
     pv_system_ids = pv_power_watts.columns
-    pv_capacity_wp = pv_capacity_wp.loc[pv_system_ids]
+    pv_capacity_watt_power = pv_capacity_watt_power.loc[pv_system_ids]
     pv_system_row_number = pv_system_row_number.loc[pv_system_ids]
 
     _log.info(
@@ -157,11 +157,11 @@ def _load_pv_power_watts_and_capacity_wp(
     # Sanity checks:
     assert not pv_power_watts.columns.duplicated().any()
     assert not pv_power_watts.index.duplicated().any()
-    assert np.isfinite(pv_capacity_wp).all()
-    assert (pv_capacity_wp >= 0).all()
+    assert np.isfinite(pv_capacity_watt_power).all()
+    assert (pv_capacity_watt_power >= 0).all()
     assert np.isfinite(pv_system_row_number).all()
-    assert np.array_equal(pv_power_watts.columns, pv_capacity_wp.index)
-    return pv_power_watts, pv_capacity_wp, pv_system_row_number
+    assert np.array_equal(pv_power_watts.columns, pv_capacity_watt_power.index)
+    return pv_power_watts, pv_capacity_watt_power, pv_system_row_number
 
 
 """Filtering to be added in a different IterDataPipe
@@ -187,7 +187,7 @@ def _load_pv_power_watts_and_capacity_wp(
 
     # Drop any PV systems whose PV capacity is too low:
     PV_CAPACITY_THRESHOLD_W = 100
-    pv_systems_to_drop = pv_capacity_wp.index[pv_capacity_wp <= PV_CAPACITY_THRESHOLD_W]
+    pv_systems_to_drop = pv_capacity_watt_power.index[pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W]
     pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
     _log.info(
         f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
@@ -197,7 +197,7 @@ def _load_pv_power_watts_and_capacity_wp(
 
     # Ensure that capacity and pv_system_row_num use the same PV system IDs as the power DF:
     pv_system_ids = pv_power_watts.columns
-    pv_capacity_wp = pv_capacity_wp.loc[pv_system_ids]
+    pv_capacity_watt_power = pv_capacity_watt_power.loc[pv_system_ids]
     pv_system_row_number = pv_system_row_number.loc[pv_system_ids]
 
     _log.info(

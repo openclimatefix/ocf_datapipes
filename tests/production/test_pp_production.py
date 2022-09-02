@@ -12,9 +12,9 @@ def test_pp_production_datapipe(pv_yields_and_systems):
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
-    pp_dp = power_perceiver_production_datapipe(filename)
+    pp_datapipe = power_perceiver_production_datapipe(filename)
 
-    batch = next(iter(pp_dp))
+    batch = next(iter(pp_datapipe))
 
     assert len(batch[BatchKey.hrvsatellite_time_utc]) == 4
     assert len(batch[BatchKey.hrvsatellite_time_utc][0]) == 19  # 6 history + now + 12 future = 19

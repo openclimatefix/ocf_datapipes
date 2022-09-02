@@ -4,64 +4,64 @@ from ocf_datapipes.select import SelectLiveT0Time, SelectLiveTimeSlice
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime
 
 
-def test_select_hrv(sat_hrv_dp):
-    time_len = len(next(iter(sat_hrv_dp)).time_utc.values)
-    t0_dp = SelectLiveT0Time(sat_hrv_dp, dim_name="time_utc")
-    sat_hrv_dp = SelectLiveTimeSlice(
-        sat_hrv_dp, history_duration=timedelta(minutes=60), t0_datapipe=t0_dp
+def test_select_hrv(sat_hrv_datapipe):
+    time_len = len(next(iter(sat_hrv_datapipe)).time_utc.values)
+    t0_datapipe = SelectLiveT0Time(sat_hrv_datapipe, dim_name="time_utc")
+    sat_hrv_datapipe = SelectLiveTimeSlice(
+        sat_hrv_datapipe, history_duration=timedelta(minutes=60), t0_datapipe=t0_datapipe
     )
-    data = next(iter(sat_hrv_dp))
+    data = next(iter(sat_hrv_datapipe))
     assert len(data.time_utc.values) == 13
     assert len(data.time_utc.values) < time_len
 
 
-def test_select_gsp(gsp_dp):
-    time_len = len(next(iter(gsp_dp)).time_utc.values)
-    t0_dp = SelectLiveT0Time(gsp_dp, dim_name="time_utc")
-    gsp_dp = SelectLiveTimeSlice(gsp_dp, history_duration=timedelta(minutes=120), t0_datapipe=t0_dp)
-    data = next(iter(gsp_dp))
+def test_select_gsp(gsp_datapipe):
+    time_len = len(next(iter(gsp_datapipe)).time_utc.values)
+    t0_datapipe = SelectLiveT0Time(gsp_datapipe, dim_name="time_utc")
+    gsp_datapipe = SelectLiveTimeSlice(gsp_datapipe, history_duration=timedelta(minutes=120), t0_datapipe=t0_datapipe)
+    data = next(iter(gsp_datapipe))
     assert len(data.time_utc.values) == 5
     assert len(data.time_utc.values) < time_len
 
 
-def test_select_nwp(nwp_dp):
-    t0_dp = SelectLiveT0Time(nwp_dp, dim_name="init_time_utc")
-    nwp_dp = ConvertToNWPTargetTime(
-        nwp_dp,
-        t0_dp,
+def test_select_nwp(nwp_datapipe):
+    t0_datapipe = SelectLiveT0Time(nwp_datapipe, dim_name="init_time_utc")
+    nwp_datapipe = ConvertToNWPTargetTime(
+        nwp_datapipe,
+        t0_datapipe,
         sample_period_duration=timedelta(hours=1),
         history_duration=timedelta(hours=2),
         forecast_duration=timedelta(hours=4),
     )
-    time_len = len(next(iter(nwp_dp)).target_time_utc.values)
-    nwp_dp = SelectLiveTimeSlice(
-        nwp_dp,
-        t0_datapipe=t0_dp,
+    time_len = len(next(iter(nwp_datapipe)).target_time_utc.values)
+    nwp_datapipe = SelectLiveTimeSlice(
+        nwp_datapipe,
+        t0_datapipe=t0_datapipe,
         history_duration=timedelta(minutes=120),
         dim_name="target_time_utc",
     )
-    data = next(iter(nwp_dp))
+    data = next(iter(nwp_datapipe))
     assert len(data.target_time_utc.values) == 3
     assert len(data.target_time_utc.values) < time_len
 
 
-def test_select_passiv(passiv_dp):
-    time_len = len(next(iter(passiv_dp)).time_utc.values)
-    t0_dp = SelectLiveT0Time(passiv_dp, dim_name="time_utc")
-    passiv_dp = SelectLiveTimeSlice(
-        passiv_dp, history_duration=timedelta(minutes=60), t0_datapipe=t0_dp
+def test_select_passiv(passiv_datapipe):
+    time_len = len(next(iter(passiv_datapipe)).time_utc.values)
+    t0_datapipe = SelectLiveT0Time(passiv_datapipe, dim_name="time_utc")
+    passiv_datapipe = SelectLiveTimeSlice(
+        passiv_datapipe, history_duration=timedelta(minutes=60), t0_datapipe=t0_datapipe
     )
-    data = next(iter(passiv_dp))
+    data = next(iter(passiv_datapipe))
     assert len(data.time_utc.values) == 13
     assert len(data.time_utc.values) < time_len
 
 
-def test_select_pvoutput(pvoutput_dp):
-    time_len = len(next(iter(pvoutput_dp)).time_utc.values)
-    t0_dp = SelectLiveT0Time(pvoutput_dp, dim_name="time_utc")
-    pvoutput_dp = SelectLiveTimeSlice(
-        pvoutput_dp, history_duration=timedelta(minutes=60), t0_datapipe=t0_dp
+def test_select_pvoutput(pvoutput_datapipe):
+    time_len = len(next(iter(pvoutput_datapipe)).time_utc.values)
+    t0_datapipe = SelectLiveT0Time(pvoutput_datapipe, dim_name="time_utc")
+    pvoutput_datapipe = SelectLiveTimeSlice(
+        pvoutput_datapipe, history_duration=timedelta(minutes=60), t0_datapipe=t0_datapipe
     )
-    data = next(iter(pvoutput_dp))
+    data = next(iter(pvoutput_datapipe))
     assert len(data.time_utc.values) == 13
     assert len(data.time_utc.values) < time_len

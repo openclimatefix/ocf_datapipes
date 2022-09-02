@@ -107,6 +107,6 @@ def test_get_pv_power_from_database_interpolate(pv_yields_and_systems):
 @freeze_time("2022-01-01 05:00")
 def test_open_pv_datasource_from_database(pv_yields_and_systems):
 
-    pv_dp = OpenPVFromDBIterDataPipe(providers=["pvoutput.org"])
-    data = next(iter(pv_dp))
+    pv_datapipe = OpenPVFromDBIterDataPipe(providers=["pvoutput.org"])
+    data = next(iter(pv_datapipe))
     assert data is not None

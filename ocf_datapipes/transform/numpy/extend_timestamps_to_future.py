@@ -22,13 +22,13 @@ class ExtendTimestepsToFutureIterDataPipe(IterDataPipe):
             forecast_duration: Forecast duration time
             sample_period_duration: Sample period for forecast
         """
-        self.source_dp = source_datapipe
+        self.source_datapipe = source_datapipe
         self.forecast_duration = forecast_duration
         self.sample_period_duration = sample_period_duration
         self.num_future_timesteps = int(self.forecast_duration / self.sample_period_duration)
 
     def __iter__(self) -> NumpyBatch:
-        for np_batch in self.source_dp:
+        for np_batch in self.source_datapipe:
             all_time_dims: dict[BatchKey, np.ndarray] = {
                 key: value for key, value in np_batch.items() if key.name.endswith("time_utc")
             }  # NWP should already cover the future, ones with no future are GSP, PV, and HRV

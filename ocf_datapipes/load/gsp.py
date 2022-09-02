@@ -86,7 +86,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
             x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
             y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
-            capacity_mwp=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(np.float32),
+            capacity_megawatt_power=gsp_pv_power_mw_ds.installedcapacity_megawatt_power.data.astype(np.float32),
         )
 
         del gsp_id_to_shape, gsp_pv_power_mw_ds
@@ -137,7 +137,7 @@ def _put_gsp_data_into_an_xr_dataarray(
     gsp_id: np.ndarray,
     x_osgb: np.ndarray,
     y_osgb: np.ndarray,
-    capacity_mwp: np.ndarray,
+    capacity_megawatt_power: np.ndarray,
 ) -> xr.DataArray:
     """
     Converts the GSP data to Xarray DataArray
@@ -148,7 +148,7 @@ def _put_gsp_data_into_an_xr_dataarray(
         gsp_id: Id of the GSPs
         x_osgb: OSGB X coordinates
         y_osgb: OSGB y coordinates
-        capacity_mwp: Capacity of each GSP
+        capacity_megawatt_power: Capacity of each GSP
 
     Returns:
         Xarray DataArray of the GSP data
@@ -162,6 +162,6 @@ def _put_gsp_data_into_an_xr_dataarray(
     data_array = data_array.assign_coords(
         x_osgb=("gsp_id", x_osgb),
         y_osgb=("gsp_id", y_osgb),
-        capacity_mwp=(("time_utc", "gsp_id"), capacity_mwp),
+        capacity_megawatt_power=(("time_utc", "gsp_id"), capacity_megawatt_power),
     )
     return data_array

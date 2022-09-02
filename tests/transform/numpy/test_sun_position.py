@@ -11,31 +11,31 @@ from ocf_datapipes.transform.numpy import (
 from ocf_datapipes.utils.consts import BatchKey
 
 
-def test_add_sun_position_all(all_loc_np_dp):
-    combined_dp = AlignGSPto5Min(
-        all_loc_np_dp, batch_key_for_5_min_datetimes=BatchKey.hrvsatellite_time_utc
+def test_add_sun_position_all(all_loc_np_datapipe):
+    combined_datapipe = AlignGSPto5Min(
+        all_loc_np_datapipe, batch_key_for_5_min_datetimes=BatchKey.hrvsatellite_time_utc
     )
-    combined_dp = EncodeSpaceTime(combined_dp)
-    combined_dp = SaveT0Time(combined_dp)
-    combined_dp = AddSunPosition(combined_dp, modality_name="hrvsatellite")
-    combined_dp = AddSunPosition(combined_dp, modality_name="pv")
-    combined_dp = AddSunPosition(combined_dp, modality_name="gsp")
-    combined_dp = AddSunPosition(combined_dp, modality_name="gsp_5_min")
-    combined_dp = AddSunPosition(combined_dp, modality_name="nwp_target_time")
-    data = next(iter(combined_dp))
+    combined_datapipe = EncodeSpaceTime(combined_datapipe)
+    combined_datapipe = SaveT0Time(combined_datapipe)
+    combined_datapipe = AddSunPosition(combined_datapipe, modality_name="hrvsatellite")
+    combined_datapipe = AddSunPosition(combined_datapipe, modality_name="pv")
+    combined_datapipe = AddSunPosition(combined_datapipe, modality_name="gsp")
+    combined_datapipe = AddSunPosition(combined_datapipe, modality_name="gsp_5_min")
+    combined_datapipe = AddSunPosition(combined_datapipe, modality_name="nwp_target_time")
+    data = next(iter(combined_datapipe))
 
 
-def test_add_sun_position_satellite(sat_dp):
+def test_add_sun_position_satellite(sat_datapipe):
     pass
 
 
-def test_add_sun_position_gsp(gsp_dp):
+def test_add_sun_position_gsp(gsp_datapipe):
     pass
 
 
-def test_add_sun_position_passiv(passiv_dp):
+def test_add_sun_position_passiv(passiv_datapipe):
     pass
 
 
-def test_add_sun_position_nwp(nwp_dp):
+def test_add_sun_position_nwp(nwp_datapipe):
     pass
