@@ -73,7 +73,6 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
         del gsp_id_to_shape, gsp_pv_power_mw_df
         while True:
-            logger.debug(data_array)
             yield data_array
 
 
