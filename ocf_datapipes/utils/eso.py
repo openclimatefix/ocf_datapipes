@@ -15,6 +15,7 @@ Peter Dudfield
 
 import logging
 import os
+from typing import Union
 from urllib.request import urlopen
 
 import geopandas as gpd
@@ -85,8 +86,11 @@ def get_gsp_metadata_from_eso(load_local_file: bool = True, save_local_file: boo
 
 
 def get_gsp_shape_from_eso(
-    join_duplicates: bool = True, load_local_file: bool = True, save_local_file: bool = False
-) -> str:
+    join_duplicates: bool = True,
+    load_local_file: bool = True,
+    save_local_file: bool = False,
+    return_filename: bool = True,
+) -> Union[str, gpd.GeoDataFrame]:
     """
     Get the the gsp shape file from ESO (or a local file)
 
@@ -95,6 +99,7 @@ def get_gsp_shape_from_eso(
             together to give one entry.
         load_local_file: Load from a local file, not from ESO
         save_local_file: Save to a local file, only need to do this is Data is updated.
+        return_filename: option to return location of the file, or geo pandas dataframe
 
     Returns: Path to local file of GSP shape data
     """
@@ -181,4 +186,7 @@ def get_gsp_shape_from_eso(
         shape_gpd.reset_index(inplace=True, drop=True)
         shape_gpd["RegionID"] = range(1, len(shape_gpd) + 1)
 
-    return local_file
+    if return_filename:
+        return local_file
+
+    return shape_gpd

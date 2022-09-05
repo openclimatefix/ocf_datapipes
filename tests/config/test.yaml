@@ -5,6 +5,7 @@ git: null
 input_data:
   gsp:
     gsp_zarr_path: tests/data/gsp/test.zarr
+    history_minutes: 120
   nwp:
     nwp_channels:
       - t

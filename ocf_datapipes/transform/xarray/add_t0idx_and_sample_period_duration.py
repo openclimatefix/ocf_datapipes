@@ -1,10 +1,13 @@
 """Adds useful t0_idx and sample period attributes"""
+import logging
 from datetime import timedelta
 from typing import Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("add_t0_idx_and_sample_period_duration")
@@ -33,6 +36,7 @@ class AddT0IdxAndSamplePeriodDurationIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Adds the two attributes to the xarray objects and returns them"""
         for xr_data in self.source_datapipe:
+            logger.debug("Adding t0 and sample_period_duration to xarray")
             xr_data.attrs["t0_idx"] = self.t0_idx
             xr_data.attrs["sample_period_duration"] = self.sample_period_duration
             yield xr_data
