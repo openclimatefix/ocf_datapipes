@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 from datetime import datetime, timedelta
@@ -17,7 +18,6 @@ from nowcasting_datamodel.models import (
 
 import ocf_datapipes
 from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
-import logging
 
 
 @pytest.fixture()

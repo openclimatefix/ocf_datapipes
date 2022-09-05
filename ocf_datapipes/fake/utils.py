@@ -1,14 +1,19 @@
-import xarray as xr
-import  numpy as np
-import pandas as pd
+from datetime import datetime
 from numbers import Number
+from typing import Optional, Sequence
+
+import numpy as np
+import pandas as pd
+import xarray as xr
 
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.utils.consts import SAT_VARIABLE_NAMES, NWP_VARIABLE_NAMES
-from typing import Sequence, Optional
-from ocf_datapipes.fake.coordinates import make_image_coords_osgb, make_random_x_and_y_osgb_centers, create_random_point_coordinates_osgb
+from ocf_datapipes.fake.coordinates import (
+    create_random_point_coordinates_osgb,
+    make_image_coords_osgb,
+    make_random_x_and_y_osgb_centers,
+)
+from ocf_datapipes.utils.consts import NWP_VARIABLE_NAMES, SAT_VARIABLE_NAMES
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
-from datetime import datetime
 
 
 def make_t0_datetimes_utc(batch_size, temporally_align_examples: bool = False):
