@@ -1,3 +1,4 @@
+"""Add fake future data for proper Power Perceiver Production"""
 from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
 
@@ -17,6 +18,8 @@ class AddZeroedFutureDataIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of NumpyBatch
+            key: BatchKey to extend
+            time_key: Batch key to use as the time for how many to append
         """
         self.source_datapipe = source_datapipe
         self.key = key
