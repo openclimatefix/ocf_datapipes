@@ -186,35 +186,6 @@ class BatchKey(Enum):
     hrvsatellite_time_utc_fourier = auto()
     hrvsatellite_time_utc_fourier_t0 = auto()
 
-    # -------------- SATELLITE -----------------------------------
-    # shape: (batch_size, time, channels, y, x)
-    #
-    # Or, if the imagery has been patched,
-    # shape: (batch_size, time, channels, y, x, n_pixels_per_patch) where n_pixels_per_patch
-    # is the *total* number of pixels,
-    # i.e. n_pixels_per_patch_along_height * n_pixels_per_patch_along_width.
-    satellite_actual = auto()
-    satellite_predicted = auto()  # shape: batch_size, time, y, x
-    satellite_t0_idx = auto()  # shape: scalar
-
-    # HRV satellite coordinates:
-    satellite_y_osgb = auto()  # shape: (batch_size, y, x)
-    satellite_x_osgb = auto()  # shape: (batch_size, y, x)
-    satellite_y_geostationary = auto()  # shape: (batch_size, y)
-    satellite_x_geostationary = auto()  # shape: (batch_size, x)
-    #: Time is seconds since UNIX epoch (1970-01-01). Shape: (batch_size, n_timesteps)
-    satellite_time_utc = auto()
-    # Added by np_batch_processor.Topography:
-    satellite_surface_height = auto()  # The surface height at each pixel. (batch_size, y, x)
-
-    # HRV satellite Fourier coordinates:
-    # Spatial coordinates. Shape: (batch_size, y, x, n_fourier_features_per_dim)
-    satellite_y_osgb_fourier = auto()
-    satellite_x_osgb_fourier = auto()
-    #: Time shape: (batch_size, n_timesteps, n_fourier_features_per_dim)
-    satellite_time_utc_fourier = auto()
-    satellite_time_utc_fourier_t0 = auto()
-
     # -------------- NWP --------------------------------------------
     nwp = auto()  # shape: (batch_size, target_time_utc, channel, y_osgb, x_osgb)
     nwp_t0_idx = auto()  # shape: scalar
@@ -315,6 +286,35 @@ class BatchKey(Enum):
     # Added by `ReduceNumTimesteps`. Gives the indicies of the randomly selected timesteps.
     # Not used in the Raw data pipeline.
     requested_timesteps = auto()  # shape: (n_requested_timesteps)
+
+    # -------------- SATELLITE -----------------------------------
+    # shape: (batch_size, time, channels, y, x)
+    #
+    # Or, if the imagery has been patched,
+    # shape: (batch_size, time, channels, y, x, n_pixels_per_patch) where n_pixels_per_patch
+    # is the *total* number of pixels,
+    # i.e. n_pixels_per_patch_along_height * n_pixels_per_patch_along_width.
+    satellite_actual = auto()
+    satellite_predicted = auto()  # shape: batch_size, time, y, x
+    satellite_t0_idx = auto()  # shape: scalar
+
+    # HRV satellite coordinates:
+    satellite_y_osgb = auto()  # shape: (batch_size, y, x)
+    satellite_x_osgb = auto()  # shape: (batch_size, y, x)
+    satellite_y_geostationary = auto()  # shape: (batch_size, y)
+    satellite_x_geostationary = auto()  # shape: (batch_size, x)
+    #: Time is seconds since UNIX epoch (1970-01-01). Shape: (batch_size, n_timesteps)
+    satellite_time_utc = auto()
+    # Added by np_batch_processor.Topography:
+    satellite_surface_height = auto()  # The surface height at each pixel. (batch_size, y, x)
+
+    # HRV satellite Fourier coordinates:
+    # Spatial coordinates. Shape: (batch_size, y, x, n_fourier_features_per_dim)
+    satellite_y_osgb_fourier = auto()
+    satellite_x_osgb_fourier = auto()
+    #: Time shape: (batch_size, n_timesteps, n_fourier_features_per_dim)
+    satellite_time_utc_fourier = auto()
+    satellite_time_utc_fourier_t0 = auto()
 
 
 NumpyBatch = dict[BatchKey, np.ndarray]

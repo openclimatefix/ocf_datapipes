@@ -16,7 +16,13 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray
-from ocf_datapipes.utils.eso import get_gsp_shape_from_eso
+try:
+    from ocf_datapipes.utils.eso import get_gsp_shape_from_eso
+
+    _has_pvlive = True
+except ImportError:
+    print("Unable to import PVLive utils, please provide filenames with OpenGSP")
+    _has_pvlive = False
 
 logger = logging.getLogger(__name__)
 
