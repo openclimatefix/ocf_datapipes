@@ -22,6 +22,6 @@ class SetSystemIDsToOneIterDataPipe(IterDataPipe):
     def __iter__(self) -> NumpyBatch:
         """Set system IDs to all 1"""
         for np_batch in self.source_datapipe:
-            np_batch[BatchKey.gsp_id] = np.ones_like(np_batch[BatchKey.gsp_id])
+            # np_batch[BatchKey.gsp_id] = np.ones_like(np_batch[BatchKey.gsp_id])
             np_batch[BatchKey.pv_id] = np.ones_like(np_batch[BatchKey.pv_id])
             yield np_batch
