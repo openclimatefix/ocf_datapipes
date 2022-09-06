@@ -292,7 +292,8 @@ def test_power_perceiver_production_functional(
         .extend_timesteps_to_future(
             forecast_duration=timedelta(hours=8),
             sample_period_duration=timedelta(minutes=30),
-        ).add_zeroed_future_data(key=BatchKey.gsp, time_key=BatchKey.gsp_time_utc)
+        )
+        .add_zeroed_future_data(key=BatchKey.gsp, time_key=BatchKey.gsp_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=4)
     )
     sat_hrv_datapipe = (
@@ -320,7 +321,8 @@ def test_power_perceiver_production_functional(
         .extend_timesteps_to_future(
             forecast_duration=timedelta(hours=2),
             sample_period_duration=timedelta(minutes=5),
-        ).add_zeroed_future_data(key=BatchKey.pv, time_key=BatchKey.pv_time_utc)
+        )
+        .add_zeroed_future_data(key=BatchKey.pv, time_key=BatchKey.pv_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=4)
     )
     nwp_datapipe = (
@@ -373,6 +375,7 @@ def test_power_perceiver_production_functional(
     assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 128, 256)
 
     from torch.utils.data import DataLoader
+
     dl = DataLoader(dataset=combined_datapipe, batch_size=None)
     batch = next(iter(dl))
     assert len(batch[BatchKey.hrvsatellite_time_utc]) == 4
