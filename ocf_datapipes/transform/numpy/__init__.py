@@ -7,3 +7,4 @@ from .extend_timestamps_to_future import (
 )
 from .save_t0_time import SaveT0TimeIterDataPipe as SaveT0Time
 from .sun_position import AddSunPositionIterDataPipe as AddSunPosition
+from .add_zeroed_future_pv import AddZeroedFutureDataIterDataPipe as AddZeroedFutureData
