@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
@@ -292,6 +293,7 @@ def test_power_perceiver_production_functional(
             forecast_duration=timedelta(hours=8),
             sample_period_duration=timedelta(minutes=30),
         )
+        .add_zeroed_future_data(key=BatchKey.gsp, time_key=BatchKey.gsp_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=4)
     )
     sat_hrv_datapipe = (
@@ -320,6 +322,7 @@ def test_power_perceiver_production_functional(
             forecast_duration=timedelta(hours=2),
             sample_period_duration=timedelta(minutes=5),
         )
+        .add_zeroed_future_data(key=BatchKey.pv, time_key=BatchKey.pv_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=4)
     )
     nwp_datapipe = (
@@ -351,7 +354,7 @@ def test_power_perceiver_production_functional(
         .add_sun_position(modality_name="nwp_target_time")
         .add_topographic_data(topo_datapipe)
         .set_system_ids_to_one()
-        .ensure_n_nwp_variables(num_variables=10)
+        .ensure_n_nwp_variables(num_variables=9)
     )
 
     batch = next(iter(combined_datapipe))
@@ -362,9 +365,30 @@ def test_power_perceiver_production_functional(
     assert len(batch[BatchKey.nwp_init_time_utc][0]) == 6
     assert len(batch[BatchKey.pv_time_utc][0]) == 37
     assert len(batch[BatchKey.gsp_time_utc][0]) == 21
+    assert len(batch[BatchKey.hrvsatellite_solar_azimuth]) == 4
+    assert len(batch[BatchKey.hrvsatellite_solar_elevation]) == 4
 
     assert batch[BatchKey.hrvsatellite_actual].shape == (4, 13, 1, 128, 256)
-    assert batch[BatchKey.nwp].shape == (4, 6, 10, 4, 4)
-    assert batch[BatchKey.pv].shape == (4, 13, 8)
-    assert batch[BatchKey.gsp].shape == (4, 5, 1)
+    assert batch[BatchKey.nwp].shape == (4, 6, 9, 4, 4)
+    assert batch[BatchKey.pv].shape == (4, 37, 8)
+    assert batch[BatchKey.gsp].shape == (4, 21, 1)
+    assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 128, 256)
+
+    from torch.utils.data import DataLoader
+
+    dl = DataLoader(dataset=combined_datapipe, batch_size=None)
+    batch = next(iter(dl))
+    assert len(batch[BatchKey.hrvsatellite_time_utc]) == 4
+    assert len(batch[BatchKey.hrvsatellite_time_utc][0]) == 37
+    assert len(batch[BatchKey.nwp_target_time_utc][0]) == 6
+    assert len(batch[BatchKey.nwp_init_time_utc][0]) == 6
+    assert len(batch[BatchKey.pv_time_utc][0]) == 37
+    assert len(batch[BatchKey.gsp_time_utc][0]) == 21
+    assert len(batch[BatchKey.hrvsatellite_solar_azimuth]) == 4
+    assert len(batch[BatchKey.hrvsatellite_solar_elevation]) == 4
+
+    assert batch[BatchKey.hrvsatellite_actual].shape == (4, 13, 1, 128, 256)
+    assert batch[BatchKey.nwp].shape == (4, 6, 9, 4, 4)
+    assert batch[BatchKey.pv].shape == (4, 37, 8)
+    assert batch[BatchKey.gsp].shape == (4, 21, 1)
     assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 128, 256)

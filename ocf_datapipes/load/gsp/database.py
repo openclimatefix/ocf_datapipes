@@ -16,6 +16,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray
+
 try:
     from ocf_datapipes.utils.eso import get_gsp_shape_from_eso
 
