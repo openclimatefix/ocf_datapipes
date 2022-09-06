@@ -171,6 +171,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
             forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
             sample_period_duration=timedelta(minutes=30),
         )
+        .add_zeroed_future_data(key=BatchKey.gsp, time_key=BatchKey.gsp_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
     logger.debug("Making Sat Time slices")
@@ -204,6 +205,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
             forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
             sample_period_duration=timedelta(minutes=5),
         )
+        .add_zeroed_future_data(key=BatchKey.pv, time_key=BatchKey.pv_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
     nwp_datapipe = (
@@ -236,6 +238,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
         .add_sun_position(modality_name="nwp_target_time")
         .add_topographic_data(topo_datapipe)
         .set_system_ids_to_one()
+        .ensure_n_nwp_variables(num_variables=9)
     )
 
     return combined_datapipe
