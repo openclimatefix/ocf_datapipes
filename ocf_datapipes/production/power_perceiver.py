@@ -92,9 +92,9 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
     )
     logger.debug("Getting locations")
-    location_datapipe1, location_datapipe2, location_datapipe3 = gsp_datapipe.location_picker(
+    location_datapipe1, location_datapipe2, location_datapipe3, location_datapipe4 = gsp_datapipe.location_picker(
         return_all_locations=True
-    ).fork(3)
+    ).fork(4)
 
     logger.debug("Got locations")
 
@@ -165,7 +165,11 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
             t0_datapipe=gsp_t0_datapipe,
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         )
-        .gsp_iterator()
+        .select_spatial_slice_meters(
+            location_datapipe=location_datapipe4,
+            roi_width_meters=10,
+            roi_height_meters=10,
+        )
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(
             forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
