@@ -99,6 +99,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         location_datapipe: IterDataPipe,
         roi_height_meters: int,
         roi_width_meters: int,
+        dim_name: str = "pv_system_id"
     ):
         """
         Select spatial slice based off pixels from point of interest
@@ -113,6 +114,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         self.location_datapipe = location_datapipe
         self.roi_height_meters = roi_height_meters
         self.roi_width_meters = roi_width_meters
+        self.dim_name = dim_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
@@ -132,7 +134,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                 & (bottom <= xr_data.y_osgb)
             )
 
-            selected = xr_data.isel(pv_system_id=id_mask)
+            selected = xr_data.isel({self.dim_name: id_mask})
             yield selected
 
 
