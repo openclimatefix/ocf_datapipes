@@ -17,6 +17,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         history_duration: timedelta,
         forecast_duration: timedelta,
         sample_period_duration: timedelta,
+        max_t0_offset: timedelta,
     ):
         """
         Get contiguous time periods for use in determing t0 times for training
@@ -26,12 +27,14 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
             history_duration: Amount of time for the history of an example
             forecast_duration: Amount of time for the forecast of an example
             sample_period_duration: The sampling period of the data source
+            max_t0_offset: Max t0 offset for the data source, add as buffer to total duration
         """
         self.source_datapipe = source_datapipe
         self.history_duration = history_duration
         self.forecast_duration = forecast_duration
-        self.total_duration = history_duration + forecast_duration
+        self.total_duration = history_duration + forecast_duration + max_t0_offset
         self.sample_period_duration = sample_period_duration
+        self.max_t0_offset = max_t0_offset
 
     def __iter__(self) -> pd.DataFrame:
         """Calculate contiguous time periods and return a dataframe containing them"""
