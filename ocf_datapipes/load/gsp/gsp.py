@@ -71,6 +71,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
         gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
+        # TODO Handle having GSP 0 in there, through setting shape to be union of all other shapes?
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_ds.gsp_id]
         data_array = put_gsp_data_into_an_xr_dataarray(
             gsp_pv_power_mw=gsp_pv_power_mw_ds.generation_mw.data.astype(np.float32),
