@@ -6,6 +6,7 @@ from torchdata.datapipes.iter import IterDataPipe
 @functional_datapipe("drop_national_gsp")
 class DropNationalGSPIterDataPipe(IterDataPipe):
     """Drops national GSP"""
+
     def __init__(self, source_datapipe: IterDataPipe):
         """
         Drop GSP National from the dataarray
