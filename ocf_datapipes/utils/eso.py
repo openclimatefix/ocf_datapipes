@@ -185,6 +185,8 @@ def get_gsp_shape_from_eso(
         shape_gpd.sort_values("GSPs", inplace=True)
         shape_gpd.reset_index(inplace=True, drop=True)
         shape_gpd["RegionID"] = range(1, len(shape_gpd) + 1)
+        shape_gpd.set_index('RegionID',inplace=True)
+        # make sure index start at 1 and goes to 317
 
     if return_filename:
         return local_file
