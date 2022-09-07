@@ -62,19 +62,19 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
         load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
     ).drop_national_gsp()
     logger.debug("Normalize GSP data")
-    gsp_datapipe = gsp_datapipe.normalize(
+    gsp_datapipe, gso_loc_datapipe = gsp_datapipe.normalize(
         normalize_fn=lambda x: x / x.capacity_megawatt_power
     ).add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-    )
+    ).fork(2)
     logger.debug("Getting locations")
     (
         location_datapipe1,
         location_datapipe2,
         location_datapipe3,
         location_datapipe4,
-    ) = gsp_datapipe.location_picker(return_all_locations=True).fork(4)
+    ) = gso_loc_datapipe.location_picker(return_all_locations=True).fork(4)
 
     logger.debug("Got locations")
 
