@@ -1,8 +1,8 @@
 """Offset T0 for training to more realistically match production"""
 from typing import Union
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -31,5 +31,7 @@ class OffsetT0IterDataPipe(IterDataPipe):
 
     def __iter__(self):
         for t0 in self.source_datapipe:
-            offset = pd.Timedelta(minutes=np.random.randint(self.min_t0_offset_minutes, self.max_t0_offset_minutes))
+            offset = pd.Timedelta(
+                minutes=np.random.randint(self.min_t0_offset_minutes, self.max_t0_offset_minutes)
+            )
             yield t0 - offset
