@@ -83,7 +83,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
         history_minutes=configuration.input_data.gsp.history_minutes,
         interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
         load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
-    )
+    ).drop_national_gsp()
     logger.debug("Normalize GSP data")
     gsp_datapipe = gsp_datapipe.normalize(
         normalize_fn=lambda x: x / x.capacity_megawatt_power
