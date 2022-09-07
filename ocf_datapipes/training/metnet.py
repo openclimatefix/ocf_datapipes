@@ -1,3 +1,4 @@
+"""Build MetNet data pipeline"""
 import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
@@ -22,14 +23,14 @@ logger = logging.getLogger(__name__)
 
 def build_metnet_dataloader(configuration_filename: Union[Path, str]) -> IterDataPipe:
     """
-        Create the Power Perceiver production pipeline using a configuration
+    Create the MetNet production pipeline using a configuration
 
-        Args:
-            configuration_filename: Name of the configuration
+    Args:
+        configuration_filename: Name of the configuration
 
-        Returns:
-            DataPipe ready to be put in a Dataloader for production
-        """
+    Returns:
+        DataPipe ready to be put in a Dataloader for training
+    """
     ####################################
     #
     # Equivalent to PP's loading and filtering methods

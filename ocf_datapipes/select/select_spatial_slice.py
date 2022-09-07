@@ -109,6 +109,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             location_datapipe: Location datapipe
             roi_height_meters: ROI height in meters
             roi_width_meters: ROI width in meters
+            dim_name: Dimension name to select for ID
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
