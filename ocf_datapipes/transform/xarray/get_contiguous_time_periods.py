@@ -17,7 +17,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         history_duration: timedelta,
         forecast_duration: timedelta,
         sample_period_duration: timedelta,
-        max_t0_offset: timedelta,
+        max_t0_offset: timedelta = timedelta(minutes=0),
     ):
         """
         Get contiguous time periods for use in determing t0 times for training
