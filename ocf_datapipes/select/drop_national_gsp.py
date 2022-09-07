@@ -1,6 +1,6 @@
 """Drop GSP National output from xarray"""
-from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 
 @functional_datapipe("drop_national_gsp")
@@ -17,7 +17,5 @@ class DropNationalGSPIterDataPipe(IterDataPipe):
     def __iter__(self):
         for xr_data in self.source_datapipe:
             # GSP ID 0 is national
-            xr_data.isel(
-                gsp_id=slice(1, len(xr_data.gsp_id))
-            )
+            xr_data.isel(gsp_id=slice(1, len(xr_data.gsp_id)))
             yield xr_data

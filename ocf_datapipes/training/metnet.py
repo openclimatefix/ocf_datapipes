@@ -1,12 +1,15 @@
 """Build MetNet data pipeline"""
+import logging
+from datetime import timedelta
+from pathlib import Path
+from typing import Union
+
 import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 import ocf_datapipes  # noqa
 from ocf_datapipes.config.model import Configuration
-from typing import Union
-from pathlib import Path
 from ocf_datapipes.load import (
     OpenConfiguration,
     OpenGSPFromDatabase,
@@ -15,8 +18,6 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from datetime import timedelta
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -99,7 +99,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         location_datapipe: IterDataPipe,
         roi_height_meters: int,
         roi_width_meters: int,
-        dim_name: str = "pv_system_id"
+        dim_name: str = "pv_system_id",
     ):
         """
         Select spatial slice based off pixels from point of interest
