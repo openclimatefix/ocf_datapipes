@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Union
 
 import xarray
-from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 import ocf_datapipes  # noqa
@@ -23,28 +22,6 @@ from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, Bat
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
-
-
-@functional_datapipe("gsp_iterator")
-class GSPIterator(IterDataPipe):
-    """GSP iterator for live that goes one by one through GSPs"""
-
-    def __init__(self, source_datapipe: IterDataPipe):
-        """
-        GSP iterator for live that goes one by one through GSPs
-
-        Args:
-            source_datapipe: Source datapipe to use
-        """
-        super().__init__()
-        self.source_datapipe = source_datapipe
-
-    def __iter__(self):
-        """GSP iterator for live that goes one by one through GSPs"""
-        for xr_dataset in self.source_datapipe:
-            # Iterate through all locations in dataset
-            for location_idx in range(len(xr_dataset["x_osgb"])):
-                yield xr_dataset.isel(gsp_id=slice(location_idx, location_idx + 1))
 
 
 def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
@@ -169,6 +146,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
             location_datapipe=location_datapipe4,
             roi_width_meters=10,
             roi_height_meters=10,
+            dim_name="gsp_id"
         )
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(
