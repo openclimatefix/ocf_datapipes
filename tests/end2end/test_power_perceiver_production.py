@@ -86,10 +86,10 @@ def test_power_perceiver_production(
     #
     #####################################
 
-    location_datapipe1, location_datapipe2, location_datapipe3 = LocationPicker(
+    location_datapipe1, location_datapipe2, location_datapipe3, location_datapipe4 = LocationPicker(
         gsp_datapipe, return_all_locations=True
     ).fork(
-        3
+        4
     )  # Its in order then
     pv_datapipe = SelectSpatialSliceMeters(
         pv_datapipe,
@@ -143,7 +143,7 @@ def test_power_perceiver_production(
         t0_datapipe=passiv_t0_datapipe,
         history_duration=timedelta(hours=1),
     )
-    gsp_datapipe = GSPIterator(gsp_datapipe)
+    gsp_datapipe = SelectSpatialSliceMeters(gsp_datapipe, location_datapipe=location_datapipe4, dim_name="gsp_id", roi_width_meters=10, roi_height_meters=10)
 
     sat_datapipe = Normalize(sat_datapipe, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4).map(
         lambda x: x.resample(time_utc="5T").interpolate("linear")
