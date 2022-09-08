@@ -18,7 +18,6 @@ from ocf_datapipes.convert import (
     ConvertSatelliteToNumpyBatch,
 )
 from ocf_datapipes.experimental import EnsureNNWPVariables, SetSystemIDsToOne
-from ocf_datapipes.production.power_perceiver import GSPIterator
 from ocf_datapipes.select import (
     LocationPicker,
     SelectLiveT0Time,
@@ -26,6 +25,7 @@ from ocf_datapipes.select import (
     SelectSpatialSliceMeters,
     SelectSpatialSlicePixels,
     SelectTimeSlice,
+    DropNationalGSP
 )
 from ocf_datapipes.transform.numpy import (
     AddSunPosition,
@@ -57,6 +57,7 @@ def test_power_perceiver_production(
     #####################################
     # Normalize GSP and PV on whole dataset here
     pv_datapipe = Normalize(passiv_datapipe, normalize_fn=lambda x: x / x.capacity_watt_power)
+    gsp_datapipe = DropNationalGSP(gsp_datapipe)
     gsp_datapipe = Normalize(gsp_datapipe, normalize_fn=lambda x: x / x.capacity_megawatt_power)
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_datapipe = ConvertSatelliteToInt8(sat_hrv_datapipe)
