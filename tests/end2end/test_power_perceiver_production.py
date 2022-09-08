@@ -19,13 +19,13 @@ from ocf_datapipes.convert import (
 )
 from ocf_datapipes.experimental import EnsureNNWPVariables, SetSystemIDsToOne
 from ocf_datapipes.select import (
+    DropNationalGSP,
     LocationPicker,
     SelectLiveT0Time,
     SelectLiveTimeSlice,
     SelectSpatialSliceMeters,
     SelectSpatialSlicePixels,
     SelectTimeSlice,
-    DropNationalGSP
 )
 from ocf_datapipes.transform.numpy import (
     AddSunPosition,
