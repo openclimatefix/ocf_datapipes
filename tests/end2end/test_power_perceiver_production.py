@@ -290,9 +290,10 @@ def test_power_perceiver_production_functional(
         .downsample(y_coarsen=16, x_coarsen=16)
         .fork(2)
     )
+    gsp_datapipe, gsp_t0_datapipe = gsp_datapipe.fork(2)
 
     nwp_t0_datapipe = nwp_t0_datapipe.select_live_t0_time(dim_name="init_time_utc")
-    gsp_t0_datapipe = gsp_datapipe.select_live_t0_time()
+    gsp_t0_datapipe = gsp_t0_datapipe.select_live_t0_time()
     sat_t0_datapipe = sat_t0_datapipe.select_live_t0_time()
     pv_t0_datapipe = pv_t0_datapipe.select_live_t0_time()
 
