@@ -235,7 +235,8 @@ def test_power_perceiver_production_functional(
         .drop_national_gsp()
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
-        ).fork(2)
+        )
+        .fork(2)
     )
     (
         location_datapipe1,

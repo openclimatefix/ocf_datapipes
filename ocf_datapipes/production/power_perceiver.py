@@ -56,18 +56,21 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
 
     nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
     topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename)
-    gsp_datapipe, gso_loc_datapipe = OpenGSPFromDatabase(
-        history_minutes=configuration.input_data.gsp.history_minutes,
-        interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
-        load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
-    ).drop_national_gsp().fork(2)
-    logger.debug("Normalize GSP data")
-    gsp_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
-        .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+    gsp_datapipe, gso_loc_datapipe = (
+        OpenGSPFromDatabase(
+            history_minutes=configuration.input_data.gsp.history_minutes,
+            interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
+            load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
         )
+        .drop_national_gsp()
+        .fork(2)
+    )
+    logger.debug("Normalize GSP data")
+    gsp_datapipe = gsp_datapipe.normalize(
+        normalize_fn=lambda x: x / x.capacity_megawatt_power
+    ).add_t0_idx_and_sample_period_duration(
+        sample_period_duration=timedelta(minutes=30),
+        history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
     )
     logger.debug("Getting locations")
     (
