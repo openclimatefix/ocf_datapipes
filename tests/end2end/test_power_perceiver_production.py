@@ -71,11 +71,11 @@ def test_power_perceiver_production(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=60),
     )
-    gsp_datapipe = AddT0IdxAndSamplePeriodDuration(
+    gsp_datapipe, gsp_loc_datapipe = AddT0IdxAndSamplePeriodDuration(
         gsp_datapipe,
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(hours=2),
-    )
+    ).fork(2)
     nwp_datapipe = AddT0IdxAndSamplePeriodDuration(
         nwp_datapipe, sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2)
     )
@@ -87,7 +87,7 @@ def test_power_perceiver_production(
     #####################################
 
     location_datapipe1, location_datapipe2, location_datapipe3, location_datapipe4 = LocationPicker(
-        gsp_datapipe, return_all_locations=True
+        gsp_loc_datapipe, return_all_locations=True
     ).fork(
         4
     )  # Its in order then
@@ -230,19 +230,19 @@ def test_power_perceiver_production_functional(
     #####################################
     # Normalize GSP and PV on whole dataset here
 
-    gsp_datapipe = (
+    gsp_datapipe, gsp_loc_datapipe = (
         gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
         .drop_national_gsp()
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
-        )
+        ).fork(2)
     )
     (
         location_datapipe1,
         location_datapipe2,
         location_datapipe3,
         location_datapipe4,
-    ) = gsp_datapipe.location_picker(return_all_locations=True).fork(4)
+    ) = gsp_loc_datapipe.location_picker(return_all_locations=True).fork(4)
 
     passiv_datapipe, pv_t0_datapipe = (
         passiv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
