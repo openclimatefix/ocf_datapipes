@@ -71,11 +71,11 @@ def test_power_perceiver_production(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=60),
     )
-    gsp_datapipe = AddT0IdxAndSamplePeriodDuration(
+    gsp_datapipe, gsp_t0_datapipe = AddT0IdxAndSamplePeriodDuration(
         gsp_datapipe,
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(hours=2),
-    )
+    ).fork(2)
     nwp_datapipe = AddT0IdxAndSamplePeriodDuration(
         nwp_datapipe, sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2)
     )
@@ -125,7 +125,7 @@ def test_power_perceiver_production(
         history_duration=timedelta(hours=2),
         forecast_duration=timedelta(hours=3),
     )
-    gsp_t0_datapipe = SelectLiveT0Time(gsp_datapipe)
+    gsp_t0_datapipe = SelectLiveT0Time(gsp_t0_datapipe)
     gsp_datapipe = SelectLiveTimeSlice(
         gsp_datapipe,
         t0_datapipe=gsp_t0_datapipe,
