@@ -231,9 +231,9 @@ def test_power_perceiver_production_functional(
             sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
         )
     )
-    location_datapipe1, location_datapipe2, location_datapipe3 = gsp_datapipe.location_picker(
+    location_datapipe1, location_datapipe2, location_datapipe3, location_datapipe4 = gsp_datapipe.location_picker(
         return_all_locations=True
-    ).fork(3)
+    ).fork(4)
 
     passiv_datapipe, pv_t0_datapipe = (
         passiv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
@@ -289,8 +289,12 @@ def test_power_perceiver_production_functional(
     gsp_datapipe = (
         gsp_datapipe.select_live_time_slice(
             t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2)
+        ).select_spatial_slice_meters(
+            location_datapipe=location_datapipe4,
+            roi_width_meters=10,
+            roi_height_meters=10,
+            dim_name="gsp_id"
         )
-        .gsp_iterator()
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(
             forecast_duration=timedelta(hours=8),
