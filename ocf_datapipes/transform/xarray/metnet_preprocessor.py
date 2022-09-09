@@ -1,14 +1,23 @@
-from torchdata.datapipes.iter import IterDataPipe, Zipper
-from torchdata.datapipes import functional_datapipe
-import numpy as np
 from typing import List
+
+import numpy as np
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe, Zipper
+
 
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
-    """
+    """ """
 
-    """
-    def __init__(self, source_datapipes: List[IterDataPipe], location_datapipe: IterDataPipe, context_width, context_height, center_width, center_height):
+    def __init__(
+        self,
+        source_datapipes: List[IterDataPipe],
+        location_datapipe: IterDataPipe,
+        context_width,
+        context_height,
+        center_width,
+        center_height,
+    ):
         """
 
         Processes set of Xarray datasets similar to MetNet

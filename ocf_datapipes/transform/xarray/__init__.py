@@ -13,7 +13,7 @@ from .ensure_n_pv_systems_per_example import (
 from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )
+from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv_power_rolling_window import PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
-from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
