@@ -30,7 +30,7 @@ class AddZeroedFutureDataIterDataPipe(IterDataPipe):
         for np_batch in self.source_datapipe:
             data = np_batch[self.key]
             new_data = np.zeros((len(np_batch[self.time_key]), *data.shape[1:]), dtype=data.dtype)
-            for t in range(data.shape[1]):
+            for t in range(data.shape[0]):
                 new_data[t] = data[t]
             np_batch[self.key] = new_data
             yield np_batch

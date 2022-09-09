@@ -30,7 +30,7 @@ def test_pp_production_datapipe(pv_yields_and_systems, gsp_yields):
         64,
         64,
     )  # 2nd dim is 6 history + now
-    assert batch[BatchKey.nwp].shape == (4, 3, 1, 2, 2)  # 2nd dim is 1 history + now + 1 future
-    assert batch[BatchKey.pv].shape == (4, 7, 32)  # 2nd dim is 6 history + now
-    assert batch[BatchKey.gsp].shape == (4, 5, 1)  # 2nd dim is 4 history + now
+    assert batch[BatchKey.nwp].shape == (4, 3, 9, 2, 2)  # 2nd dim is 1 history + now + 7 future ?? TODO check
+    assert batch[BatchKey.pv].shape == (4, 19, 32)  # 2nd dim is 6 history + now + 12 future
+    assert batch[BatchKey.gsp].shape == (4, 7, 1)  # 2nd dim is 4 history + now + 2 future
     assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 64, 64)
