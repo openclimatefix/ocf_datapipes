@@ -16,3 +16,4 @@ from .get_contiguous_time_periods import (
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv_power_rolling_window import PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
