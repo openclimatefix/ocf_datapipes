@@ -1,16 +1,19 @@
 """Open GFS Forecast data"""
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
-import xarray as xr
+import logging
 from pathlib import Path
 from typing import Union
-import logging
+
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 _log = logging.getLogger(__name__)
+
 
 @functional_datapipe("open_gfs")
 class OpenGFSForecastIterDataPipe(IterDataPipe):
     """Open GFS Forecast data"""
+
     def __init__(self, zarr_path: Union[Path, str]):
         """
         Open GFS Forecast data
@@ -32,10 +35,7 @@ def open_gfs(zarr_path: Union[Path, str]) -> xr.Dataset:
     if "*" in zarr_path:
         gfs = xr.open_mfdataset(zarr_path, engine="zarr", combine="time", chunks="auto")
     else:
-        gfs = xr.open_dataset(zarr_path,
-                              engine="zarr",
-                              mode="r",
-                              chunks="auto")
+        gfs = xr.open_dataset(zarr_path, engine="zarr", mode="r", chunks="auto")
 
     gfs = gfs.rename({"time": "time_utc"})
     # TODO Do other variables
