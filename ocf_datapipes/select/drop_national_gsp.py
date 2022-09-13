@@ -5,7 +5,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 
-@functional_datapipe("dropl_gsp")
+@functional_datapipe("drop_gsp")
 class DropGSPIterDataPipe(IterDataPipe):
     """Drops GSP"""
 
