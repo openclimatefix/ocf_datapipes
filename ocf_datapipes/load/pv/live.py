@@ -89,6 +89,8 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             pv_system_row_number=pv_system_row_number,
         )
 
+        logger.info(f"Found {len(data_xr.pv_system_row_number)} PV systems")
+
         while True:
             yield data_xr
 

@@ -1,6 +1,6 @@
 import os
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -181,7 +181,7 @@ def pv_yields_and_systems(db_session):
     for hour in range(4, 10):
         for minute in range(0, 60, 5):
             pv_yield_1 = PVYield(
-                datetime_utc=datetime(2022, 1, 1, hour, minute),
+                datetime_utc=datetime(2022, 1, 1, hour, minute, tzinfo=timezone.utc),
                 solar_generation_kw=hour + minute / 100,
             ).to_orm()
             pv_yield_1.pv_system = pv_system_sql_1
@@ -198,14 +198,16 @@ def pv_yields_and_systems(db_session):
     for minutes in [0, 10, 20, 30]:
 
         pv_yield_4 = PVYield(
-            datetime_utc=datetime(2022, 1, 1, 4) + timedelta(minutes=minutes), solar_generation_kw=4
+            datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes),
+            solar_generation_kw=4,
         ).to_orm()
         pv_yield_4.pv_system = pv_system_sql_2
         pv_yield_sqls.append(pv_yield_4)
 
     # add a system with only on pv yield
     pv_yield_5 = PVYield(
-        datetime_utc=datetime(2022, 1, 1, 4) + timedelta(minutes=minutes), solar_generation_kw=4
+        datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes),
+        solar_generation_kw=4,
     ).to_orm()
     pv_yield_5.pv_system = pv_system_sql_3
     pv_yield_sqls.append(pv_yield_5)
@@ -238,7 +240,7 @@ def gsp_yields(db_session):
         for hour in range(0, 8):
             for minute in range(0, 60, 30):
                 gsp_yield_1 = GSPYield(
-                    datetime_utc=datetime(2022, 1, 1, hour, minute),
+                    datetime_utc=datetime(2022, 1, 1, hour, minute, tzinfo=timezone.utc),
                     solar_generation_kw=hour + minute,
                 )
                 gsp_yield_1_sql = gsp_yield_1.to_orm()
