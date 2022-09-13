@@ -16,10 +16,10 @@ Peter Dudfield
 import logging
 import os
 from typing import Union
-import requests
 
 import geopandas as gpd
 import pandas as pd
+import requests
 
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 from ocf_datapipes.utils.pvlive import get_list_of_gsp_ids
