@@ -16,7 +16,7 @@ Peter Dudfield
 import logging
 import os
 from typing import Union
-from urllib.request import urlopen
+import requests
 
 import geopandas as gpd
 import pandas as pd
@@ -126,8 +126,8 @@ def get_gsp_shape_from_eso(
             "resource/08534dae-5408-4e31-8639-b579c8f1c50b/download/gsp_regions_20220314.geojson"
         )
 
-        with urlopen(url) as response:
-            shape_gpd = gpd.read_file(response)
+        with requests.get(url) as response:
+            shape_gpd = gpd.read_file(response.text)
 
             # calculate the centroid before using - to_crs
             shape_gpd["centroid_x"] = shape_gpd["geometry"].centroid.x
