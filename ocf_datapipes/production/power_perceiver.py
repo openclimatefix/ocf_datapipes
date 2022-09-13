@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Union
 
 import xarray
-from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 import ocf_datapipes  # noqa
@@ -23,28 +22,6 @@ from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, Bat
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
-
-
-@functional_datapipe("gsp_iterator")
-class GSPIterator(IterDataPipe):
-    """GSP iterator for live that goes one by one through GSPs"""
-
-    def __init__(self, source_datapipe: IterDataPipe):
-        """
-        GSP iterator for live that goes one by one through GSPs
-
-        Args:
-            source_datapipe: Source datapipe to use
-        """
-        super().__init__()
-        self.source_datapipe = source_datapipe
-
-    def __iter__(self):
-        """GSP iterator for live that goes one by one through GSPs"""
-        for xr_dataset in self.source_datapipe:
-            # Iterate through all locations in dataset
-            for location_idx in range(len(xr_dataset["x_osgb"])):
-                yield xr_dataset.isel(gsp_id=slice(location_idx, location_idx + 1))
 
 
 def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
@@ -79,22 +56,31 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
 
     nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
     topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename)
-    gsp_datapipe = OpenGSPFromDatabase(
-        history_minutes=configuration.input_data.gsp.history_minutes,
-        interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
-        load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
+    gsp_datapipe, gso_loc_datapipe = (
+        OpenGSPFromDatabase(
+            history_minutes=configuration.input_data.gsp.history_minutes,
+            interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
+            load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
+        )
+        .drop_gsp()
+        .fork(2)
     )
     logger.debug("Normalize GSP data")
-    gsp_datapipe = gsp_datapipe.normalize(
-        normalize_fn=lambda x: x / x.capacity_megawatt_power
-    ).add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(minutes=30),
-        history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+    gsp_datapipe, gsp_t0_datapipe = (
+        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
+        .add_t0_idx_and_sample_period_duration(
+            sample_period_duration=timedelta(minutes=30),
+            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+        )
+        .fork(2)
     )
     logger.debug("Getting locations")
-    location_datapipe1, location_datapipe2, location_datapipe3 = gsp_datapipe.location_picker(
-        return_all_locations=True
-    ).fork(3)
+    (
+        location_datapipe1,
+        location_datapipe2,
+        location_datapipe3,
+        location_datapipe4,
+    ) = gso_loc_datapipe.location_picker(return_all_locations=True).fork(4)
 
     logger.debug("Got locations")
 
@@ -155,7 +141,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
     )
 
     nwp_t0_datapipe = nwp_t0_datapipe.select_live_t0_time(dim_name="init_time_utc")
-    gsp_t0_datapipe = gsp_datapipe.select_live_t0_time()
+    gsp_t0_datapipe = gsp_t0_datapipe.select_live_t0_time()
     sat_t0_datapipe = sat_t0_datapipe.select_live_t0_time()
     pv_t0_datapipe = pv_t0_datapipe.select_live_t0_time()
 
@@ -165,7 +151,12 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
             t0_datapipe=gsp_t0_datapipe,
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         )
-        .gsp_iterator()
+        .select_spatial_slice_meters(
+            location_datapipe=location_datapipe4,
+            roi_width_meters=10,
+            roi_height_meters=10,
+            dim_name="gsp_id",
+        )
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(
             forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),

@@ -76,8 +76,9 @@ def open_sat_data(
     # Ensure the y and x coords are in the right order (top-left first):
     assert data_array.y_geostationary[0] > data_array.y_geostationary[-1]
     assert data_array.x_geostationary[0] < data_array.x_geostationary[-1]
-    assert data_array.y_osgb[0, 0] > data_array.y_osgb[-1, 0]
-    assert data_array.x_osgb[0, 0] < data_array.x_osgb[0, -1]
+    if "y_osgb" in data_array.dims:
+        assert data_array.y_osgb[0, 0] > data_array.y_osgb[-1, 0]
+        assert data_array.x_osgb[0, 0] < data_array.x_osgb[0, -1]
 
     # Sanity checks!
     data_array = data_array.transpose("time_utc", "channel", "y_geostationary", "x_geostationary")

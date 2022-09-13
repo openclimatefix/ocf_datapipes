@@ -18,8 +18,8 @@ from ocf_datapipes.convert import (
     ConvertSatelliteToNumpyBatch,
 )
 from ocf_datapipes.experimental import EnsureNNWPVariables, SetSystemIDsToOne
-from ocf_datapipes.production.power_perceiver import GSPIterator
 from ocf_datapipes.select import (
+    DropGSP,
     LocationPicker,
     SelectLiveT0Time,
     SelectLiveTimeSlice,
@@ -57,6 +57,7 @@ def test_power_perceiver_production(
     #####################################
     # Normalize GSP and PV on whole dataset here
     pv_datapipe = Normalize(passiv_datapipe, normalize_fn=lambda x: x / x.capacity_watt_power)
+    gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe).fork(2)
     gsp_datapipe = Normalize(gsp_datapipe, normalize_fn=lambda x: x / x.capacity_megawatt_power)
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_datapipe = ConvertSatelliteToInt8(sat_hrv_datapipe)
@@ -70,11 +71,11 @@ def test_power_perceiver_production(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=60),
     )
-    gsp_datapipe = AddT0IdxAndSamplePeriodDuration(
+    gsp_datapipe, gsp_t0_datapipe = AddT0IdxAndSamplePeriodDuration(
         gsp_datapipe,
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(hours=2),
-    )
+    ).fork(2)
     nwp_datapipe = AddT0IdxAndSamplePeriodDuration(
         nwp_datapipe, sample_period_duration=timedelta(hours=1), history_duration=timedelta(hours=2)
     )
@@ -85,10 +86,10 @@ def test_power_perceiver_production(
     #
     #####################################
 
-    location_datapipe1, location_datapipe2, location_datapipe3 = LocationPicker(
-        gsp_datapipe, return_all_locations=True
+    location_datapipe1, location_datapipe2, location_datapipe3, location_datapipe4 = LocationPicker(
+        gsp_loc_datapipe, return_all_locations=True
     ).fork(
-        3
+        4
     )  # Its in order then
     pv_datapipe = SelectSpatialSliceMeters(
         pv_datapipe,
@@ -124,7 +125,7 @@ def test_power_perceiver_production(
         history_duration=timedelta(hours=2),
         forecast_duration=timedelta(hours=3),
     )
-    gsp_t0_datapipe = SelectLiveT0Time(gsp_datapipe)
+    gsp_t0_datapipe = SelectLiveT0Time(gsp_t0_datapipe)
     gsp_datapipe = SelectLiveTimeSlice(
         gsp_datapipe,
         t0_datapipe=gsp_t0_datapipe,
@@ -142,7 +143,13 @@ def test_power_perceiver_production(
         t0_datapipe=passiv_t0_datapipe,
         history_duration=timedelta(hours=1),
     )
-    gsp_datapipe = GSPIterator(gsp_datapipe)
+    gsp_datapipe = SelectSpatialSliceMeters(
+        gsp_datapipe,
+        location_datapipe=location_datapipe4,
+        dim_name="gsp_id",
+        roi_width_meters=10,
+        roi_height_meters=10,
+    )
 
     sat_datapipe = Normalize(sat_datapipe, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4).map(
         lambda x: x.resample(time_utc="5T").interpolate("linear")
@@ -223,14 +230,20 @@ def test_power_perceiver_production_functional(
     #####################################
     # Normalize GSP and PV on whole dataset here
 
-    gsp_datapipe = gsp_datapipe.normalize(
-        normalize_fn=lambda x: x / x.capacity_megawatt_power
-    ).add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
+    gsp_datapipe, gsp_loc_datapipe = (
+        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
+        .drop_gsp()
+        .add_t0_idx_and_sample_period_duration(
+            sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
+        )
+        .fork(2)
     )
-    location_datapipe1, location_datapipe2, location_datapipe3 = gsp_datapipe.location_picker(
-        return_all_locations=True
-    ).fork(3)
+    (
+        location_datapipe1,
+        location_datapipe2,
+        location_datapipe3,
+        location_datapipe4,
+    ) = gsp_loc_datapipe.location_picker(return_all_locations=True).fork(4)
 
     passiv_datapipe, pv_t0_datapipe = (
         passiv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
@@ -277,9 +290,10 @@ def test_power_perceiver_production_functional(
         .downsample(y_coarsen=16, x_coarsen=16)
         .fork(2)
     )
+    gsp_datapipe, gsp_t0_datapipe = gsp_datapipe.fork(2)
 
     nwp_t0_datapipe = nwp_t0_datapipe.select_live_t0_time(dim_name="init_time_utc")
-    gsp_t0_datapipe = gsp_datapipe.select_live_t0_time()
+    gsp_t0_datapipe = gsp_t0_datapipe.select_live_t0_time()
     sat_t0_datapipe = sat_t0_datapipe.select_live_t0_time()
     pv_t0_datapipe = pv_t0_datapipe.select_live_t0_time()
 
@@ -287,7 +301,12 @@ def test_power_perceiver_production_functional(
         gsp_datapipe.select_live_time_slice(
             t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2)
         )
-        .gsp_iterator()
+        .select_spatial_slice_meters(
+            location_datapipe=location_datapipe4,
+            roi_width_meters=10,
+            roi_height_meters=10,
+            dim_name="gsp_id",
+        )
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(
             forecast_duration=timedelta(hours=8),
