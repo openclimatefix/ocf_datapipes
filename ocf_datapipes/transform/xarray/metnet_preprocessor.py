@@ -8,7 +8,7 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
-    """ """
+    """Preprocess set of Xarray datasets similar to MetNet-1"""
 
     def __init__(
         self,

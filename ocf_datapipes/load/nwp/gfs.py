@@ -31,7 +31,15 @@ class OpenGFSForecastIterDataPipe(IterDataPipe):
 
 
 def open_gfs(zarr_path: Union[Path, str]) -> xr.Dataset:
-    pass
+    """
+    Opens GFS dataset
+
+    Args:
+        zarr_path: Path to Zarr(s) to open
+
+    Returns:
+        Xarray dataset of GFS Forecasts
+    """
     if "*" in zarr_path:
         gfs = xr.open_mfdataset(zarr_path, engine="zarr", combine="time", chunks="auto")
     else:
