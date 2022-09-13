@@ -232,7 +232,7 @@ def test_power_perceiver_production_functional(
 
     gsp_datapipe, gsp_loc_datapipe = (
         gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
-        .drop_national_gsp()
+        .drop_gsp()
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)
         )

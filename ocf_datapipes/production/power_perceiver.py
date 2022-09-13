@@ -62,7 +62,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
             interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
             load_extra_minutes=configuration.input_data.gsp.live_load_extra_minutes,
         )
-        .drop_national_gsp()
+        .drop_gsp()
         .fork(2)
     )
     logger.debug("Normalize GSP data")
