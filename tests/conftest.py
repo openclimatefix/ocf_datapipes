@@ -198,14 +198,16 @@ def pv_yields_and_systems(db_session):
     for minutes in [0, 10, 20, 30]:
 
         pv_yield_4 = PVYield(
-            datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes), solar_generation_kw=4
+            datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes),
+            solar_generation_kw=4,
         ).to_orm()
         pv_yield_4.pv_system = pv_system_sql_2
         pv_yield_sqls.append(pv_yield_4)
 
     # add a system with only on pv yield
     pv_yield_5 = PVYield(
-        datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes), solar_generation_kw=4
+        datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes),
+        solar_generation_kw=4,
     ).to_orm()
     pv_yield_5.pv_system = pv_system_sql_3
     pv_yield_sqls.append(pv_yield_5)
