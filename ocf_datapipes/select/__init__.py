@@ -1,5 +1,5 @@
 """Selection datapipes"""
-from .drop_national_gsp import DropNationalGSPIterDataPipe as DropNationalGSP
+from .drop_national_gsp import DropGSPIterDataPipe as DropNationalGSP
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .offset_t0 import OffsetT0IterDataPipe as OffsetT0
 from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Time

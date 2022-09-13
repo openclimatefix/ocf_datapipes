@@ -1,3 +1,4 @@
+"""Preprocessing for MetNet-type inputs"""
 from typing import List
 
 import numpy as np
@@ -33,6 +34,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         crops and then for the downsample
 
         This also appends Lat/Lon coordinates to the stack, and returns a new Numpy array with the stacked data
+
+        TODO Could also add the national PV as a set of Layers, so also GSP input
 
         Args:
             source_datapipes: Datapipes that emit xarray datasets with latitude/longitude coordinates included
