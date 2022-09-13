@@ -133,6 +133,8 @@ def get_gsp_power_from_database(
         gsp_yields_dict = []
         for gsp_yield in gsp_yields:
             location = Location.from_orm(gsp_yield.location)
+            gsp_yield.datetime_utc = gsp_yield.datetime_utc.replace(tzinfo=timezone.utc)
+            gsp_yield.created_utc = gsp_yield.created_utc.replace(tzinfo=timezone.utc)
             gsp_yield = GSPYield.from_orm(gsp_yield)
 
             gsp_yield_dict = gsp_yield.__dict__
