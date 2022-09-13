@@ -1,7 +1,6 @@
 """Preprocessing for MetNet-type inputs"""
 from typing import List
 
-import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
@@ -30,15 +29,18 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         4. Stacking those context images on the center crop.
 
         This would be designed originally for NWP+Satellite+Topographic data sources.
-        To add the PV power for lots of sites, the PV power would need to be able to be on a grid for the context/center
+        To add the PV power for lots of sites, the PV power would
+        need to be able to be on a grid for the context/center
         crops and then for the downsample
 
-        This also appends Lat/Lon coordinates to the stack, and returns a new Numpy array with the stacked data
+        This also appends Lat/Lon coordinates to the stack,
+         and returns a new Numpy array with the stacked data
 
         TODO Could also add the national PV as a set of Layers, so also GSP input
 
         Args:
-            source_datapipes: Datapipes that emit xarray datasets with latitude/longitude coordinates included
+            source_datapipes: Datapipes that emit xarray datasets
+                with latitude/longitude coordinates included
             location_datapipe: Datapipe emitting location coordinate for center of example
             context_width: Width of the context area
             context_height: Height of the context area
