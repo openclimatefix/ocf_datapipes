@@ -16,10 +16,10 @@ Peter Dudfield
 import logging
 import os
 from typing import Union
-from urllib.request import urlopen
 
 import geopandas as gpd
 import pandas as pd
+import requests
 
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 from ocf_datapipes.utils.pvlive import get_list_of_gsp_ids
@@ -126,8 +126,8 @@ def get_gsp_shape_from_eso(
             "resource/08534dae-5408-4e31-8639-b579c8f1c50b/download/gsp_regions_20220314.geojson"
         )
 
-        with urlopen(url) as response:
-            shape_gpd = gpd.read_file(response)
+        with requests.get(url) as response:
+            shape_gpd = gpd.read_file(response.text)
 
             # calculate the centroid before using - to_crs
             shape_gpd["centroid_x"] = shape_gpd["geometry"].centroid.x
