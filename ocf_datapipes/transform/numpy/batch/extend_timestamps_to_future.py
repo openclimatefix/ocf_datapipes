@@ -5,6 +5,11 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 
 @functional_datapipe("extend_timesteps_to_future")
 class ExtendTimestepsToFutureIterDataPipe(IterDataPipe):
@@ -34,6 +39,7 @@ class ExtendTimestepsToFutureIterDataPipe(IterDataPipe):
             }  # NWP should already cover the future, ones with no future are GSP, PV, and HRV
             # Take the current past ones and just append more to the future
             for time_dim_key in all_time_dims.keys():
+                logger.debug(f'Extending {time_dim_key} for {self.num_future_timesteps} steps')
                 # Get last time stamp = now
                 times = list(all_time_dims[time_dim_key])
                 timestep_diff = abs(times[-1] - times[-2])
