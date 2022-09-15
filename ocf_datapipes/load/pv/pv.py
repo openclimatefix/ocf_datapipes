@@ -99,7 +99,7 @@ def _load_pv_power_watts_and_capacity_watt_power(
     _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
 
     # Load data in a way that will work in the cloud and locally:
-    if ".parquet" in filename:
+    if ".parquet" in str(filename):
         _log.debug(f"Loading PV parquet file {filename}")
         pv_power_df = pd.read_parquet(filename, engine="fastparquet")
         _log.debug("Loading PV parquet file: done")
