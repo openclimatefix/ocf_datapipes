@@ -1,4 +1,4 @@
-from ocf_datapipes.production.simple_pv import simple_pv_datapipe
+from ocf_datapipes.training.simple_pv import simple_pv_datapipe
 from ocf_datapipes.utils.consts import BatchKey
 
 
