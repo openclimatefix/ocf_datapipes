@@ -20,10 +20,9 @@ from nowcasting_datamodel.models import (
 )
 
 import ocf_datapipes
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
-
 from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.save import save_yaml_configuration
+from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
 
 
 @pytest.fixture()
@@ -292,8 +291,8 @@ def pv_parquet_file():
 
     with tempfile.TemporaryDirectory() as tmpdir:
 
-        filename = tmpdir + '/data.parquet'
-        data_df.to_parquet(filename,engine='fastparquet')
+        filename = tmpdir + "/data.parquet"
+        data_df.to_parquet(filename, engine="fastparquet")
         yield filename
 
 
@@ -304,7 +303,7 @@ def configuration_with_pv_parquet(pv_parquet_file):
 
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
-        configuration_filename = tmpdir + '/configuration.yaml'
+        configuration_filename = tmpdir + "/configuration.yaml"
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
