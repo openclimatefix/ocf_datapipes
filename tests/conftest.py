@@ -3,6 +3,7 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from nowcasting_datamodel.connection import DatabaseConnection
 from nowcasting_datamodel.models import (
@@ -20,6 +21,9 @@ from nowcasting_datamodel.models import (
 
 import ocf_datapipes
 from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
+
+from ocf_datapipes.config.load import load_yaml_configuration
+from ocf_datapipes.config.save import save_yaml_configuration
 
 
 @pytest.fixture()
@@ -255,3 +259,54 @@ def gsp_yields(db_session):
         "gsp_yields": gsp_yield_sqls,
         "gsp_systems": [gsp_sql_1],
     }
+
+
+@pytest.fixture()
+def pv_parquet_file():
+    """Create a file with PV data with the following columns
+
+    Columns
+    - timestamp
+    - ss_id
+    - generation_wh
+    """
+
+    date = datetime(2022, 9, 1, tzinfo=timezone.utc)
+    ids = range(0, 10)
+    days = 7
+
+    data = []
+    for id in ids:
+        # 288 5 minutes stamps in each day
+        for i in range(0, 288 * days):
+
+            datestamp = date + timedelta(minutes=i * 5)
+            if datestamp.hour > 21 or datestamp.hour < 3:
+                value = 0
+            else:
+                value = 9.1
+
+            data.append([datestamp, 9905 + id, value])
+
+    data_df = pd.DataFrame(data, columns=["timestamp", "ss_id", "generation_wh"])
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        filename = tmpdir + '/data.parquet'
+        data_df.to_parquet(filename,engine='fastparquet')
+        yield filename
+
+
+@pytest.fixture()
+def configuration_with_pv_parquet(pv_parquet_file):
+
+    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+
+    configuration = load_yaml_configuration(filename=filename)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        configuration_filename = tmpdir + '/configuration.yaml'
+        configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
+        configuration.output_data.filepath = tmpdir
+        save_yaml_configuration(configuration=configuration, filename=configuration_filename)
+
+        yield configuration_filename

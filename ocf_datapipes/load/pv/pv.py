@@ -96,18 +96,28 @@ def _load_pv_power_watts_and_capacity_watt_power(
     _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
 
     # Load data in a way that will work in the cloud and locally:
-    with fsspec.open(filename, mode="rb") as file:
-        pv_power_ds = xr.open_dataset(file, engine="h5netcdf")
-        pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
-        pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
-        pv_power_watts = pv_power_watts.astype(np.float32)
-        del pv_power_ds
+    if '.parquet' in filename:
+        pv_power_df = pd.read_parquet(filename)
+        pv_power_df['generation_w'] = pv_power_df['generation_wh']*12
 
-    if "passiv" not in str(filename):
-        _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
-        pv_power_watts = (
-            pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
-        )
+        # pivot on ss_id
+        pv_power_watts = pv_power_df.pivot(index='timestamp', columns='ss_id', values='generation_w')
+        pv_capacity_watt_power = pv_power_watts.max().astype(np.float32)
+
+
+    else:
+        with fsspec.open(filename, mode="rb") as file:
+            pv_power_ds = xr.open_dataset(file, engine="h5netcdf")
+            pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
+            pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
+            pv_power_watts = pv_power_watts.astype(np.float32)
+            del pv_power_ds
+
+        if "passiv" not in str(filename):
+            _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
+            pv_power_watts = (
+                pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
+            )
 
     pv_capacity_watt_power.index = [np.int32(col) for col in pv_capacity_watt_power.index]
     pv_power_watts.columns = pv_power_watts.columns.astype(np.int64)
