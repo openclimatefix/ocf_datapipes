@@ -110,11 +110,11 @@ def _load_pv_power_watts_and_capacity_watt_power(
             pv_power_df = pv_power_df[pv_power_df["timestamp"] >= start_date]
 
         # pivot on ss_id
-        _log.debug(f"Pivoting PV data")
+        _log.debug("Pivoting PV data")
         pv_power_watts = pv_power_df.pivot(
             index="timestamp", columns="ss_id", values="generation_w"
         )
-        _log.debug(f"Pivoting PV data: done")
+        _log.debug("Pivoting PV data: done")
         pv_capacity_watt_power = pv_power_watts.max().astype(np.float32)
 
     else:
