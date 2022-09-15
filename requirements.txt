@@ -21,3 +21,4 @@ tqdm
 bottleneck
 pyproj
 pyresample
+fastparquet
