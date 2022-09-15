@@ -28,21 +28,20 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
     """
     ####################################
     #
-    # Equivalent to PP's loading and filtering methods
+    # main data pipe for loading a simple site level forecast
     #
     #####################################
-    # Normalize GSP and PV on whole dataset here
+    # load configuration
     config_datapipe = OpenConfiguration(configuration_filename)
     configuration: Configuration = next(iter(config_datapipe))
 
     logger.debug("Opening Datasets")
-
     pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(
         pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
         pv_metadata_filename=configuration.input_data.pv.pv_files_groups[0].pv_metadata_filename,
     ).fork(2)
 
-    logger.debug("Normalize GSP data")
+    logger.debug("Add t0 idx")
     pv_datapipe, pv_t0_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
@@ -51,7 +50,6 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
     location_datapipe1 = pv_location_datapipe.location_picker()
-
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -70,9 +68,8 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
         .fork(2)
     )
 
-    # pv_t0_datapipe = pv_t0_datapipe.select_live_t0_time()
     pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
-
+    # take time slices
     pv_datapipe = (
         pv_datapipe.select_time_slice(
             t0_datapipe=pv_t0_datapipe,
@@ -86,7 +83,8 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
 
     ####################################
     #
-    # Equivalent to PP's np_batch_processors
+    # Join data pipes together, and get extra details
+    # TODO add simple NWP data
     #
     #####################################
     logger.debug("Combine all the data sources")
