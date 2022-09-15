@@ -99,20 +99,22 @@ def _load_pv_power_watts_and_capacity_watt_power(
     _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
 
     # Load data in a way that will work in the cloud and locally:
-    if '.parquet' in filename:
-        _log.debug(f'Loading PV parquet file {filename}')
-        pv_power_df = pd.read_parquet(filename, engine='fastparquet')
-        _log.debug('Loading PV parquet file: done')
-        pv_power_df['generation_w'] = pv_power_df['generation_wh']*12
+    if ".parquet" in filename:
+        _log.debug(f"Loading PV parquet file {filename}")
+        pv_power_df = pd.read_parquet(filename, engine="fastparquet")
+        _log.debug("Loading PV parquet file: done")
+        pv_power_df["generation_w"] = pv_power_df["generation_wh"] * 12
         if end_date is not None:
-            pv_power_df = pv_power_df[pv_power_df['timestamp'] < end_date]
+            pv_power_df = pv_power_df[pv_power_df["timestamp"] < end_date]
         if start_date is not None:
-            pv_power_df = pv_power_df[pv_power_df['timestamp'] >= start_date]
+            pv_power_df = pv_power_df[pv_power_df["timestamp"] >= start_date]
 
         # pivot on ss_id
-        _log.debug(f'Pivoting PV data')
-        pv_power_watts = pv_power_df.pivot(index='timestamp', columns='ss_id', values='generation_w')
-        _log.debug(f'Pivoting PV data: done')
+        _log.debug(f"Pivoting PV data")
+        pv_power_watts = pv_power_df.pivot(
+            index="timestamp", columns="ss_id", values="generation_w"
+        )
+        _log.debug(f"Pivoting PV data: done")
         pv_capacity_watt_power = pv_power_watts.max().astype(np.float32)
 
     else:
@@ -131,8 +133,10 @@ def _load_pv_power_watts_and_capacity_watt_power(
                     pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
                 )
             except Exception as e:
-                _log.warning('Could not convert timezone from London to UTC. '
-                             'Going to try and carry on anyway')
+                _log.warning(
+                    "Could not convert timezone from London to UTC. "
+                    "Going to try and carry on anyway"
+                )
                 _log.warning(e)
 
     pv_capacity_watt_power.index = [np.int32(col) for col in pv_capacity_watt_power.index]

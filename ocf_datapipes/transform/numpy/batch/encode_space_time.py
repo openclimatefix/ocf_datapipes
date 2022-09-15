@@ -1,4 +1,5 @@
 """Encodes the Fourier features for space and time"""
+import logging
 import warnings
 from numbers import Number
 
@@ -7,8 +8,6 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +60,7 @@ def get_spatial_and_temporal_fourier_features(
         np_batch[new_key] = compute_fourier_features(
             coords, n_fourier_features=n_fourier_features_per_dim
         )
-        logger.debug(f'add {new_key}')
+        logger.debug(f"add {new_key}")
 
     return np_batch
 

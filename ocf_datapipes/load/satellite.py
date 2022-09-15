@@ -30,7 +30,6 @@ def open_sat_data(
     # Open the data
     dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
 
-
     # TODO add 15 mins data satellite option
 
     # Rename

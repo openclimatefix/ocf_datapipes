@@ -12,13 +12,8 @@ from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
     OpenConfiguration,
-    OpenGSPFromDatabase,
-    OpenNWP,
     OpenPVFromNetCDF,
-    OpenSatellite,
-    OpenTopography,
 )
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
@@ -64,8 +59,7 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
 
     logger.debug("Making PV space slice")
     pv_datapipe, pv_t0_datapipe = (
-        pv_datapipe
-        .normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
+        pv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
