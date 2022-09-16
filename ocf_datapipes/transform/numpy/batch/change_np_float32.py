@@ -1,10 +1,10 @@
 """Datapipes to add Sun position to NumpyBatch"""
 
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+import logging
 
 import numpy as np
-import logging
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
 
 logger = logging.getLogger(__name__)
 
