@@ -8,3 +8,4 @@ from .batch.extend_timestamps_to_future import (
 )
 from .batch.save_t0_time import SaveT0TimeIterDataPipe as SaveT0Time
 from .batch.sun_position import AddSunPositionIterDataPipe as AddSunPosition
+from .batch.change_np_float32 import ChangeFloat32IterDataPipe as ChangeFloat32
