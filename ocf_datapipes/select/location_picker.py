@@ -40,7 +40,6 @@ class LocationPickerIterDataPipe(IterDataPipe):
                         x=xr_dataset["x_osgb"][location_idx].values,
                         y=xr_dataset["y_osgb"][location_idx].values,
                     )
-                    print(xr_dataset)
                     if 'pv_system_id' in xr_dataset.coords.keys():
                         location.id = xr_dataset['pv_system_id'][location_idx].values
                     logger.debug(f"Got all locations {location}")
