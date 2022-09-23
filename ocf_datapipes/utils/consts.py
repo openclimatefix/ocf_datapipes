@@ -2,7 +2,8 @@
 
 from enum import Enum, auto
 from numbers import Number
-from typing import NamedTuple, Union
+from typing import NamedTuple, Union, Optional
+from pydantic import BaseModel
 
 import numpy as np
 import xarray as xr
@@ -141,11 +142,12 @@ SPATIAL_AND_TEMPORAL_LOCATIONS_OF_EACH_EXAMPLE_FILENAME = (
 LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 
 
-class Location(NamedTuple):
+class Location(BaseModel):
     """Represent a spatial location."""
 
-    x: Number
-    y: Number
+    x: float
+    y: float
+    id: Optional[int]
 
 
 class BatchKey(Enum):

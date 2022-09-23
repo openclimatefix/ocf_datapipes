@@ -6,6 +6,7 @@ from ocf_datapipes.load.pv.pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromN
 
 from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
 from .nwp.nwp import OpenNWPIterDataPipe as OpenNWP
+from .nwp.nwp_id import OpenNWPIDIterDataPipe as OpenNWPID
 from .satellite import OpenSatelliteIterDataPipe as OpenSatellite
 
 try:

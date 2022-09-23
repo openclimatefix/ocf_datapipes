@@ -2,8 +2,10 @@ import os
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import numpy as np
 
 import pandas as pd
+import xarray as xr
 import pytest
 from nowcasting_datamodel.connection import DatabaseConnection
 from nowcasting_datamodel.models import (
@@ -297,6 +299,55 @@ def pv_parquet_file():
 
 
 @pytest.fixture()
+def nwp_data_with_id_filename():
+    """Create xarray netcdf file for NWP data
+
+    Variables
+    - init_time
+    - step
+    - variables
+    - id
+    """
+
+    # middle of the UK
+    t0_datetime_utc = datetime(2022, 9, 1)
+    time_steps = 10
+    days = 7
+    ids = np.array(range(0, 10)) + 9905
+    init_time = [t0_datetime_utc + timedelta(minutes=60 * i) for i in range(0, days*24)]
+
+    # time = pd.date_range(start=t0_datetime_utc, freq="30T", periods=10)
+    step = [timedelta(minutes=60 * i) for i in range(0, time_steps)]
+
+    coords = (
+        ("init_time", init_time),
+        ("variable", np.array(["si10","dswrf","t","prate"])),
+        ("step", step),
+        ("id", ids),
+    )
+
+    nwp = xr.DataArray(
+        abs(  # to make sure average is about 100
+            np.random.uniform(
+                0,
+                200,
+                size=(7*24, 4, time_steps, len(ids)),
+            )
+        ),
+        coords=coords,
+        name="data",
+    )  # Fake data for testing!
+
+    nwp = nwp.to_dataset(name="UKV")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filename = tmpdir + "/nwp.netcdf"
+
+        nwp.to_netcdf(filename, engine='h5netcdf')
+
+        yield filename
+
+
+@pytest.fixture()
 def configuration_with_pv_parquet(pv_parquet_file):
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
@@ -305,6 +356,22 @@ def configuration_with_pv_parquet(pv_parquet_file):
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
+        configuration.output_data.filepath = tmpdir
+        save_yaml_configuration(configuration=configuration, filename=configuration_filename)
+
+        yield configuration_filename
+
+
+@pytest.fixture()
+def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_filename):
+
+    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+
+    configuration = load_yaml_configuration(filename=filename)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        configuration_filename = tmpdir + "/configuration.yaml"
+        configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
+        configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
 
