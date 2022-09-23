@@ -2,10 +2,10 @@
 
 from enum import Enum, auto
 from typing import Union, Optional
-from pydantic import BaseModel
 
 import numpy as np
 import xarray as xr
+from pydantic import BaseModel
 
 PV_TIME_AXIS = 1
 PV_SYSTEM_AXIS = 2
