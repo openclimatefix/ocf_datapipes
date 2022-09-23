@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 from typing import Union
 
-import numpy as np
 import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -51,9 +50,7 @@ def open_nwp(netcdf_path) -> xr.DataArray:
     ukv: xr.DataArray = nwp["UKV"]
     del nwp
     ukv = ukv.transpose("init_time", "step", "variable", "id")
-    ukv = ukv.rename(
-        {"init_time": "init_time_utc", "variable": "channel"}
-    )
+    ukv = ukv.rename({"init_time": "init_time_utc", "variable": "channel"})
     # Sanity checks.
     time = pd.DatetimeIndex(ukv.init_time_utc)
     assert time.is_unique

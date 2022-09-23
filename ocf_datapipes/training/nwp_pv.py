@@ -11,7 +11,7 @@ import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import OpenConfiguration, OpenPVFromNetCDF, OpenNWPID
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
+from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
@@ -51,7 +51,7 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     ).fork(2)
 
     logger.debug("Getting locations")
-    location_datapipe1,location_datapipe2 = pv_location_datapipe.location_picker().fork(2)
+    location_datapipe1, location_datapipe2 = pv_location_datapipe.location_picker().fork(2)
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -71,13 +71,16 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     )
 
     # select id from nwp data
-    nwp_datapipe, nwp_t0_datapipe = nwp_datapipe.add_t0_idx_and_sample_period_duration(
+    nwp_datapipe, nwp_t0_datapipe = (
+        nwp_datapipe.add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(hours=1),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-        ).select_id(
+        )
+        .select_id(
             location_datapipe=location_datapipe2,
-        ).fork(2)
-
+        )
+        .fork(2)
+    )
 
     pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
     nwp_t0_datapipe = nwp_t0_datapipe.select_t0_time(dim_name="init_time_utc")

@@ -1,8 +1,7 @@
 """Constants and Enums."""
 
 from enum import Enum, auto
-from numbers import Number
-from typing import NamedTuple, Union, Optional
+from typing import Union, Optional
 from pydantic import BaseModel
 
 import numpy as np
