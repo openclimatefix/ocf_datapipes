@@ -114,13 +114,14 @@ def db_connection():
         os.environ["DB_URL"] = url
 
         connection = DatabaseConnection(url=url, base=Base_PV, echo=False)
-        Base_PV.metadata.create_all(connection.engine)
-        Base_Forecast.metadata.create_all(connection.engine)
+        from nowcasting_datamodel.models import PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL
+        for table in [PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL]:
+            table.__table__.create(connection.engine)
 
         yield connection
 
-        Base_PV.metadata.drop_all(connection.engine)
-        Base_Forecast.metadata.create_all(connection.engine)
+        for table in [PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL]:
+            table.__table__.drop(connection.engine)
 
 
 @pytest.fixture(scope="function", autouse=True)
