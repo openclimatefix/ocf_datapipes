@@ -26,13 +26,15 @@ class RemoveNansIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.DataArray:
         for xr_data in self.source_datapipe:
             logger.debug(
-                f"Dropping nans on {self.time_dim}. Currently there are {len(xr_data[self.time_dim])}"
+                f"Dropping nans on {self.time_dim}. "
+                f"Currently there are {len(xr_data[self.time_dim])}"
             )
             logger.debug(f"Minimum value is {xr_data[self.time_dim].min()}")
             logger.debug(f"Maximum value is {xr_data[self.time_dim].max()}")
             xr_data_new = xr_data.dropna(dim=self.time_dim)
             logger.debug(
-                f"After dropping nans on {self.time_dim}, there are {len(xr_data_new[self.time_dim])}"
+                f"After dropping nans on {self.time_dim}, "
+                f"there are {len(xr_data_new[self.time_dim])}"
             )
             if len(xr_data_new[self.time_dim]) == 0:
                 logger.debug(xr_data)
