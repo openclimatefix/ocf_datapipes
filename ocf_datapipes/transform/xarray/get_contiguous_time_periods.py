@@ -32,6 +32,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
             forecast_duration: Amount of time for the forecast of an example
             sample_period_duration: The sampling period of the data source
             max_t0_offset: Max t0 offset for the data source, add as buffer to total duration
+            time_dim: time dimensions for which to find the contiguous time periods
         """
         self.source_datapipe = source_datapipe
         self.history_duration = history_duration

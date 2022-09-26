@@ -43,7 +43,7 @@ def open_nwp(netcdf_path) -> xr.DataArray:
         Xarray DataArray of the NWP data
     """
     _log.debug("Loading NWP")
-    nwp = xr.open_dataset(
+    nwp = xr.load_dataset(
         netcdf_path,
         engine="h5netcdf",
         chunks="auto",

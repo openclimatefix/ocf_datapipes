@@ -18,6 +18,7 @@ class RemoveNansIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of PV data
+            time_dim: the time dimension to drop nans along
         """
         self.source_datapipe = source_datapipe
         self.time_dim = time_dim
