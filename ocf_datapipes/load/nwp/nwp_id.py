@@ -42,6 +42,7 @@ def open_nwp(netcdf_path) -> xr.DataArray:
     Returns:
         Xarray DataArray of the NWP data
     """
+    _log.debug("Loading NWP")
     nwp = xr.open_dataset(
         netcdf_path,
         engine="h5netcdf",
@@ -51,6 +52,10 @@ def open_nwp(netcdf_path) -> xr.DataArray:
     del nwp
     ukv = ukv.transpose("init_time", "step", "variable", "id")
     ukv = ukv.rename({"init_time": "init_time_utc", "variable": "channel"})
+
+    _log.debug("Resampling to 1 hour")
+    ukv = ukv.resample(init_time_utc="1H").pad()
+
     # Sanity checks.
     time = pd.DatetimeIndex(ukv.init_time_utc)
     assert time.is_unique

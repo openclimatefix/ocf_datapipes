@@ -1,10 +1,12 @@
 """Select time periods"""
+import logging
 from typing import Union
 
-import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torchdata.datapipes.iter import IterDataPipe, Zipper
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("select_time_periods")
@@ -14,7 +16,7 @@ class SelectTimePeriodsIterDataPipe(IterDataPipe):
     def __init__(
         self,
         source_datapipe: IterDataPipe,
-        time_periods: pd.DataFrame,
+        time_periods: IterDataPipe,
         dim_name: str = "time_utc",
     ):
         """
@@ -30,10 +32,14 @@ class SelectTimePeriodsIterDataPipe(IterDataPipe):
         self.dim_name = dim_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data in self.source_datapipe:
+        for xr_data, time_periods in Zipper(self.source_datapipe, self.time_periods):
+
             new_xr_data = []
-            for _, row in self.time_periods.iterrows():
+            logger.debug(f"Selecting Time periods ({len(time_periods)})")
+            for _, row in time_periods.iterrows():
                 start_dt = row["start_dt"]
                 end_dt = row["end_dt"]
                 new_xr_data.append(xr_data.sel({self.dim_name: slice(start_dt, end_dt)}))
-            yield xr.concat(new_xr_data, dim=self.dim_name)
+
+            xr_data_concat = xr.concat(new_xr_data, dim=self.dim_name)
+            yield xr_data_concat

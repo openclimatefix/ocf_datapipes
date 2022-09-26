@@ -1,4 +1,5 @@
 """Get contiguous time periods for training"""
+import logging
 from datetime import timedelta
 
 import numpy as np
@@ -6,8 +7,10 @@ import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+logger = logging.getLogger(__name__)
 
-@functional_datapipe("add_contiguous_time_periods")
+
+@functional_datapipe("get_contiguous_time_periods")
 class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
     """Get contiguous time periods for training"""
 
@@ -18,6 +21,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         forecast_duration: timedelta,
         sample_period_duration: timedelta,
         max_t0_offset: timedelta = timedelta(minutes=0),
+        time_dim: str = "time_utc",
     ):
         """
         Get contiguous time periods for use in determing t0 times for training
@@ -35,15 +39,18 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         self.total_duration = history_duration + forecast_duration + max_t0_offset
         self.sample_period_duration = sample_period_duration
         self.max_t0_offset = max_t0_offset
+        self.time_dim = time_dim
 
     def __iter__(self) -> pd.DataFrame:
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
+            logger.debug("Getting contiguous time periods")
             contiguous_time_periods = get_contiguous_time_periods(
-                datetimes=pd.DatetimeIndex(xr_data["time_utc"]),
+                datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                 min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
                 max_gap_duration=self.sample_period_duration,
             )
+            logger.debug("Getting contiguous t0 time periods")
             contiguous_time_periods = get_contiguous_t0_time_periods(
                 contiguous_time_periods=contiguous_time_periods,
                 history_duration=self.history_duration,
@@ -63,8 +70,10 @@ def get_contiguous_t0_time_periods(
       pd.DataFrame where each row represents a single time period.  The pd.DataFrame
       has two columns: `start_dt` and `end_dt` (where 'dt' is short for 'datetime').
     """
+    logger.debug(contiguous_time_periods)
     contiguous_time_periods["start_dt"] += history_duration
     contiguous_time_periods["end_dt"] -= forecast_duration
+    logger.debug(contiguous_time_periods)
     assert (contiguous_time_periods["start_dt"] < contiguous_time_periods["end_dt"]).all()
     return contiguous_time_periods
 

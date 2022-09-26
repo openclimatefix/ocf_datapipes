@@ -1,8 +1,12 @@
 """Select the t0 time for training"""
+import logging
+
 import numpy as np
 import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("select_t0_time")
@@ -23,4 +27,9 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
     def __iter__(self) -> pd.Timestamp:
         """Get the latest timestamp and return it"""
         for xr_data in self.source_datapipe:
-            yield np.random.choice(xr_data[self.dim_name].values)
+
+            logger.debug(f"Selecting t0 on {xr_data[self.dim_name]}")
+            t0 = np.random.choice(xr_data[self.dim_name].values)
+            logger.debug(f"t0 will be {t0}")
+
+            yield t0

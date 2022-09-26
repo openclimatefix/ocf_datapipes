@@ -292,6 +292,8 @@ def pv_parquet_file():
 
     data_df = pd.DataFrame(data, columns=["timestamp", "ss_id", "generation_wh"])
 
+    data_df.loc[0:3,'generation_wh'] = np.nan
+
     with tempfile.TemporaryDirectory() as tmpdir:
 
         filename = tmpdir + "/data.parquet"

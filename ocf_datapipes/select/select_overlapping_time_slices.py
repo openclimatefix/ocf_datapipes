@@ -1,9 +1,12 @@
 """Select overlapping time slices for training"""
+import logging
 from typing import Iterable
 
 import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("select_overlapping_time_slice")
@@ -22,7 +25,12 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> pd.DataFrame:
         for set_of_pd_datas in Zipper(*self.source_datapipes):
-            yield intersection_of_multiple_dataframes_of_periods(list(*set_of_pd_datas))
+            time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
+
+            logger.debug(f"Found {len(time_periods)} time periods")
+            assert len(time_periods) > 0
+
+            yield time_periods
 
 
 def intersection_of_multiple_dataframes_of_periods(

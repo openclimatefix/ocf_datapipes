@@ -1,6 +1,6 @@
 """Datapipe and utils to load PV data from NetCDF for training"""
-import datetime
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
@@ -28,6 +28,8 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self,
         pv_power_filename: Union[str, Path],
         pv_metadata_filename: Union[str, Path],
+        start_datetime: Optional[datetime] = None,
+        end_datetime: Optional[datetime] = None,
     ):
         """
         Datapipe to load PV from NetCDF
@@ -39,16 +41,26 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         super().__init__()
         self.pv_power_filename = pv_power_filename
         self.pv_metadata_filename = pv_metadata_filename
+        self.start_dateime = start_datetime
+        self.end_datetime = end_datetime
 
     def __iter__(self):
         data: xr.DataArray = load_everything_into_ram(
-            self.pv_power_filename, self.pv_metadata_filename
+            self.pv_power_filename,
+            self.pv_metadata_filename,
+            start_dateime=self.start_dateime,
+            end_datetime=self.end_datetime,
         )
         while True:
             yield data
 
 
-def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.DataArray:
+def load_everything_into_ram(
+    pv_power_filename,
+    pv_metadata_filename,
+    start_dateime: Optional[datetime] = None,
+    end_datetime: Optional[datetime] = None,
+) -> xr.DataArray:
     """Open AND load PV data into RAM."""
 
     # load metadata
@@ -61,6 +73,8 @@ def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.Data
         pv_system_row_number,
     ) = _load_pv_power_watts_and_capacity_watt_power(
         pv_power_filename,
+        start_date=start_dateime,
+        end_date=end_datetime,
     )
     # Ensure pv_metadata, pv_power_watts, and pv_capacity_watt_power all have the same set of
     # PV system IDs, in the same order:
@@ -86,8 +100,8 @@ def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.Data
 
 def _load_pv_power_watts_and_capacity_watt_power(
     filename: Union[str, Path],
-    start_date: Optional[datetime.datetime] = None,
-    end_date: Optional[datetime.datetime] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """Return pv_power_watts, pv_capacity_watt_power, pv_system_row_number.
 
