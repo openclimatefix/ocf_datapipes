@@ -14,7 +14,7 @@ class SelectIDIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         location_datapipe: IterDataPipe,
-        data_source: str = 'nwp'
+        data_source_name: str = 'nwp'
     ):
         """
         Selects id
@@ -22,17 +22,18 @@ class SelectIDIterDataPipe(IterDataPipe):
         Args:
             source_datapipe: Datapipe of Xarray objects
             location_datapipe: Location datapipe
+            data_source_name: the name of the datasource.
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
-        self.data_source = data_source
+        self.data_source_name = data_source_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
 
-            if self.data_source == 'nwp':
+            if self.data_source_name == 'nwp':
                 xr_data = xr_data.sel(id=location.id)
 
-            if self.data_source == 'pv':
+            if self.data_source_name == 'pv':
                 xr_data = xr_data.sel(pv_system_id=[location.id])
             yield xr_data

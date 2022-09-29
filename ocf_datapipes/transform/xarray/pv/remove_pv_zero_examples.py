@@ -20,6 +20,13 @@ class PVPowerRemoveZeroDataIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         window: timedelta,
     ):
+        """
+        Set zero pv data to nans
+
+        Args:
+            source_datapipe: iter data pipe
+            window: the time length of the window to check
+        """
 
         self.source_datapipe = source_datapipe
         self.window = window
