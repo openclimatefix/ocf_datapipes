@@ -1,12 +1,10 @@
 """Remove PV data """
 
+import logging
+from datetime import timedelta
+
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from datetime import timedelta
-import numpy as np
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 

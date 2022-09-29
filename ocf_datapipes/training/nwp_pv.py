@@ -70,7 +70,7 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
-        .select_id(location_datapipe=location_datapipe1, data_source="pv")
+        .select_id(location_datapipe=location_datapipe1, data_source_name="pv")
         .pv_remove_zero_data(
             window=timedelta(
                 minutes=configuration.input_data.pv.history_minutes
