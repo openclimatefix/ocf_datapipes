@@ -29,8 +29,6 @@ class RemoveNansIterDataPipe(IterDataPipe):
                 f"Dropping nans on {self.time_dim}. "
                 f"Currently there are {len(xr_data[self.time_dim])}"
             )
-            logger.debug(f"Minimum value is {xr_data[self.time_dim].min()}")
-            logger.debug(f"Maximum value is {xr_data[self.time_dim].max()}")
             xr_data_new = xr_data.dropna(dim=self.time_dim)
             logger.debug(
                 f"After dropping nans on {self.time_dim}, "
@@ -39,6 +37,4 @@ class RemoveNansIterDataPipe(IterDataPipe):
             if len(xr_data_new[self.time_dim]) == 0:
                 logger.debug(xr_data)
                 raise Exception("Data has only nans in it")
-            logger.debug(f"Minimum value is {xr_data_new[self.time_dim].min()}")
-            logger.debug(f"Maximum value is {xr_data_new[self.time_dim].max()}")
             yield xr_data_new

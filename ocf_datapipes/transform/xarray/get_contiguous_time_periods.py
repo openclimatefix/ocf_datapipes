@@ -71,10 +71,8 @@ def get_contiguous_t0_time_periods(
       pd.DataFrame where each row represents a single time period.  The pd.DataFrame
       has two columns: `start_dt` and `end_dt` (where 'dt' is short for 'datetime').
     """
-    logger.debug(contiguous_time_periods)
     contiguous_time_periods["start_dt"] += history_duration
     contiguous_time_periods["end_dt"] -= forecast_duration
-    logger.debug(contiguous_time_periods)
     assert (contiguous_time_periods["start_dt"] < contiguous_time_periods["end_dt"]).all()
     return contiguous_time_periods
 

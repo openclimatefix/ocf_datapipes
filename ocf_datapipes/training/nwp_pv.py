@@ -17,7 +17,7 @@ from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
-BUFFER_SIZE = -1
+BUFFER_SIZE = 20
 
 
 def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
@@ -49,11 +49,15 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
 
     nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
 
-    logger.debug("Add t0 idx")
-    pv_datapipe, pv_t0_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
+    logger.debug("Add t0 idx and normalize")
+    pv_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-    ).fork(2, buffer_size=BUFFER_SIZE)
+    ).normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
+    nwp_datapipe = nwp_datapipe.add_t0_idx_and_sample_period_duration(
+        sample_period_duration=timedelta(hours=1),
+        history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+    )
 
     logger.debug("Getting locations")
     (
@@ -65,12 +69,7 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
 
     logger.debug("Making PV space slice")
     pv_datapipe, pv_time_periods_datapipe, pv_t0_datapipe, = (
-        pv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
-        .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-        )
-        .select_id(location_datapipe=location_datapipe1, data_source_name="pv")
+        pv_datapipe.select_id(location_datapipe=location_datapipe1, data_source_name="pv")
         .pv_remove_zero_data(
             window=timedelta(
                 minutes=configuration.input_data.pv.history_minutes
@@ -82,16 +81,9 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     )
 
     # select id from nwp data
-    nwp_datapipe, nwp_time_periods_datapipe, nwp_t0_datapipe = (
-        nwp_datapipe.add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(hours=1),
-            history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-        )
-        .select_id(
-            location_datapipe=location_datapipe2,
-        )
-        .fork(3, buffer_size=BUFFER_SIZE)
-    )
+    nwp_datapipe, nwp_time_periods_datapipe, nwp_t0_datapipe = nwp_datapipe.select_id(
+        location_datapipe=location_datapipe2, data_source_name="nwp"
+    ).fork(3, buffer_size=BUFFER_SIZE)
 
     # get contiguous time periods
     pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
@@ -106,8 +98,8 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
         time_dim="init_time_utc",
     )
     # find joint overlapping timer periods
-    overlapping_datapipe = SelectOverlappingTimeSlice(
-        source_datapipes=[pv_time_periods_datapipe, nwp_time_periods_datapipe],
+    overlapping_datapipe = pv_time_periods_datapipe.select_overlapping_time_slice(
+        secondary_datapipes=[nwp_time_periods_datapipe],
         location_datapipe=location_datapipe3,
     )
     pv_time_periods, nwp_time_periods = overlapping_datapipe.fork(2, buffer_size=BUFFER_SIZE)

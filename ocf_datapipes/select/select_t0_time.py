@@ -28,7 +28,10 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
         """Get the latest timestamp and return it"""
         for xr_data in self.source_datapipe:
 
-            logger.debug(f"Selecting t0 on {xr_data[self.dim_name]}")
+            logger.debug(f"Selecting t0 from {len(xr_data[self.dim_name])} datetimes")
+
+            if len(xr_data[self.dim_name].values) == 0:
+                assert Exception('There are no values to get t0 from')
             t0 = np.random.choice(xr_data[self.dim_name].values)
             logger.debug(f"t0 will be {t0}")
 
