@@ -17,6 +17,8 @@ from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
+BUFFER_SIZE = -1
+
 
 def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     """
@@ -43,7 +45,7 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
         pv_metadata_filename=configuration.input_data.pv.pv_files_groups[0].pv_metadata_filename,
         start_datetime=configuration.input_data.pv.start_datetime,
         end_datetime=configuration.input_data.pv.end_datetime,
-    ).fork(2)
+    ).fork(2, buffer_size=BUFFER_SIZE)
 
     nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
 
@@ -51,10 +53,14 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     pv_datapipe, pv_t0_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-    ).fork(2)
+    ).fork(2, buffer_size=BUFFER_SIZE)
 
     logger.debug("Getting locations")
-    location_datapipe1, location_datapipe2 = pv_location_datapipe.location_picker().fork(2)
+    (
+        location_datapipe1,
+        location_datapipe2,
+        location_datapipe3,
+    ) = pv_location_datapipe.location_picker().fork(3, buffer_size=BUFFER_SIZE)
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -64,14 +70,15 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
-        .select_spatial_slice_meters(
-            location_datapipe=location_datapipe1,
-            roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
-            roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
+        .select_id(location_datapipe=location_datapipe1, data_source="pv")
+        .pv_remove_zero_data(
+            window=timedelta(
+                minutes=configuration.input_data.pv.history_minutes
+                + configuration.input_data.pv.forecast_minutes
+            )
         )
-        .ensure_n_pv_systems_per_example(n_pv_systems_per_example=1)
         .remove_nans()
-        .fork(3)
+        .fork(3, buffer_size=BUFFER_SIZE)
     )
 
     # select id from nwp data
@@ -83,16 +90,16 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
         .select_id(
             location_datapipe=location_datapipe2,
         )
-        .fork(3)
+        .fork(3, buffer_size=BUFFER_SIZE)
     )
 
     # get contiguous time periods
-    pv_t0_datapipe = pv_t0_datapipe.get_contiguous_time_periods(
+    pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
     )
-    nwp_t0_datapipe = nwp_t0_datapipe.get_contiguous_time_periods(
+    nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(
         sample_period_duration=timedelta(minutes=60),
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
@@ -100,13 +107,14 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     )
     # find joint overlapping timer periods
     overlapping_datapipe = SelectOverlappingTimeSlice(
-        source_datapipes=[pv_t0_datapipe, nwp_t0_datapipe]
+        source_datapipes=[pv_time_periods_datapipe, nwp_time_periods_datapipe],
+        location_datapipe=location_datapipe3,
     )
-    pv_time_periods, nwp_time_periods = overlapping_datapipe.fork(2)
+    pv_time_periods, nwp_time_periods = overlapping_datapipe.fork(2, buffer_size=BUFFER_SIZE)
 
     # select time periods
-    pv_t0_datapipe = pv_time_periods_datapipe.select_time_periods(time_periods=pv_time_periods)
-    nwp_t0_datapipe = nwp_time_periods_datapipe.select_time_periods(
+    pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=pv_time_periods)
+    nwp_t0_datapipe = nwp_t0_datapipe.select_time_periods(
         time_periods=nwp_time_periods, dim_name="init_time_utc"
     )
     # select t0 periods

@@ -5,6 +5,9 @@ from ocf_datapipes.transform.xarray.pv.ensure_n_pv_systems_per_example import (
 from ocf_datapipes.transform.xarray.pv.pv_power_rolling_window import (
     PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow,
 )
+from ocf_datapipes.transform.xarray.pv.remove_pv_zero_examples import (
+    PVPowerRemoveZeroDataIterDataPipe as PVPowerRemoveZeroData,
+)
 
 from .add_t0idx_and_sample_period_duration import (
     AddT0IdxAndSamplePeriodDurationIterDataPipe as AddT0IdxAndSamplePeriodDuration,

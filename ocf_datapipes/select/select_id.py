@@ -14,6 +14,7 @@ class SelectIDIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         location_datapipe: IterDataPipe,
+        data_source: str = 'nwp'
     ):
         """
         Selects id
@@ -24,9 +25,14 @@ class SelectIDIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
+        self.data_source = data_source
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
 
-            xr_data = xr_data.sel(id=location.id)
+            if self.data_source == 'nwp':
+                xr_data = xr_data.sel(id=location.id)
+
+            if self.data_source == 'pv':
+                xr_data = xr_data.sel(pv_system_id=[location.id])
             yield xr_data
