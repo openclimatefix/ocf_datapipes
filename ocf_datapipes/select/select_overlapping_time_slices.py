@@ -1,11 +1,10 @@
 """Select overlapping time slices for training"""
 import logging
-import time
-from typing import Iterable
+from typing import Iterable, Optional
 
 import pandas as pd
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes.iter import IterDataPipe
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +17,15 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         secondary_datapipes: Iterable[IterDataPipe],
-        location_datapipe: IterDataPipe,
+        location_datapipe: Optional[IterDataPipe] = None,
     ):
         """
         Source DataPipes are from the contiguous_time_period
 
         Args:
-            source_datapipes: Datapipes to compute the intersection of
+            source_datapipe: First Datapipe to compute the intersection of
+            secondary_datapipes: More Datapipe to compute the intersection of
+            location_datapipe: location fo data pipe. This allows quick loading of time periods if present
         """
         super().__init__()
         self.source_datapipe = source_datapipe
@@ -34,39 +35,45 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> pd.DataFrame:
 
-        for set_of_pd_datas in self.source_datapipe.zip(
-            *self.secondary_datapipes, self.location_datapipe
-        ):
-            location = set_of_pd_datas[-1]
-            set_of_pd_datas = set_of_pd_datas[:-1]
+        if self.location_datapipe is None:
 
-            id = int(location.id)
+            for set_of_pd_datas in self.source_datapipe.zip(*self.secondary_datapipes):
 
-            logger.debug(self.time_periods_id.keys())
-
-            if id in self.time_periods_id.keys():
-                logger.debug(f"Time periods for id {id} from store")
-                logger.debug(len(self.time_periods_id[id]))
-                time_periods = self.time_periods_id[id]
-            else:
                 logger.debug(f"Time periods for id {id} not in store")
                 time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
 
                 logger.debug(f"Found {len(time_periods)} time periods")
                 assert len(time_periods) > 0
 
-                # if id in self.time_periods_id.keys():
-                #     logger.debug(f"Got id {id} from store")
-                #     logger.debug(len(self.time_periods_id[id]))
-                #     logger.debug(self.time_periods_id[id])
-                #     logger.debug(time_periods)
-                #     assert (self.time_periods_id[id] == time_periods).all().all()
-                #     yield self.time_periods_id[id]
+                yield time_periods
+        else:
+            for set_of_pd_datas in self.source_datapipe.zip(
+                *self.secondary_datapipes, self.location_datapipe
+            ):
+                location = set_of_pd_datas[-1]
+                set_of_pd_datas = set_of_pd_datas[:-1]
 
-                self.time_periods_id[id] = time_periods
-                logger.debug(len(time_periods))
+                id = int(location.id)
 
-            yield time_periods
+                logger.debug(self.time_periods_id.keys())
+
+                if id in self.time_periods_id.keys():
+                    logger.debug(f"Time periods for id {id} from store")
+                    logger.debug(len(self.time_periods_id[id]))
+                    time_periods = self.time_periods_id[id]
+                else:
+                    logger.debug(f"Time periods for id {id} not in store")
+                    time_periods = intersection_of_multiple_dataframes_of_periods(
+                        list(set_of_pd_datas)
+                    )
+
+                    logger.debug(f"Found {len(time_periods)} time periods")
+                    assert len(time_periods) > 0
+
+                    self.time_periods_id[id] = time_periods
+                    logger.debug(len(time_periods))
+
+                yield time_periods
 
 
 def intersection_of_multiple_dataframes_of_periods(

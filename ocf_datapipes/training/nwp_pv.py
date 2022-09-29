@@ -17,7 +17,8 @@ from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
-BUFFER_SIZE = 20
+# should scale with batch_size #TODO
+BUFFER_SIZE = 100
 
 
 def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
