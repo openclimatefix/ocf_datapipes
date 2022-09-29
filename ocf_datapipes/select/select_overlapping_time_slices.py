@@ -25,7 +25,8 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
         Args:
             source_datapipe: First Datapipe to compute the intersection of
             secondary_datapipes: More Datapipe to compute the intersection of
-            location_datapipe: location fo data pipe. This allows quick loading of time periods if present
+            location_datapipe: location fo data pipe. This allows quick loading of
+                time periods if present
         """
         super().__init__()
         self.source_datapipe = source_datapipe
@@ -39,7 +40,6 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
 
             for set_of_pd_datas in self.source_datapipe.zip(*self.secondary_datapipes):
 
-                logger.debug(f"Time periods for id {id} not in store")
                 time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
 
                 logger.debug(f"Found {len(time_periods)} time periods")
