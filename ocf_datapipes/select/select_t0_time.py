@@ -31,7 +31,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
             logger.debug(f"Selecting t0 from {len(xr_data[self.dim_name])} datetimes")
 
             if len(xr_data[self.dim_name].values) == 0:
-                assert Exception('There are no values to get t0 from')
+                assert Exception("There are no values to get t0 from")
             t0 = np.random.choice(xr_data[self.dim_name].values)
             logger.debug(f"t0 will be {t0}")
 
