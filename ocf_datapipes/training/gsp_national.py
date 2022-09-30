@@ -36,22 +36,28 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
 
     # Load GSP national data
     logger.debug("Load GSP data")
-    gsp_datapipe = OpenGSPNational(gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path)
+    gsp_datapipe = OpenGSPNational(
+        gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
+    )
 
     # Load NWP data
     logger.debug("Load NWP data")
     nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
 
     logger.debug("Add t0 idx and normalize")
-    gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = gsp_datapipe.add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(minutes=30),
-        history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-    ).normalize(normalize_fn=lambda x: x / x.installedcapacity_mwp).fork(3)
+    gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
+        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
+        .add_t0_idx_and_sample_period_duration(
+            sample_period_duration=timedelta(minutes=30),
+            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+        )
+        .fork(3)
+    )
 
-    nwp_datapipe, nwp_time_periods_datapipe, nwp_t0_datapipe = nwp_datapipe.add_t0_idx_and_sample_period_duration(
+    nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(hours=1),
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-    ).fork(3)
+    ).fork(2)
 
     # get time periods
     # get contiguous time periods
@@ -106,8 +112,6 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
         .convert_nwp_to_numpy_batch()
         .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
-
-    # yield gsp_datapipe
 
     ####################################
     # Join data pipes together, and get extra details

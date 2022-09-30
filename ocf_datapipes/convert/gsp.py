@@ -28,6 +28,7 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
         """Convert from Xarray to NumpyBatch"""
         logger.debug('Converting GSP to numpy to batch')
         for xr_data in self.source_datapipe:
+
             example: NumpyBatch = {
                 BatchKey.gsp: xr_data.values,
                 BatchKey.gsp_t0_idx: xr_data.attrs["t0_idx"],
@@ -43,8 +44,9 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
                 (BatchKey.gsp_y_osgb, "y_osgb"),
                 (BatchKey.gsp_x_osgb, "x_osgb"),
             ):
-                values = xr_data[dataset_key].values
-                # Expand dims so EncodeSpaceTime works!
-                example[batch_key] = values  # np.expand_dims(values, axis=1)
+                if dataset_key in xr_data.coords.keys():
+                    values = xr_data[dataset_key].values
+                    # Expand dims so EncodeSpaceTime works!
+                    example[batch_key] = values  # np.expand_dims(values, axis=1)
 
             yield example

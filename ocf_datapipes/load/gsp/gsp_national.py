@@ -47,7 +47,7 @@ class OpenGSPNationalIterDataPipe(IterDataPipe):
         logger.debug("Getting GSP data")
 
         # Load GSP generation xr.Dataset:
-        gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
+        gsp_pv_power_mw_ds = xr.load_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
 
         # onty select nationa data
         logger.debug("Selecting National data only")
@@ -56,6 +56,7 @@ class OpenGSPNationalIterDataPipe(IterDataPipe):
         # rename some variables
         data_array = gsp_pv_power_mw_ds.rename({'datetime_gmt': 'time_utc'})
         data_array = data_array.rename({'generation_mw': 'gsp_pv_power_mw'})
+        data_array = data_array.rename({'installedcapacity_mwp': 'capacity_megawatt_power'})
 
         while True:
             yield data_array

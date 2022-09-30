@@ -304,39 +304,48 @@ def pv_parquet_file():
 
 @pytest.fixture()
 def gsp_zarr_file():
-    """Create a file with PV data with the following columns
+    """ GSP zarr file"""
 
-    Columns
-    - timestamp
-    - ss_id
-    - generation_wh
-    """
-
-    date = datetime(2022, 9, 1, tzinfo=timezone.utc)
-    ids = range(0, 10)
+    date = datetime(2022, 9, 1)
     days = 7
+    ids = np.array(range(0, 10))
+    datetime_gmt = pd.to_datetime([date + timedelta(minutes=30 * i) for i in range(0, days * 24)])
 
-    data = []
-    for id in ids:
-        # 288 5 minutes stamps in each day
-        for i in range(0, 288 * days):
+    coords = (
+        ("datetime_gmt", datetime_gmt),
+        ("gsp_id", ids),
+    )
 
-            datestamp = date + timedelta(minutes=i * 5)
-            if datestamp.hour > 21 or datestamp.hour < 3:
-                value = 0
-            else:
-                value = 9.1
+    generation_mw = xr.DataArray(
+        abs(  # to make sure average is about 100
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, len(ids)),
+            )
+        ),
+        coords=coords,
+        name="generation_mw",
+    )  # Fake data for testing!
 
-            data.append([datestamp, 9905 + id, value])
+    installedcapacity_mwp = xr.DataArray(
+        abs(  # to make sure average is about 100
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, len(ids)),
+            )
+        ),
+        coords=coords,
+        name="installedcapacity_mwp",
+    )  # Fake data for testing!
 
-    data_df = pd.DataFrame(data, columns=["timestamp", "ss_id", "generation_wh"])
-
-    data_df.loc[0:3, "generation_wh"] = np.nan
-
+    generation_mw = generation_mw.to_dataset(name="generation_mw")
+    generation_mw = generation_mw.merge(installedcapacity_mwp)
     with tempfile.TemporaryDirectory() as tmpdir:
+        filename = tmpdir + "/gsp.zarr"
+        generation_mw.to_zarr(filename)
 
-        filename = tmpdir + "/data.parquet"
-        data_df.to_parquet(filename, engine="fastparquet")
         yield filename
 
 
@@ -421,14 +430,14 @@ def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_file
 
 
 @pytest.fixture()
-def configuration_with_gsp_and_nwp(gsp_datapipe, nwp_data_with_id_filename):
+def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
-        configuration.input_data.gsp.gsp_zarr_path = gsp_datapipe.gsp_pv_power_zarr_path
+        configuration.input_data.gsp.gsp_zarr_path =gsp_zarr_file
         configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
