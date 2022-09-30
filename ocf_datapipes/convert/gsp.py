@@ -26,7 +26,7 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> NumpyBatch:
         """Convert from Xarray to NumpyBatch"""
-        logger.debug('Converting GSP to numpy to batch')
+        logger.debug("Converting GSP to numpy to batch")
         for xr_data in self.source_datapipe:
 
             example: NumpyBatch = {

@@ -22,12 +22,14 @@ BUFFER_SIZE = 100
 
 def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     """
+    Make GSP national data pipe
+
+    Currently only has GSP and NWP's in them
 
     Args:
-        configuration_filename:
+        configuration_filename: the configruation filename for the pipe
 
-    Returns:
-
+    Returns: datapipe
     """
 
     # load configuration
