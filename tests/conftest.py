@@ -303,6 +303,44 @@ def pv_parquet_file():
 
 
 @pytest.fixture()
+def gsp_zarr_file():
+    """Create a file with PV data with the following columns
+
+    Columns
+    - timestamp
+    - ss_id
+    - generation_wh
+    """
+
+    date = datetime(2022, 9, 1, tzinfo=timezone.utc)
+    ids = range(0, 10)
+    days = 7
+
+    data = []
+    for id in ids:
+        # 288 5 minutes stamps in each day
+        for i in range(0, 288 * days):
+
+            datestamp = date + timedelta(minutes=i * 5)
+            if datestamp.hour > 21 or datestamp.hour < 3:
+                value = 0
+            else:
+                value = 9.1
+
+            data.append([datestamp, 9905 + id, value])
+
+    data_df = pd.DataFrame(data, columns=["timestamp", "ss_id", "generation_wh"])
+
+    data_df.loc[0:3, "generation_wh"] = np.nan
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        filename = tmpdir + "/data.parquet"
+        data_df.to_parquet(filename, engine="fastparquet")
+        yield filename
+
+
+@pytest.fixture()
 def nwp_data_with_id_filename():
     """Create xarray netcdf file for NWP data
 
@@ -375,6 +413,22 @@ def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_file
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
+        configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
+        configuration.output_data.filepath = tmpdir
+        save_yaml_configuration(configuration=configuration, filename=configuration_filename)
+
+        yield configuration_filename
+
+
+@pytest.fixture()
+def configuration_with_gsp_and_nwp(gsp_datapipe, nwp_data_with_id_filename):
+
+    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+
+    configuration = load_yaml_configuration(filename=filename)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        configuration_filename = tmpdir + "/configuration.yaml"
+        configuration.input_data.gsp.gsp_zarr_path = gsp_datapipe.gsp_pv_power_zarr_path
         configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)

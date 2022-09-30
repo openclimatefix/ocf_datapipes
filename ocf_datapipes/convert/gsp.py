@@ -5,6 +5,10 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 @functional_datapipe("convert_gsp_to_numpy_batch")
 class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
@@ -22,6 +26,7 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> NumpyBatch:
         """Convert from Xarray to NumpyBatch"""
+        logger.debug('Converting GSP to numpy to batch')
         for xr_data in self.source_datapipe:
             example: NumpyBatch = {
                 BatchKey.gsp: xr_data.values,

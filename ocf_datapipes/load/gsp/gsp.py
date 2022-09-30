@@ -33,6 +33,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
         sheffield_solar_region_path: Optional[str] = None,
         threshold_mw: int = 0,
         sample_period_duration: datetime.timedelta = datetime.timedelta(minutes=30),
+        national_only: Optional[bool] = False
     ):
         """
         Get and open the GSP data
@@ -57,6 +58,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
             self.sheffield_solar_region_path = sheffield_solar_region_path
         self.threshold_mw = threshold_mw
         self.sample_period_duration = sample_period_duration
+        self.national_only = national_only
 
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""
@@ -69,6 +71,11 @@ class OpenGSPIterDataPipe(IterDataPipe):
 
         # Load GSP generation xr.Dataset:
         gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
+
+        # onty select nationa data
+        if self.national_only:
+            logger.debug('Selecting National data only')
+            gsp_pv_power_mw_ds = gsp_pv_power_mw_ds.sel(gsp_id=0)
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power:
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_ds.gsp_id]

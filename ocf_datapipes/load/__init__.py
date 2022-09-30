@@ -1,6 +1,7 @@
 """Loading datapipes from the raw data"""
 from ocf_datapipes.load.gsp.database import OpenGSPFromDatabaseIterDataPipe as OpenGSPFromDatabase
 from ocf_datapipes.load.gsp.gsp import OpenGSPIterDataPipe as OpenGSP
+from ocf_datapipes.load.gsp.gsp_national import OpenGSPNationalIterDataPipe as OpenGSPNational
 from ocf_datapipes.load.pv.live import OpenPVFromDBIterDataPipe as OpenPVFromDB
 from ocf_datapipes.load.pv.pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromNetCDF
 
