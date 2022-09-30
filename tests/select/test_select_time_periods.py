@@ -1,7 +1,9 @@
-from ocf_datapipes.select import SelectTimePeriods
-import pandas as pd
 from datetime import datetime
+
+import pandas as pd
 from torchdata.datapipes.iter import IterDataPipe
+
+from ocf_datapipes.select import SelectTimePeriods
 
 
 def test_select_time_slice_gsp(gsp_datapipe):
@@ -19,4 +21,3 @@ def test_select_time_slice_gsp(gsp_datapipe):
 
     assert (data.time_utc <= end).all()
     assert (data.time_utc >= start).all()
-

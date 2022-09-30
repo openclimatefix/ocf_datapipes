@@ -1,5 +1,6 @@
-from ocf_datapipes.load import OpenNWPID
 import xarray as xr
+
+from ocf_datapipes.load import OpenNWPID
 
 
 def test_make_fake_data(nwp_data_with_id_filename):
