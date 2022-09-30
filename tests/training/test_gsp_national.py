@@ -8,5 +8,5 @@ def test_nwp_pv_datapipe(configuration_with_gsp_and_nwp):
 
     batch = next(iter(gsp_datapipe))
 
-    # 4 in past, now, and 4 in the future
-    assert len(batch[BatchKey.gsp_time_utc][0]) == 9
+    # 4 in past, now, and 2 in the future
+    assert len(batch[BatchKey.gsp_time_utc][0]) == 7
