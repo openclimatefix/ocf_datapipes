@@ -32,7 +32,9 @@ def test_location_picker_all_locations(gsp_datapipe):
     loc_iterator = iter(location_datapipe)
     for i in range(len(dataset["x_osgb"])):
         loc_data = next(loc_iterator)
-        assert np.isclose((loc_data.x,loc_data.y), (dataset["x_osgb"][i], dataset["y_osgb"][i])).all()
+        assert np.isclose(
+            (loc_data.x, loc_data.y), (dataset["x_osgb"][i], dataset["y_osgb"][i])
+        ).all()
 
 
 def test_location_picker_with_id(configuration_with_pv_parquet):
@@ -51,4 +53,3 @@ def test_location_picker_with_id(configuration_with_pv_parquet):
     data = next(iter(location_datapipe))
 
     assert data.id is not None
-
