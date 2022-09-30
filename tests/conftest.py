@@ -2,11 +2,11 @@ import os
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-import numpy as np
 
+import numpy as np
 import pandas as pd
-import xarray as xr
 import pytest
+import xarray as xr
 from nowcasting_datamodel.connection import DatabaseConnection
 from nowcasting_datamodel.models import (
     Base_Forecast,
@@ -114,7 +114,8 @@ def db_connection():
         os.environ["DB_URL"] = url
 
         connection = DatabaseConnection(url=url, base=Base_PV, echo=False)
-        from nowcasting_datamodel.models import PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL
+        from nowcasting_datamodel.models import GSPYieldSQL, LocationSQL, PVSystemSQL, PVYieldSQL
+
         for table in [PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL]:
             table.__table__.create(connection.engine)
 
@@ -292,7 +293,7 @@ def pv_parquet_file():
 
     data_df = pd.DataFrame(data, columns=["timestamp", "ss_id", "generation_wh"])
 
-    data_df.loc[0:3,'generation_wh'] = np.nan
+    data_df.loc[0:3, "generation_wh"] = np.nan
 
     with tempfile.TemporaryDirectory() as tmpdir:
 
@@ -317,14 +318,14 @@ def nwp_data_with_id_filename():
     time_steps = 10
     days = 7
     ids = np.array(range(0, 10)) + 9905
-    init_time = [t0_datetime_utc + timedelta(minutes=60 * i) for i in range(0, days*24)]
+    init_time = [t0_datetime_utc + timedelta(minutes=60 * i) for i in range(0, days * 24)]
 
     # time = pd.date_range(start=t0_datetime_utc, freq="30T", periods=10)
     step = [timedelta(minutes=60 * i) for i in range(0, time_steps)]
 
     coords = (
         ("init_time", init_time),
-        ("variable", np.array(["si10","dswrf","t","prate"])),
+        ("variable", np.array(["si10", "dswrf", "t", "prate"])),
         ("step", step),
         ("id", ids),
     )
@@ -334,7 +335,7 @@ def nwp_data_with_id_filename():
             np.random.uniform(
                 0,
                 200,
-                size=(7*24, 4, time_steps, len(ids)),
+                size=(7 * 24, 4, time_steps, len(ids)),
             )
         ),
         coords=coords,
@@ -345,7 +346,7 @@ def nwp_data_with_id_filename():
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = tmpdir + "/nwp.netcdf"
 
-        nwp.to_netcdf(filename, engine='h5netcdf')
+        nwp.to_netcdf(filename, engine="h5netcdf")
 
         yield filename
 
