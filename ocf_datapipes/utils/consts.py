@@ -1,11 +1,11 @@
 """Constants and Enums."""
 
 from enum import Enum, auto
-from numbers import Number
-from typing import NamedTuple, Union
+from typing import Optional, Union
 
 import numpy as np
 import xarray as xr
+from pydantic import BaseModel
 
 PV_TIME_AXIS = 1
 PV_SYSTEM_AXIS = 2
@@ -141,11 +141,12 @@ SPATIAL_AND_TEMPORAL_LOCATIONS_OF_EACH_EXAMPLE_FILENAME = (
 LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 
 
-class Location(NamedTuple):
+class Location(BaseModel):
     """Represent a spatial location."""
 
-    x: Number
-    y: Number
+    x: float
+    y: float
+    id: Optional[int]
 
 
 class BatchKey(Enum):

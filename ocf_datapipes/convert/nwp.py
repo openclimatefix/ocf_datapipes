@@ -41,6 +41,7 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
                 (BatchKey.nwp_y_osgb, "y_osgb"),
                 (BatchKey.nwp_x_osgb, "x_osgb"),
             ):
-                example[batch_key] = xr_data[dataset_key].values
+                if dataset_key in xr_data.coords.keys():
+                    example[batch_key] = xr_data[dataset_key].values
 
             yield example

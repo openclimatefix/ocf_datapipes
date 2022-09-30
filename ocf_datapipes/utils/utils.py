@@ -1,4 +1,5 @@
 """Various utilites that didn't fit elsewhere"""
+import logging
 from pathlib import Path
 from typing import Sequence, Union
 
@@ -9,6 +10,8 @@ import xarray as xr
 from pathy import Pathy
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+
+logger = logging.getLogger(__name__)
 
 
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
@@ -124,7 +127,14 @@ def stack_np_examples_into_batch(np_examples: Sequence[NumpyBatch]) -> NumpyBatc
             np_batch[batch_key] = np_examples[0][batch_key]
         else:
             examples_for_key = [np_example[batch_key] for np_example in np_examples]
-            np_batch[batch_key] = np.stack(examples_for_key)
+            try:
+                np_batch[batch_key] = np.stack(examples_for_key)
+            except Exception as e:
+                logger.debug(f"Could not stack the following shapes together, ({batch_key})")
+                shapes = [example_for_key.shape for example_for_key in examples_for_key]
+                logger.debug(shapes)
+                logger.error(e)
+                raise e
     return np_batch
 
 

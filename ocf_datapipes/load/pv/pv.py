@@ -1,6 +1,6 @@
 """Datapipe and utils to load PV data from NetCDF for training"""
-import datetime
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
@@ -28,6 +28,8 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self,
         pv_power_filename: Union[str, Path],
         pv_metadata_filename: Union[str, Path],
+        start_datetime: Optional[datetime] = None,
+        end_datetime: Optional[datetime] = None,
     ):
         """
         Datapipe to load PV from NetCDF
@@ -35,21 +37,37 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         Args:
             pv_power_filename: Filename of the power file
             pv_metadata_filename: Filename of the metadata file
+            start_datetime: start datetime that the dataset is limited to
+            end_datetime: end datetime that the dataset is limited to
         """
         super().__init__()
         self.pv_power_filename = pv_power_filename
         self.pv_metadata_filename = pv_metadata_filename
+        self.start_dateime = start_datetime
+        self.end_datetime = end_datetime
 
     def __iter__(self):
         data: xr.DataArray = load_everything_into_ram(
-            self.pv_power_filename, self.pv_metadata_filename
+            self.pv_power_filename,
+            self.pv_metadata_filename,
+            start_dateime=self.start_dateime,
+            end_datetime=self.end_datetime,
         )
         while True:
             yield data
 
 
-def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.DataArray:
+def load_everything_into_ram(
+    pv_power_filename,
+    pv_metadata_filename,
+    start_dateime: Optional[datetime] = None,
+    end_datetime: Optional[datetime] = None,
+) -> xr.DataArray:
     """Open AND load PV data into RAM."""
+
+    # load metadata
+    pv_metadata = _load_pv_metadata(pv_metadata_filename)
+
     # Load pd.DataFrame of power and pd.Series of capacities:
     (
         pv_power_watts,
@@ -57,8 +75,9 @@ def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.Data
         pv_system_row_number,
     ) = _load_pv_power_watts_and_capacity_watt_power(
         pv_power_filename,
+        start_date=start_dateime,
+        end_date=end_datetime,
     )
-    pv_metadata = _load_pv_metadata(pv_metadata_filename)
     # Ensure pv_metadata, pv_power_watts, and pv_capacity_watt_power all have the same set of
     # PV system IDs, in the same order:
     pv_metadata, pv_power_watts = intersection_of_pv_system_ids(pv_metadata, pv_power_watts)
@@ -83,8 +102,8 @@ def load_everything_into_ram(pv_power_filename, pv_metadata_filename) -> xr.Data
 
 def _load_pv_power_watts_and_capacity_watt_power(
     filename: Union[str, Path],
-    start_date: Optional[datetime.datetime] = None,
-    end_date: Optional[datetime.datetime] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """Return pv_power_watts, pv_capacity_watt_power, pv_system_row_number.
 
@@ -96,18 +115,45 @@ def _load_pv_power_watts_and_capacity_watt_power(
     _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
 
     # Load data in a way that will work in the cloud and locally:
-    with fsspec.open(filename, mode="rb") as file:
-        pv_power_ds = xr.open_dataset(file, engine="h5netcdf")
-        pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
-        pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
-        pv_power_watts = pv_power_watts.astype(np.float32)
-        del pv_power_ds
+    if ".parquet" in str(filename):
+        _log.debug(f"Loading PV parquet file {filename}")
+        pv_power_df = pd.read_parquet(filename, engine="fastparquet")
+        _log.debug("Loading PV parquet file: done")
+        pv_power_df["generation_w"] = pv_power_df["generation_wh"] * 12
+        if end_date is not None:
+            pv_power_df = pv_power_df[pv_power_df["timestamp"] < end_date]
+        if start_date is not None:
+            pv_power_df = pv_power_df[pv_power_df["timestamp"] >= start_date]
 
-    if "passiv" not in str(filename):
-        _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
-        pv_power_watts = (
-            pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
+        # pivot on ss_id
+        _log.debug("Pivoting PV data")
+        pv_power_watts = pv_power_df.pivot(
+            index="timestamp", columns="ss_id", values="generation_w"
         )
+        _log.debug("Pivoting PV data: done")
+        pv_capacity_watt_power = pv_power_watts.max().astype(np.float32)
+
+    else:
+        with fsspec.open(filename, mode="rb") as file:
+            pv_power_ds = xr.open_dataset(file, engine="h5netcdf")
+            pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
+            pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
+            pv_power_watts = pv_power_watts.astype(np.float32)
+
+            del pv_power_ds
+
+        if "passiv" not in str(filename):
+            _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
+            try:
+                pv_power_watts = (
+                    pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
+                )
+            except Exception as e:
+                _log.warning(
+                    "Could not convert timezone from London to UTC. "
+                    "Going to try and carry on anyway"
+                )
+                _log.warning(e)
 
     pv_capacity_watt_power.index = [np.int32(col) for col in pv_capacity_watt_power.index]
     pv_power_watts.columns = pv_power_watts.columns.astype(np.int64)

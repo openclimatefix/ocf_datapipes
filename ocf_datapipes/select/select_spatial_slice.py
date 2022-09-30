@@ -62,10 +62,10 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
             half_height = self.roi_height_pixels // 2
             half_width = self.roi_width_pixels // 2
 
-            left_idx = center_idx.x - half_width
-            right_idx = center_idx.x + half_width
-            top_idx = center_idx.y - half_height
-            bottom_idx = center_idx.y + half_height
+            left_idx = int(center_idx.x - half_width)
+            right_idx = int(center_idx.x + half_width)
+            top_idx = int(center_idx.y - half_height)
+            bottom_idx = int(center_idx.y + half_height)
 
             # Sanity check!
             assert left_idx >= 0, f"{left_idx=} must be >= 0!"

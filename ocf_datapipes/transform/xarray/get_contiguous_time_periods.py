@@ -1,4 +1,5 @@
 """Get contiguous time periods for training"""
+import logging
 from datetime import timedelta
 
 import numpy as np
@@ -6,8 +7,10 @@ import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+logger = logging.getLogger(__name__)
 
-@functional_datapipe("add_contiguous_time_periods")
+
+@functional_datapipe("get_contiguous_time_periods")
 class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
     """Get contiguous time periods for training"""
 
@@ -18,6 +21,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         forecast_duration: timedelta,
         sample_period_duration: timedelta,
         max_t0_offset: timedelta = timedelta(minutes=0),
+        time_dim: str = "time_utc",
     ):
         """
         Get contiguous time periods for use in determing t0 times for training
@@ -28,6 +32,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
             forecast_duration: Amount of time for the forecast of an example
             sample_period_duration: The sampling period of the data source
             max_t0_offset: Max t0 offset for the data source, add as buffer to total duration
+            time_dim: time dimensions for which to find the contiguous time periods
         """
         self.source_datapipe = source_datapipe
         self.history_duration = history_duration
@@ -35,15 +40,18 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         self.total_duration = history_duration + forecast_duration + max_t0_offset
         self.sample_period_duration = sample_period_duration
         self.max_t0_offset = max_t0_offset
+        self.time_dim = time_dim
 
     def __iter__(self) -> pd.DataFrame:
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
+            logger.debug("Getting contiguous time periods")
             contiguous_time_periods = get_contiguous_time_periods(
-                datetimes=pd.DatetimeIndex(xr_data["time_utc"]),
+                datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                 min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
                 max_gap_duration=self.sample_period_duration,
             )
+            logger.debug("Getting contiguous t0 time periods")
             contiguous_time_periods = get_contiguous_t0_time_periods(
                 contiguous_time_periods=contiguous_time_periods,
                 history_duration=self.history_duration,

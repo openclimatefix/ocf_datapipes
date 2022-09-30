@@ -166,7 +166,7 @@ class StartEndDatetimeMixin(Base):
         end_datetime = values["end_datetime"]
 
         # check start datetime is less than end datetime
-        if start_datetime >= end_datetime:
+        if start_datetime <= end_datetime:
             message = (
                 f"Start datetime ({start_datetime}) "
                 f"should be less than end datetime ({end_datetime})"

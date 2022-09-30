@@ -40,6 +40,9 @@ class LocationPickerIterDataPipe(IterDataPipe):
                         x=xr_dataset["x_osgb"][location_idx].values,
                         y=xr_dataset["y_osgb"][location_idx].values,
                     )
+                    if "pv_system_id" in xr_dataset.coords.keys():
+
+                        location.id = int(xr_dataset["pv_system_id"][location_idx].values)
                     logger.debug(f"Got all locations {location}")
                     yield location
             else:
@@ -50,4 +53,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                     x=xr_dataset["x_osgb"][location_idx].values,
                     y=xr_dataset["y_osgb"][location_idx].values,
                 )
+                if "pv_system_id" in xr_dataset.coords.keys():
+                    location.id = int(xr_dataset["pv_system_id"][location_idx].values)
+                    logger.debug(f"Have selected location.id {location.id}")
                 yield location

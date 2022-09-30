@@ -1,4 +1,14 @@
 """Xarray transforms"""
+from ocf_datapipes.transform.xarray.pv.ensure_n_pv_systems_per_example import (
+    EnsureNPVSystemsPerExampleIterDataPipe as EnsureNPVSystemsPerExample,
+)
+from ocf_datapipes.transform.xarray.pv.pv_power_rolling_window import (
+    PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow,
+)
+from ocf_datapipes.transform.xarray.pv.remove_pv_zero_examples import (
+    PVPowerRemoveZeroDataIterDataPipe as PVPowerRemoveZeroData,
+)
+
 from .add_t0idx_and_sample_period_duration import (
     AddT0IdxAndSamplePeriodDurationIterDataPipe as AddT0IdxAndSamplePeriodDuration,
 )
@@ -7,13 +17,10 @@ from .convert_to_nwp_target_times import (
     ConvertToNWPTargetTimeIterDataPipe as ConvertToNWPTargetTime,
 )
 from .downsample import DownsampleIterDataPipe as Downsample
-from .ensure_n_pv_systems_per_example import (
-    EnsureNPVSystemsPerExampleIterDataPipe as EnsureNPVSystemsPerExample,
-)
+from .drop_nans import RemoveNansIterDataPipe as RemoveNans
 from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
-from .pv_power_rolling_window import PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography

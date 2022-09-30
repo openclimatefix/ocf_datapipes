@@ -30,6 +30,8 @@ def open_sat_data(
     # Open the data
     dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
 
+    # TODO add 15 mins data satellite option
+
     # Rename
     # These renamings will no longer be necessary when the Zarr uses the 'correct' names,
     # see https://github.com/openclimatefix/Satip/issues/66

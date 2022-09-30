@@ -70,6 +70,9 @@ def put_pv_data_into_an_xr_dataarray(
     )
     # Sample period duration is required so PVDownsample transform knows by how much
     # to change the pv_t0_idx:
+
+    assert len(pv_system_row_number) > 0
+
     return data_array
 
 
