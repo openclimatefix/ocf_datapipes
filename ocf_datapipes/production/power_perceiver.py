@@ -230,6 +230,7 @@ def power_perceiver_production_datapipe(configuration_filename: Union[Path, str]
         .add_topographic_data(topo_datapipe)
         .set_system_ids_to_one()
         .ensure_n_nwp_variables(num_variables=9)
+        .change_float32()
     )
 
     return combined_datapipe
