@@ -26,8 +26,8 @@ input_data:
     pv_image_size_meters_height: 10000000
     pv_image_size_meters_width: 10000000
     n_pv_systems_per_example: 32
-    start_datetime: '2010-01-01 00:00:00+00:00'
-    end_datetime: '2030-01-01 00:00:00+00:00'
+    start_datetime: "2010-01-01 00:00:00+00:00"
+    end_datetime: "2030-01-01 00:00:00+00:00"
   satellite:
     satellite_channels:
       - IR_016
