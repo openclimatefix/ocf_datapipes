@@ -105,10 +105,10 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     pv_time_periods, nwp_time_periods = overlapping_datapipe.fork(2, buffer_size=BUFFER_SIZE)
 
     # select time periods
-    pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=pv_time_periods)
-    nwp_t0_datapipe = nwp_t0_datapipe.select_time_periods(
-        time_periods=nwp_time_periods, dim_name="init_time_utc"
-    )
+    pv_t0_datapipe, nwp_t0_datapipe = pv_t0_datapipe.select_time_periods(
+        time_periods=pv_time_periods
+    ).fork(2, buffer_size=BUFFER_SIZE)
+
     # select t0 periods
     pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
     nwp_t0_datapipe = nwp_t0_datapipe.select_t0_time(dim_name="init_time_utc")
