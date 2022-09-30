@@ -81,9 +81,9 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     )
 
     # select id from nwp data
-    nwp_datapipe, nwp_time_periods_datapipe, nwp_t0_datapipe = nwp_datapipe.select_id(
+    nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_id(
         location_datapipe=location_datapipe2, data_source_name="nwp"
-    ).fork(3, buffer_size=BUFFER_SIZE)
+    ).fork(2, buffer_size=BUFFER_SIZE)
 
     # get contiguous time periods
     pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
@@ -102,16 +102,12 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
         secondary_datapipes=[nwp_time_periods_datapipe],
         location_datapipe=location_datapipe3,
     )
-    pv_time_periods, nwp_time_periods = overlapping_datapipe.fork(2, buffer_size=BUFFER_SIZE)
 
     # select time periods
-    pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=pv_time_periods)
-    nwp_t0_datapipe = nwp_t0_datapipe.select_time_periods(
-        time_periods=nwp_time_periods, dim_name="init_time_utc"
-    )
+    pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+
     # select t0 periods
-    pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
-    nwp_t0_datapipe = nwp_t0_datapipe.select_t0_time(dim_name="init_time_utc")
+    pv_t0_datapipe, nwp_t0_datapipe = pv_t0_datapipe.select_t0_time().fork(2)
 
     # take pv time slices
     pv_datapipe = (
