@@ -304,7 +304,7 @@ def pv_parquet_file():
 
 @pytest.fixture()
 def gsp_zarr_file():
-    """ GSP zarr file"""
+    """GSP zarr file"""
 
     date = datetime(2022, 9, 1)
     days = 7
@@ -437,7 +437,7 @@ def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
-        configuration.input_data.gsp.gsp_zarr_path =gsp_zarr_file
+        configuration.input_data.gsp.gsp_zarr_path = gsp_zarr_file
         configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)

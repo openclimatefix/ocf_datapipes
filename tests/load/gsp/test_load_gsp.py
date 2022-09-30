@@ -7,7 +7,6 @@ def test_open_gsp():
     assert gsp_data is not None
 
 
-
 def test_open_gsp_national():
     gsp_datapipe = OpenGSPNational("tests/data/gsp/test.zarr")
     gsp_data = next(iter(gsp_datapipe))
