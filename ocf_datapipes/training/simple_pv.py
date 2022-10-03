@@ -36,20 +36,26 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
     configuration: Configuration = next(iter(config_datapipe))
 
     logger.debug("Opening Datasets")
-    pv_datapipe,pv_location_datapipe = OpenPVFromNetCDF(
+    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(
         pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
         pv_metadata_filename=configuration.input_data.pv.pv_files_groups[0].pv_metadata_filename,
     ).fork(2)
 
     logger.debug("Add t0 idx")
-    pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
+    (
+        pv_datapipe,
+        pv_t0_datapipe,
+        pv_time_periods_datapipe,
+    ) = pv_datapipe.add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-    ).fork(3)
+    ).fork(
+        3
+    )
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
-    location_datapipe1,location_datapipe2  = pv_location_datapipe.location_picker().fork(2)
+    location_datapipe1, location_datapipe2 = pv_location_datapipe.location_picker().fork(2)
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
