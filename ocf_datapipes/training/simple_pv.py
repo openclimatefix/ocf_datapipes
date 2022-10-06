@@ -42,14 +42,20 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
     ).fork(2)
 
     logger.debug("Add t0 idx")
-    pv_datapipe, pv_t0_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
+    (
+        pv_datapipe,
+        pv_t0_datapipe,
+        pv_time_periods_datapipe,
+    ) = pv_datapipe.add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-    ).fork(2)
+    ).fork(
+        3
+    )
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
-    location_datapipe1 = pv_location_datapipe.location_picker()
+    location_datapipe1, location_datapipe2 = pv_location_datapipe.location_picker().fork(2)
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -68,6 +74,15 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
         .fork(2)
     )
 
+    # get contiguous time periods
+    pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
+        sample_period_duration=timedelta(minutes=5),
+        history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+        forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
+    )
+
+    # select time periods
+    pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=pv_time_periods_datapipe)
     pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
     # take time slices
     pv_datapipe = (
