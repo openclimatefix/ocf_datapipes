@@ -13,10 +13,10 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self,
         source_datapipes: List[IterDataPipe],
         location_datapipe: IterDataPipe,
-        context_width,
-        context_height,
-        center_width,
-        center_height,
+        context_width: float,
+        context_height: float,
+        center_width: float,
+        center_height: float,
     ):
         """
 
