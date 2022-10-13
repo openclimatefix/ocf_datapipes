@@ -9,7 +9,9 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 @functional_datapipe("create_pv_image")
 class CreatePVImage(IterDataPipe):
-    def __init__(self, source_datapipe: IterDataPipe, image_datapipe: IterDataPipe, normalize: bool = False):
+    def __init__(
+        self, source_datapipe: IterDataPipe, image_datapipe: IterDataPipe, normalize: bool = False
+    ):
         """
         Creates 2D image of PV sites
         """
