@@ -9,12 +9,13 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 @functional_datapipe("create_pv_image")
 class CreatePVImage(IterDataPipe):
-    def __init__(self, source_datapipe: IterDataPipe, image_datapipe: IterDataPipe):
+    def __init__(self, source_datapipe: IterDataPipe, image_datapipe: IterDataPipe, normalize: bool = False):
         """
         Creates 2D image of PV sites
         """
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
+        self.normalize = normalize
 
     def __iter__(self):
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
@@ -39,4 +40,7 @@ class CreatePVImage(IterDataPipe):
                     pv_image[time][x_idx][y_idx] += pv_system["data"][time]
 
             # TODO Construct Xarray object to return? Or add to PV data?
+            if self.normalize:
+                if np.max(pv_image) > 0:
+                    pv_image /= np.max(pv_image)
             yield pv_image
