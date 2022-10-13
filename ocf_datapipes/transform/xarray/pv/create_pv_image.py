@@ -30,7 +30,9 @@ class CreatePVImage(IterDataPipe):
                     continue
                 x_idx = np.searchsorted(pv_system["x"], image_xr["x"])
                 y_idx = np.searchsorted(pv_system["y"], image_xr["y"])
-                pv_image[x_idx][y_idx] += pv_system["data"]
+                # Now go by the timestep to create cube of PV data
+                for time in range(len(pv_system.time.values)):
+                    pv_image[time][x_idx][y_idx] += pv_system["data"][time]
 
             # TODO Construct Xarray object to return? Or add to PV data?
             yield pv_image
