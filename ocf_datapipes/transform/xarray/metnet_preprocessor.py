@@ -1,10 +1,11 @@
 """Preprocessing for MetNet-type inputs"""
 from typing import List
 
+import numpy as np
+import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
-import xarray as xr
-import numpy as np
+
 
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
@@ -19,7 +20,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         center_width: float,
         center_height: float,
         output_height_pixels: int,
-        output_width_pixels: int
+        output_width_pixels: int,
     ):
         """
 
@@ -66,14 +67,20 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             contexts = []
 
             for xr_data in xr_datas:
-                xr_context = _get_spatial_crop(xr_data, location=location,
-                                               roi_width_meters=self.context_width,
-                                               roi_height_meters=self.context_height,
-                                               dim_name="data")
-                xr_center = _get_spatial_crop(xr_data, location=location,
-                                               roi_width_meters=self.center_width,
-                                               roi_height_meters=self.center_height,
-                                               dim_name="data")
+                xr_context = _get_spatial_crop(
+                    xr_data,
+                    location=location,
+                    roi_width_meters=self.context_width,
+                    roi_height_meters=self.context_height,
+                    dim_name="data",
+                )
+                xr_center = _get_spatial_crop(
+                    xr_data,
+                    location=location,
+                    roi_width_meters=self.center_width,
+                    roi_height_meters=self.center_height,
+                    dim_name="data",
+                )
                 centers.append(xr_center)
                 contexts.append(xr_context)
             # TODO Resample here before stacking
@@ -92,10 +99,10 @@ def _get_spatial_crop(xr_data, location, roi_height_meters, roi_width_meters, di
     top = location.y + half_height
     # Select data in the region of interest:
     id_mask = (
-            (left <= xr_data.x_osgb)
-            & (xr_data.x_osgb <= right)
-            & (xr_data.y_osgb <= top)
-            & (bottom <= xr_data.y_osgb)
+        (left <= xr_data.x_osgb)
+        & (xr_data.x_osgb <= right)
+        & (xr_data.y_osgb <= top)
+        & (bottom <= xr_data.y_osgb)
     )
 
     selected = xr_data.isel({dim_name: id_mask})
