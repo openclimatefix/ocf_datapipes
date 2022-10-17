@@ -3,7 +3,8 @@ from typing import List
 
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
-
+import xarray as xr
+import numpy as np
 
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
@@ -17,6 +18,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         context_height: float,
         center_width: float,
         center_height: float,
+        output_height_pixels: int,
+        output_width_pixels: int
     ):
         """
 
@@ -46,6 +49,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             context_height: Height of the context area
             center_width: Center width of the area of interest
             center_height: Center height of the area of interest
+            output_height_pixels: Output height in pixels
+            output_width_pixels: Output width in pixels
         """
         self.source_datapipes = source_datapipes
         self.location_datapipe = location_datapipe
@@ -54,14 +59,44 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self.center_width = center_width
         self.center_height = center_height
 
-    def __iter__(self):
+    def __iter__(self) -> np.ndarray:
         for xr_datas, location in Zipper(Zipper(*self.source_datapipes), self.location_datapipe):
-            # TODO Use location, find center point in xarray datasets
-            # TODO Then select the xarray dataset
-            # TODO Then on this selected example, select the center area
             # TODO Use the Lat/Long coordinates of the center array for the lat/lon stuff
-            for xr_data in xr_datas:
-                # TODO Get context area, center area, and resample
-                pass
+            centers = []
+            contexts = []
 
-            pass
+            for xr_data in xr_datas:
+                xr_context = _get_spatial_crop(xr_data, location=location,
+                                               roi_width_meters=self.context_width,
+                                               roi_height_meters=self.context_height,
+                                               dim_name="data")
+                xr_center = _get_spatial_crop(xr_data, location=location,
+                                               roi_width_meters=self.center_width,
+                                               roi_height_meters=self.center_height,
+                                               dim_name="data")
+                centers.append(xr_center)
+                contexts.append(xr_context)
+            # TODO Resample here before stacking
+            stacked_data = np.stack([*centers, *contexts], dim=-1)
+            yield stacked_data
+
+
+def _get_spatial_crop(xr_data, location, roi_height_meters, roi_width_meters, dim_name):
+    # Compute the index for left and right:
+    half_height = roi_height_meters // 2
+    half_width = roi_width_meters // 2
+
+    left = location.x - half_width
+    right = location.x + half_width
+    bottom = location.y - half_height
+    top = location.y + half_height
+    # Select data in the region of interest:
+    id_mask = (
+            (left <= xr_data.x_osgb)
+            & (xr_data.x_osgb <= right)
+            & (xr_data.y_osgb <= top)
+            & (bottom <= xr_data.y_osgb)
+    )
+
+    selected = xr_data.isel({dim_name: id_mask})
+    return selected

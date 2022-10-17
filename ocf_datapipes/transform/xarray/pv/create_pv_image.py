@@ -13,7 +13,14 @@ class CreatePVImage(IterDataPipe):
         self, source_datapipe: IterDataPipe, image_datapipe: IterDataPipe, normalize: bool = False
     ):
         """
-        Creates 2D image of PV sites
+        Creates a 3D data cube of PV output image x number of timesteps
+
+        TODO Include PV System IDs or something, currently just takes the outputs
+
+        Args:
+            source_datapipe: Source datapipe of PV data
+            image_datapipe: Datapipe emitting images to get the shape from, with coordinates
+            normalize: Whether to normalize based off the image max, or leave raw data
         """
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
@@ -45,4 +52,8 @@ class CreatePVImage(IterDataPipe):
             if self.normalize:
                 if np.max(pv_image) > 0:
                     pv_image /= np.max(pv_image)
+
+            # Should return Xarray as in Xarray transforms
+            # Same coordinates as the image xarray, so can take that
+
             yield pv_image
