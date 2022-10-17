@@ -67,23 +67,19 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             contexts = []
 
             for xr_data in xr_datas:
-                xr_context = _get_spatial_crop(
-                    xr_data,
-                    location=location,
-                    roi_width_meters=self.context_width,
-                    roi_height_meters=self.context_height,
-                    dim_name="data",
-                )
-                xr_center = _get_spatial_crop(
-                    xr_data,
-                    location=location,
-                    roi_width_meters=self.center_width,
-                    roi_height_meters=self.center_height,
-                    dim_name="data",
-                )
+                xr_context: xr.Dataset = _get_spatial_crop(xr_data, location=location,
+                                               roi_width_meters=self.context_width,
+                                               roi_height_meters=self.context_height,
+                                               dim_name="data")
+                xr_center: xr.Dataset = _get_spatial_crop(xr_data, location=location,
+                                               roi_width_meters=self.center_width,
+                                               roi_height_meters=self.center_height,
+                                               dim_name="data")
+                # TODO Resample here before stacking
+                xr_center = xr_center.coarsen(y=3).mean().coarsen(x=3).mean()
+                xr_context = xr_context.coarsen(y=3).mean().coarsen(x=3).mean()
                 centers.append(xr_center)
                 contexts.append(xr_context)
-            # TODO Resample here before stacking
             stacked_data = np.stack([*centers, *contexts], dim=-1)
             yield stacked_data
 
