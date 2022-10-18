@@ -18,6 +18,7 @@ dependencies:
   - pyresample
   - geopandas
   - h5netcdf
+  - scipy
   - pip:
       - einops
       - pathy
