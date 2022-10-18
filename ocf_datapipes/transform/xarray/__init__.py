@@ -24,3 +24,4 @@ from .get_contiguous_time_periods import (
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
