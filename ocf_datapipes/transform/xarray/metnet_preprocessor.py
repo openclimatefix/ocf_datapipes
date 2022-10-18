@@ -5,7 +5,7 @@ import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
-
+from scipy import signal
 
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
@@ -59,13 +59,14 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self.context_height = context_height
         self.center_width = center_width
         self.center_height = center_height
+        self.output_height_pixels = output_height_pixels
+        self.output_width_pixels = output_width_pixels
 
     def __iter__(self) -> np.ndarray:
         for xr_datas, location in Zipper(Zipper(*self.source_datapipes), self.location_datapipe):
             # TODO Use the Lat/Long coordinates of the center array for the lat/lon stuff
             centers = []
             contexts = []
-
             for xr_data in xr_datas:
                 xr_context: xr.Dataset = _get_spatial_crop(
                     xr_data,
@@ -81,9 +82,9 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     roi_height_meters=self.center_height,
                     dim_name="data",
                 )
-                # TODO Resample here before stacking
-                xr_center = xr_center.coarsen(y=3).mean().coarsen(x=3).mean()
-                xr_context = xr_context.coarsen(y=3).mean().coarsen(x=3).mean()
+                # Resamples to the same number of pixels for both center and contexts
+                xr_center = _resample_to_pixel_size(xr_center, self.output_height_pixels, self.output_width_pixels)
+                xr_context = _resample_to_pixel_size(xr_context, self.output_height_pixels, self.output_width_pixels)
                 centers.append(xr_center)
                 contexts.append(xr_context)
             stacked_data = np.stack([*centers, *contexts], dim=-1)
@@ -109,3 +110,14 @@ def _get_spatial_crop(xr_data, location, roi_height_meters, roi_width_meters, di
 
     selected = xr_data.isel({dim_name: id_mask})
     return selected
+
+def _resample_to_pixel_size(xr_data, height_pixels, width_pixels):
+    x_coords = xr_data["x"].values
+    y_coords = xr_data["y"].values
+
+    # Resample down to the number of pixels wanted
+    x_coords = signal.resample(x_coords, width_pixels)
+    y_coords = signal.resample(y_coords, height_pixels)
+
+    xr_data = xr_data.interp(x=x_coords, y=y_coords, method="linear")
+    return xr_data
