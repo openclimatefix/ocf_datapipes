@@ -5,13 +5,19 @@ import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
-from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
+
 from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
+
 
 @functional_datapipe("create_pv_image")
 class CreatePVImageIterDataPipe(IterDataPipe):
     def __init__(
-        self, source_datapipe: IterDataPipe, image_datapipe: IterDataPipe, normalize: bool = False, image_dim: str = "geostationary"
+        self,
+        source_datapipe: IterDataPipe,
+        image_datapipe: IterDataPipe,
+        normalize: bool = False,
+        image_dim: str = "geostationary",
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -26,16 +32,22 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
         self.normalize = normalize
-        self.x_dim = "x_"+image_dim
-        self.y_dim = "y_"+image_dim
+        self.x_dim = "x_" + image_dim
+        self.y_dim = "y_" + image_dim
 
     def __iter__(self):
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
             if "geostationary" in self.x_dim:
-                _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(image_xr)
+                _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
+                    image_xr
+                )
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
             pv_image = np.zeros(
-                (len(pv_systems_xr["time_utc"]), len(image_xr[self.x_dim]), len(image_xr[self.y_dim])),
+                (
+                    len(pv_systems_xr["time_utc"]),
+                    len(image_xr[self.x_dim]),
+                    len(image_xr[self.y_dim]),
+                ),
                 dtype=np.float32,
             )
             # Coordinates should be in order for the image, so just need to do the search sorted thing to get the index to add the PV output to
@@ -44,7 +56,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             for pv_system_id in pv_systems_xr["pv_system_id"]:
                 pv_system = pv_systems_xr.sel(pv_system_id=pv_system_id)
                 if "geostationary" in self.x_dim:
-                    pv_x, pv_y = _osgb_to_geostationary(xx=pv_system["x_osgb"].values, yy=pv_system["y_osgb"].values)
+                    pv_x, pv_y = _osgb_to_geostationary(
+                        xx=pv_system["x_osgb"].values, yy=pv_system["y_osgb"].values
+                    )
                 else:
                     pv_x = pv_system["x_osgb"]
                     pv_y = pv_system["y_osgb"]
@@ -61,7 +75,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
                     # y_geostationary is in descending order:
                     y_idx = len(image_xr[self.y_dim]) - (
-                            np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
+                        np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
                     )
                 else:
                     x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
@@ -79,18 +93,20 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             pv_image = _create_data_array_from_image(pv_image, pv_systems_xr, image_xr)
             yield pv_image
 
+
 def _create_data_array_from_image(pv_image, pv_systems_xr, image_xr):
     data_array = xr.DataArray(
         data=pv_image,
         coords=(
             ("time_utc", pv_systems_xr.time_utc.values),
             ("x_geostationary", image_xr.x_geostationary.values),
-            ("y_geostationary", image_xr.y_geostationary.values)
+            ("y_geostationary", image_xr.y_geostationary.values),
         ),
         name="pv_image",
     ).astype(np.float32)
     data_array.attrs = image_xr.attrs
     return data_array
+
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
     xr_data: xr.DataArray,

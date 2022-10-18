@@ -3,9 +3,10 @@ from typing import List
 
 import numpy as np
 import xarray as xr
+from scipy import signal
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
-from scipy import signal
+
 
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
@@ -83,8 +84,12 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     dim_name="data",
                 )
                 # Resamples to the same number of pixels for both center and contexts
-                xr_center = _resample_to_pixel_size(xr_center, self.output_height_pixels, self.output_width_pixels)
-                xr_context = _resample_to_pixel_size(xr_context, self.output_height_pixels, self.output_width_pixels)
+                xr_center = _resample_to_pixel_size(
+                    xr_center, self.output_height_pixels, self.output_width_pixels
+                )
+                xr_context = _resample_to_pixel_size(
+                    xr_context, self.output_height_pixels, self.output_width_pixels
+                )
                 centers.append(xr_center)
                 contexts.append(xr_context)
             stacked_data = np.stack([*centers, *contexts], dim=-1)
@@ -110,6 +115,7 @@ def _get_spatial_crop(xr_data, location, roi_height_meters, roi_width_meters, di
 
     selected = xr_data.isel({dim_name: id_mask})
     return selected
+
 
 def _resample_to_pixel_size(xr_data, height_pixels, width_pixels):
     x_coords = xr_data["x"].values
