@@ -89,6 +89,7 @@ def _create_data_array_from_image(pv_image, pv_systems_xr, image_xr):
         ),
         name="pv_image",
     ).astype(np.float32)
+    data_array.attrs = image_xr.attrs
     return data_array
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
