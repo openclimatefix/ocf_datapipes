@@ -4,6 +4,7 @@ from typing import Optional
 
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
 from ocf_datapipes.config.model import Configuration
 
 

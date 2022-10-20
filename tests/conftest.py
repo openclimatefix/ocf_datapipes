@@ -405,6 +405,7 @@ def configuration():
 
     return load_yaml_configuration(filename=filename)
 
+
 @pytest.fixture()
 def configuration_with_pv_parquet(pv_parquet_file):
 
