@@ -1,4 +1,5 @@
 """Numpy transforms"""
+from .batch.add_length import AddLengthIterDataPipe as AddLength
 from .batch.add_topographic_data import AddTopographicDataIterDataPipe as AddTopographicData
 from .batch.add_zeroed_future_pv import AddZeroedFutureDataIterDataPipe as AddZeroedFutureData
 from .batch.align_gsp_to_5_min import AlignGSPto5MinIterDataPipe as AlignGSPto5Min
