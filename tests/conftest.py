@@ -399,6 +399,14 @@ def nwp_data_with_id_filename():
 
 
 @pytest.fixture()
+def configuration():
+
+    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+
+    return load_yaml_configuration(filename=filename)
+
+
+@pytest.fixture()
 def configuration_with_pv_parquet(pv_parquet_file):
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")

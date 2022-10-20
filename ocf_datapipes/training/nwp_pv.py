@@ -2,7 +2,7 @@
 import logging
 from datetime import timedelta
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
@@ -20,7 +20,9 @@ xarray.set_options(keep_attrs=True)
 BUFFER_SIZE = 100
 
 
-def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
+def nwp_pv_datapipe(
+    configuration_filename: Union[Path, str], tag: Optional[str] = "train"
+) -> IterDataPipe:
     """
     Create the Power Perceiver production pipeline using a configuration
 
@@ -59,12 +61,18 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
     )
 
+    if tag == "test":
+        return_all = True
+    else:
+        return_all = False
     logger.debug("Getting locations")
     (
         location_datapipe1,
         location_datapipe2,
         location_datapipe3,
-    ) = pv_location_datapipe.location_picker().fork(3, buffer_size=BUFFER_SIZE)
+    ) = pv_location_datapipe.location_picker(return_all_locations=return_all).fork(
+        3, buffer_size=BUFFER_SIZE
+    )
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -107,7 +115,9 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
     pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
 
     # select t0 periods
-    pv_t0_datapipe, nwp_t0_datapipe = pv_t0_datapipe.select_t0_time().fork(2)
+    pv_t0_datapipe, nwp_t0_datapipe = pv_t0_datapipe.select_t0_time(
+        return_all_times=return_all
+    ).fork(2)
 
     # take pv time slices
     pv_datapipe = (
@@ -144,6 +154,10 @@ def nwp_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
         MergeNumpyModalities([pv_datapipe, nwp_datapipe])
         .encode_space_time()
         .add_sun_position(modality_name="pv")
+    )
+
+    combined_datapipe = combined_datapipe.add_length(
+        configuration=configuration, train_validation_test=tag
     )
 
     return combined_datapipe
