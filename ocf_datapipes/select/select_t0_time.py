@@ -33,7 +33,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
         self.return_all_times = return_all_times
 
         if self.return_all_times:
-            logger.debug('Will be returning all t0 times')
+            logger.debug("Will be returning all t0 times")
 
     def __iter__(self) -> pd.Timestamp:
         """Get the latest timestamp and return it"""
