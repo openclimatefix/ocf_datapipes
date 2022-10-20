@@ -111,23 +111,27 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
         _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
         left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
         right, top = _osgb_to_geostationary(xx=right, yy=top)
-        # Select data in the region of interest:
-        id_mask = (
+        x_mask = (
                 (left <= xr_data.x_geostationary)
                 & (xr_data.x_geostationary <= right)
-                & (xr_data.y_geostationary <= bottom) # Y is flipped in satellite
-                & (top <= xr_data.y_geostationary) # Y is flipped in satellite
         )
+        y_mask = (
+                (xr_data.y_geostationary <= bottom)
+                & (top <= xr_data.y_geostationary)
+        )
+        selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
     else:
         # Select data in the region of interest:
-        id_mask = (
-            (left <= xr_data.x_osgb)
-            & (xr_data.x_osgb <= right)
-            & (xr_data.y_osgb <= top)
-            & (bottom <= xr_data.y_osgb)
+        x_mask = (
+                (left <= xr_data.x_osgb)
+                & (xr_data.x_osgb <= right)
         )
+        y_mask = (
+                (xr_data.y_osgb <= top)
+                & (bottom <= xr_data.y_osgb)
+        )
+        selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
 
-    selected = xr_data.isel({dim_name: id_mask})
     return selected
 
 
