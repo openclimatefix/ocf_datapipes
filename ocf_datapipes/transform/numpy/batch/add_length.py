@@ -20,7 +20,7 @@ class AddLengthIterDataPipe(IterDataPipe):
         train_validation_test: Optional[str] = "train",
     ):
         """
-        Adds length to the data pipe. This is useful when training a model. 
+        Adds length to the data pipe. This is useful when training a model.
 
         Either 'length' is set or, 'configuration' and 'train_validation_test' is set
 
