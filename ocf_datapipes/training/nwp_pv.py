@@ -156,6 +156,6 @@ def nwp_pv_datapipe(
         .add_sun_position(modality_name="pv")
     )
 
-    combined_datapipe.add_length(configuration=configuration, train_validation_test=tag)
+    combined_datapipe = combined_datapipe.add_length(configuration=configuration, train_validation_test=tag)
 
     return combined_datapipe
