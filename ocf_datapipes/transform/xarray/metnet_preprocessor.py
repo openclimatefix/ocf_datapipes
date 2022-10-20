@@ -6,6 +6,7 @@ import xarray as xr
 from scipy import signal
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
 
 
 @functional_datapipe("preprocess_metnet")
@@ -96,7 +97,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             yield stacked_data
 
 
-def _get_spatial_crop(xr_data, location, roi_height_meters, roi_width_meters, dim_name):
+def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meters: int, dim_name):
     # Compute the index for left and right:
     half_height = roi_height_meters // 2
     half_width = roi_width_meters // 2
@@ -105,13 +106,26 @@ def _get_spatial_crop(xr_data, location, roi_height_meters, roi_width_meters, di
     right = location.x + half_width
     bottom = location.y - half_height
     top = location.y + half_height
-    # Select data in the region of interest:
-    id_mask = (
-        (left <= xr_data.x_osgb)
-        & (xr_data.x_osgb <= right)
-        & (xr_data.y_osgb <= top)
-        & (bottom <= xr_data.y_osgb)
-    )
+    if "geostationary" in dim_name:
+        # Convert to geostationary edges
+        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
+        left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
+        right, top = _osgb_to_geostationary(xx=right, yy=top)
+        # Select data in the region of interest:
+        id_mask = (
+                (left <= xr_data.x_geostationary)
+                & (xr_data.x_geostationary <= right)
+                & (xr_data.y_geostationary <= bottom) # Y is flipped in satellite
+                & (top <= xr_data.y_geostationary) # Y is flipped in satellite
+        )
+    else:
+        # Select data in the region of interest:
+        id_mask = (
+            (left <= xr_data.x_osgb)
+            & (xr_data.x_osgb <= right)
+            & (xr_data.y_osgb <= top)
+            & (bottom <= xr_data.y_osgb)
+        )
 
     selected = xr_data.isel({dim_name: id_mask})
     return selected
