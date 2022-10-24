@@ -101,13 +101,13 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 if xr_index == 0:  # Only for the first one
                     # Add in time features for each timestep
                     time_image = _create_time_image(xr_center,
-                                                    time_dim="init_time_utc",
+                                                    time_dim="target_time_utc",
                                                     output_height_pixels=self.output_height_pixels,
                                                     output_width_pixels=self.output_width_pixels)
                     contexts.append(time_image)
                     # Need to add sun features
                     if self.add_sun_features:
-                        sun_image = _create_sun_image(image_xr=xr_center, x_dim="x_osgb", y_dim="y_osgb", time_dim="init_time_utc",
+                        sun_image = _create_sun_image(image_xr=xr_center, x_dim="x_osgb", y_dim="y_osgb", time_dim="target_time_utc",
                                                       normalize=True)
                         contexts.append(sun_image)
                 xr_context = _resample_to_pixel_size(
@@ -210,11 +210,11 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
 
 
 def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output_width_pixels: int):
-    times = xr_data[time_dim].values
+    times = pd.DatetimeIndex(xr_data[time_dim].values)
     # Sin+Cos of month, day, hour, after dividing by 12, 366, and 24 respecitvely
-    months = np.asarray([t.month for t in times])
-    days = np.asarray([t.day for t in times])
-    hours = np.asarray([t.hour for t in times])
+    months = times.month
+    days = times.day
+    hours = times.hour
     months /= 12
     days /= 366
     hours /= 24
@@ -223,7 +223,7 @@ def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output
     days = np.expand_dims(days, axis=[1, 2, 3])
     hours = np.expand_dims(hours, axis=[1, 2, 3])
 
-    tile_reps = (1, 1, output_height_pixels, output_width_pixels)  # Has time dimension, so tile other ones by
+    tile_reps = (1, output_height_pixels, output_width_pixels)  # Has time dimension, so tile other ones by
     sin_months = np.tile(np.sin(months), reps=tile_reps)
     cos_months = np.tile(np.cos(months), reps=tile_reps)
     sin_hours = np.tile(np.sin(hours), reps=tile_reps)
@@ -231,7 +231,7 @@ def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output
     sin_days = np.tile(np.sin(days), reps=tile_reps)
     cos_days = np.tile(np.cos(days), reps=tile_reps)
 
-    return np.stack([sin_months, cos_months, sin_days, cos_days, sin_hours, cos_hours], axis=1)
+    return np.concatenate([sin_months, cos_months, sin_days, cos_days, sin_hours, cos_hours], axis=1)
 
 
 def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
@@ -242,10 +242,10 @@ def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
     # Create empty image to use for the PV Systems, assumes image has x and y coordinates
     sun_image = np.zeros(
         (
-            len(image_xr[time_dim]),
             2,  # Azimuth and elevation
             len(image_xr[y_dim]),
             len(image_xr[x_dim]),
+            len(image_xr[time_dim]),
         ),
         dtype=np.float32,
     )
@@ -261,20 +261,22 @@ def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
     # Go through each time on its own, lat lons still in order of image
     # TODO Make this faster
     # dt = pd.DatetimeIndex(dt)  # pvlib expects a `pd.DatetimeIndex`.
-    for y_index, lat in enumerate(lats):
-        for x_index, lon in enumerate(lons):
-            solpos = pvlib.solarposition.get_solarposition(
-                time=time_utc,
-                latitude=lat,
-                longitude=lon,
-                # Which `method` to use?
-                # pyephem seemed to be a good mix between speed and ease but causes segfaults!
-                # nrel_numba doesn't work when using multiple worker processes.
-                # nrel_c is probably fastest but requires C code to be manually compiled:
-                # https://midcdmz.nrel.gov/spa/
-            )
-            sun_image[:,0][y_index][x_index] = solpos["azimuth"]
-            sun_image[:,1][y_index][x_index] = solpos["elevation"]
+    for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
+        solpos = pvlib.solarposition.get_solarposition(
+            time=time_utc,
+            latitude=lat,
+            longitude=lon,
+            # Which `method` to use?
+            # pyephem seemed to be a good mix between speed and ease but causes segfaults!
+            # nrel_numba doesn't work when using multiple worker processes.
+            # nrel_c is probably fastest but requires C code to be manually compiled:
+            # https://midcdmz.nrel.gov/spa/
+        )
+        sun_image[0][:][example_idx] = solpos["azimuth"]
+        sun_image[1][example_idx][:] = solpos["elevation"]
+
+    # Flip back to normal ordering
+    sun_image = np.transpose(sun_image, [3,0,1,2])
 
     # Normalize.
     if normalize:
