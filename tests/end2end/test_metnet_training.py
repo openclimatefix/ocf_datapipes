@@ -170,14 +170,15 @@ def test_metnet_production(
             sat_datapipe,
             nwp_datapipe,
             pv_datapipe,
-        ],  # topo_datapipe],
+        ],
+        #topo_datapipe],
         location_datapipe=location_datapipe5,
-        center_width=100_000,
-        center_height=100_000,
-        context_height=1_000_000,
-        context_width=1_000_000,
-        output_width_pixels=200,
-        output_height_pixels=200,
+        center_width=500_000,
+        center_height=1_000_000,
+        context_height=10_000_000,
+        context_width=10_000_000,
+        output_width_pixels=512,
+        output_height_pixels=512,
     )
 
     batch = next(iter(combined_datapipe))

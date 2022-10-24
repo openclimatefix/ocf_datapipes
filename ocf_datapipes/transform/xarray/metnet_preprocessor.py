@@ -161,6 +161,15 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
             bottom <= xr_data.y_geostationary
         )
         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
+    elif "x" in xr_data.coords:
+        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
+        left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
+        right, top = _osgb_to_geostationary(xx=right, yy=top)
+        x_mask = (left <= xr_data.x) & (xr_data.x <= right)
+        y_mask = (xr_data.y <= top) & (  # Y is flipped
+                bottom <= xr_data.y
+        )
+        selected = xr_data.isel(x=x_mask, y=y_mask)
     else:
         # Select data in the region of interest:
         x_mask = (left <= xr_data.x_osgb) & (xr_data.x_osgb <= right)
@@ -174,6 +183,9 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     if "x_geostationary" in xr_data.coords:
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
+    elif "x" in xr_data.coords:
+        x_coords = xr_data["x"].values
+        y_coords = xr_data["y"].values
     else:
         x_coords = xr_data["x_osgb"].values
         y_coords = xr_data["y_osgb"].values
@@ -184,6 +196,8 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
         xr_data = xr_data.interp(
             x_geostationary=x_coords, y_geostationary=y_coords, method="linear"
         )
+    elif "x" in xr_data.coords:
+        xr_data = xr_data.interp(x=x_coords, y=y_coords, method="linear")
     else:
         xr_data = xr_data.interp(x_osgb=x_coords, y_osgb=y_coords, method="linear")
     # Extract just the data now
