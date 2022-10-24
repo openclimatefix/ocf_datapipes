@@ -177,7 +177,7 @@ def test_metnet_production(
         center_height=1_000_000,
         context_height=10_000_000,
         context_width=10_000_000,
-        output_width_pixels=512,
+        output_width_pixels=256,
         output_height_pixels=512,
     )
 

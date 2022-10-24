@@ -45,8 +45,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             pv_image = np.zeros(
                 (
                     len(pv_systems_xr["time_utc"]),
-                    len(image_xr[self.x_dim]),
                     len(image_xr[self.y_dim]),
+                    len(image_xr[self.x_dim]),
                 ),
                 dtype=np.float32,
             )
@@ -99,8 +99,8 @@ def _create_data_array_from_image(pv_image, pv_systems_xr, image_xr):
         data=pv_image,
         coords=(
             ("time_utc", pv_systems_xr.time_utc.values),
-            ("x_geostationary", image_xr.x_geostationary.values),
             ("y_geostationary", image_xr.y_geostationary.values),
+            ("x_geostationary", image_xr.x_geostationary.values),
         ),
         name="pv_image",
     ).astype(np.float32)
