@@ -1,7 +1,6 @@
 """Preprocessing for MetNet-type inputs"""
 from typing import List
 
-import einops
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -90,22 +89,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 xr_context = _resample_to_pixel_size(
                     xr_context, self.output_height_pixels, self.output_width_pixels
                 )
-                # Use the t0, interpolate to 5min in the past data, but future data stays separate
-                # For data sources with future, just add empty inputs, no interpolation of the data, model
-                # should be able to figure it out
                 xr_center = xr_center.to_numpy()
                 xr_context = xr_context.to_numpy()
-                # Want to concatenate by channel, then stack by time
-                # Each timestep should be separate, with the ones for the future having extra empty ones
-                # MetNet-2 concatenates along time axis until not enough then pads sthe rest
-                # As in, for NWP, it would be the last 3 hours concatenated to the last 15min of satellite
-                # And rest is padded
-                # End result is that there should be 13 timesteps for 1 hour of history as input + 48 for hourly future NWP
-                # 61 timesteps total, or 37 if only 24 hours of NWP
-                # Other option is just to append the future NWP to the history as well, to reduce the amount of timesteps
-                # needed, which is probably the best way going about it, 48 hour forecast would then only use
-                # 48 timesteps instead of 61, or 24 instead of 37
-                # Also simpler to implement, just padd ones to the longest of the time sequences then concatenate
                 if len(xr_center.shape) == 3:  # Need to add channel dimension
                     xr_center = np.expand_dims(xr_center, axis=1)
                     xr_context = np.expand_dims(xr_context, axis=1)
@@ -136,8 +121,6 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     mode="constant",
                     constant_values=0.0,
                 )
-            # Should be Time x Channels X Width X Height, concatenate along channels,
-            # then along time, so need to pad out empty tensor for future NWP ones
             stacked_data = np.concatenate([*centers, *contexts], axis=1)
             yield stacked_data
 

@@ -53,9 +53,6 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 ),
                 dtype=np.float32,
             )
-            # Coordinates should be in order for the image, so just need to do the search sorted thing to get the index to add the PV output to
-            # Once all the outputs are added, then normalize? Could also normalize PV first, then normalize the normalized PV data
-            # In either case have to iterate through all PV systems in example
             for pv_system_id in pv_systems_xr["pv_system_id"]:
                 pv_system = pv_systems_xr.sel(pv_system_id=pv_system_id)
                 if "geostationary" in self.x_dim:
@@ -74,7 +71,6 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     print("Failing on Y")
                     continue
                 if "geostationary" in self.x_dim:
-                    # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:
                     x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
                     # y_geostationary is in descending order:
                     y_idx = len(image_xr[self.y_dim]) - (
