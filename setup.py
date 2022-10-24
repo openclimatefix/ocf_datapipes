@@ -10,7 +10,7 @@ install_requires = (this_directory / "requirements.txt").read_text().splitlines(
 
 setup(
     name="ocf_datapipes",
-    version="0.4.4",
+    version="0.4.5",
     license="MIT",
     description="Pytorch Datapipes built for use in Open Climate Fix's nowcasting/forecasting work",
     author="Jacob Bieker, Jack Kelly, Peter Dudfield",
