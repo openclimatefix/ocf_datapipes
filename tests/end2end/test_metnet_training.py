@@ -39,12 +39,12 @@ from ocf_datapipes.transform.xarray import (
     AddT0IdxAndSamplePeriodDuration,
     ConvertSatelliteToInt8,
     ConvertToNWPTargetTime,
+    CreatePVImage,
     Downsample,
     EnsureNPVSystemsPerExample,
     Normalize,
+    PreProcessMetNet,
     ReprojectTopography,
-PreProcessMetNet,
-CreatePVImage
 )
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
 
@@ -92,9 +92,13 @@ def test_metnet_production(
     #
     #####################################
 
-    location_datapipe1, location_datapipe2, location_datapipe3, location_datapipe4, location_datapipe5 = LocationPicker(
-        gsp_loc_datapipe, return_all_locations=True
-    ).fork(
+    (
+        location_datapipe1,
+        location_datapipe2,
+        location_datapipe3,
+        location_datapipe4,
+        location_datapipe5,
+    ) = LocationPicker(gsp_loc_datapipe, return_all_locations=True).fork(
         5
     )  # Its in order then
     pv_datapipe, pv_t0_datapipe = SelectSpatialSliceMeters(
@@ -102,7 +106,9 @@ def test_metnet_production(
         location_datapipe=location_datapipe1,
         roi_width_meters=100_000,
         roi_height_meters=100_000,
-    ).fork(2)  # Has to be large as test PV systems aren't in first 20 GSPs it seems
+    ).fork(
+        2
+    )  # Has to be large as test PV systems aren't in first 20 GSPs it seems
     nwp_datapipe, nwp_t0_datapipe = Downsample(nwp_datapipe, y_coarsen=16, x_coarsen=16).fork(2)
     nwp_t0_datapipe = SelectLiveT0Time(nwp_t0_datapipe, dim_name="init_time_utc")
     nwp_datapipe = ConvertToNWPTargetTime(
@@ -146,7 +152,9 @@ def test_metnet_production(
 
     pv_datapipe = CreatePVImage(pv_datapipe, image_datapipe)
 
-    sat_hrv_datapipe = Normalize(sat_hrv_datapipe, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4).map(
+    sat_hrv_datapipe = Normalize(
+        sat_hrv_datapipe, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4
+    ).map(
         lambda x: x.resample(time_utc="5T").interpolate("linear")
     )  # Interplate to 5 minutes incase its 15 minutes
     sat_datapipe = Normalize(sat_datapipe, mean=SAT_MEAN["IR_016"], std=SAT_STD["IR_016"]).map(
@@ -156,14 +164,21 @@ def test_metnet_production(
     topo_datapipe = Normalize(topo_datapipe, calculate_mean_std_from_example=True)
 
     # Now combine in the MetNet format
-    combined_datapipe = PreProcessMetNet([sat_hrv_datapipe, sat_datapipe, nwp_datapipe, pv_datapipe,],# topo_datapipe],
-                                location_datapipe=location_datapipe5,
-                                center_width=100_000,
-                                center_height=100_000,
-                                context_height=1_000_000,
-                                context_width=1_000_000,
-                                output_width_pixels=200,
-                                output_height_pixels=200)
+    combined_datapipe = PreProcessMetNet(
+        [
+            sat_hrv_datapipe,
+            sat_datapipe,
+            nwp_datapipe,
+            pv_datapipe,
+        ],  # topo_datapipe],
+        location_datapipe=location_datapipe5,
+        center_width=100_000,
+        center_height=100_000,
+        context_height=1_000_000,
+        context_width=1_000_000,
+        output_width_pixels=200,
+        output_height_pixels=200,
+    )
 
     batch = next(iter(combined_datapipe))
     print(batch.shape)

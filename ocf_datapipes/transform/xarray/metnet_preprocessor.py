@@ -1,11 +1,12 @@
 """Preprocessing for MetNet-type inputs"""
 from typing import List
 
+import einops
 import numpy as np
 import xarray as xr
-import einops
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
 
 
@@ -105,7 +106,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 # needed, which is probably the best way going about it, 48 hour forecast would then only use
                 # 48 timesteps instead of 61, or 24 instead of 37
                 # Also simpler to implement, just padd ones to the longest of the time sequences then concatenate
-                if len(xr_center.shape) == 3: # Need to add channel dimension
+                if len(xr_center.shape) == 3:  # Need to add channel dimension
                     xr_center = np.expand_dims(xr_center, axis=1)
                     xr_context = np.expand_dims(xr_context, axis=1)
                 centers.append(xr_center)
@@ -113,11 +114,28 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             # Pad out time dimension to be the same, using the largest one
             # All should have 4 dimensions at this point
             for i in range(len(centers)):
-                centers[i] = np.pad(centers[i], pad_width=((0, np.max([c.shape[0] for c in centers]) - centers[i].shape[0]),
-                                                           (0,0), (0,0), (0,0)), mode='constant', constant_values=0.0)
-                contexts[i] = np.pad(contexts[i],
-                                    pad_width=((0, np.max([c.shape[0] for c in contexts]) - contexts[i].shape[0]),
-                                               (0, 0), (0, 0), (0, 0)), mode='constant', constant_values=0.0)
+                centers[i] = np.pad(
+                    centers[i],
+                    pad_width=(
+                        (0, np.max([c.shape[0] for c in centers]) - centers[i].shape[0]),
+                        (0, 0),
+                        (0, 0),
+                        (0, 0),
+                    ),
+                    mode="constant",
+                    constant_values=0.0,
+                )
+                contexts[i] = np.pad(
+                    contexts[i],
+                    pad_width=(
+                        (0, np.max([c.shape[0] for c in contexts]) - contexts[i].shape[0]),
+                        (0, 0),
+                        (0, 0),
+                        (0, 0),
+                    ),
+                    mode="constant",
+                    constant_values=0.0,
+                )
             # Should be Time x Channels X Width X Height, concatenate along channels,
             # then along time, so need to pad out empty tensor for future NWP ones
             stacked_data = np.concatenate([*centers, *contexts], axis=1)
@@ -138,25 +156,15 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
         _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
         left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
         right, top = _osgb_to_geostationary(xx=right, yy=top)
-        x_mask = (
-                (left <= xr_data.x_geostationary)
-                & (xr_data.x_geostationary <= right)
-        )
-        y_mask = (
-                (xr_data.y_geostationary <= top) # Y is flipped
-                & (bottom <= xr_data.y_geostationary)
+        x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
+        y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
+            bottom <= xr_data.y_geostationary
         )
         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
     else:
         # Select data in the region of interest:
-        x_mask = (
-                (left <= xr_data.x_osgb)
-                & (xr_data.x_osgb <= right)
-        )
-        y_mask = (
-                (xr_data.y_osgb <= top)
-                & (bottom <= xr_data.y_osgb)
-        )
+        x_mask = (left <= xr_data.x_osgb) & (xr_data.x_osgb <= right)
+        y_mask = (xr_data.y_osgb <= top) & (bottom <= xr_data.y_osgb)
         selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
 
     return selected
@@ -173,7 +181,9 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     x_coords = np.linspace(x_coords[0], x_coords[-1], num=width_pixels)
     y_coords = np.linspace(y_coords[0], y_coords[-1], num=height_pixels)
     if "x_geostationary" in xr_data.coords:
-        xr_data = xr_data.interp(x_geostationary=x_coords, y_geostationary=y_coords, method="linear")
+        xr_data = xr_data.interp(
+            x_geostationary=x_coords, y_geostationary=y_coords, method="linear"
+        )
     else:
         xr_data = xr_data.interp(x_osgb=x_coords, y_osgb=y_coords, method="linear")
     # Extract just the data now
