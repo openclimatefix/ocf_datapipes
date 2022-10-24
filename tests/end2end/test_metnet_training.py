@@ -185,4 +185,3 @@ def test_metnet_production(
     print(batch.shape)
     batch = next(iter(gsp_datapipe))
     print(batch.shape)
-
