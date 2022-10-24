@@ -38,7 +38,7 @@ from ocf_datapipes.transform.xarray import (
     PreProcessMetNet,
     ReprojectTopography,
 )
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
+from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey, SAT_MEAN_DA, SAT_STD_DA
 
 logger = logging.getLogger("metnet_datapipe")
 
@@ -201,7 +201,7 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
         history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
         forecast_duration=timedelta(minutes=0),
         sample_period_duration=timedelta(minutes=5),
-    ).normalize(mean=SAT_MEAN, std=SAT_STD)
+    ).normalize(mean=SAT_MEAN_DA, std=SAT_STD_DA)
     sat_hrv_datapipe, sat_pv_image_datapipe = (
         sat_hrv_datapipe.select_time_slice(
             t0_datapipe=sat_hrv_t0_datapipe,
