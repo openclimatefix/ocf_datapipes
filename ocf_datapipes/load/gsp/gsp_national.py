@@ -38,7 +38,7 @@ class OpenGSPNationalIterDataPipe(IterDataPipe):
         # Load GSP generation xr.Dataset:
         gsp_pv_power_mw_ds = xr.load_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
 
-        # onty select nationa data
+        # only select national data
         logger.debug("Selecting National data only")
         gsp_pv_power_mw_ds = gsp_pv_power_mw_ds.sel(gsp_id=0)
 
