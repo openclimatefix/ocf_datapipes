@@ -25,3 +25,4 @@ from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNe
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage

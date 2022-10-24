@@ -7,22 +7,30 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
+import pvlib
+import pandas as pd
+from ocf_datapipes.utils.geospatial import osgb_to_lat_lon, load_geostationary_area_definition_and_transform_latlon
 
+ELEVATION_MEAN = 37.4
+ELEVATION_STD = 12.7
+AZIMUTH_MEAN = 177.7
+AZIMUTH_STD = 41.7
 
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
     """Preprocess set of Xarray datasets similar to MetNet-1"""
 
     def __init__(
-        self,
-        source_datapipes: List[IterDataPipe],
-        location_datapipe: IterDataPipe,
-        context_width: float,
-        context_height: float,
-        center_width: float,
-        center_height: float,
-        output_height_pixels: int,
-        output_width_pixels: int,
+            self,
+            source_datapipes: List[IterDataPipe],
+            location_datapipe: IterDataPipe,
+            context_width: int,
+            context_height: int,
+            center_width: int,
+            center_height: int,
+            output_height_pixels: int,
+            output_width_pixels: int,
+            add_sun_features: bool = False
     ):
         """
 
@@ -33,6 +41,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         2. Creating a center crop of the center_height, center_width
         3. Downsampling the context area of interest to the same shape as the center crop
         4. Stacking those context images on the center crop.
+        5. Add Month, Day, Hour channels for each input time
+        6. Add Sun position as well?
 
         This would be designed originally for NWP+Satellite+Topographic data sources.
         To add the PV power for lots of sites, the PV power would
@@ -54,6 +64,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             center_height: Center height of the area of interest
             output_height_pixels: Output height in pixels
             output_width_pixels: Output width in pixels
+            add_sun_features: Whether to calculate and add Sun elevation and azimuth for each center pixel
         """
         self.source_datapipes = source_datapipes
         self.location_datapipe = location_datapipe
@@ -63,13 +74,14 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self.center_height = center_height
         self.output_height_pixels = output_height_pixels
         self.output_width_pixels = output_width_pixels
+        self.add_sun_features = add_sun_features
 
     def __iter__(self) -> np.ndarray:
         for xr_datas, location in Zipper(Zipper(*self.source_datapipes), self.location_datapipe):
             # TODO Use the Lat/Long coordinates of the center array for the lat/lon stuff
             centers = []
             contexts = []
-            for xr_data in xr_datas:
+            for xr_index, xr_data in enumerate(xr_datas):
                 xr_context: xr.Dataset = _get_spatial_crop(
                     xr_data,
                     location=location,
@@ -86,6 +98,18 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 xr_center = _resample_to_pixel_size(
                     xr_center, self.output_height_pixels, self.output_width_pixels
                 )
+                if xr_index == 0:  # Only for the first one
+                    # Add in time features for each timestep
+                    time_image = _create_time_image(xr_center,
+                                                    time_dim="init_time_utc",
+                                                    output_height_pixels=self.output_height_pixels,
+                                                    output_width_pixels=self.output_width_pixels)
+                    contexts.append(time_image)
+                    # Need to add sun features
+                    if self.add_sun_features:
+                        sun_image = _create_sun_image(image_xr=xr_center, x_dim="x_osgb", y_dim="y_osgb", time_dim="init_time_utc",
+                                                      normalize=True)
+                        contexts.append(sun_image)
                 xr_context = _resample_to_pixel_size(
                     xr_context, self.output_height_pixels, self.output_width_pixels
                 )
@@ -141,7 +165,7 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
         right, top = _osgb_to_geostationary(xx=right, yy=top)
         x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
         y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
-            bottom <= xr_data.y_geostationary
+                bottom <= xr_data.y_geostationary
         )
         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
     elif "x" in xr_data.coords:
@@ -183,3 +207,77 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
         xr_data = xr_data.interp(x_osgb=x_coords, y_osgb=y_coords, method="linear")
     # Extract just the data now
     return xr_data
+
+
+def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output_width_pixels: int):
+    times = xr_data[time_dim].values
+    # Sin+Cos of month, day, hour, after dividing by 12, 366, and 24 respecitvely
+    months = np.asarray([t.month for t in times])
+    days = np.asarray([t.day for t in times])
+    hours = np.asarray([t.hour for t in times])
+    months /= 12
+    days /= 366
+    hours /= 24
+
+    months = np.expand_dims(months, axis=[1, 2, 3])
+    days = np.expand_dims(days, axis=[1, 2, 3])
+    hours = np.expand_dims(hours, axis=[1, 2, 3])
+
+    tile_reps = (1, 1, output_height_pixels, output_width_pixels)  # Has time dimension, so tile other ones by
+    sin_months = np.tile(np.sin(months), reps=tile_reps)
+    cos_months = np.tile(np.cos(months), reps=tile_reps)
+    sin_hours = np.tile(np.sin(hours), reps=tile_reps)
+    cos_hours = np.tile(np.cos(hours), reps=tile_reps)
+    sin_days = np.tile(np.sin(days), reps=tile_reps)
+    cos_days = np.tile(np.cos(days), reps=tile_reps)
+
+    return np.stack([sin_months, cos_months, sin_days, cos_days, sin_hours, cos_hours], axis=1)
+
+
+def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
+    if "geostationary" in x_dim:
+        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
+            image_xr
+        )
+    # Create empty image to use for the PV Systems, assumes image has x and y coordinates
+    sun_image = np.zeros(
+        (
+            len(image_xr[time_dim]),
+            2,  # Azimuth and elevation
+            len(image_xr[y_dim]),
+            len(image_xr[x_dim]),
+        ),
+        dtype=np.float32,
+    )
+    if "geostationary" in x_dim:
+        transform_to_latlon = load_geostationary_area_definition_and_transform_latlon(image_xr)
+        lats, lons = transform_to_latlon(xx=image_xr[x_dim].values, yy=image_xr[y_dim].values)
+    else:
+        transform_to_latlon = osgb_to_lat_lon
+        lats, lons = transform_to_latlon(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
+    time_utc = image_xr[time_dim].values
+
+    # Loop round each example to get the Sun's elevation and azimuth:
+    # Go through each time on its own, lat lons still in order of image
+    # TODO Make this faster
+    # dt = pd.DatetimeIndex(dt)  # pvlib expects a `pd.DatetimeIndex`.
+    for y_index, lat in enumerate(lats):
+        for x_index, lon in enumerate(lons):
+            solpos = pvlib.solarposition.get_solarposition(
+                time=time_utc,
+                latitude=lat,
+                longitude=lon,
+                # Which `method` to use?
+                # pyephem seemed to be a good mix between speed and ease but causes segfaults!
+                # nrel_numba doesn't work when using multiple worker processes.
+                # nrel_c is probably fastest but requires C code to be manually compiled:
+                # https://midcdmz.nrel.gov/spa/
+            )
+            sun_image[:,0][y_index][x_index] = solpos["azimuth"]
+            sun_image[:,1][y_index][x_index] = solpos["elevation"]
+
+    # Normalize.
+    if normalize:
+        sun_image[:, 0] = (sun_image[:, 0] - AZIMUTH_MEAN) / AZIMUTH_STD
+        sun_image[:, 1] = (sun_image[:, 1] - ELEVATION_MEAN) / ELEVATION_STD
+    return sun_image

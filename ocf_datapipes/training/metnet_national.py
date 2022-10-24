@@ -208,9 +208,9 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
     # Now combine in the MetNet format
     combined_datapipe = PreProcessMetNet(
         [
+            nwp_datapipe,
             sat_hrv_datapipe,
             sat_datapipe,
-            nwp_datapipe,
             pv_datapipe,
         ],
         location_datapipe=location_datapipe,
@@ -219,7 +219,7 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
         context_height=10_000_000,
         context_width=10_000_000,
         output_width_pixels=256,
-        output_height_pixels=512,
+        output_height_pixels=256,
     )
 
     return combined_datapipe.zip(gsp_datapipe) # Makes (Inputs, Label) tuples
