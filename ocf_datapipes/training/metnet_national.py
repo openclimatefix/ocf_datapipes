@@ -220,6 +220,7 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
         context_width=10_000_000,
         output_width_pixels=256,
         output_height_pixels=256,
+        add_sun_features=True,
     )
 
     return combined_datapipe.zip(gsp_datapipe) # Makes (Inputs, Label) tuples
