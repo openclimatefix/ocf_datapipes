@@ -181,6 +181,8 @@ def test_metnet_production(
     )
 
     batch = next(iter(combined_datapipe))
+    assert ~np.isnan(batch).any()
     print(batch.shape)
     batch = next(iter(gsp_datapipe))
     print(batch.shape)
+

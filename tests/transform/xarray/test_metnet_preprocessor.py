@@ -2,12 +2,11 @@ from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime, PreProcessMetNet
 
 
-def test_metnet_preprocess(sat_datapipe, nwp_datapipe, gsp_datapipe):
+def test_metnet_preprocess(sat_datapipe, gsp_datapipe):
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
     gsp_datapipe = LocationPicker(gsp_datapipe)
-    nwp_datapipe = ConvertToNWPTargetTime(nwp_datapipe)
     datapipe = PreProcessMetNet(
-        [sat_datapipe, nwp_datapipe],
+        [sat_datapipe],
         location_datapipe=gsp_datapipe,
         center_width=100_000,
         center_height=100_000,

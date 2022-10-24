@@ -81,7 +81,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
                 # Now go by the timestep to create cube of PV data
                 for time in range(len(pv_system.time_utc.values)):
-                    pv_image[time][x_idx][y_idx] += pv_system[time].values
+                    pv_image[time][y_idx][x_idx] += pv_system[time].values
 
             if self.normalize:
                 if np.max(pv_image) > 0:
