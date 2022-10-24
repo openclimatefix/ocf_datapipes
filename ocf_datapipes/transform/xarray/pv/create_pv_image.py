@@ -13,6 +13,7 @@ from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_an
 @functional_datapipe("create_pv_image")
 class CreatePVImageIterDataPipe(IterDataPipe):
     """Create PV image from individual sites"""
+
     def __init__(
         self,
         source_datapipe: IterDataPipe,
@@ -96,7 +97,11 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             yield pv_image
 
 
-def _create_data_array_from_image(pv_image: np.ndarray, pv_systems_xr: Union[xr.Dataset, xr.DataArray], image_xr: Union[xr.Dataset, xr.DataArray]):
+def _create_data_array_from_image(
+    pv_image: np.ndarray,
+    pv_systems_xr: Union[xr.Dataset, xr.DataArray],
+    image_xr: Union[xr.Dataset, xr.DataArray],
+):
     data_array = xr.DataArray(
         data=pv_image,
         coords=(

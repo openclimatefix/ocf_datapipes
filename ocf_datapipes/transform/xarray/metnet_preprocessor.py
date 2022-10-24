@@ -166,9 +166,7 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
         left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
         right, top = _osgb_to_geostationary(xx=right, yy=top)
         x_mask = (left <= xr_data.x) & (xr_data.x <= right)
-        y_mask = (xr_data.y <= top) & (  # Y is flipped
-                bottom <= xr_data.y
-        )
+        y_mask = (xr_data.y <= top) & (bottom <= xr_data.y)  # Y is flipped
         selected = xr_data.isel(x=x_mask, y=y_mask)
     else:
         # Select data in the region of interest:

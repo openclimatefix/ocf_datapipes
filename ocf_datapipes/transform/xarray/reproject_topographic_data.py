@@ -58,7 +58,7 @@ def reproject_topo_data_from_osgb_to_geostationary(topo: xr.DataArray) -> xr.Dat
     topo_image = pyresample.image.ImageContainerQuick(topo.values, topo_osgb_area_def)
     topo_image_resampled = topo_image.resample(topo_geostationary_area_def)
     topo_dataarray = _get_data_array_of_resampled_topo_image(topo_image_resampled)
-    #topo_dataarray.attrs["area"] = str(topo_geostationary_area_def)
+    # topo_dataarray.attrs["area"] = str(topo_geostationary_area_def)
     return topo_dataarray
 
 
