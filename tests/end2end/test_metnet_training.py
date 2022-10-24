@@ -178,7 +178,7 @@ def test_metnet_production(
         context_width=10_000_000,
         output_width_pixels=512,
         output_height_pixels=512,
-        add_sun_features=True
+        add_sun_features=True,
     )
 
     batch = next(iter(combined_datapipe))

@@ -2,15 +2,18 @@
 from typing import Union
 
 import numpy as np
+import pandas as pd
+import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.consts import Location
-from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
-import pvlib
-import pandas as pd
-from ocf_datapipes.utils.geospatial import osgb_to_lat_lon, load_geostationary_area_definition_and_transform_latlon
+from ocf_datapipes.utils.geospatial import (
+    load_geostationary_area_definition_and_transform_latlon,
+    load_geostationary_area_definition_and_transform_osgb,
+    osgb_to_lat_lon,
+)
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
@@ -27,7 +30,7 @@ class CreateSunImageIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         normalize: bool = False,
         image_dim: str = "geostationary",
-        time_dim: str = "time_utc"
+        time_dim: str = "time_utc",
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -57,15 +60,19 @@ class CreateSunImageIterDataPipe(IterDataPipe):
             sun_image = np.zeros(
                 (
                     len(image_xr[self.time_dim]),
-                    2, # Azimuth and elevation
+                    2,  # Azimuth and elevation
                     len(image_xr[self.y_dim]),
                     len(image_xr[self.x_dim]),
                 ),
                 dtype=np.float32,
             )
             if "geostationary" in self.x_dim:
-                transform_to_latlon = load_geostationary_area_definition_and_transform_latlon(image_xr)
-                lats, lons = transform_to_latlon(xx=image_xr[self.x_dim].values, yy=image_xr[self.y_dim].values)
+                transform_to_latlon = load_geostationary_area_definition_and_transform_latlon(
+                    image_xr
+                )
+                lats, lons = transform_to_latlon(
+                    xx=image_xr[self.x_dim].values, yy=image_xr[self.y_dim].values
+                )
             else:
                 transform_to_latlon = osgb_to_lat_lon
                 lats, lons = transform_to_latlon(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
@@ -74,7 +81,7 @@ class CreateSunImageIterDataPipe(IterDataPipe):
             # Loop round each example to get the Sun's elevation and azimuth:
             # Go through each time on its own, lat lons still in order of image
             # TODO Make this faster
-            #dt = pd.DatetimeIndex(dt)  # pvlib expects a `pd.DatetimeIndex`.
+            # dt = pd.DatetimeIndex(dt)  # pvlib expects a `pd.DatetimeIndex`.
             for y_index, lat in enumerate(lats):
                 for x_index, lon in enumerate(lons):
                     solpos = pvlib.solarposition.get_solarposition(
@@ -87,13 +94,13 @@ class CreateSunImageIterDataPipe(IterDataPipe):
                         # nrel_c is probably fastest but requires C code to be manually compiled:
                         # https://midcdmz.nrel.gov/spa/
                     )
-                    sun_image[:,0][y_index][x_index] = solpos["azimuth"]
-                    sun_image[:,1][y_index][x_index] = solpos["elevation"]
+                    sun_image[:, 0][y_index][x_index] = solpos["azimuth"]
+                    sun_image[:, 1][y_index][x_index] = solpos["elevation"]
 
             # Normalize.
             if self.normalize:
-                sun_image[:,0] = (sun_image[:,0] - AZIMUTH_MEAN) / AZIMUTH_STD
-                sun_image[:,1] = (sun_image[:,1] - ELEVATION_MEAN) / ELEVATION_STD
+                sun_image[:, 0] = (sun_image[:, 0] - AZIMUTH_MEAN) / AZIMUTH_STD
+                sun_image[:, 1] = (sun_image[:, 1] - ELEVATION_MEAN) / ELEVATION_STD
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
@@ -105,7 +112,7 @@ def _create_data_array_from_image(
     sun_image: np.ndarray,
     image_xr: Union[xr.Dataset, xr.DataArray],
     is_geostationary: bool,
-    time_dim: str
+    time_dim: str,
 ):
     if is_geostationary:
         data_array = xr.DataArray(

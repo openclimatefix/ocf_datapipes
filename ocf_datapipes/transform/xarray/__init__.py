@@ -16,6 +16,7 @@ from .convert_satellite_to_int import ConvertSatelliteToInt8IterDataPipe as Conv
 from .convert_to_nwp_target_times import (
     ConvertToNWPTargetTimeIterDataPipe as ConvertToNWPTargetTime,
 )
+from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage
 from .downsample import DownsampleIterDataPipe as Downsample
 from .drop_nans import RemoveNansIterDataPipe as RemoveNans
 from .get_contiguous_time_periods import (
@@ -25,4 +26,3 @@ from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNe
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
-from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage

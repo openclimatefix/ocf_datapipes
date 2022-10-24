@@ -2,35 +2,39 @@
 from typing import List
 
 import numpy as np
+import pandas as pd
+import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
-from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
-import pvlib
-import pandas as pd
-from ocf_datapipes.utils.geospatial import osgb_to_lat_lon, load_geostationary_area_definition_and_transform_latlon
+from ocf_datapipes.utils.geospatial import (
+    load_geostationary_area_definition_and_transform_latlon,
+    load_geostationary_area_definition_and_transform_osgb,
+    osgb_to_lat_lon,
+)
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
 AZIMUTH_MEAN = 177.7
 AZIMUTH_STD = 41.7
 
+
 @functional_datapipe("preprocess_metnet")
 class PreProcessMetNetIterDataPipe(IterDataPipe):
     """Preprocess set of Xarray datasets similar to MetNet-1"""
 
     def __init__(
-            self,
-            source_datapipes: List[IterDataPipe],
-            location_datapipe: IterDataPipe,
-            context_width: int,
-            context_height: int,
-            center_width: int,
-            center_height: int,
-            output_height_pixels: int,
-            output_width_pixels: int,
-            add_sun_features: bool = False
+        self,
+        source_datapipes: List[IterDataPipe],
+        location_datapipe: IterDataPipe,
+        context_width: int,
+        context_height: int,
+        center_width: int,
+        center_height: int,
+        output_height_pixels: int,
+        output_width_pixels: int,
+        add_sun_features: bool = False,
     ):
         """
 
@@ -100,15 +104,22 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 )
                 if xr_index == 0:  # Only for the first one
                     # Add in time features for each timestep
-                    time_image = _create_time_image(xr_center,
-                                                    time_dim="target_time_utc",
-                                                    output_height_pixels=self.output_height_pixels,
-                                                    output_width_pixels=self.output_width_pixels)
+                    time_image = _create_time_image(
+                        xr_center,
+                        time_dim="target_time_utc",
+                        output_height_pixels=self.output_height_pixels,
+                        output_width_pixels=self.output_width_pixels,
+                    )
                     contexts.append(time_image)
                     # Need to add sun features
                     if self.add_sun_features:
-                        sun_image = _create_sun_image(image_xr=xr_center, x_dim="x_osgb", y_dim="y_osgb", time_dim="target_time_utc",
-                                                      normalize=True)
+                        sun_image = _create_sun_image(
+                            image_xr=xr_center,
+                            x_dim="x_osgb",
+                            y_dim="y_osgb",
+                            time_dim="target_time_utc",
+                            normalize=True,
+                        )
                         contexts.append(sun_image)
                 xr_context = _resample_to_pixel_size(
                     xr_context, self.output_height_pixels, self.output_width_pixels
@@ -165,7 +176,7 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
         right, top = _osgb_to_geostationary(xx=right, yy=top)
         x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
         y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
-                bottom <= xr_data.y_geostationary
+            bottom <= xr_data.y_geostationary
         )
         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
     elif "x" in xr_data.coords:
@@ -223,7 +234,11 @@ def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output
     days = np.expand_dims(days, axis=[1, 2, 3])
     hours = np.expand_dims(hours, axis=[1, 2, 3])
 
-    tile_reps = (1, output_height_pixels, output_width_pixels)  # Has time dimension, so tile other ones by
+    tile_reps = (
+        1,
+        output_height_pixels,
+        output_width_pixels,
+    )  # Has time dimension, so tile other ones by
     sin_months = np.tile(np.sin(months), reps=tile_reps)
     cos_months = np.tile(np.cos(months), reps=tile_reps)
     sin_hours = np.tile(np.sin(hours), reps=tile_reps)
@@ -231,14 +246,14 @@ def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output
     sin_days = np.tile(np.sin(days), reps=tile_reps)
     cos_days = np.tile(np.cos(days), reps=tile_reps)
 
-    return np.concatenate([sin_months, cos_months, sin_days, cos_days, sin_hours, cos_hours], axis=1)
+    return np.concatenate(
+        [sin_months, cos_months, sin_days, cos_days, sin_hours, cos_hours], axis=1
+    )
 
 
 def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
     if "geostationary" in x_dim:
-        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
-            image_xr
-        )
+        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(image_xr)
     # Create empty image to use for the PV Systems, assumes image has x and y coordinates
     sun_image = np.zeros(
         (
@@ -276,7 +291,7 @@ def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
         sun_image[1][example_idx][:] = solpos["elevation"]
 
     # Flip back to normal ordering
-    sun_image = np.transpose(sun_image, [3,0,1,2])
+    sun_image = np.transpose(sun_image, [3, 0, 1, 2])
 
     # Normalize.
     if normalize:
