@@ -171,7 +171,6 @@ def test_metnet_production(
             nwp_datapipe,
             pv_datapipe,
         ],
-        #topo_datapipe],
         location_datapipe=location_datapipe5,
         center_width=500_000,
         center_height=1_000_000,
@@ -182,4 +181,6 @@ def test_metnet_production(
     )
 
     batch = next(iter(combined_datapipe))
+    print(batch.shape)
+    batch = next(iter(gsp_datapipe))
     print(batch.shape)

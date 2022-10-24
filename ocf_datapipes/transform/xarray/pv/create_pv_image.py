@@ -1,5 +1,5 @@
 """Convert point PV sites to image output"""
-from typing import List
+from typing import Union
 
 import numpy as np
 import xarray as xr
@@ -12,6 +12,7 @@ from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_an
 
 @functional_datapipe("create_pv_image")
 class CreatePVImageIterDataPipe(IterDataPipe):
+    """Create PV image from individual sites"""
     def __init__(
         self,
         source_datapipe: IterDataPipe,
@@ -28,6 +29,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             source_datapipe: Source datapipe of PV data
             image_datapipe: Datapipe emitting images to get the shape from, with coordinates
             normalize: Whether to normalize based off the image max, or leave raw data
+            image_dim: Dimension name for the x and y dimensions
         """
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
@@ -35,7 +37,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         self.x_dim = "x_" + image_dim
         self.y_dim = "y_" + image_dim
 
-    def __iter__(self):
+    def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
             if "geostationary" in self.x_dim:
                 _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
@@ -94,7 +96,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             yield pv_image
 
 
-def _create_data_array_from_image(pv_image, pv_systems_xr, image_xr):
+def _create_data_array_from_image(pv_image: np.ndarray, pv_systems_xr: Union[xr.Dataset, xr.DataArray], image_xr: Union[xr.Dataset, xr.DataArray]):
     data_array = xr.DataArray(
         data=pv_image,
         coords=(
