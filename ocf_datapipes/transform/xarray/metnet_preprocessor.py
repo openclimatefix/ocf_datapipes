@@ -89,14 +89,38 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 xr_context = _resample_to_pixel_size(
                     xr_context, self.output_height_pixels, self.output_width_pixels
                 )
+                # Use the t0, interpolate to 5min in the past data, but future data stays separate
+                # For data sources with future, just add empty inputs, no interpolation of the data, model
+                # should be able to figure it out
                 xr_center = xr_center.to_numpy()
                 xr_context = xr_context.to_numpy()
-                if len(xr_center.shape) == 5: # Includes a time dimension
-                    xr_center = np.reshape(xr_center, (-1, *xr_center.shape[2:]))
-                    xr_context = np.reshape(xr_context, (-1, *xr_context.shape[2:]))
+                # Want to concatenate by channel, then stack by time
+                # Each timestep should be separate, with the ones for the future having extra empty ones
+                # MetNet-2 concatenates along time axis until not enough then pads sthe rest
+                # As in, for NWP, it would be the last 3 hours concatenated to the last 15min of satellite
+                # And rest is padded
+                # End result is that there should be 13 timesteps for 1 hour of history as input + 48 for hourly future NWP
+                # 61 timesteps total, or 37 if only 24 hours of NWP
+                # Other option is just to append the future NWP to the history as well, to reduce the amount of timesteps
+                # needed, which is probably the best way going about it, 48 hour forecast would then only use
+                # 48 timesteps instead of 61, or 24 instead of 37
+                # Also simpler to implement, just padd ones to the longest of the time sequences then concatenate
+                if len(xr_center.shape) == 3: # Need to add channel dimension
+                    xr_center = np.expand_dims(xr_center, axis=1)
+                    xr_context = np.expand_dims(xr_context, axis=1)
                 centers.append(xr_center)
                 contexts.append(xr_context)
-            stacked_data = np.concatenate([*centers, *contexts], axis=0)
+            # Pad out time dimension to be the same, using the largest one
+            # All should have 4 dimensions at this point
+            for i in range(len(centers)):
+                centers[i] = np.pad(centers[i], pad_width=((0, np.max([c.shape[0] for c in centers]) - centers[i].shape[0]),
+                                                           (0,0), (0,0), (0,0)), mode='constant', constant_values=0.0)
+                contexts[i] = np.pad(contexts[i],
+                                    pad_width=((0, np.max([c.shape[0] for c in contexts]) - contexts[i].shape[0]),
+                                               (0, 0), (0, 0), (0, 0)), mode='constant', constant_values=0.0)
+            # Should be Time x Channels X Width X Height, concatenate along channels,
+            # then along time, so need to pad out empty tensor for future NWP ones
+            stacked_data = np.concatenate([*centers, *contexts], axis=1)
             yield stacked_data
 
 
@@ -119,7 +143,7 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
                 & (xr_data.x_geostationary <= right)
         )
         y_mask = (
-                (xr_data.y_geostationary <= top)
+                (xr_data.y_geostationary <= top) # Y is flipped
                 & (bottom <= xr_data.y_geostationary)
         )
         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
