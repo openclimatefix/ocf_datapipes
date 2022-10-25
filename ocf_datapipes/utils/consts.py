@@ -393,6 +393,7 @@ SAT_STD = {
     "WV_073": 106.8855172848904,
 }
 
+
 def _to_data_array(d):
     return xr.DataArray(
         [d[key] for key in SAT_VARIABLE_NAMES], coords={"channel": list(SAT_VARIABLE_NAMES)}

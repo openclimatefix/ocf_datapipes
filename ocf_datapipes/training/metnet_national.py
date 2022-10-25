@@ -38,7 +38,15 @@ from ocf_datapipes.transform.xarray import (
     PreProcessMetNet,
     ReprojectTopography,
 )
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey, SAT_MEAN_DA, SAT_STD_DA
+from ocf_datapipes.utils.consts import (
+    NWP_MEAN,
+    NWP_STD,
+    SAT_MEAN,
+    SAT_MEAN_DA,
+    SAT_STD,
+    SAT_STD_DA,
+    BatchKey,
+)
 
 logger = logging.getLogger("metnet_datapipe")
 
@@ -60,11 +68,11 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
     configuration: Configuration = next(iter(config_datapipe))
 
     # Check which modalities to use
-    use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != '' else False
-    use_pv = True if configuration.input_data.pv.pv_filename != '' else False
-    use_sat = True if configuration.input_data.satellite.satellite_zarr_path != '' else False
-    use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != '' else False
-    use_topo = True if configuration.input_data.topographic.topographic_filename != '' else False
+    use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != "" else False
+    use_pv = True if configuration.input_data.pv.pv_filename != "" else False
+    use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
+    use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
+    use_topo = True if configuration.input_data.topographic.topographic_filename != "" else False
 
     # Load GSP national data
     logger.debug("Opening GSP Data")
