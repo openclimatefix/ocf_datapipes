@@ -59,6 +59,13 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
     config_datapipe = OpenConfiguration(configuration_filename)
     configuration: Configuration = next(iter(config_datapipe))
 
+    # Check which modalities to use
+    use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != '' else False
+    use_pv = True if configuration.input_data.pv.pv_filename != '' else False
+    use_sat = True if configuration.input_data.satellite.satellite_zarr_path != '' else False
+    use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != '' else False
+    use_topo = True if configuration.input_data.topographic.topographic_filename != '' else False
+
     # Load GSP national data
     logger.debug("Opening GSP Data")
     gsp_datapipe = OpenGSPNational(
@@ -226,13 +233,18 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
     location_datapipe = LocationPicker(gsp_loc_datapipe, return_all_locations=True)
 
     # Now combine in the MetNet format
+    modalities = []
+    if use_nwp:
+        modalities.append(nwp_datapipe)
+    if use_hrv:
+        modalities.append(sat_hrv_datapipe)
+    if use_sat:
+        modalities.append(sat_datapipe)
+    if use_pv:
+        modalities.append(pv_datapipe)
+
     combined_datapipe = PreProcessMetNet(
-        [
-            nwp_datapipe,
-            sat_hrv_datapipe,
-            sat_datapipe,
-            pv_datapipe,
-        ],
+        modalities,
         location_datapipe=location_datapipe,
         center_width=500_000,
         center_height=1_000_000,
