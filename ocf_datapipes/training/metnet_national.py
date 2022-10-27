@@ -20,6 +20,7 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
+from ocf_datapipes.convert import ConvertGSPToNumpy
 from ocf_datapipes.select import (
     DropGSP,
     LocationPicker,
@@ -318,4 +319,4 @@ def metnet_national_datapipe(
     elif mode == "val":
         combined_datapipe = combined_datapipe.header(configuration.process.n_validation_batches)
 
-    return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
+    return combined_datapipe.zip(gsp_datapipe.convert_to_numpy())  # Makes (Inputs, Label) tuples
