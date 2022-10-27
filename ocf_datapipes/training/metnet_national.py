@@ -49,6 +49,7 @@ from ocf_datapipes.utils.consts import (
 )
 
 logger = logging.getLogger("metnet_datapipe")
+logger.setLevel(logging.DEBUG)
 
 
 def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
