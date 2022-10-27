@@ -10,6 +10,7 @@ xarray.set_options(keep_attrs=True)
 from datetime import timedelta
 
 from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.convert import ConvertGSPToNumpy
 from ocf_datapipes.load import (
     OpenConfiguration,
     OpenGSP,
@@ -20,7 +21,6 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.convert import ConvertGSPToNumpy
 from ocf_datapipes.select import (
     DropGSP,
     LocationPicker,
