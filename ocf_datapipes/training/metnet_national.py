@@ -319,4 +319,5 @@ def metnet_national_datapipe(
     elif mode == "val":
         combined_datapipe = combined_datapipe.header(configuration.process.n_validation_batches)
 
-    return combined_datapipe.zip(gsp_datapipe.convert_to_numpy())  # Makes (Inputs, Label) tuples
+    gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
+    return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
