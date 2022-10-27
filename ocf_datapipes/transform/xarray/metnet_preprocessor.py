@@ -103,7 +103,9 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     xr_center, self.output_height_pixels, self.output_width_pixels
                 )
                 if xr_index == 0:  # Only for the first one
-                    _extra_time_dim = "target_time_utc" if "target_time_utc" in xr_data.coords else "time_utc"
+                    _extra_time_dim = (
+                        "target_time_utc" if "target_time_utc" in xr_data.coords else "time_utc"
+                    )
                     # Add in time features for each timestep
                     time_image = _create_time_image(
                         xr_center,
