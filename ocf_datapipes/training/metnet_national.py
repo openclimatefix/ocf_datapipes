@@ -71,7 +71,7 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
 
     # Check which modalities to use
     use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != "" else False
-    use_pv = True if configuration.input_data.pv.pv_filename != "" else False
+    use_pv = True if configuration.input_data.pv.pv_files_groups[0].pv_filename != "" else False
     use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
     use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv}")
