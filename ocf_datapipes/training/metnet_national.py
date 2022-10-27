@@ -38,6 +38,7 @@ from ocf_datapipes.transform.xarray import (
     PreProcessMetNet,
     ReprojectTopography,
 )
+from ocf_datapipes.transform.numpy import AddLength
 from ocf_datapipes.utils.consts import (
     NWP_MEAN,
     NWP_STD,
@@ -184,7 +185,7 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
         sat_time_periods,
         sat_hrv_time_periods,
         pv_time_periods,
-    ) = overlapping_datapipe.fork(5, buffer_size=100)
+    ) = overlapping_datapipe.fork(5)
 
     # select time periods
     gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=gsp_time_periods)
@@ -283,5 +284,6 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
         output_height_pixels=256,
         add_sun_features=True,
     )
+    combined_datapipe = AddLength(combined_datapipe, configuration=configuration)
 
     return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
