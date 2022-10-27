@@ -9,8 +9,8 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.geospatial import (
-    load_geostationary_area_definition_and_transform_to_latlon,
     load_geostationary_area_definition_and_transform_osgb,
+    load_geostationary_area_definition_and_transform_to_latlon,
     osgb_to_lat_lon,
 )
 
