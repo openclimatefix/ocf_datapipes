@@ -9,7 +9,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.geospatial import (
-    load_geostationary_area_definition_and_transform_latlon,
+    load_geostationary_area_definition_and_transform_to_latlon,
     load_geostationary_area_definition_and_transform_osgb,
     osgb_to_lat_lon,
 )
@@ -104,7 +104,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 )
                 if xr_index == 0:  # Only for the first one
                     _extra_time_dim = (
-                        "target_time_utc" if "target_time_utc" in xr_data.coords else "time_utc"
+                        "target_time_utc" if "target_time_utc" in xr_data.dims else "time_utc"
                     )
                     # Add in time features for each timestep
                     time_image = _create_time_image(
@@ -118,8 +118,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     if self.add_sun_features:
                         sun_image = _create_sun_image(
                             image_xr=xr_center,
-                            x_dim="x_osgb" if "x_osgb" in xr_data.coords else "x_geostationary",
-                            y_dim="y_osgb" if "y_osgb" in xr_data.coords else "y_geostationary",
+                            x_dim="x_osgb" if "x_osgb" in xr_data.dims else "x_geostationary",
+                            y_dim="y_osgb" if "y_osgb" in xr_data.dims else "y_geostationary",
                             time_dim=_extra_time_dim,
                             normalize=True,
                         )
@@ -268,7 +268,7 @@ def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
         dtype=np.float32,
     )
     if "geostationary" in x_dim:
-        transform_to_latlon = load_geostationary_area_definition_and_transform_latlon(image_xr)
+        transform_to_latlon = load_geostationary_area_definition_and_transform_to_latlon(image_xr)
         lats, lons = transform_to_latlon(xx=image_xr[x_dim].values, yy=image_xr[y_dim].values)
     else:
         transform_to_latlon = osgb_to_lat_lon
