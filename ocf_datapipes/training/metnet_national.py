@@ -54,7 +54,7 @@ logger = logging.getLogger("metnet_datapipe")
 logger.setLevel(logging.DEBUG)
 
 
-def metnet_national_datapipe(configuration_filename: Union[Path, str], mode="train") -> IterDataPipe:
+def metnet_national_datapipe(configuration_filename: Union[Path, str], mode="train", use_sun: bool = True) -> IterDataPipe:
     """
     Make GSP national data pipe
 
@@ -289,7 +289,7 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str], mode="tra
         context_width=10_000_000,
         output_width_pixels=256,
         output_height_pixels=256,
-        add_sun_features=True,
+        add_sun_features=use_sun,
     )
     if mode == 'train':
         combined_datapipe = combined_datapipe.header(configuration.process.n_train_batches)
