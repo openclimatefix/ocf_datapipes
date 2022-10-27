@@ -103,10 +103,11 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     xr_center, self.output_height_pixels, self.output_width_pixels
                 )
                 if xr_index == 0:  # Only for the first one
+                    _extra_time_dim = "target_time_utc" if "target_time_utc" in xr_data.coords else "time_utc"
                     # Add in time features for each timestep
                     time_image = _create_time_image(
                         xr_center,
-                        time_dim="target_time_utc",
+                        time_dim=_extra_time_dim,
                         output_height_pixels=self.output_height_pixels,
                         output_width_pixels=self.output_width_pixels,
                     )
@@ -115,9 +116,9 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     if self.add_sun_features:
                         sun_image = _create_sun_image(
                             image_xr=xr_center,
-                            x_dim="x_osgb",
-                            y_dim="y_osgb",
-                            time_dim="target_time_utc",
+                            x_dim="x_osgb" if "x_osgb" in xr_data.coords else "x_geostationary",
+                            y_dim="y_osgb" if "y_osgb" in xr_data.coords else "y_geostationary",
+                            time_dim=_extra_time_dim,
                             normalize=True,
                         )
                         contexts.append(sun_image)
