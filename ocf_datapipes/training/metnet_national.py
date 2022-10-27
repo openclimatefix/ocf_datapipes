@@ -72,7 +72,6 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
     use_pv = True if configuration.input_data.pv.pv_filename != "" else False
     use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
     use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
-    use_topo = True if configuration.input_data.topographic.topographic_filename != "" else False
 
     # Load GSP national data
     logger.debug("Opening GSP Data")
