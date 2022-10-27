@@ -1,10 +1,9 @@
 """Convert GSP to Numpy Array"""
 import logging
 
+import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
