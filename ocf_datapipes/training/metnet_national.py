@@ -258,7 +258,7 @@ def metnet_national_datapipe(configuration_filename: Union[Path, str]) -> IterDa
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).create_pv_image(image_datapipe)
+        ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=100)
 
     location_datapipe = LocationPicker(gsp_loc_datapipe, return_all_locations=True)
 
