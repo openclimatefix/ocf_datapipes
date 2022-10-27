@@ -88,7 +88,8 @@ def metnet_national_datapipe(
     location_datapipe = LocationPicker(gsp_loc_datapipe)
 
     logger.debug("Add t0 idx and normalize")
-    def _normalize_gsp(x): # So it can be pickled
+
+    def _normalize_gsp(x):  # So it can be pickled
         return x / x.capacity_megawatt_power
 
     gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
