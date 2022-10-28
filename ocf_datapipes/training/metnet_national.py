@@ -55,6 +55,9 @@ logger = logging.getLogger("metnet_datapipe")
 logger.setLevel(logging.DEBUG)
 
 
+def normalize_gsp(x):  # So it can be pickled
+    return x / x.capacity_megawatt_power
+
 def metnet_national_datapipe(
     configuration_filename: Union[Path, str], mode="train", use_sun: bool = True
 ) -> IterDataPipe:
@@ -90,11 +93,9 @@ def metnet_national_datapipe(
 
     logger.debug("Add t0 idx and normalize")
 
-    def _normalize_gsp(x):  # So it can be pickled
-        return x / x.capacity_megawatt_power
 
     gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=_normalize_gsp)
+        gsp_datapipe.normalize(normalize_fn=normalize_gsp)
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
