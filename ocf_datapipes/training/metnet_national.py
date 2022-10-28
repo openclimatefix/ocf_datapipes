@@ -58,6 +58,7 @@ logger.setLevel(logging.DEBUG)
 def normalize_gsp(x):  # So it can be pickled
     return x / x.capacity_megawatt_power
 
+
 def metnet_national_datapipe(
     configuration_filename: Union[Path, str], mode="train", use_sun: bool = True
 ) -> IterDataPipe:
@@ -92,7 +93,6 @@ def metnet_national_datapipe(
     location_datapipe = LocationPicker(gsp_loc_datapipe)
 
     logger.debug("Add t0 idx and normalize")
-
 
     gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
         gsp_datapipe.normalize(normalize_fn=normalize_gsp)
