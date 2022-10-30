@@ -86,7 +86,9 @@ def metnet_national_datapipe(
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv}")
     # Load GSP national data
     logger.debug("Opening GSP Data")
-    gsp_datapipe, gsp_loc_datapipe = OpenGSPNational(gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path).fork(2)
+    gsp_datapipe, gsp_loc_datapipe = OpenGSPNational(
+        gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
+    ).fork(2)
 
     location_datapipe = LocationPicker(gsp_loc_datapipe)
 
