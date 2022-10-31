@@ -318,9 +318,9 @@ def metnet_national_datapipe(
         add_sun_features=use_sun,
     )
     if mode == "train":
-        combined_datapipe = combined_datapipe.header(configuration.process.n_train_batches).set_length(configuration.process.n_train_batches)
+        combined_datapipe = combined_datapipe
     elif mode == "val":
-        combined_datapipe = combined_datapipe.header(configuration.process.n_validation_batches).set_length(configuration.process.n_validation_batches)
+        combined_datapipe = combined_datapipe
 
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
