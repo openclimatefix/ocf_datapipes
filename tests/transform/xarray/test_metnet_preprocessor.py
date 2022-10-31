@@ -1,5 +1,5 @@
 from ocf_datapipes.select import DropGSP, LocationPicker
-from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime, PreProcessMetNet, CreatePVImage
+from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime, CreatePVImage, PreProcessMetNet
 
 
 def test_metnet_preprocess_no_sun(sat_datapipe, gsp_datapipe):
@@ -73,7 +73,10 @@ def test_metnet_preprocess_both_sat_other_order(sat_datapipe, sat_hrv_datapipe, 
     data = next(iter(datapipe))
     print(data.shape)
 
-def test_metnet_preprocess_both_sat_pv(sat_datapipe, sat_hrv_datapipe, gsp_datapipe, passiv_datapipe):
+
+def test_metnet_preprocess_both_sat_pv(
+    sat_datapipe, sat_hrv_datapipe, gsp_datapipe, passiv_datapipe
+):
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
     gsp_datapipe = LocationPicker(gsp_datapipe)
     sat_datapipe, image_datapipe = sat_datapipe.fork(2)
