@@ -1,7 +1,7 @@
 """Select time periods"""
+import datetime
 import logging
 from typing import Union
-import datetime
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
