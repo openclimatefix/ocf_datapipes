@@ -1,3 +1,4 @@
+import datetime
 import logging
 from pathlib import Path
 from typing import Union
@@ -28,6 +29,7 @@ from ocf_datapipes.select import (
     SelectLiveTimeSlice,
     SelectSpatialSliceMeters,
     SelectTimeSlice,
+    SelectTrainTestTimePeriod
 )
 from ocf_datapipes.transform.numpy import AddLength
 from ocf_datapipes.transform.xarray import (
@@ -60,7 +62,9 @@ def normalize_gsp(x):  # So it can be pickled
 
 
 def metnet_national_datapipe(
-    configuration_filename: Union[Path, str], mode="train", use_sun: bool = True
+    configuration_filename: Union[Path, str], mode="train", use_sun: bool = True,
+        start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
+        end_time: datetime.datetime = datetime.datetime(2023, 1, 1)
 ) -> IterDataPipe:
     """
     Make GSP national data pipe
@@ -70,6 +74,9 @@ def metnet_national_datapipe(
     Args:
         configuration_filename: the configruation filename for the pipe
         mode: One of 'train', 'val', or 'test'
+        use_sun: Whether to add sun features or not
+        start_time: Start time to select on
+        end_time: End time to select from
 
     Returns: datapipe
     """
@@ -86,7 +93,7 @@ def metnet_national_datapipe(
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv}")
     # Load GSP national data
     logger.debug("Opening GSP Data")
-    gsp_datapipe = OpenGSP(gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path)
+    gsp_datapipe = OpenGSP(gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path).select_train_test_time(start_time, end_time)
 
     gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2)
 
