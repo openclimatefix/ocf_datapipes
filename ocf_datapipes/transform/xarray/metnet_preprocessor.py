@@ -136,11 +136,12 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 contexts.append(xr_context)
             # Pad out time dimension to be the same, using the largest one
             # All should have 4 dimensions at this point
+            max_time_len = max(np.max([c.shape[0] for c in centers]), np.max([c.shape[0] for c in contexts]))
             for i in range(len(centers)):
                 centers[i] = np.pad(
                     centers[i],
                     pad_width=(
-                        (0, np.max([c.shape[0] for c in centers]) - centers[i].shape[0]),
+                        (0, max_time_len - centers[i].shape[0]),
                         (0, 0),
                         (0, 0),
                         (0, 0),
@@ -148,10 +149,11 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     mode="constant",
                     constant_values=0.0,
                 )
+            for i in range(len(contexts)):
                 contexts[i] = np.pad(
                     contexts[i],
                     pad_width=(
-                        (0, np.max([c.shape[0] for c in contexts]) - contexts[i].shape[0]),
+                        (0, max_time_len - contexts[i].shape[0]),
                         (0, 0),
                         (0, 0),
                         (0, 0),
