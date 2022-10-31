@@ -293,7 +293,7 @@ def metnet_national_datapipe(
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=100)
+        ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=1000)
 
     # Now combine in the MetNet format
     modalities = []
@@ -318,9 +318,9 @@ def metnet_national_datapipe(
         add_sun_features=use_sun,
     )
     if mode == "train":
-        combined_datapipe = combined_datapipe.header(configuration.process.n_train_batches)
+        combined_datapipe = combined_datapipe.header(configuration.process.n_train_batches).set_length(configuration.process.n_train_batches)
     elif mode == "val":
-        combined_datapipe = combined_datapipe.header(configuration.process.n_validation_batches)
+        combined_datapipe = combined_datapipe.header(configuration.process.n_validation_batches).set_length(configuration.process.n_validation_batches)
 
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
