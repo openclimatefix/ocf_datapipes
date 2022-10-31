@@ -87,5 +87,5 @@ def get_gsp_id_to_shape(
 
     # For the national forecast, GSP ID 0, we want the shape to be the
     # union of all the other shapes
-    gsp_id_to_shape = gsp_id_to_shape.concat(gsp_0).sort_index()
+    gsp_id_to_shape = pd.concat([gsp_id_to_shape, gsp_0]).sort_index()
     return gsp_id_to_shape
