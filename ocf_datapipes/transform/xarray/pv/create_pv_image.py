@@ -77,11 +77,11 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     pv_y = pv_system["y_osgb"]
                 # Quick check as search sorted doesn't give an error if it is not in the range
                 if pv_x < image_xr[self.x_dim][0].values or pv_x > image_xr[self.x_dim][-1].values:
-                    print("Failing on X")
+                    # print("Failing on X")
                     continue
                 # Y Coordinates are in reverse for satellite data
                 if pv_y > image_xr[self.y_dim][0].values or pv_y < image_xr[self.y_dim][-1].values:
-                    print("Failing on Y")
+                    # print("Failing on Y")
                     continue
                 if "geostationary" in self.x_dim:
                     x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
