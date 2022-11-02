@@ -8,7 +8,9 @@ def test_select_hrv(sat_hrv_datapipe):
     time_len = len(next(iter(sat_hrv_datapipe)).time_utc.values)
     t0_datapipe = SelectLiveT0Time(sat_hrv_datapipe)
     sat_hrv_datapipe = SelectLiveTimeSlice(
-        sat_hrv_datapipe, t0_datapipe=t0_datapipe, history_duration=timedelta(hours=1),
+        sat_hrv_datapipe,
+        t0_datapipe=t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     data = next(iter(sat_hrv_datapipe))
     assert len(data.time_utc.values) == 13
@@ -19,7 +21,9 @@ def test_select_gsp(gsp_datapipe):
     time_len = len(next(iter(gsp_datapipe)).time_utc.values)
     t0_datapipe = SelectLiveT0Time(gsp_datapipe)
     gsp_datapipe = SelectLiveTimeSlice(
-        gsp_datapipe, t0_datapipe=t0_datapipe, history_duration=timedelta(hours=2),
+        gsp_datapipe,
+        t0_datapipe=t0_datapipe,
+        history_duration=timedelta(hours=2),
     )
     data = next(iter(gsp_datapipe))
     assert len(data.time_utc.values) == 5
@@ -43,7 +47,9 @@ def test_select_passiv(passiv_datapipe):
     time_len = len(next(iter(passiv_datapipe)).time_utc.values)
     t0_datapipe = SelectLiveT0Time(passiv_datapipe)
     passiv_datapipe = SelectLiveTimeSlice(
-        passiv_datapipe, t0_datapipe=t0_datapipe, history_duration=timedelta(hours=1),
+        passiv_datapipe,
+        t0_datapipe=t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     data = next(iter(passiv_datapipe))
     assert len(data.time_utc.values) == 13
@@ -54,7 +60,9 @@ def test_select_pvoutput(pvoutput_datapipe):
     time_len = len(next(iter(pvoutput_datapipe)).time_utc.values)
     t0_datapipe = SelectLiveT0Time(pvoutput_datapipe, dim_name="time_utc")
     pvoutput_datapipe = SelectLiveTimeSlice(
-        pvoutput_datapipe, t0_datapipe=t0_datapipe, history_duration=timedelta(hours=1),
+        pvoutput_datapipe,
+        t0_datapipe=t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     data = next(iter(pvoutput_datapipe))
     assert len(data.time_utc.values) == 13
