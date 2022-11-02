@@ -86,7 +86,6 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             centers = []
             contexts = []
             for xr_index, xr_data in enumerate(xr_datas):
-                print(f"Index: {xr_index} Data: {xr_data}")
                 xr_context: xr.Dataset = _get_spatial_crop(
                     xr_data,
                     location=location,
@@ -207,7 +206,6 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
 
 def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     if "x_geostationary" in xr_data.dims:
-        print("Use Geo")
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
         print(xr_data["x_geostationary"])
