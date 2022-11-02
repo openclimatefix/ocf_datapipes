@@ -65,10 +65,10 @@ def metnet_national_datapipe(
     configuration_filename: Union[Path, str],
     mode="train",
     use_sun: bool = True,
-        use_nwp: bool = True,
-        use_sat: bool = True,
-        use_hrv: bool = True,
-        use_pv: bool = True,
+    use_nwp: bool = True,
+    use_sat: bool = True,
+    use_hrv: bool = True,
+    use_pv: bool = True,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
@@ -144,7 +144,7 @@ def metnet_national_datapipe(
         )
 
         nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(
-            sample_period_duration=timedelta(hours=3), # Init times are 3 hours apart
+            sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
             time_dim="init_time_utc",
