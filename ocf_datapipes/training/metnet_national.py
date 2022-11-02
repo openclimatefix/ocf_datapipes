@@ -104,13 +104,11 @@ def metnet_national_datapipe(
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun}")
     # Load GSP national data
     logger.debug("Opening GSP Data")
-    gsp_datapipe = OpenGSP(
+    gsp_datapipe, gsp_loc_datapipe = OpenGSPNational(
         gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
-    ).select_train_test_time(start_time, end_time)
+    ).select_train_test_time(start_time, end_time).fork(2)
 
-    gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2)
-
-    location_datapipe = LocationPicker(gsp_loc_datapipe)
+    #gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2)
 
     logger.debug("Add t0 idx and normalize")
 
@@ -326,7 +324,7 @@ def metnet_national_datapipe(
 
     combined_datapipe = PreProcessMetNet(
         modalities,
-        location_datapipe=location_datapipe,
+        location_datapipe=None,
         center_width=500_000,
         center_height=1_000_000,
         context_height=10_000_000,
