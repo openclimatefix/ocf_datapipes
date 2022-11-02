@@ -15,11 +15,7 @@ from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 class PVFillNightNansIterDataPipe(IterDataPipe):
     """Fill nighttime nans with zeros"""
 
-    def __init__(
-        self,
-        source_datapipe: IterDataPipe,
-        elevation_limit:int = 5
-    ):
+    def __init__(self, source_datapipe: IterDataPipe, elevation_limit: int = 5):
         """
         Fill nighttime nans with zeros
 
@@ -29,7 +25,7 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
                 This is defaulted to to 5.
         """
         self.source_datapipe = source_datapipe
-        self.elevation_limit=elevation_limit
+        self.elevation_limit = elevation_limit
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Run iter"""
