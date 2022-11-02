@@ -1,9 +1,8 @@
 """Fill nighttime PV with NaNs"""
 
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
-import pandas as pd
 import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
