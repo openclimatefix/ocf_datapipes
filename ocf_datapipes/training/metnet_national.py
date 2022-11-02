@@ -92,10 +92,14 @@ def metnet_national_datapipe(
     configuration: Configuration = next(iter(config_datapipe))
 
     # Check which modalities to use
-    use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != "" else False
-    use_pv = True if configuration.input_data.pv.pv_files_groups[0].pv_filename != "" else False
-    use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
-    use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
+    if use_nwp:
+        use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != "" else False
+    if use_pv:
+        use_pv = True if configuration.input_data.pv.pv_files_groups[0].pv_filename != "" else False
+    if use_sat:
+        use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
+    if use_hrv:
+        use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv}")
     # Load GSP national data
     logger.debug("Opening GSP Data")
