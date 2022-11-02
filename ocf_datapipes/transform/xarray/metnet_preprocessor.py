@@ -99,7 +99,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     roi_width_meters=self.center_width,
                     roi_height_meters=self.center_height,
                 )
-                print(f"Index: {xr_index} Data Center: {xr_center}")
+                print(f"Index: {xr_index} Data Center: {xr_center['x_geostationary']}")
                 # Resamples to the same number of pixels for both center and contexts
                 xr_center = _resample_to_pixel_size(
                     xr_center, self.output_height_pixels, self.output_width_pixels
