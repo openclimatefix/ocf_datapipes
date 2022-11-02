@@ -2,12 +2,13 @@
 
 from typing import Optional, Union
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-import pvlib
+
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 
 
@@ -45,7 +46,7 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
                     # nrel_c is probably fastest but requires C code to be manually compiled:
                     # https://midcdmz.nrel.gov/spa/
                 )
-                elevation[:,example_idx] = solpos["elevation"]
+                elevation[:, example_idx] = solpos["elevation"]
 
             # get maks data for nighttime and nans
             night_time_mask = elevation < 5.0
