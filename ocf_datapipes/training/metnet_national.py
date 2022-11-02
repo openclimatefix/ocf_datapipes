@@ -63,7 +63,6 @@ def normalize_gsp(x):  # So it can be pickled
 
 def metnet_national_datapipe(
     configuration_filename: Union[Path, str],
-    mode="train",
     use_sun: bool = True,
     use_nwp: bool = True,
     use_sat: bool = True,
@@ -334,10 +333,6 @@ def metnet_national_datapipe(
         output_height_pixels=256,
         add_sun_features=use_sun,
     )
-    if mode == "train":
-        combined_datapipe = combined_datapipe
-    elif mode == "val":
-        combined_datapipe = combined_datapipe
 
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
