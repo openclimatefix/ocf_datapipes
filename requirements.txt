@@ -1,3 +1,5 @@
+torch==1.12.1
+torchdata==0.4.1
 cartopy==0.19.0.post1
 torch
 xarray
