@@ -26,4 +26,4 @@ class ConvertGSPToNumpyIterDataPipe(IterDataPipe):
         """Convert from Xarray to Numpy array"""
         logger.debug("Converting GSP to numpy")
         for xr_data in self.source_datapipe:
-            yield xr_data["capacity_megawatt_power"].values
+            yield xr_data["gsp_pv_power_mw"].values / xr_data["capacity_megawatt_power"].values
