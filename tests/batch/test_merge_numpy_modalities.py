@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+import pytest
+
 from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
 from ocf_datapipes.convert import (
     ConvertGSPToNumpyBatch,
@@ -9,7 +11,7 @@ from ocf_datapipes.convert import (
 )
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration
 
-
+@pytest.mark.skip()
 def test_merge_modalities(sat_hrv_datapipe, nwp_datapipe, gsp_datapipe, passiv_datapipe):
     batch_size = 4
 
