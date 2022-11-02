@@ -23,4 +23,4 @@ pyproj
 pyresample
 fastparquet
 scipy
-pytest<=7.2
+pytest<7.2
