@@ -13,15 +13,22 @@ from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 
 @functional_datapipe("pv_fill_night_nans")
 class PVFillNightNansIterDataPipe(IterDataPipe):
-    """Compute rolling mean of PV power."""
+    """Fill nighttime nans with zeros"""
 
     def __init__(
         self,
         source_datapipe: IterDataPipe,
     ):
+        """
+        Fill nighttime nans with zeros
+
+        Args:
+            source_datapipe: the main data pipe
+        """
         self.source_datapipe = source_datapipe
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        """ Run iter """
         for xr_data in self.source_datapipe:
             lats, lons = osgb_to_lat_lon(x=xr_data.x_osgb, y=xr_data.y_osgb)
 
