@@ -98,7 +98,9 @@ def metnet_national_datapipe(
     if use_sat:
         use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
     if use_hrv:
-        use_hrv = True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
+        use_hrv = (
+            True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
+        )
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv}")
     # Load GSP national data
     logger.debug("Opening GSP Data")

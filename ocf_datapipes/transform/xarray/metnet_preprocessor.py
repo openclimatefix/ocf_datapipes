@@ -142,24 +142,14 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             for i in range(len(centers)):
                 centers[i] = np.pad(
                     centers[i],
-                    pad_width=(
-                        (0, max_time_len - centers[i].shape[0]),
-                        (0, 0),
-                        (0, 0),
-                        (0, 0),
-                    ),
+                    pad_width=((0, max_time_len - centers[i].shape[0]), (0, 0), (0, 0), (0, 0),),
                     mode="constant",
                     constant_values=0.0,
                 )
             for i in range(len(contexts)):
                 contexts[i] = np.pad(
                     contexts[i],
-                    pad_width=(
-                        (0, max_time_len - contexts[i].shape[0]),
-                        (0, 0),
-                        (0, 0),
-                        (0, 0),
-                    ),
+                    pad_width=((0, max_time_len - contexts[i].shape[0]), (0, 0), (0, 0), (0, 0),),
                     mode="constant",
                     constant_values=0.0,
                 )
