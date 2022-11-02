@@ -56,4 +56,5 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 if "pv_system_id" in xr_dataset.coords.keys():
                     location.id = int(xr_dataset["pv_system_id"][location_idx].values)
                     logger.debug(f"Have selected location.id {location.id}")
+                print(location)
                 yield location
