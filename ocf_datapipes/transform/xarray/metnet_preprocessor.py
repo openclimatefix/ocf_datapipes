@@ -203,10 +203,10 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
 
 
 def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
-    if "x_geostationary" in xr_data.coords:
+    if "x_geostationary" in xr_data.dims:
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
-    elif "x" in xr_data.coords:
+    elif "x" in xr_data.dims:
         x_coords = xr_data["x"].values
         y_coords = xr_data["y"].values
     else:
@@ -215,11 +215,11 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     # Resample down to the number of pixels wanted
     x_coords = np.linspace(x_coords[0], x_coords[-1], num=width_pixels)
     y_coords = np.linspace(y_coords[0], y_coords[-1], num=height_pixels)
-    if "x_geostationary" in xr_data.coords:
+    if "x_geostationary" in xr_data.dims:
         xr_data = xr_data.interp(
             x_geostationary=x_coords, y_geostationary=y_coords, method="linear"
         )
-    elif "x" in xr_data.coords:
+    elif "x" in xr_data.dims:
         xr_data = xr_data.interp(x=x_coords, y=y_coords, method="linear")
     else:
         xr_data = xr_data.interp(x_osgb=x_coords, y_osgb=y_coords, method="linear")
