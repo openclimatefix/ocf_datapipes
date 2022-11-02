@@ -99,10 +99,6 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     roi_width_meters=self.center_width,
                     roi_height_meters=self.center_height,
                 )
-                if len(xr_context['x_geostationary'].values) == 0:
-                    print(xr_data)
-                    print(xr_center)
-                    print(xr_context)
                 # Resamples to the same number of pixels for both center and contexts
                 xr_center = _resample_to_pixel_size(
                     xr_center, self.output_height_pixels, self.output_width_pixels
@@ -208,8 +204,6 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
 
 
 def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
-    if len(xr_data['x_geostationary'].values) == 0:
-        print(xr_data)
     if "x_geostationary" in xr_data.dims:
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
