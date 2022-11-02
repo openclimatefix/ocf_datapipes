@@ -2,6 +2,9 @@
 from ocf_datapipes.transform.xarray.pv.ensure_n_pv_systems_per_example import (
     EnsureNPVSystemsPerExampleIterDataPipe as EnsureNPVSystemsPerExample,
 )
+from ocf_datapipes.transform.xarray.pv.pv_fill_nighttime_nans_with_zeros import (
+    PVFillNightNansIterDataPipe as PVFillNightNans,
+)
 from ocf_datapipes.transform.xarray.pv.pv_power_rolling_window import (
     PVPowerRollingWindowIterDataPipe as PVPowerRollingWindow,
 )
