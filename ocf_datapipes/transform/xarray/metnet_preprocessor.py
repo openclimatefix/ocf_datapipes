@@ -86,18 +86,21 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             centers = []
             contexts = []
             for xr_index, xr_data in enumerate(xr_datas):
+                print(f"Index: {xr_index} Data: {xr_data}")
                 xr_context: xr.Dataset = _get_spatial_crop(
                     xr_data,
                     location=location,
                     roi_width_meters=self.context_width,
                     roi_height_meters=self.context_height,
                 )
+
                 xr_center: xr.Dataset = _get_spatial_crop(
                     xr_data,
                     location=location,
                     roi_width_meters=self.center_width,
                     roi_height_meters=self.center_height,
                 )
+                print(f"Index: {xr_index} Data Center: {xr_center}")
                 # Resamples to the same number of pixels for both center and contexts
                 xr_center = _resample_to_pixel_size(
                     xr_center, self.output_height_pixels, self.output_width_pixels
