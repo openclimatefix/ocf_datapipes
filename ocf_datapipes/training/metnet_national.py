@@ -65,6 +65,10 @@ def metnet_national_datapipe(
     configuration_filename: Union[Path, str],
     mode="train",
     use_sun: bool = True,
+        use_nwp: bool = True,
+        use_sat: bool = True,
+        use_hrv: bool = True,
+        use_pv: bool = True,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
@@ -106,7 +110,7 @@ def metnet_national_datapipe(
     logger.debug("Add t0 idx and normalize")
 
     gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=normalize_gsp)
+        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
@@ -318,10 +322,10 @@ def metnet_national_datapipe(
     combined_datapipe = PreProcessMetNet(
         modalities,
         location_datapipe=location_datapipe,
-        center_width=500_000,
-        center_height=1_000_000,
-        context_height=10_000_000,
-        context_width=10_000_000,
+        center_width=5_000_000,
+        center_height=10_000_000,
+        context_height=100_000_000,
+        context_width=100_000_000,
         output_width_pixels=256,
         output_height_pixels=256,
         add_sun_features=use_sun,
