@@ -18,14 +18,18 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
     def __init__(
         self,
         source_datapipe: IterDataPipe,
+        elevation_limit:int = 5
     ):
         """
         Fill nighttime nans with zeros
 
         Args:
             source_datapipe: the main data pipe
+            elevation_limit: below this limit, all nans will be filled wiht zero.
+                This is defaulted to to 5.
         """
         self.source_datapipe = source_datapipe
+        self.elevation_limit=elevation_limit
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Run iter"""
@@ -48,7 +52,7 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
                 elevation[:, example_idx] = solpos["elevation"]
 
             # get maks data for nighttime and nans
-            night_time_mask = elevation < 5.0
+            night_time_mask = elevation < self.elevation_limit
             nan_mask = np.isnan(xr_data.data)
             total_mask = night_time_mask & nan_mask
 
