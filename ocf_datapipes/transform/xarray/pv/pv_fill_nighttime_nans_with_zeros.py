@@ -29,7 +29,7 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        """ Run iter """
+        """Run iter"""
         for xr_data in self.source_datapipe:
             lats, lons = osgb_to_lat_lon(x=xr_data.x_osgb, y=xr_data.y_osgb)
 
