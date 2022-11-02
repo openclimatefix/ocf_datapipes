@@ -13,8 +13,6 @@ from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_to_latlon,
     osgb_to_lat_lon,
 )
-from torchdata.datapipes.iter import IterableWrapper
-from ocf_datapipes.utils.consts import Location
 
 
 ELEVATION_MEAN = 37.4
@@ -83,11 +81,6 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self.output_width_pixels = output_width_pixels
         self.add_sun_features = add_sun_features
 
-        if self.location_datapipe is None:
-            def location_generator():
-                yield Location(x=358841.90625, y=468599.8125)
-            ## Give out the center of the GSPs, which is x=358841.90625 y=468599.8125
-            self.location_datapipe = IterableWrapper(location_generator())
     def __iter__(self) -> np.ndarray:
         for xr_datas, location in Zipper(Zipper(*self.source_datapipes), self.location_datapipe):
             # TODO Use the Lat/Long coordinates of the center array for the lat/lon stuff

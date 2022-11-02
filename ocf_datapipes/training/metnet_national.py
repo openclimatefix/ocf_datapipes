@@ -110,6 +110,8 @@ def metnet_national_datapipe(
 
     gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2)
 
+    location_datapipe = LocationPicker(gsp_loc_datapipe)
+
     logger.debug("Add t0 idx and normalize")
 
     gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
@@ -324,7 +326,7 @@ def metnet_national_datapipe(
 
     combined_datapipe = PreProcessMetNet(
         modalities,
-        location_datapipe=None,
+        location_datapipe=location_datapipe,
         center_width=500_000,
         center_height=1_000_000,
         context_height=10_000_000,
