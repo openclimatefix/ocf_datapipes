@@ -207,6 +207,8 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
 
 
 def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
+    if len(xr_data['x_geostationary'].values) == 0:
+        print(xr_data)
     if "x_geostationary" in xr_data.dims:
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
