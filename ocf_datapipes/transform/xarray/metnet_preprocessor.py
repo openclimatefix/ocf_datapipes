@@ -99,7 +99,9 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     roi_width_meters=self.center_width,
                     roi_height_meters=self.center_height,
                 )
-                print(f"Index: {xr_index} Data Center: {xr_center['x_geostationary']}")
+                if len(xr_center['x_geostationary'].values) == 0:
+                    print(xr_data)
+                    print(xr_center)
                 # Resamples to the same number of pixels for both center and contexts
                 xr_center = _resample_to_pixel_size(
                     xr_center, self.output_height_pixels, self.output_width_pixels
@@ -208,8 +210,6 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     if "x_geostationary" in xr_data.dims:
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
-        print(xr_data["x_geostationary"])
-        print(y_coords)
     elif "x" in xr_data.dims:
         x_coords = xr_data["x"].values
         y_coords = xr_data["y"].values
@@ -217,7 +217,6 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
         x_coords = xr_data["x_osgb"].values
         y_coords = xr_data["y_osgb"].values
     # Resample down to the number of pixels wanted
-    print(f"X Coords: {x_coords}")
     x_coords = np.linspace(x_coords[0], x_coords[-1], num=width_pixels)
     y_coords = np.linspace(y_coords[0], y_coords[-1], num=height_pixels)
     if "x_geostationary" in xr_data.dims:
