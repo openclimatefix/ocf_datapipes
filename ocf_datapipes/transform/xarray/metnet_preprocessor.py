@@ -210,6 +210,8 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
         print("Use Geo")
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
+        print(xr_data["x_geostationary"])
+        print(y_coords)
     elif "x" in xr_data.dims:
         x_coords = xr_data["x"].values
         y_coords = xr_data["y"].values
