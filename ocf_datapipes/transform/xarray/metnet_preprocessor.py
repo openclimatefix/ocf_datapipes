@@ -99,9 +99,10 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                     roi_width_meters=self.center_width,
                     roi_height_meters=self.center_height,
                 )
-                if len(xr_center['x_geostationary'].values) == 0:
+                if len(xr_context['x_geostationary'].values) == 0:
                     print(xr_data)
                     print(xr_center)
+                    print(xr_context)
                 # Resamples to the same number of pixels for both center and contexts
                 xr_center = _resample_to_pixel_size(
                     xr_center, self.output_height_pixels, self.output_width_pixels
