@@ -26,7 +26,8 @@ class SelectTrainTestTimePeriodsIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of Xarray objects
-            time_periods: Time periods to select
+            start_time: Start time to select
+            end_time: End time to select
             dim_name: Dimension name for time
         """
         self.source_datapipe = source_datapipe
