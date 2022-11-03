@@ -2,11 +2,10 @@
 from typing import Union
 
 import numpy as np
-import pandas as pd
 import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
@@ -39,7 +38,6 @@ class CreateSunImageIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Source datapipe of PV data
-            image_datapipe: Datapipe emitting images to get the shape from, with coordinates
             normalize: Whether to normalize based off the image max, or leave raw data
             image_dim: Dimension name for the x and y dimensions
             time_dim: Time dimension name
@@ -52,10 +50,6 @@ class CreateSunImageIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray:
         for image_xr in self.source_datapipe:
-            if "geostationary" in self.x_dim:
-                _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
-                    image_xr
-                )
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
             sun_image = np.zeros(
                 (
@@ -89,9 +83,12 @@ class CreateSunImageIterDataPipe(IterDataPipe):
                         latitude=lat,
                         longitude=lon,
                         # Which `method` to use?
-                        # pyephem seemed to be a good mix between speed and ease but causes segfaults!
-                        # nrel_numba doesn't work when using multiple worker processes.
-                        # nrel_c is probably fastest but requires C code to be manually compiled:
+                        # pyephem seemed to be a good mix between speed
+                        # and ease but causes segfaults!
+                        # nrel_numba doesn't work when using
+                        # multiple worker processes.
+                        # nrel_c is probably fastest but
+                        # requires C code to be manually compiled:
                         # https://midcdmz.nrel.gov/spa/
                     )
                     sun_image[:, 0][y_index][x_index] = solpos["azimuth"]

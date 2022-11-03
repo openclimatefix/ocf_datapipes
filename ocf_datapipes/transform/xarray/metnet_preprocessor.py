@@ -69,7 +69,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             center_height: Center height of the area of interest
             output_height_pixels: Output height in pixels
             output_width_pixels: Output width in pixels
-            add_sun_features: Whether to calculate and add Sun elevation and azimuth for each center pixel
+            add_sun_features: Whether to calculate and
+            add Sun elevation and azimuth for each center pixel
         """
         self.source_datapipes = source_datapipes
         self.location_datapipe = location_datapipe
@@ -251,8 +252,6 @@ def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output
 
 
 def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
-    if "geostationary" in x_dim:
-        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(image_xr)
     # Create empty image to use for the PV Systems, assumes image has x and y coordinates
     sun_image = np.zeros(
         (
