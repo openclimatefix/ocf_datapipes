@@ -33,10 +33,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         Datapipe to load PV from NetCDF
 
         Args:
-            pv_power_filename: Filename of the power file
-            pv_metadata_filename: Filename of the metadata file
-            start_datetime: start datetime that the dataset is limited to
-            end_datetime: end datetime that the dataset is limited to
+            pv: pv configuration
         """
         super().__init__()
         self.pv = pv
