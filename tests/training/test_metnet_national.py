@@ -1,6 +1,6 @@
 import os
 
-import torch
+import numpy as np
 
 import ocf_datapipes
 from ocf_datapipes.training.metnet_national import metnet_national_datapipe
@@ -11,5 +11,5 @@ def test_metnet_datapipe():
     gsp_datapipe = metnet_national_datapipe(filename, use_nwp=False)
 
     batch = next(iter(gsp_datapipe))
-    assert all(torch.isfinite(batch[0]))
-    assert all(torch.isfinite(batch[1]))
+    assert all(np.isfinite(batch[0]))
+    assert all(np.isfinite(batch[1]))
