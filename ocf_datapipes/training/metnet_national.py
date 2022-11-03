@@ -113,7 +113,9 @@ def metnet_national_datapipe(
     # Load NWP data
     if use_nwp:
         logger.debug("Opening NWP Data")
-        nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+        nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path).select_channels(
+            configuration.input_data.nwp.nwp_channels
+        )
 
         (
             nwp_datapipe,
@@ -135,7 +137,9 @@ def metnet_national_datapipe(
 
     if use_sat:
         logger.debug("Opening Satellite Data")
-        sat_datapipe = OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
+        sat_datapipe = OpenSatellite(
+            configuration.input_data.satellite.satellite_zarr_path
+        ).select_channels(configuration.input_data.satellite.satellite_channels)
         (
             sat_datapipe,
             sat_time_periods_datapipe,

@@ -107,8 +107,7 @@ def nwp_pv_datapipe(
     )
     # find joint overlapping timer periods
     overlapping_datapipe = pv_time_periods_datapipe.select_overlapping_time_slice(
-        secondary_datapipes=[nwp_time_periods_datapipe],
-        location_datapipe=location_datapipe3,
+        secondary_datapipes=[nwp_time_periods_datapipe], location_datapipe=location_datapipe3,
     )
 
     # select time periods

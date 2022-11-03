@@ -14,3 +14,4 @@ from .select_t0_time import SelectT0TimeIterDataPipe as SelectT0Time
 from .select_time_periods import SelectTimePeriodsIterDataPipe as SelectTimePeriods
 from .select_time_slice import SelectTimeSliceIterDataPipe as SelectTimeSlice
 from .select_train_test import SelectTrainTestTimePeriodsIterDataPipe as SelectTrainTestTimePeriod
+from .select_channels import SelectChannelsIterDataPipe as SelectChannels

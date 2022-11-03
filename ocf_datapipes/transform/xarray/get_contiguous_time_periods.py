@@ -78,9 +78,7 @@ def get_contiguous_t0_time_periods(
 
 
 def get_contiguous_time_periods(
-    datetimes: pd.DatetimeIndex,
-    min_seq_length: int,
-    max_gap_duration: timedelta,
+    datetimes: pd.DatetimeIndex, min_seq_length: int, max_gap_duration: timedelta,
 ) -> pd.DataFrame:
     """Return a pd.DataFrame where each row records the boundary of a contiguous time period.
 
