@@ -1,5 +1,5 @@
-from ocf_datapipes.load import OpenPVFromNetCDF
 from ocf_datapipes.config.model import PV, PVFiles
+from ocf_datapipes.load import OpenPVFromNetCDF
 
 
 def test_remove_nans_all_pv_systems(pv_parquet_file):

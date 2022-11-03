@@ -110,8 +110,9 @@ def pvoutput_datapipe():
     )
 
     pv = PV(
-            start_datetime=datetime(2018, 1, 1, tzinfo=timezone.utc),
-            end_datetime=datetime(2023, 1, 1, tzinfo=timezone.utc),)
+        start_datetime=datetime(2018, 1, 1, tzinfo=timezone.utc),
+        end_datetime=datetime(2023, 1, 1, tzinfo=timezone.utc),
+    )
     pv_file = PVFiles(
         pv_filename=str(filename),
         pv_metadata_filename=str(filename_metadata),
@@ -342,7 +343,11 @@ def gsp_zarr_file():
 
     generation_mw = xr.DataArray(
         abs(  # to make sure average is about 100
-            np.random.uniform(0, 200, size=(7 * 24, len(ids)),)
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, len(ids)),
+            )
         ),
         coords=coords,
         name="generation_mw",
@@ -350,7 +355,11 @@ def gsp_zarr_file():
 
     installedcapacity_mwp = xr.DataArray(
         abs(  # to make sure average is about 100
-            np.random.uniform(0, 200, size=(7 * 24, len(ids)),)
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, len(ids)),
+            )
         ),
         coords=coords,
         name="installedcapacity_mwp",
@@ -395,7 +404,11 @@ def nwp_data_with_id_filename():
 
     nwp = xr.DataArray(
         abs(  # to make sure average is about 100
-            np.random.uniform(0, 200, size=(7 * 24, 4, time_steps, len(ids)),)
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, 4, time_steps, len(ids)),
+            )
         ),
         coords=coords,
         name="data",
@@ -426,7 +439,9 @@ def configuration_with_pv_parquet(pv_parquet_file):
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
-        configuration.input_data.pv.pv_files_groups = [configuration.input_data.pv.pv_files_groups[0]]
+        configuration.input_data.pv.pv_files_groups = [
+            configuration.input_data.pv.pv_files_groups[0]
+        ]
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
@@ -443,7 +458,9 @@ def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_file
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
-        configuration.input_data.pv.pv_files_groups = [configuration.input_data.pv.pv_files_groups[0]]
+        configuration.input_data.pv.pv_files_groups = [
+            configuration.input_data.pv.pv_files_groups[0]
+        ]
         configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)

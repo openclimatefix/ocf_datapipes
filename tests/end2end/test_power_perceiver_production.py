@@ -127,15 +127,21 @@ def test_power_perceiver_production(
     )
     gsp_t0_datapipe = SelectLiveT0Time(gsp_t0_datapipe)
     gsp_datapipe = SelectLiveTimeSlice(
-        gsp_datapipe, t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2),
+        gsp_datapipe,
+        t0_datapipe=gsp_t0_datapipe,
+        history_duration=timedelta(hours=2),
     )
     sat_t0_datapipe = SelectLiveT0Time(sat_t0_datapipe)
     sat_datapipe = SelectLiveTimeSlice(
-        sat_datapipe, t0_datapipe=sat_t0_datapipe, history_duration=timedelta(hours=1),
+        sat_datapipe,
+        t0_datapipe=sat_t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     passiv_t0_datapipe = SelectLiveT0Time(pv_t0_datapipe)
     pv_datapipe = SelectLiveTimeSlice(
-        pv_datapipe, t0_datapipe=passiv_t0_datapipe, history_duration=timedelta(hours=1),
+        pv_datapipe,
+        t0_datapipe=passiv_t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     gsp_datapipe = SelectSpatialSliceMeters(
         gsp_datapipe,
@@ -303,14 +309,16 @@ def test_power_perceiver_production_functional(
         )
         .convert_gsp_to_numpy_batch()
         .extend_timesteps_to_future(
-            forecast_duration=timedelta(hours=8), sample_period_duration=timedelta(minutes=30),
+            forecast_duration=timedelta(hours=8),
+            sample_period_duration=timedelta(minutes=30),
         )
         .add_zeroed_future_data(key=BatchKey.gsp, time_key=BatchKey.gsp_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=4)
     )
     sat_hrv_datapipe = (
         sat_hrv_datapipe.select_live_time_slice(
-            t0_datapipe=sat_t0_datapipe, history_duration=timedelta(hours=1),
+            t0_datapipe=sat_t0_datapipe,
+            history_duration=timedelta(hours=1),
         )
         .normalize(mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4)
         .map(
@@ -318,17 +326,20 @@ def test_power_perceiver_production_functional(
         )  # Interplate to 5 minutes incase its 15 minutes
         .convert_satellite_to_numpy_batch(is_hrv=True)
         .extend_timesteps_to_future(
-            forecast_duration=timedelta(hours=2), sample_period_duration=timedelta(minutes=5),
+            forecast_duration=timedelta(hours=2),
+            sample_period_duration=timedelta(minutes=5),
         )
         .merge_numpy_examples_to_batch(n_examples_per_batch=4)
     )
     passiv_datapipe = (
         passiv_datapipe.select_live_time_slice(
-            t0_datapipe=pv_t0_datapipe, history_duration=timedelta(hours=1),
+            t0_datapipe=pv_t0_datapipe,
+            history_duration=timedelta(hours=1),
         )
         .convert_pv_to_numpy_batch()
         .extend_timesteps_to_future(
-            forecast_duration=timedelta(hours=2), sample_period_duration=timedelta(minutes=5),
+            forecast_duration=timedelta(hours=2),
+            sample_period_duration=timedelta(minutes=5),
         )
         .add_zeroed_future_data(key=BatchKey.pv, time_key=BatchKey.pv_time_utc)
         .merge_numpy_examples_to_batch(n_examples_per_batch=4)

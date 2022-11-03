@@ -38,7 +38,7 @@ class SelectIDIterDataPipe(IterDataPipe):
                 try:
                     xr_data = xr_data.sel(id=location.id)
                 except Exception as e:
-                    logger.warning(f'Could not find {location.id} in nwp {xr_data.id}')
+                    logger.warning(f"Could not find {location.id} in nwp {xr_data.id}")
                     raise e
 
             if self.data_source_name == "pv":
