@@ -44,7 +44,7 @@ class GSPIterator(IterDataPipe):
 
 
 @pytest.fixture()
-def all_loc_np_datapipe():
+def all_loc_np_datapipe(passiv_datapipe):
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "hrv_sat_data.zarr"
     sat_datapipe = OpenSatellite(zarr_path=filename)
     sat_datapipe = ConvertSatelliteToInt8(sat_datapipe)
@@ -53,20 +53,8 @@ def all_loc_np_datapipe():
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=60),
     )
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "passiv"
-        / "UK_PV_metadata.csv"
-    )
-    pv_datapipe = OpenPVFromNetCDF(
-        pv_power_filename=filename, pv_metadata_filename=filename_metadata
-    )
+
+    pv_datapipe = passiv_datapipe
     pv_datapipe = AddT0IdxAndSamplePeriodDuration(
         pv_datapipe,
         sample_period_duration=timedelta(minutes=5),
@@ -202,19 +190,8 @@ def nwp_np_datapipe():
 
 
 @pytest.fixture()
-def passiv_np_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "passiv"
-        / "UK_PV_metadata.csv"
-    )
-    dp = OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+def passiv_np_datapipe(passiv_datapipe):
+    dp = passiv_datapipe
     dp = AddT0IdxAndSamplePeriodDuration(
         dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
     )
@@ -224,24 +201,8 @@ def passiv_np_datapipe():
 
 
 @pytest.fixture()
-def pvoutput_np_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "pvoutput"
-        / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "pvoutput"
-        / "UK_PV_metadata.csv"
-    )
-    dp = OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+def pvoutput_np_datapipe(pvoutput_datapipe):
+    dp = pvoutput_datapipe
     dp = AddT0IdxAndSamplePeriodDuration(
         dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
     )
