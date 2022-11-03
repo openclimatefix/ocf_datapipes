@@ -2,7 +2,7 @@
 import logging
 from datetime import timedelta
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
 
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
 
-def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe:
+def simple_pv_datapipe(configuration_filename: Union[Path, str], tag: Optional[str] = "train") -> IterDataPipe:
     """
     Create the Power Perceiver production pipeline using a configuration
 
@@ -36,33 +36,23 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
     configuration: Configuration = next(iter(config_datapipe))
 
     logger.debug("Opening Datasets")
-    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(
-        pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
-        pv_metadata_filename=configuration.input_data.pv.pv_files_groups[0].pv_metadata_filename,
-    ).fork(2)
+    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans().fork(2)
 
     logger.debug("Add t0 idx")
-    (
-        pv_datapipe,
-        pv_t0_datapipe,
-        pv_time_periods_datapipe,
-    ) = pv_datapipe.add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(minutes=5),
-        history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-    ).fork(
-        3
-    )
+    pv_datapipe= pv_datapipe.add_t0_idx_and_sample_period_duration(
+        sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
+        history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes))
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
-    location_datapipe1, location_datapipe2 = pv_location_datapipe.location_picker().fork(2)
+    location_datapipe1 = pv_location_datapipe.location_picker()
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
-    pv_datapipe, pv_t0_datapipe = (
+    pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe = (
         pv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
         .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
+            sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
         .select_spatial_slice_meters(
@@ -71,12 +61,13 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
             roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
         )
         .ensure_n_pv_systems_per_example(n_pv_systems_per_example=1)
-        .fork(2)
+        .remove_nans()
+        .fork(3)
     )
 
     # get contiguous time periods
     pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(minutes=5),
+        sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
     )
@@ -90,7 +81,7 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
             t0_datapipe=pv_t0_datapipe,
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
-            sample_period_duration=timedelta(minutes=5),
+            sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
         )
         .convert_pv_to_numpy_batch()
         .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
@@ -107,6 +98,10 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str]) -> IterDataPipe
         MergeNumpyModalities([pv_datapipe])
         # .align_gsp_to_5_min(batch_key_for_5_min_datetimes=BatchKey.pv_time_utc)
         .encode_space_time().add_sun_position(modality_name="pv")
+    )
+
+    combined_datapipe = combined_datapipe.add_length(
+        configuration=configuration, train_validation_test=tag
     )
 
     return combined_datapipe
