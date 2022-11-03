@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
 
-def simple_pv_datapipe(configuration_filename: Union[Path, str], tag: Optional[str] = "train") -> IterDataPipe:
+def simple_pv_datapipe(
+    configuration_filename: Union[Path, str], tag: Optional[str] = "train"
+) -> IterDataPipe:
     """
     Create the Power Perceiver production pipeline using a configuration
 
@@ -36,12 +38,17 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str], tag: Optional[s
     configuration: Configuration = next(iter(config_datapipe))
 
     logger.debug("Opening Datasets")
-    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans().fork(2)
+    pv_datapipe, pv_location_datapipe = (
+        OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans().fork(2)
+    )
 
     logger.debug("Add t0 idx")
-    pv_datapipe= pv_datapipe.add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
-        history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes))
+    pv_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
+        sample_period_duration=timedelta(
+            minutes=configuration.input_data.pv.time_resolution_minutes
+        ),
+        history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+    )
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
@@ -52,7 +59,9 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str], tag: Optional[s
     pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe = (
         pv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
         .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.pv.time_resolution_minutes
+            ),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
         .select_spatial_slice_meters(
@@ -67,7 +76,9 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str], tag: Optional[s
 
     # get contiguous time periods
     pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
+        sample_period_duration=timedelta(
+            minutes=configuration.input_data.pv.time_resolution_minutes
+        ),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
     )
@@ -81,7 +92,9 @@ def simple_pv_datapipe(configuration_filename: Union[Path, str], tag: Optional[s
             t0_datapipe=pv_t0_datapipe,
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
-            sample_period_duration=timedelta(minutes=configuration.input_data.pv.time_resolution_minutes),
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.pv.time_resolution_minutes
+            ),
         )
         .convert_pv_to_numpy_batch()
         .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
