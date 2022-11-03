@@ -10,7 +10,7 @@ def test_pv_power_remove_data(passiv_datapipe):
     passiv_datapipe = PVFillNightNans(passiv_datapipe)
     data_after = next(iter(passiv_datapipe))
 
-    assert data_before[:,0].sum() > 0
+    assert data_before[:, 0].sum() > 0
     assert data_after[:, 0].sum() > 0
     assert data_before[:, 1].sum() > 0
     assert data_after[:, 1].sum() > 0

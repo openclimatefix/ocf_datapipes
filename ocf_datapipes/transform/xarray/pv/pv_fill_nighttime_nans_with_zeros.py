@@ -1,5 +1,6 @@
 """Fill nighttime PV with NaNs"""
 
+import logging
 from typing import Union
 
 import numpy as np
@@ -9,8 +10,6 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -42,15 +41,17 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
                     yield self.new_xr_data
             else:
 
-                logger.info('Going to fill night time nans')
+                logger.info("Going to fill night time nans")
 
                 lats, lons = osgb_to_lat_lon(x=xr_data.x_osgb, y=xr_data.y_osgb)
 
                 elevation = np.full_like(xr_data.data, fill_value=np.NaN).astype(np.float32)
                 for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
 
-                    logger.debug(f'Getting solar elevation for {lat} {lon} '
-                                 f'{example_idx} out of {len(lats)}')
+                    logger.debug(
+                        f"Getting solar elevation for {lat} {lon} "
+                        f"{example_idx} out of {len(lats)}"
+                    )
 
                     # get mask data for nans
                     nan_mask = np.isnan(xr_data.data[:, example_idx])
@@ -74,7 +75,7 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
                 total_mask = night_time_mask & nan_mask
 
                 # set value
-                logger.debug('Setting night nans to 0')
+                logger.debug("Setting night nans to 0")
                 xr_data.data[total_mask] = 0.0
 
                 self.new_xr_data = xr_data
