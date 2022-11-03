@@ -318,7 +318,11 @@ def gsp_zarr_file():
 
     generation_mw = xr.DataArray(
         abs(  # to make sure average is about 100
-            np.random.uniform(0, 200, size=(7 * 24, len(ids)),)
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, len(ids)),
+            )
         ),
         coords=coords,
         name="generation_mw",
@@ -326,7 +330,11 @@ def gsp_zarr_file():
 
     installedcapacity_mwp = xr.DataArray(
         abs(  # to make sure average is about 100
-            np.random.uniform(0, 200, size=(7 * 24, len(ids)),)
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, len(ids)),
+            )
         ),
         coords=coords,
         name="installedcapacity_mwp",
@@ -371,7 +379,11 @@ def nwp_data_with_id_filename():
 
     nwp = xr.DataArray(
         abs(  # to make sure average is about 100
-            np.random.uniform(0, 200, size=(7 * 24, 4, time_steps, len(ids)),)
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, 4, time_steps, len(ids)),
+            )
         ),
         coords=coords,
         name="data",
