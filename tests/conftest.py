@@ -76,7 +76,10 @@ def passiv_datapipe():
         / "UK_PV_metadata.csv"
     )
 
-    pv = PV()
+    pv = PV(
+        start_datetime=datetime(2018, 1, 1, tzinfo=timezone.utc),
+        end_datetime=datetime(2023, 1, 1, tzinfo=timezone.utc),
+    )
     pv_file = PVFiles(
         pv_filename=str(filename),
         pv_metadata_filename=str(filename_metadata),
@@ -106,7 +109,9 @@ def pvoutput_datapipe():
         / "UK_PV_metadata.csv"
     )
 
-    pv = PV()
+    pv = PV(
+            start_datetime=datetime(2018, 1, 1, tzinfo=timezone.utc),
+            end_datetime=datetime(2023, 1, 1, tzinfo=timezone.utc),)
     pv_file = PVFiles(
         pv_filename=str(filename),
         pv_metadata_filename=str(filename_metadata),
@@ -449,6 +454,7 @@ def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_file
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
+        configuration.input_data.pv.pv_files_groups = [configuration.input_data.pv.pv_files_groups[0]]
         configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
