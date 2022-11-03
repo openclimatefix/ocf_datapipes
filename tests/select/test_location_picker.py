@@ -43,10 +43,7 @@ def test_location_picker_with_id(configuration_with_pv_parquet):
     config_datapipe = OpenConfiguration(configuration_with_pv_parquet)
     configuration: Configuration = next(iter(config_datapipe))
 
-    pv_location_datapipe = OpenPVFromNetCDF(
-        pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
-        pv_metadata_filename=configuration.input_data.pv.pv_files_groups[0].pv_metadata_filename,
-    )
+    pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
 
     location_datapipe = pv_location_datapipe.location_picker()
 
