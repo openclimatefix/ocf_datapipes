@@ -40,6 +40,7 @@ def metnet_national_datapipe(
     use_sat: bool = True,
     use_hrv: bool = True,
     use_pv: bool = True,
+    max_num_pv_systems: int = -1,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
@@ -55,6 +56,7 @@ def metnet_national_datapipe(
         use_hrv: Whether to use HRV Satellite or not
         use_sat: Whether to use non-HRV Satellite or not
         use_nwp: Whether to use NWP or not
+        max_num_pv_systems: max number of PV systems to include, <= 0 if no sampling
         start_time: Start time to select on
         end_time: End time to select from
 
@@ -286,7 +288,7 @@ def metnet_national_datapipe(
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=1000)
+        ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=max_num_pv_systems)
 
     # Now combine in the MetNet format
     modalities = []
