@@ -35,43 +35,42 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
 
         for xr_data in self.source_datapipe:
 
-          logger.info("Going to fill night time nans")
+            logger.info("Going to fill night time nans")
 
-          lats, lons = osgb_to_lat_lon(x=xr_data.x_osgb, y=xr_data.y_osgb)
+            lats, lons = osgb_to_lat_lon(x=xr_data.x_osgb, y=xr_data.y_osgb)
 
-          elevation = np.full_like(xr_data.data, fill_value=np.NaN).astype(np.float32)
-          for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
+            elevation = np.full_like(xr_data.data, fill_value=np.NaN).astype(np.float32)
+            for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
 
-              logger.debug(
-                  f"Getting solar elevation for {lat} {lon} "
-                  f"{example_idx} out of {len(lats)}"
-              )
+                logger.debug(
+                    f"Getting solar elevation for {lat} {lon} " f"{example_idx} out of {len(lats)}"
+                )
 
-              # get mask data for nans
-              nan_mask = np.isnan(xr_data.data[:, example_idx])
-              time_utc_nans = xr_data.time_utc[nan_mask]
+                # get mask data for nans
+                nan_mask = np.isnan(xr_data.data[:, example_idx])
+                time_utc_nans = xr_data.time_utc[nan_mask]
 
-              solpos = pvlib.solarposition.get_solarposition(
-                  time=time_utc_nans,
-                  latitude=lat,
-                  longitude=lon,
-                  # Which `method` to use?
-                  # pyephem seemed to be a good mix between speed and ease but causes
-                  # segfaults!
-                  # nrel_numba doesn't work when using multiple worker processes.
-                  # nrel_c is probably fastest but requires C code to be manually compiled:
-                  # https://midcdmz.nrel.gov/spa/
-              )
-              elevation[nan_mask, example_idx] = solpos["elevation"]
+                solpos = pvlib.solarposition.get_solarposition(
+                    time=time_utc_nans,
+                    latitude=lat,
+                    longitude=lon,
+                    # Which `method` to use?
+                    # pyephem seemed to be a good mix between speed and ease but causes
+                    # segfaults!
+                    # nrel_numba doesn't work when using multiple worker processes.
+                    # nrel_c is probably fastest but requires C code to be manually compiled:
+                    # https://midcdmz.nrel.gov/spa/
+                )
+                elevation[nan_mask, example_idx] = solpos["elevation"]
 
-          # get maks data for nighttime and nans
-          night_time_mask = elevation < self.elevation_limit
-          nan_mask = np.isnan(xr_data.data)
-          total_mask = night_time_mask & nan_mask
+            # get maks data for nighttime and nans
+            night_time_mask = elevation < self.elevation_limit
+            nan_mask = np.isnan(xr_data.data)
+            total_mask = night_time_mask & nan_mask
 
-          # set value
-          logger.debug("Setting night nans to 0")
-          xr_data.data[total_mask] = 0.0
+            # set value
+            logger.debug("Setting night nans to 0")
+            xr_data.data[total_mask] = 0.0
 
-          while True:
-              yield xr_data
+            while True:
+                yield xr_data
