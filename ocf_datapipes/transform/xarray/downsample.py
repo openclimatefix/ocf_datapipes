@@ -35,6 +35,9 @@ class DownsampleIterDataPipe(IterDataPipe):
         """Coarsen the data on the specified dimensions"""
         for xr_data in self.source_datapipe:
             yield xr_data.coarsen(
-                {self.y_dim_name: self.y_coarsen, self.x_dim_name: self.x_coarsen,},
+                {
+                    self.y_dim_name: self.y_coarsen,
+                    self.x_dim_name: self.x_coarsen,
+                },
                 boundary="trim",
             ).mean()

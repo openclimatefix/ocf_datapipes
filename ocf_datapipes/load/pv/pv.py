@@ -74,7 +74,9 @@ def load_everything_into_ram(
         pv_capacity_watt_power,
         pv_system_row_number,
     ) = _load_pv_power_watts_and_capacity_watt_power(
-        pv_power_filename, start_date=start_dateime, end_date=end_datetime,
+        pv_power_filename,
+        start_date=start_dateime,
+        end_date=end_datetime,
     )
     # Ensure pv_metadata, pv_power_watts, and pv_capacity_watt_power all have the same set of
     # PV system IDs, in the same order:
