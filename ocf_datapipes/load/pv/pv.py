@@ -2,7 +2,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import fsspec
 import numpy as np
@@ -10,6 +10,7 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+from ocf_datapipes.config.model import PV
 
 from ocf_datapipes.load.pv.utils import (
     intersection_of_pv_system_ids,
@@ -26,10 +27,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        pv_power_filename: Union[str, Path],
-        pv_metadata_filename: Union[str, Path],
-        start_datetime: Optional[datetime] = None,
-        end_datetime: Optional[datetime] = None,
+        pv:PV,
     ):
         """
         Datapipe to load PV from NetCDF
@@ -41,20 +39,46 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
             end_datetime: end datetime that the dataset is limited to
         """
         super().__init__()
-        self.pv_power_filename = pv_power_filename
-        self.pv_metadata_filename = pv_metadata_filename
-        self.start_dateime = start_datetime
-        self.end_datetime = end_datetime
+        self.pv = pv
+        self.pv_power_filenames = [pv_files_group.pv_filename for pv_files_group in pv.pv_files_groups]
+        self.pv_metadata_filenames = [pv_files_group.pv_metadata_filename for pv_files_group in pv.pv_files_groups]
+        self.start_dateime = pv.start_datetime
+        self.end_datetime = pv.end_datetime
 
     def __iter__(self):
-        data: xr.DataArray = load_everything_into_ram(
-            self.pv_power_filename,
-            self.pv_metadata_filename,
-            start_dateime=self.start_dateime,
-            end_datetime=self.end_datetime,
-        )
+        pv_datas_xr = []
+        for i in range(len(self.pv_power_filenames)):
+            one_data: xr.DataArray = load_everything_into_ram(
+                self.pv_power_filenames[i],
+                self.pv_metadata_filenames[i],
+                start_dateime=self.start_dateime,
+                end_datetime=self.end_datetime,
+            )
+            pv_datas_xr.append(one_data)
+
+        data = join_pv(pv_datas_xr)
+
         while True:
             yield data
+
+
+def join_pv(data_arrays: List[xr.DataArray]) -> xr.DataArray:
+    """
+    Join PV data arrays together
+
+    Args:
+        data_arrays: the pv data arrays
+
+    Returns: one data array containing all pv systems
+    """
+
+    if len(data_arrays) == 1:
+        return data_arrays[0]
+
+    # expand each dataset to full time_utc
+    joined_data_array = xr.concat(data_arrays, dim='pv_system_id')
+
+    return joined_data_array
 
 
 def load_everything_into_ram(
@@ -179,9 +203,12 @@ def _load_pv_power_watts_and_capacity_watt_power(
     # Resample to 5-minutely and interpolate up to 15 minutes ahead.
     # TODO: Issue #74: Give users the option to NOT resample (because Perceiver IO
     # doesn't need all the data to be perfectly aligned).
-    pv_power_watts = pv_power_watts.resample("5T").interpolate(method="time", limit=3)
+    # pv_power_watts = pv_power_watts.resample("5T").interpolate(method="time", limit=3)
     pv_power_watts.dropna(axis="index", how="all", inplace=True)
     pv_power_watts.dropna(axis="columns", how="all", inplace=True)
+
+    # bad_system = [15293, 68159, 33165]
+    # pv_power_watts.drop(columns=bad_system, inplace=True)
 
     # Drop any PV systems whose PV capacity is too low:
     PV_CAPACITY_THRESHOLD_W = 100
