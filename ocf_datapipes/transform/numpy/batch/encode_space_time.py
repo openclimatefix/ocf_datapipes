@@ -44,9 +44,7 @@ class EncodeSpaceTimeIterDataPipe(IterDataPipe):
 
 
 def get_spatial_and_temporal_fourier_features(
-    np_batch: NumpyBatch,
-    lengths: dict[str, Number],
-    n_fourier_features_per_dim: int = 8,
+    np_batch: NumpyBatch, lengths: dict[str, Number], n_fourier_features_per_dim: int = 8,
 ) -> NumpyBatch:
     """Add fourier features for x_osgb, y_osgb and time_utc."""
 
@@ -96,15 +94,10 @@ def compute_fourier_features(
     assert max_freq > min_freq
 
     div_term = np.linspace(
-        start=min_freq,
-        stop=max_freq,
-        num=n_fourier_features // 2,
-        dtype=array.dtype,
+        start=min_freq, stop=max_freq, num=n_fourier_features // 2, dtype=array.dtype,
     )
     fourier_features = np.full(
-        shape=array.shape + (n_fourier_features,),
-        fill_value=np.NaN,
-        dtype=array.dtype,
+        shape=array.shape + (n_fourier_features,), fill_value=np.NaN, dtype=array.dtype,
     )
 
     radians = array * np.pi / 2
@@ -120,8 +113,7 @@ def compute_fourier_features(
 
 
 def _rescale_coords_for_all_dims_to_approx_0_to_1(
-    np_batch: NumpyBatch,
-    lengths: dict[str, Number],
+    np_batch: NumpyBatch, lengths: dict[str, Number],
 ) -> dict[str, np.ndarray]:
     """Rescale coords for all dimensions, across all modalities.
 
@@ -154,8 +146,7 @@ def _rescale_coords_for_all_dims_to_approx_0_to_1(
 
 
 def _rescale_coords_for_single_dim_to_approx_0_to_1(
-    coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray],
-    length: Number,
+    coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray], length: Number,
 ) -> dict[str, np.ndarray]:
     """Rescale the coords for a single dimension, across all modalities.
 

@@ -120,27 +120,19 @@ def test_metnet_production(
     )
     gsp_t0_datapipe = SelectLiveT0Time(gsp_t0_datapipe)
     gsp_datapipe = SelectLiveTimeSlice(
-        gsp_datapipe,
-        t0_datapipe=gsp_t0_datapipe,
-        history_duration=timedelta(hours=2),
+        gsp_datapipe, t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2),
     )
     sat_t0_datapipe = SelectLiveT0Time(sat_datapipe)
     sat_datapipe, image_datapipe = SelectLiveTimeSlice(
-        sat_datapipe,
-        t0_datapipe=sat_t0_datapipe,
-        history_duration=timedelta(hours=1),
+        sat_datapipe, t0_datapipe=sat_t0_datapipe, history_duration=timedelta(hours=1),
     ).fork(2)
     sat_hrv_t0_datapipe = SelectLiveT0Time(sat_hrv_datapipe)
     sat_hrv_datapipe = SelectLiveTimeSlice(
-        sat_hrv_datapipe,
-        t0_datapipe=sat_hrv_t0_datapipe,
-        history_duration=timedelta(hours=1),
+        sat_hrv_datapipe, t0_datapipe=sat_hrv_t0_datapipe, history_duration=timedelta(hours=1),
     )
     passiv_t0_datapipe = SelectLiveT0Time(pv_t0_datapipe)
     pv_datapipe = SelectLiveTimeSlice(
-        pv_datapipe,
-        t0_datapipe=passiv_t0_datapipe,
-        history_duration=timedelta(hours=1),
+        pv_datapipe, t0_datapipe=passiv_t0_datapipe, history_duration=timedelta(hours=1),
     )
     gsp_datapipe = SelectSpatialSliceMeters(
         gsp_datapipe,
@@ -165,12 +157,7 @@ def test_metnet_production(
 
     # Now combine in the MetNet format
     combined_datapipe = PreProcessMetNet(
-        [
-            nwp_datapipe,
-            sat_hrv_datapipe,
-            sat_datapipe,
-            pv_datapipe,
-        ],
+        [nwp_datapipe, sat_hrv_datapipe, sat_datapipe, pv_datapipe,],
         location_datapipe=location_datapipe5,
         center_width=500_000,
         center_height=1_000_000,
