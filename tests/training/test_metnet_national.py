@@ -11,5 +11,5 @@ def test_metnet_datapipe():
     gsp_datapipe = metnet_national_datapipe(filename, use_nwp=False)
 
     batch = next(iter(gsp_datapipe))
-    assert all(np.isfinite(batch[0]))
-    assert all(np.isfinite(batch[1]))
+    assert np.isfinite(batch[0]).all()
+    assert np.isfinite(batch[1]).all()
