@@ -438,6 +438,7 @@ def configuration_with_pv_parquet(pv_parquet_file):
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
+        configuration.input_data.pv.pv_files_groups = [configuration.input_data.pv.pv_files_groups[0]]
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
