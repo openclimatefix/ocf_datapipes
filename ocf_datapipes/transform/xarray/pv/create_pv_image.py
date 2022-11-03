@@ -34,6 +34,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             normalize: Whether to normalize based off the image max, or leave raw data
             image_dim: Dimension name for the x and y dimensions
             max_num_pv_systems: Max number of PV systems to use
+            seed: Random seed to use if using max_num_pv_systems
         """
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe

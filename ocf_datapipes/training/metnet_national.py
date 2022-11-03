@@ -1,3 +1,4 @@
+"""Create the training/validation datapipe for training the national MetNet/-2 Model"""
 import datetime
 import logging
 from pathlib import Path
@@ -58,6 +59,15 @@ logger.setLevel(logging.DEBUG)
 
 
 def normalize_gsp(x):  # So it can be pickled
+    """
+    Normalize the GSP data
+
+    Args:
+        x: Input DataArray
+
+    Returns:
+        Normalized DataArray
+    """
     return x / x.capacity_megawatt_power
 
 
@@ -78,8 +88,11 @@ def metnet_national_datapipe(
 
     Args:
         configuration_filename: the configruation filename for the pipe
-        mode: One of 'train', 'val', or 'test'
         use_sun: Whether to add sun features or not
+        use_pv: Whether to use PV input or not
+        use_hrv: Whether to use HRV Satellite or not
+        use_sat: Whether to use non-HRV Satellite or not
+        use_nwp: Whether to use NWP or not
         start_time: Start time to select on
         end_time: End time to select from
 
@@ -115,7 +128,7 @@ def metnet_national_datapipe(
     logger.debug("Add t0 idx and normalize")
 
     gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
+        gsp_datapipe.normalize(normalize_fn=normalize_gsp)
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
