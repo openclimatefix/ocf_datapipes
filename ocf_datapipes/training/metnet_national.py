@@ -7,8 +7,6 @@ from typing import Union
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
-xarray.set_options(keep_attrs=True)
-
 from datetime import timedelta
 
 from ocf_datapipes.config.model import Configuration
@@ -16,33 +14,16 @@ from ocf_datapipes.convert import ConvertGSPToNumpy
 from ocf_datapipes.load import (
     OpenConfiguration,
     OpenGSP,
-    OpenGSPFromDatabase,
-    OpenGSPNational,
     OpenNWP,
     OpenPVFromNetCDF,
     OpenSatellite,
-    OpenTopography,
 )
 from ocf_datapipes.select import (
     DropGSP,
     LocationPicker,
-    SelectLiveT0Time,
-    SelectLiveTimeSlice,
-    SelectSpatialSliceMeters,
-    SelectTimeSlice,
-    SelectTrainTestTimePeriod,
 )
-from ocf_datapipes.transform.numpy import AddLength
 from ocf_datapipes.transform.xarray import (
-    AddT0IdxAndSamplePeriodDuration,
-    ConvertSatelliteToInt8,
-    ConvertToNWPTargetTime,
-    CreatePVImage,
-    Downsample,
-    EnsureNPVSystemsPerExample,
-    Normalize,
     PreProcessMetNet,
-    ReprojectTopography,
 )
 from ocf_datapipes.utils.consts import (
     NWP_MEAN,
@@ -51,9 +32,9 @@ from ocf_datapipes.utils.consts import (
     SAT_MEAN_DA,
     SAT_STD,
     SAT_STD_DA,
-    BatchKey,
 )
 
+xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
 logger.setLevel(logging.DEBUG)
 
