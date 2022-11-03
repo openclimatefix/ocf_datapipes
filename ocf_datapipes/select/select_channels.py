@@ -32,5 +32,5 @@ class SelectChannelsIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data in self.source_datapipe:
             logger.debug(f"Selecting Channels: {self.channels} out of {xr_data['channel'].values}")
-            xr_data = xr_data.sel({self.dim_name: self.channels})
+            xr_data = xr_data.sel({self.dim_name: list(self.channels)})
             yield xr_data
