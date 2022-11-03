@@ -2,7 +2,7 @@
 import logging
 from datetime import timedelta
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional, Union
 
 import xarray
 from torchdata.datapipes.iter import IterDataPipe

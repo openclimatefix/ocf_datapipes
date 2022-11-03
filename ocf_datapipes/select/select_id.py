@@ -1,6 +1,6 @@
 """Selects time slice"""
-from typing import Union
 import logging
+from typing import Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
