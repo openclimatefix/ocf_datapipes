@@ -1,7 +1,7 @@
-from ocf_datapipes.load import OpenPVFromNetCDF
-from ocf_datapipes.config.model import PV, PVFiles
-
 from datetime import datetime, timezone
+
+from ocf_datapipes.config.model import PV, PVFiles
+from ocf_datapipes.load import OpenPVFromNetCDF
 
 
 def test_open_passiv_from_nc():

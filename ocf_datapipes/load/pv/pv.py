@@ -10,8 +10,8 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from ocf_datapipes.config.model import PV
 
+from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import (
     intersection_of_pv_system_ids,
     put_pv_data_into_an_xr_dataarray,
@@ -27,7 +27,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        pv:PV,
+        pv: PV,
     ):
         """
         Datapipe to load PV from NetCDF
@@ -40,8 +40,12 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         """
         super().__init__()
         self.pv = pv
-        self.pv_power_filenames = [pv_files_group.pv_filename for pv_files_group in pv.pv_files_groups]
-        self.pv_metadata_filenames = [pv_files_group.pv_metadata_filename for pv_files_group in pv.pv_files_groups]
+        self.pv_power_filenames = [
+            pv_files_group.pv_filename for pv_files_group in pv.pv_files_groups
+        ]
+        self.pv_metadata_filenames = [
+            pv_files_group.pv_metadata_filename for pv_files_group in pv.pv_files_groups
+        ]
         self.start_dateime = pv.start_datetime
         self.end_datetime = pv.end_datetime
 
@@ -76,7 +80,7 @@ def join_pv(data_arrays: List[xr.DataArray]) -> xr.DataArray:
         return data_arrays[0]
 
     # expand each dataset to full time_utc
-    joined_data_array = xr.concat(data_arrays, dim='pv_system_id')
+    joined_data_array = xr.concat(data_arrays, dim="pv_system_id")
 
     return joined_data_array
 
