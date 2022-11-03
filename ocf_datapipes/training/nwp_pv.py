@@ -42,8 +42,9 @@ def nwp_pv_datapipe(
     configuration: Configuration = next(iter(config_datapipe))
 
     logger.debug("Opening Datasets")
-    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv
-    ).fork(2, buffer_size=BUFFER_SIZE)
+    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).fork(
+        2, buffer_size=BUFFER_SIZE
+    )
 
     nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
 
