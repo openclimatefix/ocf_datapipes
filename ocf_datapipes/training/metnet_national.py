@@ -1,38 +1,19 @@
 """Create the training/validation datapipe for training the national MetNet/-2 Model"""
 import datetime
 import logging
+from datetime import timedelta
 from pathlib import Path
 from typing import Union
 
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
-from datetime import timedelta
-
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.convert import ConvertGSPToNumpy
-from ocf_datapipes.load import (
-    OpenConfiguration,
-    OpenGSP,
-    OpenNWP,
-    OpenPVFromNetCDF,
-    OpenSatellite,
-)
-from ocf_datapipes.select import (
-    DropGSP,
-    LocationPicker,
-)
-from ocf_datapipes.transform.xarray import (
-    PreProcessMetNet,
-)
-from ocf_datapipes.utils.consts import (
-    NWP_MEAN,
-    NWP_STD,
-    SAT_MEAN,
-    SAT_MEAN_DA,
-    SAT_STD,
-    SAT_STD_DA,
-)
+from ocf_datapipes.load import OpenConfiguration, OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite
+from ocf_datapipes.select import DropGSP, LocationPicker
+from ocf_datapipes.transform.xarray import PreProcessMetNet
+from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")

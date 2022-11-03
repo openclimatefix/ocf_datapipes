@@ -14,7 +14,6 @@ from ocf_datapipes.utils.geospatial import (
     osgb_to_lat_lon,
 )
 
-
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
 AZIMUTH_MEAN = 177.7
@@ -145,14 +144,24 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             for i in range(len(centers)):
                 centers[i] = np.pad(
                     centers[i],
-                    pad_width=((0, max_time_len - centers[i].shape[0]), (0, 0), (0, 0), (0, 0),),
+                    pad_width=(
+                        (0, max_time_len - centers[i].shape[0]),
+                        (0, 0),
+                        (0, 0),
+                        (0, 0),
+                    ),
                     mode="constant",
                     constant_values=0.0,
                 )
             for i in range(len(contexts)):
                 contexts[i] = np.pad(
                     contexts[i],
-                    pad_width=((0, max_time_len - contexts[i].shape[0]), (0, 0), (0, 0), (0, 0),),
+                    pad_width=(
+                        (0, max_time_len - contexts[i].shape[0]),
+                        (0, 0),
+                        (0, 0),
+                        (0, 0),
+                    ),
                     mode="constant",
                     constant_values=0.0,
                 )
