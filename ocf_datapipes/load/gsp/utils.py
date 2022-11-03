@@ -77,11 +77,15 @@ def get_gsp_id_to_shape(
     # the spatial union.
     gsp_id_to_shape = gsp_id_to_shape.dissolve(by="gsp_id")
 
-    gsp_0 = gpd.GeoDataFrame(
-        data={"gsp_id": [0], "geometry": [gsp_id_to_shape["geometry"].unary_union]}
-    ).set_index("gsp_id")
+    gsp_0 = (
+        gpd.GeoDataFrame(
+            data={"gsp_id": [0], "geometry": [gsp_id_to_shape["geometry"].unary_union]}
+        )
+        .set_index("gsp_id")
+        .set_crs(gsp_id_to_shape.crs)
+    )
 
     # For the national forecast, GSP ID 0, we want the shape to be the
     # union of all the other shapes
-    gsp_id_to_shape = gsp_id_to_shape.append(gsp_0).sort_index()
+    gsp_id_to_shape = pd.concat([gsp_id_to_shape, gsp_0]).sort_index()
     return gsp_id_to_shape

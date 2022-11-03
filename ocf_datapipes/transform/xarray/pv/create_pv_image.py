@@ -20,6 +20,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         image_datapipe: IterDataPipe,
         normalize: bool = False,
         image_dim: str = "geostationary",
+        max_num_pv_systems: int = -1,
+        seed=None,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -31,15 +33,28 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             image_datapipe: Datapipe emitting images to get the shape from, with coordinates
             normalize: Whether to normalize based off the image max, or leave raw data
             image_dim: Dimension name for the x and y dimensions
+            max_num_pv_systems: Max number of PV systems to use
+            seed: Random seed to use if using max_num_pv_systems
         """
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
         self.normalize = normalize
         self.x_dim = "x_" + image_dim
         self.y_dim = "y_" + image_dim
+        self.max_num_pv_systems = max_num_pv_systems
+        self.rng = np.random.default_rng(seed=seed)
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
+            if (
+                self.max_num_pv_systems > 0
+                and len(pv_systems_xr.pv_system_id.values) >= self.max_num_pv_systems
+            ):
+                subset_of_pv_system_ids = self.rng.choice(
+                    pv_systems_xr.pv_system_id, size=self.max_num_pv_systems, replace=False,
+                )
+                pv_systems_xr = pv_systems_xr.sel(pv_system_id=subset_of_pv_system_ids)
+
             if "geostationary" in self.x_dim:
                 _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
                     image_xr
@@ -64,11 +79,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     pv_y = pv_system["y_osgb"]
                 # Quick check as search sorted doesn't give an error if it is not in the range
                 if pv_x < image_xr[self.x_dim][0].values or pv_x > image_xr[self.x_dim][-1].values:
-                    print("Failing on X")
                     continue
                 # Y Coordinates are in reverse for satellite data
                 if pv_y > image_xr[self.y_dim][0].values or pv_y < image_xr[self.y_dim][-1].values:
-                    print("Failing on Y")
                     continue
                 if "geostationary" in self.x_dim:
                     x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
