@@ -23,6 +23,7 @@ from nowcasting_datamodel.models import (
 
 import ocf_datapipes
 from ocf_datapipes.config.load import load_yaml_configuration
+from ocf_datapipes.config.model import PV, PVFiles
 from ocf_datapipes.config.save import save_yaml_configuration
 from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
 
@@ -74,7 +75,16 @@ def passiv_datapipe():
         / "passiv"
         / "UK_PV_metadata.csv"
     )
-    return OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+
+    pv = PV()
+    pv_file = PVFiles(
+        pv_filename=str(filename),
+        pv_metadata_filename=str(filename_metadata),
+        label="solar_sheffield_passiv",
+    )
+    pv.pv_files_groups = [pv_file]
+
+    return OpenPVFromNetCDF(pv=pv)
 
 
 @pytest.fixture()
@@ -95,7 +105,16 @@ def pvoutput_datapipe():
         / "pvoutput"
         / "UK_PV_metadata.csv"
     )
-    return OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+
+    pv = PV()
+    pv_file = PVFiles(
+        pv_filename=str(filename),
+        pv_metadata_filename=str(filename_metadata),
+        label="pvoutput.org",
+    )
+    pv.pv_files_groups = [pv_file]
+
+    return OpenPVFromNetCDF(pv=pv)
 
 
 @pytest.fixture()
