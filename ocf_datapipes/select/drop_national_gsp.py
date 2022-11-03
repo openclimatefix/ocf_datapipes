@@ -23,5 +23,5 @@ class DropGSPIterDataPipe(IterDataPipe):
     def __iter__(self):
         for xr_data in self.source_datapipe:
             # GSP ID 0 is national
-            xr_data.isel(gsp_id=self.gsps_to_keep)
+            xr_data = xr_data.isel(gsp_id=self.gsps_to_keep)
             yield xr_data

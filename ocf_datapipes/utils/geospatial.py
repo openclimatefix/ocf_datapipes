@@ -123,3 +123,28 @@ def load_geostationary_area_definition_and_transform_latlon(xr_data):
         crs_from=WGS84, crs_to=geostationary_crs
     ).transform
     return latlon_to_geostationary
+
+
+def load_geostationary_area_definition_and_transform_to_latlon(xr_data):
+    """
+    Loads geostationary area and transformation from Latlon to geostationaery
+
+    Args:
+        xr_data: Xarray object with geostationary area
+
+    Returns:
+        The transform
+    """
+    # Only load these if using geostationary projection
+    import pyproj
+    import pyresample
+
+    area_definition_yaml = xr_data.attrs["area"]
+    geostationary_area_definition = pyresample.area_config.load_area_from_string(
+        area_definition_yaml
+    )
+    geostationary_crs = geostationary_area_definition.crs
+    geostationary_to_latlon = pyproj.Transformer.from_crs(
+        crs_to=WGS84, crs_from=geostationary_crs
+    ).transform
+    return geostationary_to_latlon

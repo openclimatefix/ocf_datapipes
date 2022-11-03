@@ -392,3 +392,13 @@ SAT_STD = {
     "WV_062": 111.8514878214775,
     "WV_073": 106.8855172848904,
 }
+
+
+def _to_data_array(d):
+    return xr.DataArray(
+        [d[key] for key in SAT_VARIABLE_NAMES], coords={"channel": list(SAT_VARIABLE_NAMES)}
+    ).astype(np.float32)
+
+
+SAT_MEAN_DA = _to_data_array(SAT_MEAN)
+SAT_STD_DA = _to_data_array(SAT_STD)

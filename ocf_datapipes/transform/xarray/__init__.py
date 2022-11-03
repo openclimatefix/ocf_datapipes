@@ -19,6 +19,7 @@ from .convert_satellite_to_int import ConvertSatelliteToInt8IterDataPipe as Conv
 from .convert_to_nwp_target_times import (
     ConvertToNWPTargetTimeIterDataPipe as ConvertToNWPTargetTime,
 )
+from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage
 from .downsample import DownsampleIterDataPipe as Downsample
 from .drop_nans import RemoveNansIterDataPipe as RemoveNans
 from .get_contiguous_time_periods import (
