@@ -79,8 +79,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     # went for isel incase there is a duplicated pv_system_id
                     pv_system = pv_systems_xr.isel(pv_system_id=i)
                 except Exception as e:
-                    logger.warning(f'Could not select {pv_system_id} '
-                                   f'from {pv_systems_xr.pv_system_id}')
+                    logger.warning(
+                        f"Could not select {pv_system_id} " f"from {pv_systems_xr.pv_system_id}"
+                    )
                     raise e
                 if "geostationary" in self.x_dim:
                     pv_x, pv_y = _osgb_to_geostationary(
