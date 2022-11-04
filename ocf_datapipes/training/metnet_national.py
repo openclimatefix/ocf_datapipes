@@ -81,15 +81,11 @@ def metnet_national_datapipe(
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun}")
     # Load GSP national data
     logger.debug("Opening GSP Data")
-    gsp_datapipe = (
-        OpenGSP(gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path)
-        .select_train_test_time(start_time, end_time)
-        .cycle()
-    )
+    gsp_datapipe = OpenGSP(
+        gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
+    ).select_train_test_time(start_time, end_time)
 
-    gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2, buffer_size=-1)
-
-    location_datapipe = LocationPicker(gsp_loc_datapipe).cycle()
+    gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
 
     logger.debug("Add t0 idx and normalize")
 
@@ -99,7 +95,7 @@ def metnet_national_datapipe(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         )
-        .fork(3, buffer_size=-1)
+        .fork(3)
     )
     # get time periods
     # get contiguous time periods
@@ -115,20 +111,14 @@ def metnet_national_datapipe(
     # Load NWP data
     if use_nwp:
         logger.debug("Opening NWP Data")
-        nwp_datapipe = (
+        nwp_datapipe, nwp_time_periods_datapipe = (
             OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
             .select_channels(configuration.input_data.nwp.nwp_channels)
-            .cycle()
-        )
-
-        (
-            nwp_datapipe,
-            nwp_time_periods_datapipe,
-        ) = nwp_datapipe.add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(hours=1),
-            history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-        ).fork(
-            2, buffer_size=-1
+            .add_t0_idx_and_sample_period_duration(
+                sample_period_duration=timedelta(hours=1),
+                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+            )
+            .fork(2)
         )
 
         nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(
@@ -141,19 +131,16 @@ def metnet_national_datapipe(
 
     if use_sat:
         logger.debug("Opening Satellite Data")
-        sat_datapipe = (
+        sat_datapipe, sat_time_periods_datapipe = (
             OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
             .select_channels(configuration.input_data.satellite.satellite_channels)
-            .cycle()
-        )
-        (
-            sat_datapipe,
-            sat_time_periods_datapipe,
-        ) = sat_datapipe.add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
-        ).fork(
-            2, buffer_size=-1
+            .add_t0_idx_and_sample_period_duration(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(
+                    minutes=configuration.input_data.satellite.history_minutes
+                ),
+            )
+            .fork(2)
         )
 
         sat_time_periods_datapipe = sat_time_periods_datapipe.get_contiguous_time_periods(
@@ -165,21 +152,17 @@ def metnet_national_datapipe(
 
     if use_hrv:
         logger.debug("Opening HRV Satellite Data")
-        sat_hrv_datapipe = OpenSatellite(
-            configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
-        ).cycle()
-
-        (
-            sat_hrv_datapipe,
-            sat_hrv_time_periods_datapipe,
-        ) = sat_hrv_datapipe.add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(
-                minutes=configuration.input_data.hrvsatellite.history_minutes
-            ),
-        ).fork(
-            2, buffer_size=-1
+        sat_hrv_datapipe, sat_hrv_time_periods_datapipe = (
+            OpenSatellite(configuration.input_data.hrvsatellite.hrvsatellite_zarr_path)
+            .add_t0_idx_and_sample_period_duration(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(
+                    minutes=configuration.input_data.hrvsatellite.history_minutes
+                ),
+            )
+            .fork(2)
         )
+
         sat_hrv_time_periods_datapipe = sat_hrv_time_periods_datapipe.get_contiguous_time_periods(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(
@@ -191,19 +174,18 @@ def metnet_national_datapipe(
 
     if use_pv:
         logger.debug("Opening PV")
-        pv_datapipe, pv_location_datapipe = (
-            OpenPVFromNetCDF(pv=configuration.input_data.pv).cycle().fork(2, buffer_size=-1)
-        )
-
-        logger.debug("Add t0 idx")
-        (
-            pv_datapipe,
-            pv_time_periods_datapipe,
-        ) = pv_datapipe.add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-        ).fork(
-            2, buffer_size=-1
+        pv_datapipe, pv_time_periods_datapipe = (
+            OpenPVFromNetCDF(
+                pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
+                pv_metadata_filename=configuration.input_data.pv.pv_files_groups[
+                    0
+                ].pv_metadata_filename,
+            )
+            .add_t0_idx_and_sample_period_duration(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+            )
+            .fork(2)
         )
 
         pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
@@ -219,31 +201,17 @@ def metnet_national_datapipe(
         secondary_datapipes=secondary_datapipes,
     )
 
-    (
-        gsp_time_periods,
-        nwp_time_periods,
-        sat_time_periods,
-        sat_hrv_time_periods,
-        pv_time_periods,
-    ) = overlapping_datapipe.fork(5, buffer_size=-1)
-
     # select time periods
-    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=gsp_time_periods)
+    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
 
     # select t0 periods
     logger.debug("Select t0 joint")
-    (
-        gsp_t0_datapipe,
-        nwp_t0_datapipe,
-        sat_t0_datapipe,
-        sat_hrv_t0_datapipe,
-        pv_t0_datapipe,
-    ) = gsp_t0_datapipe.select_t0_time().fork(5, buffer_size=-1)
+    t0_datapipes = gsp_t0_datapipe.select_t0_time().fork(1 + len(secondary_datapipes))
 
     # take pv time slices
     logger.debug("Take GSP time slices")
     gsp_datapipe = gsp_datapipe.select_time_slice(
-        t0_datapipe=gsp_t0_datapipe,
+        t0_datapipe=t0_datapipes[0],
         history_duration=timedelta(minutes=0),
         forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
         sample_period_duration=timedelta(minutes=30),
@@ -253,7 +221,7 @@ def metnet_national_datapipe(
         # take nwp time slices
         logger.debug("Take NWP time slices")
         nwp_datapipe = nwp_datapipe.convert_to_nwp_target_time(
-            t0_datapipe=nwp_t0_datapipe,
+            t0_datapipe=t0_datapipes[1],
             sample_period_duration=timedelta(hours=1),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
@@ -263,7 +231,7 @@ def metnet_national_datapipe(
         logger.debug("Take Satellite time slices")
         # take sat time slices
         sat_datapipe = sat_datapipe.select_time_slice(
-            t0_datapipe=sat_t0_datapipe,
+            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat])],
             history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
@@ -272,7 +240,7 @@ def metnet_national_datapipe(
     if use_hrv:
         logger.debug("Take HRV Satellite time slices")
         sat_hrv_datapipe = sat_hrv_datapipe.select_time_slice(
-            t0_datapipe=sat_hrv_t0_datapipe,
+            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv])],
             history_duration=timedelta(
                 minutes=configuration.input_data.hrvsatellite.history_minutes
             ),
@@ -284,14 +252,14 @@ def metnet_national_datapipe(
         logger.debug("Take PV Time Slices")
         # take pv time slices
         if use_sat:
-            sat_datapipe, image_datapipe = sat_datapipe.fork(2, buffer_size=-1)
+            sat_datapipe, image_datapipe = sat_datapipe.fork(2)
         elif use_hrv:
-            sat_hrv_datapipe, image_datapipe = sat_hrv_datapipe.fork(2, buffer_size=-1)
+            sat_hrv_datapipe, image_datapipe = sat_hrv_datapipe.fork(2)
         elif use_nwp:
-            nwp_datapipe, image_datapipe = nwp_datapipe.fork(2, buffer_size=-1)
+            nwp_datapipe, image_datapipe = nwp_datapipe.fork(2)
 
         pv_datapipe = pv_datapipe.select_time_slice(
-            t0_datapipe=pv_t0_datapipe,
+            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv, use_pv])],
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
@@ -307,6 +275,10 @@ def metnet_national_datapipe(
         modalities.append(sat_datapipe)
     if use_pv:
         modalities.append(pv_datapipe)
+
+    gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2)
+
+    location_datapipe = LocationPicker(gsp_loc_datapipe)
 
     combined_datapipe = PreProcessMetNet(
         modalities,
