@@ -1,7 +1,7 @@
 """Select channels"""
 import datetime
 import logging
-from typing import Union, List
+from typing import List, Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -15,7 +15,10 @@ class SelectChannelsIterDataPipe(IterDataPipe):
     """Select channels"""
 
     def __init__(
-        self, source_datapipe: IterDataPipe, channels: List[str], dim_name: str = "channel",
+        self,
+        source_datapipe: IterDataPipe,
+        channels: List[str],
+        dim_name: str = "channel",
     ):
         """
         Select channels
