@@ -1,9 +1,12 @@
 """Selects time slice"""
+import logging
 from typing import Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("select_id")
@@ -32,7 +35,11 @@ class SelectIDIterDataPipe(IterDataPipe):
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
 
             if self.data_source_name == "nwp":
-                xr_data = xr_data.sel(id=location.id)
+                try:
+                    xr_data = xr_data.sel(id=location.id)
+                except Exception as e:
+                    logger.warning(f"Could not find {location.id} in nwp {xr_data.id}")
+                    raise e
 
             if self.data_source_name == "pv":
                 xr_data = xr_data.sel(pv_system_id=[location.id])

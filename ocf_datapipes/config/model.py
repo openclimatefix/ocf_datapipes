@@ -201,7 +201,7 @@ class PVFiles(BaseModel):
         return v
 
 
-class PV(DataSourceMixin, StartEndDatetimeMixin):
+class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]

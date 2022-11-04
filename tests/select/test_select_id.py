@@ -9,10 +9,8 @@ def test_select_id(configuration_with_pv_parquet, nwp_data_with_id_filename):
     config_datapipe = OpenConfiguration(configuration_with_pv_parquet)
     configuration: Configuration = next(iter(config_datapipe))
 
-    pv_location_datapipe = OpenPVFromNetCDF(
-        pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
-        pv_metadata_filename=configuration.input_data.pv.pv_files_groups[0].pv_metadata_filename,
-    )
+    pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
+
     nwp_datapipe = OpenNWPID(netcdf_path=nwp_data_with_id_filename)
 
     location_datapipe = pv_location_datapipe.location_picker()
