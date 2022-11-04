@@ -252,11 +252,11 @@ def metnet_national_datapipe(
         logger.debug("Take PV Time Slices")
         # take pv time slices
         if use_sat:
-            sat_datapipe, image_datapipe = sat_datapipe.fork(2, buffer_size=-1)
+            sat_datapipe, image_datapipe = sat_datapipe.fork(2)
         elif use_hrv:
-            sat_hrv_datapipe, image_datapipe = sat_hrv_datapipe.fork(2, buffer_size=-1)
+            sat_hrv_datapipe, image_datapipe = sat_hrv_datapipe.fork(2)
         elif use_nwp:
-            nwp_datapipe, image_datapipe = nwp_datapipe.fork(2, buffer_size=-1)
+            nwp_datapipe, image_datapipe = nwp_datapipe.fork(2)
 
         pv_datapipe = pv_datapipe.select_time_slice(
             t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv, use_pv])],
