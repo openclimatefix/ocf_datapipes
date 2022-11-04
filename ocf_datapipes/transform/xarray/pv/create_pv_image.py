@@ -111,6 +111,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             if self.normalize:
                 if np.max(pv_image) > 0:
                     pv_image /= np.max(pv_image)
+            pv_image = np.nan_to_num(pv_image)
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
