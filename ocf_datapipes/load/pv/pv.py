@@ -54,6 +54,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
                 self.pv_metadata_filenames[i],
                 start_dateime=self.start_dateime,
                 end_datetime=self.end_datetime,
+                time_resolution_minutes=self.pv.time_resolution_minutes,
             )
             pv_datas_xr.append(one_data)
 
@@ -87,6 +88,7 @@ def load_everything_into_ram(
     pv_metadata_filename,
     start_dateime: Optional[datetime] = None,
     end_datetime: Optional[datetime] = None,
+    time_resolution_minutes: Optional[int] = 5,
 ) -> xr.DataArray:
     """Open AND load PV data into RAM."""
 
@@ -102,6 +104,7 @@ def load_everything_into_ram(
         pv_power_filename,
         start_date=start_dateime,
         end_date=end_datetime,
+        time_resolution_minutes=time_resolution_minutes,
     )
     # Ensure pv_metadata, pv_power_watts, and pv_capacity_watt_power all have the same set of
     # PV system IDs, in the same order:
@@ -129,6 +132,7 @@ def _load_pv_power_watts_and_capacity_watt_power(
     filename: Union[str, Path],
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
+    time_resolution_minutes: Optional[int] = 5,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """Return pv_power_watts, pv_capacity_watt_power, pv_system_row_number.
 
@@ -204,7 +208,9 @@ def _load_pv_power_watts_and_capacity_watt_power(
     # Resample to 5-minutely and interpolate up to 15 minutes ahead.
     # TODO: Issue #74: Give users the option to NOT resample (because Perceiver IO
     # doesn't need all the data to be perfectly aligned).
-    pv_power_watts = pv_power_watts.resample("5T").interpolate(method="time", limit=3)
+    pv_power_watts = pv_power_watts.resample(f"{time_resolution_minutes}T").interpolate(
+        method="time", limit=3
+    )
     pv_power_watts.dropna(axis="index", how="all", inplace=True)
     pv_power_watts.dropna(axis="columns", how="all", inplace=True)
 
@@ -226,7 +232,7 @@ def _load_pv_power_watts_and_capacity_watt_power(
     pv_system_row_number = pv_system_row_number.loc[pv_system_ids]
 
     _log.info(
-        "After filtering & resampling to 5 minutes:"
+        f"After filtering & resampling to {time_resolution_minutes} minutes:"
         f" pv_power = {pv_power_watts.values.nbytes / 1e6:,.1f} MBytes."
         f" {len(pv_power_watts)} PV power datetimes."
         f" {len(pv_power_watts.columns)} PV power PV system IDs."
