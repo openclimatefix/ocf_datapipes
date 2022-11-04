@@ -176,10 +176,7 @@ def metnet_national_datapipe(
         logger.debug("Opening PV")
         pv_datapipe, pv_time_periods_datapipe = (
             OpenPVFromNetCDF(
-                pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
-                pv_metadata_filename=configuration.input_data.pv.pv_files_groups[
-                    0
-                ].pv_metadata_filename,
+                pv=configuration.input_data.pv
             )
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
