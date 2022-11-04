@@ -231,7 +231,7 @@ def metnet_national_datapipe(
         logger.debug("Take Satellite time slices")
         # take sat time slices
         sat_datapipe = sat_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[sum(use_nwp, use_sat)],
+            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat])],
             history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
@@ -240,7 +240,7 @@ def metnet_national_datapipe(
     if use_hrv:
         logger.debug("Take HRV Satellite time slices")
         sat_hrv_datapipe = sat_hrv_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[sum(use_nwp, use_sat, use_hrv)],
+            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv])],
             history_duration=timedelta(
                 minutes=configuration.input_data.hrvsatellite.history_minutes
             ),
@@ -259,7 +259,7 @@ def metnet_national_datapipe(
             nwp_datapipe, image_datapipe = nwp_datapipe.fork(2, buffer_size=-1)
 
         pv_datapipe = pv_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[sum(use_nwp, use_sat, use_hrv, use_pv)],
+            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv, use_pv])],
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
