@@ -1,6 +1,6 @@
 """Convert point PV sites to image output"""
-from typing import Union
 import logging
+from typing import Union
 
 import numpy as np
 import xarray as xr
@@ -9,7 +9,6 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
-
 
 logger = logging.getLogger(__name__)
 
