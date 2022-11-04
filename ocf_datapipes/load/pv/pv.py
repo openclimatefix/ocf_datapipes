@@ -208,7 +208,9 @@ def _load_pv_power_watts_and_capacity_watt_power(
     # Resample to 5-minutely and interpolate up to 15 minutes ahead.
     # TODO: Issue #74: Give users the option to NOT resample (because Perceiver IO
     # doesn't need all the data to be perfectly aligned).
-    pv_power_watts = pv_power_watts.resample(f"{time_resolution_minutes}T").interpolate(method="time", limit=3)
+    pv_power_watts = pv_power_watts.resample(f"{time_resolution_minutes}T").interpolate(
+        method="time", limit=3
+    )
     pv_power_watts.dropna(axis="index", how="all", inplace=True)
     pv_power_watts.dropna(axis="columns", how="all", inplace=True)
 
