@@ -81,9 +81,11 @@ def metnet_national_datapipe(
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun}")
     # Load GSP national data
     logger.debug("Opening GSP Data")
-    gsp_datapipe = OpenGSP(
-        gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
-    ).select_train_test_time(start_time, end_time).cycle()
+    gsp_datapipe = (
+        OpenGSP(gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path)
+        .select_train_test_time(start_time, end_time)
+        .cycle()
+    )
 
     gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2, buffer_size=-1)
 
@@ -113,9 +115,11 @@ def metnet_national_datapipe(
     # Load NWP data
     if use_nwp:
         logger.debug("Opening NWP Data")
-        nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path).select_channels(
-            configuration.input_data.nwp.nwp_channels
-        ).cycle()
+        nwp_datapipe = (
+            OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+            .select_channels(configuration.input_data.nwp.nwp_channels)
+            .cycle()
+        )
 
         (
             nwp_datapipe,
@@ -137,9 +141,11 @@ def metnet_national_datapipe(
 
     if use_sat:
         logger.debug("Opening Satellite Data")
-        sat_datapipe = OpenSatellite(
-            configuration.input_data.satellite.satellite_zarr_path
-        ).select_channels(configuration.input_data.satellite.satellite_channels).cycle()
+        sat_datapipe = (
+            OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
+            .select_channels(configuration.input_data.satellite.satellite_channels)
+            .cycle()
+        )
         (
             sat_datapipe,
             sat_time_periods_datapipe,
@@ -185,12 +191,9 @@ def metnet_national_datapipe(
 
     if use_pv:
         logger.debug("Opening PV")
-        pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(
-            pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
-            pv_metadata_filename=configuration.input_data.pv.pv_files_groups[
-                0
-            ].pv_metadata_filename,
-        ).cycle().fork(2, buffer_size=-1)
+        pv_datapipe, pv_location_datapipe = (
+            OpenPVFromNetCDF(pv=configuration.input_data.pv).cycle().fork(2, buffer_size=-1)
+        )
 
         logger.debug("Add t0 idx")
         (

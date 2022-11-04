@@ -44,7 +44,7 @@ class GSPIterator(IterDataPipe):
 
 
 @pytest.fixture()
-def all_loc_np_datapipe():
+def all_loc_np_datapipe(passiv_datapipe):
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "hrv_sat_data.zarr"
     sat_datapipe = OpenSatellite(zarr_path=filename)
     sat_datapipe = ConvertSatelliteToInt8(sat_datapipe)
@@ -53,20 +53,8 @@ def all_loc_np_datapipe():
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=60),
     )
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "passiv"
-        / "UK_PV_metadata.csv"
-    )
-    pv_datapipe = OpenPVFromNetCDF(
-        pv_power_filename=filename, pv_metadata_filename=filename_metadata
-    )
+
+    pv_datapipe = passiv_datapipe
     pv_datapipe = AddT0IdxAndSamplePeriodDuration(
         pv_datapipe,
         sample_period_duration=timedelta(minutes=5),
@@ -129,15 +117,21 @@ def all_loc_np_datapipe():
     )
     gsp_t0_datapipe = SelectLiveT0Time(gsp_datapipe)
     gsp_datapipe = SelectLiveTimeSlice(
-        gsp_datapipe, t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2),
+        gsp_datapipe,
+        t0_datapipe=gsp_t0_datapipe,
+        history_duration=timedelta(hours=2),
     )
     sat_t0_datapipe = SelectLiveT0Time(sat_t0_datapipe)
     sat_datapipe = SelectLiveTimeSlice(
-        sat_datapipe, t0_datapipe=sat_t0_datapipe, history_duration=timedelta(hours=1),
+        sat_datapipe,
+        t0_datapipe=sat_t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     passiv_t0_datapipe = SelectLiveT0Time(pv_t0_datapipe)
     pv_datapipe = SelectLiveTimeSlice(
-        pv_datapipe, t0_datapipe=passiv_t0_datapipe, history_duration=timedelta(hours=1),
+        pv_datapipe,
+        t0_datapipe=passiv_t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     gsp_datapipe = GSPIterator(gsp_datapipe)
     sat_datapipe = ConvertSatelliteToNumpyBatch(sat_datapipe, is_hrv=True)
@@ -196,19 +190,8 @@ def nwp_np_datapipe():
 
 
 @pytest.fixture()
-def passiv_np_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "passiv"
-        / "UK_PV_metadata.csv"
-    )
-    dp = OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+def passiv_np_datapipe(passiv_datapipe):
+    dp = passiv_datapipe
     dp = AddT0IdxAndSamplePeriodDuration(
         dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
     )
@@ -218,24 +201,8 @@ def passiv_np_datapipe():
 
 
 @pytest.fixture()
-def pvoutput_np_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "pvoutput"
-        / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "pvoutput"
-        / "UK_PV_metadata.csv"
-    )
-    dp = OpenPVFromNetCDF(pv_power_filename=filename, pv_metadata_filename=filename_metadata)
+def pvoutput_np_datapipe(pvoutput_datapipe):
+    dp = pvoutput_datapipe
     dp = AddT0IdxAndSamplePeriodDuration(
         dp, sample_period_duration=timedelta(minutes=5), history_duration=timedelta(minutes=60)
     )

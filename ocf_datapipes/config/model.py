@@ -201,7 +201,7 @@ class PVFiles(BaseModel):
         return v
 
 
-class PV(DataSourceMixin, StartEndDatetimeMixin):
+class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]
@@ -222,10 +222,12 @@ class PV(DataSourceMixin, StartEndDatetimeMixin):
     )
 
     pv_filename: str = Field(
-        None, description="The NetCDF files holding the solar PV power timeseries.",
+        None,
+        description="The NetCDF files holding the solar PV power timeseries.",
     )
     pv_metadata_filename: str = Field(
-        None, description="Tthe CSV files describing each PV system.",
+        None,
+        description="Tthe CSV files describing each PV system.",
     )
 
     is_live: bool = Field(

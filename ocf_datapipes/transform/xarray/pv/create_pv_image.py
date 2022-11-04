@@ -1,4 +1,5 @@
 """Convert point PV sites to image output"""
+import logging
 from typing import Union
 
 import numpy as np
@@ -8,6 +9,8 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("create_pv_image")
@@ -51,7 +54,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 and len(pv_systems_xr.pv_system_id.values) >= self.max_num_pv_systems
             ):
                 subset_of_pv_system_ids = self.rng.choice(
-                    pv_systems_xr.pv_system_id, size=self.max_num_pv_systems, replace=False,
+                    pv_systems_xr.pv_system_id,
+                    size=self.max_num_pv_systems,
+                    replace=False,
                 )
                 pv_systems_xr = pv_systems_xr.sel(pv_system_id=subset_of_pv_system_ids)
 
@@ -68,8 +73,15 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 ),
                 dtype=np.float32,
             )
-            for pv_system_id in pv_systems_xr["pv_system_id"]:
-                pv_system = pv_systems_xr.sel(pv_system_id=pv_system_id)
+            for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
+                try:
+                    # went for isel incase there is a duplicated pv_system_id
+                    pv_system = pv_systems_xr.isel(pv_system_id=i)
+                except Exception as e:
+                    logger.warning(
+                        f"Could not select {pv_system_id} " f"from {pv_systems_xr.pv_system_id}"
+                    )
+                    raise e
                 if "geostationary" in self.x_dim:
                     pv_x, pv_y = _osgb_to_geostationary(
                         xx=pv_system["x_osgb"].values, yy=pv_system["y_osgb"].values

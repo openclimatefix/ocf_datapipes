@@ -42,12 +42,9 @@ def nwp_pv_datapipe(
     configuration: Configuration = next(iter(config_datapipe))
 
     logger.debug("Opening Datasets")
-    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(
-        pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
-        pv_metadata_filename=configuration.input_data.pv.pv_files_groups[0].pv_metadata_filename,
-        start_datetime=configuration.input_data.pv.start_datetime,
-        end_datetime=configuration.input_data.pv.end_datetime,
-    ).fork(2, buffer_size=BUFFER_SIZE)
+    pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).fork(
+        2, buffer_size=BUFFER_SIZE
+    )
 
     nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
 
@@ -107,7 +104,8 @@ def nwp_pv_datapipe(
     )
     # find joint overlapping timer periods
     overlapping_datapipe = pv_time_periods_datapipe.select_overlapping_time_slice(
-        secondary_datapipes=[nwp_time_periods_datapipe], location_datapipe=location_datapipe3,
+        secondary_datapipes=[nwp_time_periods_datapipe],
+        location_datapipe=location_datapipe3,
     )
 
     # select time periods
