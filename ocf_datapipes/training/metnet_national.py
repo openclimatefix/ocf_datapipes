@@ -185,12 +185,7 @@ def metnet_national_datapipe(
 
     if use_pv:
         logger.debug("Opening PV")
-        pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(
-            pv_power_filename=configuration.input_data.pv.pv_files_groups[0].pv_filename,
-            pv_metadata_filename=configuration.input_data.pv.pv_files_groups[
-                0
-            ].pv_metadata_filename,
-        ).fork(2)
+        pv_datapipe, pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).fork(2)
 
         logger.debug("Add t0 idx")
         (

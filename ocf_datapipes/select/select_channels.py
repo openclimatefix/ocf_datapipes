@@ -1,5 +1,4 @@
 """Select channels"""
-import datetime
 import logging
 from typing import List, Union
 
