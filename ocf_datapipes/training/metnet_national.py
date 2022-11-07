@@ -10,7 +10,14 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.convert import ConvertGSPToNumpy
-from ocf_datapipes.load import OpenConfiguration, OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
+from ocf_datapipes.load import (
+    OpenConfiguration,
+    OpenGSP,
+    OpenNWP,
+    OpenPVFromNetCDF,
+    OpenSatellite,
+    OpenTopography,
+)
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
@@ -81,7 +88,9 @@ def metnet_national_datapipe(
             True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
         )
     if use_topo:
-        use_topo = True if configuration.input_data.topographic.topographic_filename != "" else False
+        use_topo = (
+            True if configuration.input_data.topographic.topographic_filename != "" else False
+        )
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun}")
     # Load GSP national data
     logger.debug("Opening GSP Data")

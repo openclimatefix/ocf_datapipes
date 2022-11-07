@@ -117,9 +117,8 @@ def test_metnet_preprocess_sat_hrv_pv_nwp(
     data = next(iter(datapipe))
     assert data.shape == (289, 14, 100, 100)
 
-def test_metnet_preprocess_sat_topo(
-    sat_datapipe, gsp_datapipe,topo_datapipe
-):
+
+def test_metnet_preprocess_sat_topo(sat_datapipe, gsp_datapipe, topo_datapipe):
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
     gsp_datapipe = LocationPicker(gsp_datapipe)
     datapipe = PreProcessMetNet(
@@ -135,6 +134,7 @@ def test_metnet_preprocess_sat_topo(
     )
     data = next(iter(datapipe))
     assert data.shape == (25, 12, 100, 100)
+
 
 def test_metnet_preprocess_sat_hrv_pv_nwp_topo(
     sat_datapipe, sat_hrv_datapipe, gsp_datapipe, passiv_datapipe, nwp_datapipe, topo_datapipe
