@@ -5,7 +5,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Union
 
-import numpy as np
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
