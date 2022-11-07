@@ -10,7 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.convert import ConvertGSPToNumpy
-from ocf_datapipes.load import OpenConfiguration, OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite
+from ocf_datapipes.load import OpenConfiguration, OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
@@ -40,6 +40,7 @@ def metnet_national_datapipe(
     use_sat: bool = True,
     use_hrv: bool = True,
     use_pv: bool = True,
+    use_topo: bool = True,
     max_num_pv_systems: int = -1,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
@@ -56,6 +57,7 @@ def metnet_national_datapipe(
         use_hrv: Whether to use HRV Satellite or not
         use_sat: Whether to use non-HRV Satellite or not
         use_nwp: Whether to use NWP or not
+        use_topo: Whether to use topographic map or not
         max_num_pv_systems: max number of PV systems to include, <= 0 if no sampling
         start_time: Start time to select on
         end_time: End time to select from
@@ -78,6 +80,8 @@ def metnet_national_datapipe(
         use_hrv = (
             True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
         )
+    if use_topo:
+        use_topo = True if configuration.input_data.topographic.topographic_filename != "" else False
     print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun}")
     # Load GSP national data
     logger.debug("Opening GSP Data")
@@ -260,6 +264,9 @@ def metnet_national_datapipe(
             sample_period_duration=timedelta(minutes=5),
         ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=max_num_pv_systems)
 
+    if use_topo:
+        topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename)
+
     # Now combine in the MetNet format
     modalities = []
     if use_nwp:
@@ -270,6 +277,8 @@ def metnet_national_datapipe(
         modalities.append(sat_datapipe)
     if use_pv:
         modalities.append(pv_datapipe)
+    if use_topo:
+        modalities.append(topo_datapipe)
 
     gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2)
 
