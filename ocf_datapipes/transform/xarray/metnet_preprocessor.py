@@ -131,6 +131,9 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 )
                 xr_center = xr_center.to_numpy()
                 xr_context = xr_context.to_numpy()
+                if len(xr_center.shape) == 2:  # Need to add channel dimension
+                    xr_center = np.expand_dims(xr_center, axis=0)
+                    xr_context = np.expand_dims(xr_context, axis=0)
                 if len(xr_center.shape) == 3:  # Need to add channel dimension
                     xr_center = np.expand_dims(xr_center, axis=1)
                     xr_context = np.expand_dims(xr_context, axis=1)
@@ -142,6 +145,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 np.max([c.shape[0] for c in centers]), np.max([c.shape[0] for c in contexts])
             )
             for i in range(len(centers)):
+                print(centers[i].shape)
                 centers[i] = np.pad(
                     centers[i],
                     pad_width=(
@@ -208,12 +212,12 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     if "x_geostationary" in xr_data.dims:
         x_coords = xr_data["x_geostationary"].values
         y_coords = xr_data["y_geostationary"].values
-    elif "x" in xr_data.dims:
-        x_coords = xr_data["x"].values
-        y_coords = xr_data["y"].values
-    else:
+    elif "x_osgb" in xr_data.dims:
         x_coords = xr_data["x_osgb"].values
         y_coords = xr_data["y_osgb"].values
+    else:
+        x_coords = xr_data["x"].values
+        y_coords = xr_data["y"].values
     # Resample down to the number of pixels wanted
     x_coords = np.linspace(x_coords[0], x_coords[-1], num=width_pixels)
     y_coords = np.linspace(y_coords[0], y_coords[-1], num=height_pixels)
@@ -221,10 +225,10 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
         xr_data = xr_data.interp(
             x_geostationary=x_coords, y_geostationary=y_coords, method="linear"
         )
-    elif "x" in xr_data.dims:
-        xr_data = xr_data.interp(x=x_coords, y=y_coords, method="linear")
-    else:
+    elif "x_osgb" in xr_data.dims:
         xr_data = xr_data.interp(x_osgb=x_coords, y_osgb=y_coords, method="linear")
+    else:
+        xr_data = xr_data.interp(x=x_coords, y=y_coords, method="linear")
     # Extract just the data now
     return xr_data
 
