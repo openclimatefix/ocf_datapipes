@@ -44,6 +44,7 @@ def normalize_gsp(x):  # So it can be pickled
 def _remove_nans(x):
     return x.fillna(0.0)
 
+
 def metnet_national_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
@@ -278,7 +279,9 @@ def metnet_national_datapipe(
         ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=max_num_pv_systems)
 
     if use_topo:
-        topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename).map(_remove_nans)
+        topo_datapipe = OpenTopography(
+            configuration.input_data.topographic.topographic_filename
+        ).map(_remove_nans)
 
     # Now combine in the MetNet format
     modalities = []
