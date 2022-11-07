@@ -15,6 +15,9 @@ from ocf_datapipes.load import OpenConfiguration, OpenPVFromNetCDF
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
+# default is set to 1000
+BUFFERSIZE = -1
+
 
 def simple_pv_datapipe(
     configuration_filename: Union[Path, str], tag: Optional[str] = "train"
@@ -39,7 +42,9 @@ def simple_pv_datapipe(
 
     logger.debug("Opening Datasets")
     pv_datapipe, pv_location_datapipe = (
-        OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans().fork(2)
+        OpenPVFromNetCDF(pv=configuration.input_data.pv).
+            pv_fill_night_nans().
+            fork(2, buffer_size=BUFFERSIZE)
     )
 
     logger.debug("Add t0 idx")
@@ -71,7 +76,7 @@ def simple_pv_datapipe(
         )
         .ensure_n_pv_systems_per_example(n_pv_systems_per_example=1)
         .remove_nans()
-        .fork(3)
+        .fork(3, buffer_size=BUFFERSIZE)
     )
 
     # get contiguous time periods
