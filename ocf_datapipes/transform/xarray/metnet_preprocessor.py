@@ -145,7 +145,6 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 np.max([c.shape[0] for c in centers]), np.max([c.shape[0] for c in contexts])
             )
             for i in range(len(centers)):
-                print(centers[i].shape)
                 centers[i] = np.pad(
                     centers[i],
                     pad_width=(
