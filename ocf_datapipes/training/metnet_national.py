@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Union
 
+import numpy as np
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -39,6 +40,9 @@ def normalize_gsp(x):  # So it can be pickled
     """
     return x / x.capacity_megawatt_power
 
+
+def _remove_nans(x):
+    return x.fillna(0.0)
 
 def metnet_national_datapipe(
     configuration_filename: Union[Path, str],
@@ -274,7 +278,7 @@ def metnet_national_datapipe(
         ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=max_num_pv_systems)
 
     if use_topo:
-        topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename)
+        topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename).map(_remove_nans)
 
     # Now combine in the MetNet format
     modalities = []
