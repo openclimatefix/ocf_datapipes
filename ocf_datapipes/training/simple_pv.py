@@ -42,9 +42,9 @@ def simple_pv_datapipe(
 
     logger.debug("Opening Datasets")
     pv_datapipe, pv_location_datapipe = (
-        OpenPVFromNetCDF(pv=configuration.input_data.pv).
-            pv_fill_night_nans().
-            fork(2, buffer_size=BUFFERSIZE)
+        OpenPVFromNetCDF(pv=configuration.input_data.pv)
+        .pv_fill_night_nans()
+        .fork(2, buffer_size=BUFFERSIZE)
     )
 
     logger.debug("Add t0 idx")
