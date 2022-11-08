@@ -118,6 +118,8 @@ def load_everything_into_ram(
         x_osgb=pv_metadata.x_osgb.astype(np.float32),
         capacity_watt_power=pv_capacity_watt_power,
         pv_system_row_number=pv_system_row_number,
+        latitude=pv_metadata.latitude,
+        longitude=pv_metadata.longitude
     )
 
     # Sanity checks:

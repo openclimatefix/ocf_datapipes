@@ -1,6 +1,6 @@
 """ Util functions for PV data source"""
 import logging
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -27,6 +27,8 @@ def put_pv_data_into_an_xr_dataarray(
     x_osgb: pd.Series,
     capacity_watt_power: pd.Series,
     pv_system_row_number: pd.Series,
+    longitude: Optional[pd.Series] = None,
+    latitude: Optional[pd.Series] = None,
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
 
@@ -70,6 +72,14 @@ def put_pv_data_into_an_xr_dataarray(
     )
     # Sample period duration is required so PVDownsample transform knows by how much
     # to change the pv_t0_idx:
+    if latitude is not None:
+        data_array = data_array.assign_coords(
+            latitude=("pv_system_id", latitude),
+        )
+    if longitude is not None:
+        data_array = data_array.assign_coords(
+            longitude=("pv_system_id", longitude),
+        )
 
     assert len(pv_system_row_number) > 0
 
