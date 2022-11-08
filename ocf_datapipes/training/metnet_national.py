@@ -220,9 +220,11 @@ def metnet_national_datapipe(
 
     # select t0 periods
     logger.debug("Select t0 joint")
+    num_t0_datapipes = 1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
     t0_datapipes = gsp_t0_datapipe.select_t0_time(
         return_all_times=False if mode == "train" else True
-    ).fork(1 + len(secondary_datapipes))
+    ).fork(num_t0_datapipes)
+
 
     # take pv time slices
     logger.debug("Take GSP time slices")
@@ -316,4 +318,8 @@ def metnet_national_datapipe(
     )
 
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
-    return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
+    if mode == "train":
+        return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
+    else:
+        start_time_datapipe = t0_datapipes[len(t0_datapipes)-1] # The one extra one
+        return combined_datapipe.zip(gsp_datapipe, start_time_datapipe)
