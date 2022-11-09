@@ -19,7 +19,6 @@ setup(
     install_requires=install_requires,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    extras_require={"all": ["cartopy==0.19.0.post1"]},
     include_package_data=True,
     packages=find_packages(),
 )
