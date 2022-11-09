@@ -414,7 +414,7 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class NWP(DataSourceMixin):
+class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
     """NWP configuration model"""
 
     # TODO change to nwp_path, as it could be a netcdf now.
