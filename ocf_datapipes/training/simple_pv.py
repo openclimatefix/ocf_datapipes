@@ -69,11 +69,13 @@ def simple_pv_datapipe(
             ),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
-        .select_spatial_slice_meters(
-            location_datapipe=location_datapipe1,
-            roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
-            roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
-        )
+        .select_id(location_datapipe=location_datapipe1, data_source_name="pv")
+        # .select_spatial_slice_meters(
+        #     location_datapipe=location_datapipe1,
+        #     roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
+        #     roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
+        #     x_dim_name="longitude", y_dim_name="latitude"
+        # )
         .ensure_n_pv_systems_per_example(n_pv_systems_per_example=1)
         .remove_nans()
         .fork(3, buffer_size=BUFFERSIZE)
