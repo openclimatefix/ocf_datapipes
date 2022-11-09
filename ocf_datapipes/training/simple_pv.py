@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
 # default is set to 1000
-BUFFERSIZE = -1
+BUFFERSIZE = 1000
 
 
 def simple_pv_datapipe(
@@ -57,7 +57,7 @@ def simple_pv_datapipe(
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
-    location_datapipe1 = pv_location_datapipe.location_picker()
+    location_datapipe1 = pv_location_datapipe.location_picker(x_dim_name='long')
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -118,8 +118,8 @@ def simple_pv_datapipe(
         .encode_space_time().add_sun_position(modality_name="pv")
     )
 
-    combined_datapipe = combined_datapipe.add_length(
-        configuration=configuration, train_validation_test=tag
-    )
+    # combined_datapipe = combined_datapipe.add_length(
+    #     configuration=configuration, train_validation_test=tag
+    # )
 
     return combined_datapipe
