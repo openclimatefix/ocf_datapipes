@@ -70,7 +70,8 @@ def metnet_national_datapipe(
         use_sat: Whether to use non-HRV Satellite or not
         use_nwp: Whether to use NWP or not
         use_topo: Whether to use topographic map or not
-        mode: Either 'train', where random times are selected, or 'test' or 'val' where times are sequential
+        mode: Either 'train', where random times are selected,
+            or 'test' or 'val' where times are sequential
         max_num_pv_systems: max number of PV systems to include, <= 0 if no sampling
         start_time: Start time to select on
         end_time: End time to select from
@@ -220,11 +221,12 @@ def metnet_national_datapipe(
 
     # select t0 periods
     logger.debug("Select t0 joint")
-    num_t0_datapipes = 1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
+    num_t0_datapipes = (
+        1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
+    )
     t0_datapipes = gsp_t0_datapipe.select_t0_time(
         return_all_times=False if mode == "train" else True
     ).fork(num_t0_datapipes)
-
 
     # take pv time slices
     logger.debug("Take GSP time slices")
@@ -321,5 +323,5 @@ def metnet_national_datapipe(
     if mode == "train":
         return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
     else:
-        start_time_datapipe = t0_datapipes[len(t0_datapipes)-1] # The one extra one
+        start_time_datapipe = t0_datapipes[len(t0_datapipes) - 1]  # The one extra one
         return combined_datapipe.zip(gsp_datapipe, start_time_datapipe)
