@@ -42,7 +42,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
 
-            logger.debug(f"Getting locations")
+            logger.debug("Getting locations")
 
             if self.return_all_locations:
 
