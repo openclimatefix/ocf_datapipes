@@ -50,13 +50,16 @@ def open_gfs(zarr_path: Union[Path, str]) -> xr.Dataset:
     else:
         nwp = xr.load_dataset(zarr_path, engine="zarr", mode="r", chunks="auto")
 
-    nwp = xr.concat([nwp["dlwrf"], nwp["t"], nwp["u"], nwp["v"], nwp["prate"]], "channel")
-    nwp = nwp.assign_coords(channel=["dlwrf", "t", "u", "v", "prate"])
+    variables = list(nwp.keys())
+
+    nwp = xr.concat([nwp[v] for v in variables], "channel")
+    nwp = nwp.assign_coords(channel=variables)
 
     nwp = nwp.transpose("time", "step", "channel", "latitude", "longitude")
     nwp = nwp.rename({"time": "init_time_utc"})
     nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longitude")
-    nwp = nwp.drop("valid_time")
+    if 'valid_time' in nwp.coords.keys():
+        nwp = nwp.drop("valid_time")
 
     # nwp = nwp.resample(init_time_utc="60T").pad()
     _log.debug("Interpolating hour 0 to NWP data")

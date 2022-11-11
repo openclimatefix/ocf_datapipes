@@ -424,6 +424,59 @@ def nwp_data_with_id_filename():
 
 
 @pytest.fixture()
+def nwp_gfs_data():
+    """Create xarray netcdf file for NWP data
+
+    Variables
+    - init_time
+    - step
+    - latitude
+    - longitude
+    """
+
+    # middle of the UK
+    t0_datetime_utc = datetime(2022, 9, 1)
+    time_steps = 10
+    days = 7
+    x = np.array(range(0, 10))
+    y = np.array(range(0, 10))
+    init_time = [t0_datetime_utc + timedelta(minutes=60 * i) for i in range(0, days * 24)]
+
+    # time = pd.date_range(start=t0_datetime_utc, freq="30T", periods=10)
+    step = [timedelta(minutes=60 * (i + 1)) for i in range(0, time_steps)]
+
+    data_arrays = []
+    for variable in ["si10", "dswrf", "t", "prate"]:
+        coords = (
+            ("time", init_time),
+            ("step", step),
+            ("longitude", x),
+            ("latitude", y),
+        )
+
+        nwp = xr.DataArray(
+            abs(  # to make sure average is about 100
+                np.random.uniform(
+                    0,
+                    200,
+                    size=(7 * 24, time_steps, len(x), len(y)),
+                )
+            ),
+            coords=coords,
+            name=variable,
+        )  # Fake data for testing!
+        data_arrays.append(nwp)
+
+    nwp = xr.merge(data_arrays)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filename = tmpdir + "/nwp.zarr"
+
+        nwp.to_zarr(filename)
+
+        yield filename
+
+
+@pytest.fixture()
 def configuration():
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
