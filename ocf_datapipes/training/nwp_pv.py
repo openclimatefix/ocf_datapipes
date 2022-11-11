@@ -11,7 +11,7 @@ import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import OpenConfiguration, OpenGFSForecast, OpenNWPID, OpenPVFromNetCDF
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, NWP_GFS_MEAN, NWP_GFS_STD
+from ocf_datapipes.utils.consts import NWP_GFS_MEAN, NWP_GFS_STD, NWP_MEAN, NWP_STD
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
