@@ -121,7 +121,7 @@ def nwp_pv_datapipe(
             x_dim_name=configuration.input_data.nwp.x_dim_name,
         )
 
-    nwp_datapipe = nwp_datapipe.fork(2, buffer_size=BUFFER_SIZE)
+    nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.fork(2, buffer_size=BUFFER_SIZE)
 
     #
     # get contiguous time periods
