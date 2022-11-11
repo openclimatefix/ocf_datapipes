@@ -4,7 +4,7 @@ from ocf_datapipes.transform.numpy import ChangeFloat32
 from ocf_datapipes.utils.consts import BatchKey
 
 
-def test_add_sun_position_gsp(all_loc_np_datapipe):
+def test_change_to_float32(all_loc_np_datapipe):
     pass
 
     all_loc_np_datapipe = ChangeFloat32(all_loc_np_datapipe)

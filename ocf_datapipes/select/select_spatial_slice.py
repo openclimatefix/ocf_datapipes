@@ -139,10 +139,11 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             bottom = location.y - half_height
             top = location.y + half_height
             # Select data in the region of interest:
-            id_mask = left <= getattr(xr_data, self.x_dim_name) & (
-                getattr(xr_data, self.x_dim_name) <= right
-            ) & (getattr(xr_data, self.y_dim_name) <= top) & (
-                bottom <= getattr(xr_data, self.y_dim_name)
+            id_mask = (
+                (left <= getattr(xr_data, self.x_dim_name))
+                & (getattr(xr_data, self.x_dim_name) <= right)
+                & (getattr(xr_data, self.y_dim_name) <= top)
+                & (bottom <= getattr(xr_data, self.y_dim_name))
             )
 
             selected = xr_data.isel({self.dim_name: id_mask})
