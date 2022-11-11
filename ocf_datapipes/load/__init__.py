@@ -11,7 +11,6 @@ from .nwp.nwp import OpenNWPIterDataPipe as OpenNWP
 from .nwp.nwp_id import OpenNWPIDIterDataPipe as OpenNWPID
 from .satellite import OpenSatelliteIterDataPipe as OpenSatellite
 
-
 try:
     import rioxarray  # Rioxarray is sometimes a pain to install, so only load this if its installed
 
