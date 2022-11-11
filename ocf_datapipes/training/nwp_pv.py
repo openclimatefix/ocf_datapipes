@@ -54,7 +54,7 @@ def nwp_pv_datapipe(
         nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
     else:
         raise Exception(
-            f'NWP provider {configuration.input_data.nwp.nwp_provider} '
+            f"NWP provider {configuration.input_data.nwp.nwp_provider} "
             f'not in "UKMetOffice" or "GFS"'
         )
 
@@ -108,17 +108,20 @@ def nwp_pv_datapipe(
     )
 
     # select square from nwp data
-    # nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(
-    #     location_datapipe=location_datapipe2,
-    #     roi_height_pixels=2,
-    #     roi_width_pixels=2,
-    #     y_dim_name=configuration.input_data.nwp.y_dim_name,
-    #     x_dim_name=configuration.input_data.nwp.x_dim_name,
-    # ).fork(2, buffer_size=BUFFER_SIZE)
+    if configuration.input_data.nwp.index_by_id:
+        nwp_datapipe = nwp_datapipe.select_id(
+            location_datapipe=location_datapipe2,
+        )
+    else:
+        nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
+            location_datapipe=location_datapipe2,
+            roi_height_pixels=configuration.input_data.nwp.nwp_image_size_pixels_height,
+            roi_width_pixels=configuration.input_data.nwp.nwp_image_size_pixels_width,
+            y_dim_name=configuration.input_data.nwp.y_dim_name,
+            x_dim_name=configuration.input_data.nwp.x_dim_name,
+        )
 
-    nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_id(
-        location_datapipe=location_datapipe2,
-    ).fork(2, buffer_size=BUFFER_SIZE)
+    nwp_datapipe = nwp_datapipe.fork(2, buffer_size=BUFFER_SIZE)
 
     #
     # get contiguous time periods
