@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes.iter import IterDataPipe
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
 
             if self.return_all_times:
 
-                number_of_locations = next(number_of_locations)
+                number_of_locations = next(self.number_locations_datapipe)
 
                 logger.info(
                     f"Will be returning all times from {xr_data[self.dim_name]}. "
