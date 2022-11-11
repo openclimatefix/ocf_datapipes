@@ -48,12 +48,14 @@ def nwp_pv_datapipe(
         .fork(2, buffer_size=BUFFER_SIZE)
     )
 
-    if configuration.input_data.nwp.nwp_provider == 'UKMetOffice':
+    if configuration.input_data.nwp.nwp_provider == "UKMetOffice":
         nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
-    elif configuration.input_data.nwp.nwp_provider == 'GFS':
+    elif configuration.input_data.nwp.nwp_provider == "GFS":
         nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
     else:
-        raise Exception(f'NWP provider {configuration.input_data.nwp.nwp_provider} not in "UKMetOffice" or "GFS"')
+        raise Exception(
+            f'NWP provider {configuration.input_data.nwp.nwp_provider} not in "UKMetOffice" or "GFS"'
+        )
 
     logger.debug("Add t0 idx and normalize")
     pv_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
@@ -82,7 +84,7 @@ def nwp_pv_datapipe(
     ) = pv_location_datapipe.location_picker(
         return_all_locations=return_all,
         x_dim_name=configuration.input_data.pv.x_dim_name,
-        y_dim_name=configuration.input_data.pv.y_dim_name
+        y_dim_name=configuration.input_data.pv.y_dim_name,
     ).fork(
         4, buffer_size=BUFFER_SIZE
     )
