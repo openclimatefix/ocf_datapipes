@@ -2,10 +2,14 @@
 from datetime import timedelta
 from typing import Union
 
+import logging
+
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("select_live_time_slice")
@@ -37,4 +41,7 @@ class SelectLiveTimeSliceIterDataPipe(IterDataPipe):
         """Select the recent live data"""
         for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
             xr_data = xr_data.sel({self.dim_name: slice(t0 - self.history_duration, t0)})
+
+            logger.debug(f'Took slice of length {len(xr_data.time_utc)}')
+
             yield xr_data

@@ -1,5 +1,7 @@
 """Select spatial slices"""
+import logging
 from typing import Union
+import logging
 
 import numpy as np
 import xarray as xr
@@ -9,6 +11,8 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
 
+
+logger = logging.getLogger(__name__)
 
 @functional_datapipe("select_spatial_slice_pixels")
 class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
@@ -124,6 +128,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
             # Compute the index for left and right:
+            logger.debug('Getting Spatial Slice Meters')
+
             half_height = self.roi_height_meters // 2
             half_width = self.roi_width_meters // 2
 

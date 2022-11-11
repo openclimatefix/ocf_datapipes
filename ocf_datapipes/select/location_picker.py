@@ -43,9 +43,12 @@ class LocationPickerIterDataPipe(IterDataPipe):
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
 
-            logger.debug(f"Getting locations for {xr_dataset}")
+            logger.debug(f"Getting locations")
 
             if self.return_all_locations:
+
+                logger.debug('Going to return all locations')
+
                 # Iterate through all locations in dataset
                 for location_idx in range(len(xr_dataset[self.x_dim_name])):
                     location = Location(
@@ -55,7 +58,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                     if "pv_system_id" in xr_dataset.coords.keys():
 
                         location.id = int(xr_dataset["pv_system_id"][location_idx].values)
-                    logger.debug(f"Got all locations {location}")
+                    logger.debug(f"Got all location {location}")
                     yield location
             else:
                 # Assumes all datasets have osgb coordinates for selecting locations
@@ -68,5 +71,4 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 if "pv_system_id" in xr_dataset.coords.keys():
                     location.id = int(xr_dataset["pv_system_id"][location_idx].values)
                     logger.debug(f"Have selected location.id {location.id}")
-                for i in range(0, 10):
-                    yield location
+                yield location

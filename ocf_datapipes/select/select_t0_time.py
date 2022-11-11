@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         dim_name: str = "time_utc",
         return_all_times: Optional[bool] = False,
+        number_locations_datapipe: Optional[IterDataPipe] = None
     ):
         """
         Select a random t0 time for training
@@ -27,29 +28,37 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe emitting Xarray objects
             dim_name: The time dimension name to use
             return_all_times: option to
+            number_locations_datapipe: get the total number of locations
         """
         self.source_datapipe = source_datapipe
         self.dim_name = dim_name
         self.return_all_times = return_all_times
+        self.number_locations_datapipe = number_locations_datapipe
 
         if self.return_all_times:
             logger.debug("Will be returning all t0 times")
 
     def __iter__(self) -> pd.Timestamp:
         """Get the latest timestamp and return it"""
-        for xr_data in self.source_datapipe:
+        for xr_data, number_of_locations in Zipper(self.source_datapipe, self.number_locations_datapipe):
 
             if self.return_all_times:
 
+                logger.info(f'Will be returning all times from {xr_data[self.dim_name]}. '
+                             f'There are {len(xr_data[self.dim_name])} of them')
+
                 for t0 in xr_data[self.dim_name].values:
-                    yield t0
+
+                    for _ in range(0,number_of_locations):
+                        logger.debug(f"t0 will be {t0}")
+                        yield t0
 
             else:
 
                 logger.debug(f"Selecting t0 from {len(xr_data[self.dim_name])} datetimes")
 
                 if len(xr_data[self.dim_name].values) == 0:
-                    assert Exception("There are no values to get t0 from")
+                    raise Exception("There are no values to get t0 from")
                 t0 = np.random.choice(xr_data[self.dim_name].values)
                 logger.debug(f"t0 will be {t0}")
 
