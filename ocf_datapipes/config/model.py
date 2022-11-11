@@ -463,7 +463,9 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
     nwp_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
     nwp_provider: str = Field("UKMetOffice", description="The provider of the NWP data")
-    index_by_id: bool = Field(False, description='If the NWP data has an id coordinate, not x and y. ')
+    index_by_id: bool = Field(
+        False, description="If the NWP data has an id coordinate, not x and y."
+    )
 
     @validator("nwp_provider")
     def validate_nwp_provider(cls, v):
