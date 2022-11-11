@@ -40,11 +40,11 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> pd.Timestamp:
         """Get the latest timestamp and return it"""
-        for xr_data, number_of_locations in Zipper(
-            self.source_datapipe, self.number_locations_datapipe
-        ):
+        for xr_data in self.source_datapipe:
 
             if self.return_all_times:
+
+                number_of_locations = next(number_of_locations)
 
                 logger.info(
                     f"Will be returning all times from {xr_data[self.dim_name]}. "

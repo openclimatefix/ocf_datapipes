@@ -145,6 +145,40 @@ class TimeResolutionMixin(Base):
         return v
 
 
+class XYDimensionalNames(Base):
+    """X and Y dimensions names"""
+
+    x_dim_name: str = Field(
+        "x_osgb",
+        description="The x dimension name. Should be either x_osgb or longitude",
+    )
+
+    y_dim_name: str = Field(
+        "y_osgb",
+        description="The y dimension name. Should be either y_osgb or latitude",
+    )
+
+    @root_validator
+    def check_start_and_end_datetime(cls, values):
+
+        x_dim_name = values["x_dim_name"]
+        y_dim_name = values["y_dim_name"]
+
+        assert x_dim_name in ["x_osgb", "longitude", "x"]
+        assert y_dim_name in ["y_osgb", "latitude", "y"]
+
+        if x_dim_name == "x":
+            assert y_dim_name == "y"
+
+        if x_dim_name == "x_osgb":
+            assert y_dim_name == "y_osgb"
+
+        if x_dim_name == "longitude":
+            assert y_dim_name == "latitude"
+
+        return values
+
+
 class StartEndDatetimeMixin(Base):
     """Mixin class to add start and end date"""
 
@@ -204,7 +238,7 @@ class PVFiles(BaseModel):
         return v
 
 
-class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
+class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]
@@ -414,7 +448,7 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
+class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
     """NWP configuration model"""
 
     # TODO change to nwp_path, as it could be a netcdf now.
@@ -427,6 +461,17 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
     nwp_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
+    nwp_provider: str = Field("UKMetOffice", description="The provider of the NWP data")
+
+    @validator("nwp_provider")
+    def validate_nwp_provider(cls, v):
+        """Validate 'nwp_provider'"""
+        nwp_providers = ["UKMetOffice", "GFS"]
+        if v not in nwp_providers:
+            message = f"NWP provider {v} is not in {nwp_providers}"
+            logger.warning(message)
+            assert Exception(message)
+        return v
 
 
 class GSP(DataSourceMixin, StartEndDatetimeMixin):
