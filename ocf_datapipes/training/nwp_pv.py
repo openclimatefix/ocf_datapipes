@@ -11,7 +11,7 @@ import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import OpenConfiguration, OpenGFSForecast, OpenNWPID, OpenPVFromNetCDF
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD
+from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, NWP_GFS_MEAN, NWP_GFS_STD
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
@@ -172,18 +172,22 @@ def nwp_pv_datapipe(
     )
 
     # take nwp time slices
-    nwp_datapipe = (
-        nwp_datapipe.convert_to_nwp_target_time(
-            t0_datapipe=nwp_t0_datapipe,
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.nwp.time_resolution_minutes
-            ),
-            history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-            forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-        )
-        .normalize(mean=NWP_MEAN, std=NWP_STD)
-        .convert_nwp_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+    nwp_datapipe = nwp_datapipe.convert_to_nwp_target_time(
+        t0_datapipe=nwp_t0_datapipe,
+        sample_period_duration=timedelta(
+            minutes=configuration.input_data.nwp.time_resolution_minutes
+        ),
+        history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+        forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
+    )
+
+    if configuration.input_data.nwp.nwp_provider == "UKMetOffice":
+        nwp_datapipe = nwp_datapipe.normalize(mean=NWP_MEAN, std=NWP_STD)
+    else:
+        nwp_datapipe = nwp_datapipe.normalize(mean=NWP_GFS_MEAN, std=NWP_GFS_STD)
+
+    nwp_datapipe = nwp_datapipe.convert_nwp_to_numpy_batch().merge_numpy_examples_to_batch(
+        n_examples_per_batch=configuration.process.batch_size
     )
 
     ####################################
