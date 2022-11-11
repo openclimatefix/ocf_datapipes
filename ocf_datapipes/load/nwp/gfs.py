@@ -58,7 +58,7 @@ def open_gfs(zarr_path: Union[Path, str]) -> xr.Dataset:
     nwp = nwp.transpose("time", "step", "channel", "latitude", "longitude")
     nwp = nwp.rename({"time": "init_time_utc"})
     nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longitude")
-    if 'valid_time' in nwp.coords.keys():
+    if "valid_time" in nwp.coords.keys():
         nwp = nwp.drop("valid_time")
 
     # nwp = nwp.resample(init_time_utc="60T").pad()
