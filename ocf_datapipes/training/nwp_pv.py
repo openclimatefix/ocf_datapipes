@@ -10,7 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenConfiguration, OpenGFSForecast, OpenPVFromNetCDF
+from ocf_datapipes.load import OpenConfiguration, OpenGFSForecast, OpenNWPID, OpenPVFromNetCDF
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD
 
 logger = logging.getLogger(__name__)
@@ -48,8 +48,12 @@ def nwp_pv_datapipe(
         .fork(2, buffer_size=BUFFER_SIZE)
     )
 
-    # nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
-    nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
+    if configuration.input_data.nwp.nwp_provider == 'UKMetOffice':
+        nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
+    elif configuration.input_data.nwp.nwp_provider == 'GFS':
+        nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
+    else:
+        raise Exception(f'NWP provider {configuration.input_data.nwp.nwp_provider} not in "UKMetOffice" or "GFS"')
 
     logger.debug("Add t0 idx and normalize")
     pv_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
@@ -76,7 +80,9 @@ def nwp_pv_datapipe(
         location_datapipe3,
         location_datapipe4,
     ) = pv_location_datapipe.location_picker(
-        return_all_locations=return_all, x_dim_name="longitude", y_dim_name="latitude"
+        return_all_locations=return_all,
+        x_dim_name=configuration.input_data.pv.x_dim_name,
+        y_dim_name=configuration.input_data.pv.y_dim_name
     ).fork(
         4, buffer_size=BUFFER_SIZE
     )
@@ -99,12 +105,16 @@ def nwp_pv_datapipe(
     )
 
     # select square from nwp data
-    nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(
+    # nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(
+    #     location_datapipe=location_datapipe2,
+    #     roi_height_pixels=2,
+    #     roi_width_pixels=2,
+    #     y_dim_name=configuration.input_data.nwp.y_dim_name,
+    #     x_dim_name=configuration.input_data.nwp.x_dim_name,
+    # ).fork(2, buffer_size=BUFFER_SIZE)
+
+    nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_id(
         location_datapipe=location_datapipe2,
-        roi_height_pixels=2,
-        roi_width_pixels=2,
-        y_dim_name="latitude",
-        x_dim_name="longitude",
     ).fork(2, buffer_size=BUFFER_SIZE)
 
     #
