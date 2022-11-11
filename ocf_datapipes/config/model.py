@@ -159,7 +159,8 @@ class XYDimensionalNames(Base):
     )
 
     @root_validator
-    def check_start_and_end_datetime(cls, values):
+    def check_x_y_dimension_names(cls, values):
+        """Check that the x and y dimeision pair up correctly"""
 
         x_dim_name = values["x_dim_name"]
         y_dim_name = values["y_dim_name"]
