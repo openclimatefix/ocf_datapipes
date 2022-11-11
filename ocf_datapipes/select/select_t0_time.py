@@ -44,7 +44,12 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
 
             if self.return_all_times:
 
-                number_of_locations = next(self.number_locations_datapipe)
+                if self.number_locations_datapipe is None:
+                    raise Exception(
+                        "Need to set number_locations_datapipe " "when returning all times"
+                    )
+                else:
+                    number_of_locations = next(self.number_locations_datapipe)
 
                 logger.info(
                     f"Will be returning all times from {xr_data[self.dim_name]}. "
