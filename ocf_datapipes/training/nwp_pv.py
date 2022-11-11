@@ -54,7 +54,7 @@ def nwp_pv_datapipe(
         nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
     else:
         raise Exception(
-            f'NWP provider {configuration.input_data.nwp.nwp_provider} '
+            f"NWP provider {configuration.input_data.nwp.nwp_provider} "
             f'not in "UKMetOffice" or "GFS"'
         )
 
