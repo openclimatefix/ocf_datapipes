@@ -1,6 +1,5 @@
 """Pick locations from a dataset"""
 import logging
-
 from typing import Optional
 
 import numpy as np
@@ -47,7 +46,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
 
             if self.return_all_locations:
 
-                logger.debug('Going to return all locations')
+                logger.debug("Going to return all locations")
 
                 # Iterate through all locations in dataset
                 for location_idx in range(len(xr_dataset[self.x_dim_name])):

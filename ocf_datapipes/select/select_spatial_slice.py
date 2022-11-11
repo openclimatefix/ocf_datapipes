@@ -1,7 +1,6 @@
 """Select spatial slices"""
 import logging
 from typing import Union
-import logging
 
 import numpy as np
 import xarray as xr
@@ -11,8 +10,8 @@ from torchdata.datapipes.iter import IterDataPipe, Zipper
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
 
-
 logger = logging.getLogger(__name__)
+
 
 @functional_datapipe("select_spatial_slice_pixels")
 class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
@@ -116,6 +115,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             roi_height_meters: ROI height in meters
             roi_width_meters: ROI width in meters
             dim_name: Dimension name to select for ID
+            y_dim_name: the y dimension name, this is so we can switch between osgb and lat,lon
+            x_dim_name: the x dimension name, this is so we can switch between osgb and lat,lon
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
@@ -128,7 +129,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
             # Compute the index for left and right:
-            logger.debug('Getting Spatial Slice Meters')
+            logger.debug("Getting Spatial Slice Meters")
 
             half_height = self.roi_height_meters // 2
             half_width = self.roi_width_meters // 2
@@ -138,11 +139,10 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             bottom = location.y - half_height
             top = location.y + half_height
             # Select data in the region of interest:
-            id_mask = (
-                left <= getattr(xr_data, self.x_dim_name)
-                & (getattr(xr_data, self.x_dim_name) <= right)
-                & (getattr(xr_data, self.y_dim_name) <= top)
-                & (bottom <= getattr(xr_data, self.y_dim_name))
+            id_mask = left <= getattr(xr_data, self.x_dim_name) & (
+                getattr(xr_data, self.x_dim_name) <= right
+            ) & (getattr(xr_data, self.y_dim_name) <= top) & (
+                bottom <= getattr(xr_data, self.y_dim_name)
             )
 
             selected = xr_data.isel({self.dim_name: id_mask})

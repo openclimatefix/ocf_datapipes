@@ -41,6 +41,8 @@ def put_pv_data_into_an_xr_dataarray(
          Index = PV system ID ints.
         pv_system_row_number: The integer position of the PV system in the metadata.
             Used to create the PV system ID embedding.
+        longitude: longitude of the locations
+        latitude: latitude of the locations
     """
     # Sanity check!
     pv_system_ids = pv_power_watts.columns

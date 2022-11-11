@@ -119,7 +119,7 @@ def load_everything_into_ram(
         capacity_watt_power=pv_capacity_watt_power,
         pv_system_row_number=pv_system_row_number,
         latitude=pv_metadata.latitude,
-        longitude=pv_metadata.longitude
+        longitude=pv_metadata.longitude,
     )
 
     # Sanity checks:

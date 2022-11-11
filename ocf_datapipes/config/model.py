@@ -42,7 +42,7 @@ METERS_PER_ROI = Field(128_000, description="The number of meters of region of i
 logger = logging.getLogger(__name__)
 
 # add SV to list of providers
-providers.append('SV')
+providers.append("SV")
 
 
 class Base(BaseModel):

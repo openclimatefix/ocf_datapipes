@@ -12,9 +12,7 @@ from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
     OpenConfiguration,
-    OpenNWPID,
     OpenPVFromNetCDF,
-    OpenNWP,
     OpenGFSForecast,
 )
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD

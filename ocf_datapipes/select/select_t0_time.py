@@ -19,7 +19,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         dim_name: str = "time_utc",
         return_all_times: Optional[bool] = False,
-        number_locations_datapipe: Optional[IterDataPipe] = None
+        number_locations_datapipe: Optional[IterDataPipe] = None,
     ):
         """
         Select a random t0 time for training
@@ -40,16 +40,20 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> pd.Timestamp:
         """Get the latest timestamp and return it"""
-        for xr_data, number_of_locations in Zipper(self.source_datapipe, self.number_locations_datapipe):
+        for xr_data, number_of_locations in Zipper(
+            self.source_datapipe, self.number_locations_datapipe
+        ):
 
             if self.return_all_times:
 
-                logger.info(f'Will be returning all times from {xr_data[self.dim_name]}. '
-                             f'There are {len(xr_data[self.dim_name])} of them')
+                logger.info(
+                    f"Will be returning all times from {xr_data[self.dim_name]}. "
+                    f"There are {len(xr_data[self.dim_name])} of them"
+                )
 
                 for t0 in xr_data[self.dim_name].values:
 
-                    for _ in range(0,number_of_locations):
+                    for _ in range(0, number_of_locations):
                         logger.debug(f"t0 will be {t0}")
                         yield t0
 

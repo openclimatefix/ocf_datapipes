@@ -57,7 +57,9 @@ def simple_pv_datapipe(
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
-    location_datapipe1 = pv_location_datapipe.location_picker(x_dim_name="longitude", y_dim_name="latitude")
+    location_datapipe1 = pv_location_datapipe.location_picker(
+        x_dim_name="longitude", y_dim_name="latitude"
+    )
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
