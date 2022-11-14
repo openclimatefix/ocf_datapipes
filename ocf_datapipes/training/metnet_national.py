@@ -194,7 +194,9 @@ def metnet_national_datapipe(
 
     if use_pv:
         if use_hrv:
-            image_datapipe = OpenSatellite(configuration.input_data.hrvsatellite.hrvsatellite_zarr_path)
+            image_datapipe = OpenSatellite(
+                configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
+            )
         elif use_sat:
             image_datapipe = OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
         elif use_nwp:
@@ -205,7 +207,13 @@ def metnet_national_datapipe(
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-            ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=max_num_pv_systems, always_return_first=True)
+            )
+            .create_pv_image(
+                image_datapipe,
+                normalize=True,
+                max_num_pv_systems=max_num_pv_systems,
+                always_return_first=True,
+            )
             .fork(2)
         )
 
