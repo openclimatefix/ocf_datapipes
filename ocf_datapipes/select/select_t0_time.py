@@ -42,14 +42,9 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
         """Get the latest timestamp and return it"""
         for xr_data in self.source_datapipe:
 
-            if self.return_all_times:
+            if self.return_all_times and (self.number_locations_datapipe is not None):
 
-                if self.number_locations_datapipe is None:
-                    raise Exception(
-                        "Need to set number_locations_datapipe " "when returning all times"
-                    )
-                else:
-                    number_of_locations = next(self.number_locations_datapipe)
+                number_of_locations = next(self.number_locations_datapipe)
 
                 logger.info(
                     f"Will be returning all times from {xr_data[self.dim_name]}. "
