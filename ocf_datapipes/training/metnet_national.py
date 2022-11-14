@@ -193,12 +193,26 @@ def metnet_national_datapipe(
         secondary_datapipes.append(sat_hrv_time_periods_datapipe)
 
     if use_pv:
+        if use_hrv:
+            image_datapipe = OpenSatellite(
+                configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
+            )
+        elif use_sat:
+            image_datapipe = OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
+        elif use_nwp:
+            image_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
         logger.debug("Opening PV")
         pv_datapipe, pv_time_periods_datapipe = (
             OpenPVFromNetCDF(pv=configuration.input_data.pv)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+            )
+            .create_pv_image(
+                image_datapipe,
+                normalize=True,
+                max_num_pv_systems=max_num_pv_systems,
+                always_return_first=True,
             )
             .fork(2)
         )
@@ -271,19 +285,12 @@ def metnet_national_datapipe(
     if use_pv:
         logger.debug("Take PV Time Slices")
         # take pv time slices
-        if use_sat:
-            sat_datapipe, image_datapipe = sat_datapipe.fork(2)
-        elif use_hrv:
-            sat_hrv_datapipe, image_datapipe = sat_hrv_datapipe.fork(2)
-        elif use_nwp:
-            nwp_datapipe, image_datapipe = nwp_datapipe.fork(2)
-
         pv_datapipe = pv_datapipe.select_time_slice(
             t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv, use_pv])],
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).create_pv_image(image_datapipe, normalize=True, max_num_pv_systems=max_num_pv_systems)
+        )
 
     if use_topo:
         topo_datapipe = OpenTopography(
