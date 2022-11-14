@@ -24,6 +24,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         normalize: bool = False,
         image_dim: str = "geostationary",
         max_num_pv_systems: int = -1,
+        always_return_first: bool = False,
         seed=None,
     ):
         """
@@ -37,6 +38,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             normalize: Whether to normalize based off the image max, or leave raw data
             image_dim: Dimension name for the x and y dimensions
             max_num_pv_systems: Max number of PV systems to use
+            always_return_first: Always return the first image data cube, to save computation
+                Only use for if making the image at the beginning of the stack
             seed: Random seed to use if using max_num_pv_systems
         """
         self.source_datapipe = source_datapipe
@@ -46,6 +49,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         self.y_dim = "y_" + image_dim
         self.max_num_pv_systems = max_num_pv_systems
         self.rng = np.random.default_rng(seed=seed)
+        self.always_return_first = always_return_first
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
@@ -115,6 +119,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
             pv_image = _create_data_array_from_image(pv_image, pv_systems_xr, image_xr)
+            if self.always_return_first:
+                while True:
+                    yield pv_image
             yield pv_image
 
 
