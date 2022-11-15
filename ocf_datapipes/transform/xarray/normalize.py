@@ -66,4 +66,6 @@ class NormalizeIterDataPipe(IterDataPipe):
                 except Exception as e:
                     logger.error(f"Could not run function {self.normalize_fn} on data {xr_data}")
                     raise e
+
+            logger.debug("Normalizing data:done")
             yield xr_data

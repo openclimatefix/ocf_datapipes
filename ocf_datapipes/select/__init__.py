@@ -1,6 +1,7 @@
 """Selection datapipes"""
 from .drop_national_gsp import DropGSPIterDataPipe as DropGSP
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
+from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations
 from .offset_t0 import OffsetT0IterDataPipe as OffsetT0
 from .select_channels import SelectChannelsIterDataPipe as SelectChannels
 from .select_id import SelectIDIterDataPipe as SelectID

@@ -126,6 +126,8 @@ def get_contiguous_time_periods(
             periods.append(period)
         start_i = next_start_i
 
-    assert len(periods) > 0
+    assert len(periods) > 0, (
+        f"Did not find an periods from {datetimes}. " f"{min_seq_length=} {max_gap_duration=}"
+    )
 
     return pd.DataFrame(periods)
