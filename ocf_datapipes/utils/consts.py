@@ -353,6 +353,26 @@ NWP_STD = {
 
 NWP_CHANNEL_NAMES = tuple(NWP_STD.keys())
 
+NWP_GFS_MEAN = {
+    "t": 285.7799539185846,
+    "dswrf": 294.6696933986283,
+    "prate": 3.6078121378638696e-05,
+    "dlwrf": 319,
+    "u": 0.552,
+    "v": -0.477,
+}
+
+NWP_GFS_STD = {
+    "t": 5.017000766747606,
+    "dswrf": 233.1834250473355,
+    "prate": 0.00021690701537950742,
+    "dlwrf": 46.571,
+    "u": 4.165,
+    "v": 4.123,
+}
+
+NWP_GFS_CHANNEL_NAMES = tuple(NWP_GFS_STD.keys())
+
 
 def _to_data_array(d):
     return xr.DataArray(

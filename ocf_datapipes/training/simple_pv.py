@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
 # default is set to 1000
-BUFFERSIZE = -1
+BUFFERSIZE = 1000
 
 
 def simple_pv_datapipe(
@@ -57,7 +57,9 @@ def simple_pv_datapipe(
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
-    location_datapipe1 = pv_location_datapipe.location_picker()
+    location_datapipe1 = pv_location_datapipe.location_picker(
+        x_dim_name="longitude", y_dim_name="latitude"
+    )
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -69,11 +71,13 @@ def simple_pv_datapipe(
             ),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
-        .select_spatial_slice_meters(
-            location_datapipe=location_datapipe1,
-            roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
-            roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
-        )
+        .select_id(location_datapipe=location_datapipe1, data_source_name="pv")
+        # .select_spatial_slice_meters(
+        #     location_datapipe=location_datapipe1,
+        #     roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
+        #     roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
+        #     x_dim_name="longitude", y_dim_name="latitude"
+        # )
         .ensure_n_pv_systems_per_example(n_pv_systems_per_example=1)
         .remove_nans()
         .fork(3, buffer_size=BUFFERSIZE)
@@ -118,8 +122,8 @@ def simple_pv_datapipe(
         .encode_space_time().add_sun_position(modality_name="pv")
     )
 
-    combined_datapipe = combined_datapipe.add_length(
-        configuration=configuration, train_validation_test=tag
-    )
+    # combined_datapipe = combined_datapipe.add_length(
+    #     configuration=configuration, train_validation_test=tag
+    # )
 
     return combined_datapipe
