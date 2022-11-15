@@ -73,7 +73,7 @@ def make_fake_nwp_data(configuration: Configuration, t0_datetime_utc: datetime):
         history_minutes=nwp_config.history_minutes,
         forecast_minutes=nwp_config.forecast_minutes,
         t0_datetime_utc=t0_datetime_utc,
-        time_resolution_minutes=nwp_config.,
+        time_resolution_minutes=nwp_config.time_resolution_minutes,
     )
     n_times = time_utc.shape[1]
 
