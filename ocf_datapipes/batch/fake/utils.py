@@ -1,4 +1,5 @@
 """ Utils Functions to for fake data """
+from datetime import timedelta
 from typing import List
 
 import numpy as np
@@ -38,3 +39,58 @@ def make_t0_datetimes_utc(batch_size, temporally_align_examples: bool = False):
     # https://github.com/openclimatefix/nowcasting_dataset/issues/594
 
     return t0_datetimes_utc
+
+
+def get_n_time_steps_from_config(input_data_configuration, include_forecast: bool = True) -> int:
+    """
+    Get the number of time steps from the input data configuration
+
+    Args:
+        input_data_configuration: NWP, GSP, PV, e.t.c see ocf_datapipes.config.model
+        include_forecast: option to include forecast timesteps or not
+
+    Returns:
+
+    """
+    # get history time steps
+    n_time_steps = int(
+        input_data_configuration.history_minutes / input_data_configuration.time_resolution_minutes
+    )
+
+    if include_forecast:
+        n_time_steps = n_time_steps + int(
+            input_data_configuration.forecast_minutes
+            / input_data_configuration.time_resolution_minutes
+        )
+
+    # add extra step for now
+    n_time_steps = n_time_steps + 1
+
+    return n_time_steps
+
+
+def make_time_utc(
+    batch_size, history_minutes, forecast_minutes, t0_datetime_utc, time_resolution_minutes
+):
+    """
+    Make time utc array
+
+    Args:
+        batch_size: the batch size
+        history_minutes: the history minutes we want
+        forecast_minutes: the amount of minutes that the forecast will be fore
+        t0_datetime_utc: t0_datetime
+        time_resolution_minutes: time resolution e.g 5 for daat in 5 minutes chunks
+
+    Returns: array of time_utc
+
+    """
+    start_datetime = t0_datetime_utc - timedelta(minutes=history_minutes)
+    end_datetime = t0_datetime_utc + timedelta(minutes=forecast_minutes)
+    time_utc = pd.date_range(
+        start=start_datetime, end=end_datetime, freq=f"{time_resolution_minutes}T"
+    )
+
+    time_utc = time_utc.values.astype("datetime64[s]")
+    time_utc = np.tile(time_utc, (batch_size, 1))
+    return time_utc
