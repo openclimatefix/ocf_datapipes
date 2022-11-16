@@ -45,8 +45,8 @@ def make_fake_pv_data(configuration: Configuration, t0_datetime_utc: datetime):
     batch[BatchKey.pv_system_row_number] = np.random.randint(0, 100, (batch_size, n_pv_systems))
     batch[BatchKey.pv_id] = np.random.randint(0, 1000, (batch_size, n_pv_systems))
     batch[BatchKey.pv_mask] = np.random.randint(0, 1, (batch_size, n_pv_systems))
-    batch[BatchKey.pv_x_osgb] = np.random.randint(0, 10 ** 6, (batch_size, n_pv_systems))
-    batch[BatchKey.pv_y_osgb] = np.random.randint(0, 10 ** 6, (batch_size, n_pv_systems))
+    batch[BatchKey.pv_x_osgb] = np.random.randint(0, 10**6, (batch_size, n_pv_systems))
+    batch[BatchKey.pv_y_osgb] = np.random.randint(0, 10**6, (batch_size, n_pv_systems))
 
     batch[BatchKey.pv_x_osgb_fourier] = np.random.random(
         (batch_size, n_pv_systems, n_fourier_features)
