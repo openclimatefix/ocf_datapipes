@@ -38,3 +38,13 @@ def test_make_fake_batch_only_pv_nwp_gsp():
     configuration.input_data.gsp = input_data.gsp
 
     _ = make_fake_batch(configuration=configuration)
+
+
+def test_make_fake_batch_only_nwp_gsp():
+
+    configuration = Configuration()
+    input_data = configuration.input_data.set_all_to_defaults()
+    configuration.input_data.nwp = input_data.nwp
+    configuration.input_data.gsp = input_data.gsp
+
+    _ = make_fake_batch(configuration=configuration)
