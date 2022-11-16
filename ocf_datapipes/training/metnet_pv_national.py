@@ -20,7 +20,15 @@ from ocf_datapipes.load import (
 )
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA, PV_YIELD
+from ocf_datapipes.utils.consts import (
+    NWP_MEAN,
+    NWP_STD,
+    PV_YIELD,
+    SAT_MEAN,
+    SAT_MEAN_DA,
+    SAT_STD,
+    SAT_STD_DA,
+)
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -51,6 +59,7 @@ def normalize_pv(x):  # So it can be pickled
         Normalized DataArray
     """
     return x / x.capacity_watt_power
+
 
 def _remove_nans(x):
     return x.fillna(0.0)
@@ -110,7 +119,9 @@ def metnet_national_datapipe(
         use_topo = (
             True if configuration.input_data.topographic.topographic_filename != "" else False
         )
-    print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun} Topo: {use_topo}")
+    print(
+        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
+    )
     # Load GSP national data
     logger.debug("Opening GSP Data")
     gsp_datapipe = OpenGSP(
@@ -237,7 +248,7 @@ def metnet_national_datapipe(
         1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
     )
     t0_datapipes = gsp_t0_datapipe.select_t0_time(
-        return_all_times=False # if mode == "train" else True
+        return_all_times=False  # if mode == "train" else True
     ).fork(num_t0_datapipes)
 
     # take pv time slices
@@ -322,8 +333,10 @@ def metnet_national_datapipe(
         output_height_pixels=256,
         add_sun_features=use_sun,
     )
-    
-    pv_datapipe = pv_datapipe.ensure_n_pv_systems_per_example(n_pv_systems_per_example=1000).convert_pv_to_numpy(return_pv_system_row=True)
+
+    pv_datapipe = pv_datapipe.ensure_n_pv_systems_per_example(
+        n_pv_systems_per_example=1000
+    ).convert_pv_to_numpy(return_pv_system_row=True)
     combined_datapipe = metnet_datapipe.zip(pv_datapipe)
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     if mode == "train":

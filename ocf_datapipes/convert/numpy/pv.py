@@ -10,7 +10,12 @@ from ocf_datapipes.utils.consts import NumpyBatch
 class ConvertPVToNumpyIterDataPipe(IterDataPipe):
     """Convert PV Xarray to NumpyBatch"""
 
-    def __init__(self, source_datapipe: IterDataPipe, return_pv_id: bool = False, return_pv_system_row: bool = False):
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        return_pv_id: bool = False,
+        return_pv_system_row: bool = False,
+    ):
         """
         Convert PV Xarray objects to NumpyBatch objects
 

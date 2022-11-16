@@ -98,7 +98,9 @@ def metnet_national_datapipe(
         use_topo = (
             True if configuration.input_data.topographic.topographic_filename != "" else False
         )
-    print(f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun} Topo: {use_topo}")
+    print(
+        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
+    )
     # Load GSP national data
     logger.debug("Opening GSP Data")
     gsp_datapipe = OpenGSP(
@@ -235,7 +237,7 @@ def metnet_national_datapipe(
         1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
     )
     t0_datapipes = gsp_t0_datapipe.select_t0_time(
-        return_all_times=False # if mode == "train" else True
+        return_all_times=False  # if mode == "train" else True
     ).fork(num_t0_datapipes)
 
     # take pv time slices
