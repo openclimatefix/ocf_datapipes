@@ -8,5 +8,6 @@ from .coordinates import ConvertLatLonToOSGBIterDataPipe as ConvertLatLonToOSGB
 from .coordinates import ConvertOSGBToLatLonIterDataPipe as ConvertOSGBToLatLon
 from .numpy.gsp import ConvertGSPToNumpyIterDataPipe as ConvertGSPToNumpy
 from .nwp import ConvertNWPToNumpyBatchIterDataPipe as ConvertNWPToNumpyBatch
-from .pv import ConvertPVToNumpyBatchIterDataPipe as ConvertPVToNumpyBatch
+from ocf_datapipes.convert.numpy.batch.pv import ConvertPVToNumpyBatchIterDataPipe as ConvertPVToNumpyBatch
 from .satellite import ConvertSatelliteToNumpyBatchIterDataPipe as ConvertSatelliteToNumpyBatch
+from .numpy.pv import ConvertPVToNumpyIterDataPipe as ConvertPVToNumpy
