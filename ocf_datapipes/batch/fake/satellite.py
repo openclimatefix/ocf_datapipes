@@ -10,6 +10,16 @@ from ocf_datapipes.utils.consts import BatchKey
 def make_fake_satellite_data(
     configuration: Configuration, t0_datetime_utc: datetime, is_hrv: bool = False
 ):
+    """
+    Make Fake Satellte data ready for ML model. This makes data across all different data inputs
+
+    Args:
+        configuration: configuration object
+        t0_datetime_utc: one datetime for when t0 is
+        is_hrv: option if its hrv or not
+
+    Returns: dictionary of satellite items
+    """
 
     if is_hrv:
         prefix = "hrv"

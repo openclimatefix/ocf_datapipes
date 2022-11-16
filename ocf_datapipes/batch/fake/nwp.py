@@ -8,6 +8,15 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def make_fake_nwp_data(configuration: Configuration, t0_datetime_utc: datetime):
+    """
+    Make Fake NWP data ready for ML model
+
+    Args:
+        configuration: configuration object
+        t0_datetime_utc: one datetime for when t0 is
+
+    Returns: dictionary of nwp items
+    """
 
     nwp_config = configuration.input_data.nwp
     if nwp_config is None:

@@ -1,10 +1,8 @@
 """ Utils Functions to for fake data """
 from datetime import timedelta
-from typing import List
 
 import numpy as np
 import pandas as pd
-import xarray as xr
 
 
 def make_t0_datetimes_utc(batch_size, temporally_align_examples: bool = False):

@@ -8,6 +8,15 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def make_fake_pv_data(configuration: Configuration, t0_datetime_utc: datetime):
+    """
+    Make Fake PV data ready for ML model
+
+    Args:
+        configuration: configuration object
+        t0_datetime_utc: one datetime for when t0 is
+
+    Returns: dictionary of pv items
+    """
 
     pv_config = configuration.input_data.pv
     if pv_config is None:

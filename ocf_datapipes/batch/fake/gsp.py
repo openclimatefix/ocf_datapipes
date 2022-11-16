@@ -8,6 +8,15 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) -> dict:
+    """
+    Make Fake GSP data ready for ML model
+
+    Args:
+        configuration: configuration object
+        t0_datetime_utc: one datetime for when t0 is
+
+    Returns: dictionary of gsp items
+    """
 
     gsp_config = configuration.input_data.gsp
 
@@ -39,12 +48,8 @@ def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) 
     batch[BatchKey.pv_x_osgb] = np.random.randint(0, 10 ** 6, (batch_size, n_gsps))
     batch[BatchKey.pv_y_osgb] = np.random.randint(0, 10 ** 6, (batch_size, n_gsps))
 
-    batch[BatchKey.pv_x_osgb_fourier] = np.random.random(
-        (batch_size, n_gsps, n_fourier_features)
-    )
-    batch[BatchKey.pv_y_osgb_fourier] = np.random.random(
-        (batch_size, n_gsps, n_fourier_features)
-    )
+    batch[BatchKey.pv_x_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
+    batch[BatchKey.pv_y_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
     batch[BatchKey.pv_time_utc_fourier] = np.random.random(
         (batch_size, n_times, n_fourier_features)
     )

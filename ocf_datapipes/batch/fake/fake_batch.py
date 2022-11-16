@@ -1,10 +1,11 @@
+from datetime import datetime, timezone
+
 from ocf_datapipes.batch.fake.gsp import make_fake_gsp_data
 from ocf_datapipes.batch.fake.nwp import make_fake_nwp_data
 from ocf_datapipes.batch.fake.pv import make_fake_pv_data
 from ocf_datapipes.batch.fake.satellite import make_fake_satellite_data
 from ocf_datapipes.batch.fake.sun import make_fake_sun_data
 from ocf_datapipes.config.model import Configuration
-from datetime import datetime, timezone
 
 
 def make_fake_batch(configuration: Configuration) -> dict:
@@ -42,10 +43,15 @@ def make_fake_batch(configuration: Configuration) -> dict:
     )
 
     # make sun features
-    batch_sun = make_fake_sun_data(configuration=configuration, t0_datetime_utc=t0_datetime_utc)
+    batch_sun = make_fake_sun_data(configuration=configuration)
 
-    batch = {**batch_pv, **batch_nwp, **batch_gsp, **batch_satellite, **batch_hrv_satellite, **batch_sun}
+    batch = {
+        **batch_pv,
+        **batch_nwp,
+        **batch_gsp,
+        **batch_satellite,
+        **batch_hrv_satellite,
+        **batch_sun,
+    }
 
     return batch
-
-
