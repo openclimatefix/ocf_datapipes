@@ -3,7 +3,7 @@ from datetime import datetime
 
 import numpy as np
 
-from ocf_datapipes.batch.fake.utils import make_time_utc, get_n_time_steps_from_config
+from ocf_datapipes.batch.fake.utils import get_n_time_steps_from_config, make_time_utc
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils.consts import BatchKey
 
