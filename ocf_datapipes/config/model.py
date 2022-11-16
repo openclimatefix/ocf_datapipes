@@ -478,7 +478,7 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
         return v
 
 
-class GSP(DataSourceMixin, StartEndDatetimeMixin):
+class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
     """GSP configuration model"""
 
     gsp_zarr_path: str = Field("gs://solar-pv-nowcasting-data/PV/GSP/v2/pv_gsp.zarr")
