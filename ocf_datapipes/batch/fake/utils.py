@@ -47,7 +47,7 @@ def get_n_time_steps_from_config(input_data_configuration, include_forecast: boo
         input_data_configuration: NWP, GSP, PV, e.t.c see ocf_datapipes.config.model
         include_forecast: option to include forecast timesteps or not
 
-    Returns:
+    Returns: number of time steps for this input data
 
     """
     # get history time steps

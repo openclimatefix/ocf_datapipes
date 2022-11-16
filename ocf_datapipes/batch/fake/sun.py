@@ -1,3 +1,4 @@
+""" Make fake Sun data """
 import numpy as np
 
 from ocf_datapipes.batch.fake.utils import get_n_time_steps_from_config

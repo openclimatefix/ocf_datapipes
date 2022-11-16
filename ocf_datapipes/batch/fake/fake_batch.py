@@ -1,3 +1,4 @@
+""" Make fake batch """
 from datetime import datetime, timezone
 
 from ocf_datapipes.batch.fake.gsp import make_fake_gsp_data

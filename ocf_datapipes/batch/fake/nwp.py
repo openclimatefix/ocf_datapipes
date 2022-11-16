@@ -1,3 +1,4 @@
+""" Make fake NWP data """
 from datetime import datetime
 
 import numpy as np

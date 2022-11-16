@@ -1,3 +1,4 @@
+""" Make fake Satellite data """
 from datetime import datetime
 
 import numpy as np
@@ -11,7 +12,7 @@ def make_fake_satellite_data(
     configuration: Configuration, t0_datetime_utc: datetime, is_hrv: bool = False
 ):
     """
-    Make Fake Satellte data ready for ML model. This makes data across all different data inputs
+    Make Fake Satellite data ready for ML model. This makes data across all different data inputs
 
     Args:
         configuration: configuration object
