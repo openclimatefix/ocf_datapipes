@@ -1,6 +1,8 @@
 """Ensure there is N PV systems per example"""
 import logging
 
+from typing import Optional
+
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -13,7 +15,14 @@ logger = logging.getLogger(__name__)
 class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
     """Ensure there is N PV systems per example"""
 
-    def __init__(self, source_datapipe: IterDataPipe, n_pv_systems_per_example: int, seed=None):
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        n_pv_systems_per_example: int,
+        seed=None,
+        method: str = "random",
+        locations_datapipe: Optional[IterDataPipe] = None,
+    ):
         """
         Ensure there is N PV systems per example
 
@@ -21,21 +30,46 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe of PV data
             n_pv_systems_per_example: Number of PV systems to have in example
             seed: Random seed for choosing
+            method: method for picking PV systems. Can be 'random' or 'closest'
+            locations_datapipe: location of this example. Can be None as its only needed for 'closest'
         """
         self.source_datapipe = source_datapipe
         self.n_pv_systems_per_example = n_pv_systems_per_example
         self.rng = np.random.default_rng(seed=seed)
+        self.method = method
+        self.locations_datapipe = locations_datapipe
+
+        assert method in ["random", "closest"]
+
+        if method == "closest":
+            assert (
+                locations_datapipe is not None
+            ), f"If you are slect closest PV systems, then a location data pipe is needed"
 
     def __iter__(self):
         for xr_data in self.source_datapipe:
             if len(xr_data.pv_system_id) > self.n_pv_systems_per_example:
                 logger.debug(f"Reducing PV systems to  {self.n_pv_systems_per_example}")
                 # More PV systems are available than we need. Reduce by randomly sampling:
-                subset_of_pv_system_ids = self.rng.choice(
-                    xr_data.pv_system_id,
-                    size=self.n_pv_systems_per_example,
-                    replace=False,
-                )
+                if self.method == "random":
+                    subset_of_pv_system_ids = self.rng.choice(
+                        xr_data.pv_system_id,
+                        size=self.n_pv_systems_per_example,
+                        replace=False,
+                    )
+                elif self.method == "closest":
+
+                    location = next(self.locations_datapipe)
+
+                    # get distance
+                    delta_x = xr_data.x_osgb - location.x
+                    delta_y = xr_data.y_osgb - location.y
+                    r2 = delta_x ** 2 + delta_y ** 2
+
+                    # order and select closest
+                    r2 = r2.sortby(r2)
+                    subset_of_pv_system_ids = r2.pv_system_id[: self.n_pv_systems_per_example]
+
                 xr_data = xr_data.sel(pv_system_id=subset_of_pv_system_ids)
             elif len(xr_data.pv_system_id) < self.n_pv_systems_per_example:
                 logger.debug("Padding out PV systems")
