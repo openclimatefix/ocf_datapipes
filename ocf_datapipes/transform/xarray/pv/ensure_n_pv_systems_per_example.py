@@ -1,6 +1,5 @@
 """Ensure there is N PV systems per example"""
 import logging
-
 from typing import Optional
 
 import numpy as np
@@ -65,7 +64,7 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
                     # get distance
                     delta_x = xr_data.x_osgb - location.x
                     delta_y = xr_data.y_osgb - location.y
-                    r2 = delta_x ** 2 + delta_y ** 2
+                    r2 = delta_x**2 + delta_y**2
 
                     # order and select closest
                     r2 = r2.sortby(r2)
