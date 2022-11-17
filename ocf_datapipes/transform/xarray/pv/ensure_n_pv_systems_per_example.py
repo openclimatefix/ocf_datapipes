@@ -31,7 +31,8 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
             n_pv_systems_per_example: Number of PV systems to have in example
             seed: Random seed for choosing
             method: method for picking PV systems. Can be 'random' or 'closest'
-            locations_datapipe: location of this example. Can be None as its only needed for 'closest'
+            locations_datapipe: location of this example.
+                Can be None as its only needed for 'closest'
         """
         self.source_datapipe = source_datapipe
         self.n_pv_systems_per_example = n_pv_systems_per_example
@@ -44,7 +45,7 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
         if method == "closest":
             assert (
                 locations_datapipe is not None
-            ), f"If you are slect closest PV systems, then a location data pipe is needed"
+            ), "If you are slect closest PV systems, then a location data pipe is needed"
 
     def __iter__(self):
         for xr_data in self.source_datapipe:
