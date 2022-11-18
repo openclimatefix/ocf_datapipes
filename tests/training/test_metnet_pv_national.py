@@ -13,3 +13,5 @@ def test_metnet_datapipe():
     batch = next(iter(gsp_datapipe))
     assert np.isfinite(batch[0]).all()
     assert np.isfinite(batch[1]).all()
+    assert np.isfinite(batch[2]).all()
+    assert np.isfinite(batch[3]).all()
