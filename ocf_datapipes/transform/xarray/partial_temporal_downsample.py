@@ -35,7 +35,9 @@ class PartialTemporalDownsampleIterDataPipe(IterDataPipe):
         for xr_data in self.source_datapipe:
 
             # Split into ones in the past and ones in the future
-            same_data = xr_data.sel({self.time_dim_name: slice(0,xr_data.attrs["t0_idx"]+self.start_idx)})
+            same_data = xr_data.sel(
+                {self.time_dim_name: slice(0, xr_data.attrs["t0_idx"] + self.start_idx)}
+            )
             interpolated_data = xr_data.sel()
             yield xr_data.coarsen(
                 {

@@ -98,13 +98,15 @@ def metnet_national_datapipe(
 
     logger.debug("Add t0 idx and normalize")
 
-    gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
-        gsp_datapipe
-        .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-        )
-        .fork(3)
+    (
+        gsp_datapipe,
+        gsp_time_periods_datapipe,
+        gsp_t0_datapipe,
+    ) = gsp_datapipe.add_t0_idx_and_sample_period_duration(
+        sample_period_duration=timedelta(minutes=30),
+        history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+    ).fork(
+        3
     )
     # get time periods
     # get contiguous time periods

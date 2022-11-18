@@ -334,9 +334,11 @@ def metnet_national_datapipe(
         add_sun_features=use_sun,
     )
 
-    pv_datapipe = pv_datapipe.ensure_n_pv_systems_per_example(
-        n_pv_systems_per_example=1000
-    ).map(_remove_nans).convert_pv_to_numpy(return_pv_system_row=True)
+    pv_datapipe = (
+        pv_datapipe.ensure_n_pv_systems_per_example(n_pv_systems_per_example=1000)
+        .map(_remove_nans)
+        .convert_pv_to_numpy(return_pv_system_row=True)
+    )
     combined_datapipe = metnet_datapipe.zip(pv_datapipe)
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     if mode == "train":
