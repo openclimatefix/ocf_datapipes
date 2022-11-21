@@ -20,6 +20,8 @@ then optionally `.transform.numpy`.
 loading the config file, data, selecting and transforming data, and returning the
 numpy data to the PyTorch dataloader.
 
+Modules have their own README's as well to go into further detail.
+
 ```
 .
 └── ocf_datapipes/
