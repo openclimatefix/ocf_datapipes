@@ -8,7 +8,7 @@ use in other datapipes.
 `geospatial.py` contains utilities for converting between
 various coordinate systems
 
-`pvlive.py` contains code for accessing Sheffield 
+`pvlive.py` contains code for accessing Sheffield
 Solar's PV Live service
 
 `consts.py` contains constants used in normalization, etc.
