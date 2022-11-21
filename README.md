@@ -2,7 +2,40 @@
 OCF's DataPipe based dataloader for training and inference
 
 
+## Organization
+
+
+
+```
+.
+└── ocf_datapipes/
+    ├── batch/
+    │   └── fake
+    ├── config/
+    │   └── convert/
+    │       └── numpy/
+    │           └── batch
+    ├── experimental
+    ├── fake
+    ├── load/
+    │   ├── gsp
+    │   ├── nwp
+    │   └── pv
+    ├── production
+    ├── select
+    ├── training
+    ├── transform/
+    │   ├── numpy/
+    │   │   └── batch
+    │   └── xarray/
+    │       └── pv
+    ├── utils/
+    │   └── split
+    └── validation
+```
+
 ## Usage
+
 
 
 
