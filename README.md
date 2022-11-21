@@ -1,10 +1,22 @@
 # ocf_datapipes
 OCF's DataPipe based dataloader for training and inference
 
+## Usage
+
+
+
+End to end examples are given in `ocf_datapipes.training` and `ocf_datapipes.production`.
+
 
 ## Organization
 
+This repo is organized as follows. The general flow of data loading and processing 
+goes from the `ocf_datapipes.load -> .select -> .transform.xarray -> .convert` and 
+then optionally `.transform.numpy`. 
 
+`training` and `production` contain datapipes that go through all the steps of 
+loading the config file, data, selecting and transforming data, and returning the 
+numpy data to the PyTorch dataloader.
 
 ```
 .
@@ -33,11 +45,6 @@ OCF's DataPipe based dataloader for training and inference
     │   └── split
     └── validation
 ```
-
-## Usage
-
-
-
 
 ## Adding a new DataPipe
 A general outline for a new DataPipe should go something
