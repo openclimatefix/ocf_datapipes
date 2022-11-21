@@ -10,12 +10,12 @@ End to end examples are given in `ocf_datapipes.training` and `ocf_datapipes.pro
 
 ## Organization
 
-This repo is organized as follows. The general flow of data loading and processing 
-goes from the `ocf_datapipes.load -> .select -> .transform.xarray -> .convert` and 
-then optionally `.transform.numpy`. 
+This repo is organized as follows. The general flow of data loading and processing
+goes from the `ocf_datapipes.load -> .select -> .transform.xarray -> .convert` and
+then optionally `.transform.numpy`.
 
-`training` and `production` contain datapipes that go through all the steps of 
-loading the config file, data, selecting and transforming data, and returning the 
+`training` and `production` contain datapipes that go through all the steps of
+loading the config file, data, selecting and transforming data, and returning the
 numpy data to the PyTorch dataloader.
 
 ```
