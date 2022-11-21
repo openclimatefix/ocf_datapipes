@@ -3,7 +3,8 @@ OCF's DataPipe based dataloader for training and inference
 
 ## Usage
 
-
+These datapipes are designed to be composable and modular, and follow the same setup as for the in-built Pytorch
+Datapipes. There are some great docs on how they can be composed and used [here](https://pytorch.org/data/main/examples.html).
 
 End to end examples are given in `ocf_datapipes.training` and `ocf_datapipes.production`.
 
