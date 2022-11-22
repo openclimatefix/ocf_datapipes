@@ -1,8 +1,6 @@
+"""Common functionality for datapipes"""
 import logging
 from datetime import timedelta
-from typing import List
-
-import xarray as xr
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
@@ -10,7 +8,6 @@ from ocf_datapipes.load import (
     OpenConfiguration,
     OpenGSP,
     OpenNWP,
-    OpenPVFromDB,
     OpenPVFromNetCDF,
     OpenSatellite,
     OpenTopography,
@@ -30,7 +27,6 @@ def open_and_return_datapipes(
 ) -> dict[IterDataPipe]:
     """
     Open data sources given a configuration and return the list of datapipes
-
 
     Args:
         configuration_filename: Path to file to open
