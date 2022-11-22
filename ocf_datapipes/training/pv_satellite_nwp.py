@@ -10,7 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenConfiguration, OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite
+from ocf_datapipes.load import OpenConfiguration, OpenNWP, OpenPVFromNetCDF, OpenSatellite
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD
 
 logger = logging.getLogger(__name__)
@@ -20,9 +20,7 @@ xarray.set_options(keep_attrs=True)
 BUFFER_SIZE = 100
 
 
-def pv_nwp_satellite_data_pipeline(
-    configuration: Union[Path, str, Configuration]
-) -> IterDataPipe:
+def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration]) -> IterDataPipe:
     """
     Make data pipe with PV, NWP and Satellite
 
