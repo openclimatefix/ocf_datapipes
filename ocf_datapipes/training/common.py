@@ -68,6 +68,8 @@ def open_and_return_datapipes(
 
     used_datapipes = {}
 
+    used_datapipes["config"] = configuration
+
     # Load GSP national data
     if use_gsp:
         logger.debug("Opening GSP Data")
