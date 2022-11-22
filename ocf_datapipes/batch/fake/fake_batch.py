@@ -1,6 +1,5 @@
 """ Make fake batch """
 from datetime import datetime, timezone
-
 from typing import Optional
 
 import numpy as np
@@ -13,7 +12,6 @@ from ocf_datapipes.batch.fake.pv import make_fake_pv_data
 from ocf_datapipes.batch.fake.satellite import make_fake_satellite_data
 from ocf_datapipes.batch.fake.sun import make_fake_sun_data
 from ocf_datapipes.config.model import Configuration
-
 from ocf_datapipes.utils.utils import datetime64_to_float
 
 
