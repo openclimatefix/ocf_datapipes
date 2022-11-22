@@ -29,7 +29,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
     The location can be made either from GSP or PV
 
     Args:
-        configuration_filename: the configuration filename for the pipe
+        configuration: the configuration filename for the pipe, can also be the actual configuration
 
     Returns: datapipe
     """
