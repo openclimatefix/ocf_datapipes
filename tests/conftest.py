@@ -542,4 +542,3 @@ def configuration_filename():
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
     yield filename
-

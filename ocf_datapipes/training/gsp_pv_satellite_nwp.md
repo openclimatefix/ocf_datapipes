@@ -39,5 +39,5 @@ graph TD
     E3 --> F3[NWP Batch] --> G
     E4 --> F4[Satelite Batch] --> G
     G[Example]
-    
+
 ```
