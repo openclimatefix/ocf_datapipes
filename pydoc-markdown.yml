@@ -19,21 +19,21 @@ renderer:
         - title: Convert
           contents: [convert]
         - title: Experimental
-          contents: [ experimental ]
+          contents: [experimental]
         - title: Fake Data
-          contents: [ fake ]
+          contents: [fake]
         - title: Loading Data
-          contents: [ load ]
+          contents: [load]
         - title: Production Datapipes
-          contents: [ production ]
+          contents: [production]
         - title: Training Datapipes
-          contents: [ training ]
+          contents: [training]
         - title: Selecting Data
-          contents: [ select ]
+          contents: [select]
         - title: Transforms
-          contents: [ transform ]
+          contents: [transform]
         - title: Validation
-          contents: [ validation ]
+          contents: [validation]
         - title: Utils
           contents: [utils]
   mkdocs_config:

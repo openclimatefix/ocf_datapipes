@@ -1,6 +1,6 @@
 # OCF Datapipes
 
-OCF's DataPipes for training and inference in Pytorch. 
+OCF's DataPipes for training and inference in Pytorch.
 
 ## Usage
 
