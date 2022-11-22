@@ -1,0 +1,42 @@
+loaders:
+  - type: python
+    search_path: [ocf_datapipes/]
+processors:
+  - type: filter
+  - type: smart
+renderer:
+  type: mkdocs
+  pages:
+    - title: Home
+      name: index
+      source: README.md
+    - title: API Documentation
+      children:
+        - title: Batch
+          contents: [batch]
+        - title: Configuration
+          contents: [config]
+        - title: Convert
+          contents: [convert]
+        - title: Experimental
+          contents: [experimental]
+        - title: Fake Data
+          contents: [fake]
+        - title: Loading Data
+          contents: [load]
+        - title: Production Datapipes
+          contents: [production]
+        - title: Training Datapipes
+          contents: [training]
+        - title: Selecting Data
+          contents: [select]
+        - title: Transforms
+          contents: [transform]
+        - title: Validation
+          contents: [validation]
+        - title: Utils
+          contents: [utils]
+  mkdocs_config:
+    site_name: OCF Datapipes
+    theme: readthedocs
+    repo_url: https://github.com/openclimatefix/ocf_datapipes
