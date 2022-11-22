@@ -23,6 +23,7 @@ def make_fake_batch(configuration: Configuration, to_torch: Optional[bool] = Fal
 
     Args:
         configuration: a configuration file
+        to_torch: optional if we return the batch with torch.Tensor
 
     Returns: dictionary containing the batch
 
