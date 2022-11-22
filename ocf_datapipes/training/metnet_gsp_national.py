@@ -121,7 +121,6 @@ def metnet_national_datapipe(
 
     # Split into GSP for target, only national, and one for history
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
-    gsp_history = DropGSP(gsp_datapipe, gsps_to_keep=list(range(1, 317)))
 
     logger.debug("Add t0 idx and normalize")
 
