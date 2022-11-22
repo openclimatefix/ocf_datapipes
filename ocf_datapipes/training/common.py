@@ -62,7 +62,8 @@ def open_and_return_datapipes(
     if use_gsp:
         use_gsp = True if configuration.input_data.gsp.gsp_zarr_path != "" else False
     logger.debug(
-        f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Topo: {use_topo}"
+        f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
+        f" HRV: {use_hrv} PV: {use_pv} Topo: {use_topo}"
     )
 
     used_datapipes = {}
