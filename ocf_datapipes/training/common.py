@@ -1,6 +1,7 @@
 """Common functionality for datapipes"""
 import logging
 from datetime import timedelta
+
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
