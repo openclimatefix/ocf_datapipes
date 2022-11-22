@@ -104,17 +104,24 @@ def metnet_national_datapipe(
     """
 
     # load datasets
-    used_datapipes = open_and_return_datapipes(configuration_filename=configuration_filename,
-                                               use_nwp=use_nwp, use_topo=use_topo, use_sat=use_sat,
-                                               use_hrv=use_hrv, use_gsp=use_gsp)
+    used_datapipes = open_and_return_datapipes(
+        configuration_filename=configuration_filename,
+        use_nwp=use_nwp,
+        use_topo=use_topo,
+        use_sat=use_sat,
+        use_hrv=use_hrv,
+        use_gsp=use_gsp,
+    )
     configuration = used_datapipes["config"]
     # Load GSP national data
     logger.debug("Opening GSP Data")
-    gsp_datapipe, gsp_history = used_datapipes["gsp"].select_train_test_time(start_time, end_time).fork(2)
+    gsp_datapipe, gsp_history = (
+        used_datapipes["gsp"].select_train_test_time(start_time, end_time).fork(2)
+    )
 
     # Split into GSP for target, only national, and one for history
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
-    gsp_history = DropGSP(gsp_datapipe, gsps_to_keep=list(range(1,317)))
+    gsp_history = DropGSP(gsp_datapipe, gsps_to_keep=list(range(1, 317)))
 
     logger.debug("Add t0 idx and normalize")
 
@@ -143,10 +150,12 @@ def metnet_national_datapipe(
         history_duration=timedelta(minutes=0),
         forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
     )
-    gsp_history_time_periods_datapipe = gsp_history_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(minutes=30),
-        history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-        forecast_duration=timedelta(minutes=0),
+    gsp_history_time_periods_datapipe = (
+        gsp_history_time_periods_datapipe.get_contiguous_time_periods(
+            sample_period_duration=timedelta(minutes=30),
+            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+            forecast_duration=timedelta(minutes=0),
+        )
     )
 
     secondary_datapipes = [gsp_history_time_periods_datapipe]
