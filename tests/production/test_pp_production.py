@@ -18,8 +18,8 @@ def test_pp_production_datapipe(pv_yields_and_systems, gsp_yields):
 
     assert len(batch[BatchKey.hrvsatellite_time_utc]) == 4
     assert len(batch[BatchKey.hrvsatellite_time_utc][0]) == 19  # 6 history + now + 12 future = 19
-    assert len(batch[BatchKey.nwp_target_time_utc][0]) == 3
-    assert len(batch[BatchKey.nwp_init_time_utc][0]) == 3
+    assert len(batch[BatchKey.nwp_target_time_utc][0]) == 4
+    assert len(batch[BatchKey.nwp_init_time_utc][0]) == 4
     assert len(batch[BatchKey.pv_time_utc][0]) == 19
     assert len(batch[BatchKey.gsp_time_utc][0]) == 7  # 4 history + now + 2 future = 4
 
@@ -32,7 +32,7 @@ def test_pp_production_datapipe(pv_yields_and_systems, gsp_yields):
     )  # 2nd dim is 6 history + now
     assert batch[BatchKey.nwp].shape == (
         4,
-        3,
+        4,
         9,
         2,
         2,

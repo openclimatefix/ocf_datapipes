@@ -535,3 +535,10 @@ def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
 
         yield configuration_filename
+
+
+@pytest.fixture()
+def configuration_filename():
+
+    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+    yield filename
