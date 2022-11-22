@@ -315,7 +315,7 @@ def metnet_national_datapipe(
             .convert_pv_to_numpy(return_pv_system_row=True)
         )
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
-    gsp_history = ConvertGSPToNumpy(gsp_history)
+    gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
     if mode == "train":
         if use_gsp and use_pv:
             return metnet_datapipe.zip(gsp_history, pv_datapipe, gsp_datapipe)
