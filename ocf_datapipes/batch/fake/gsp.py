@@ -43,9 +43,7 @@ def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) 
     batch[BatchKey.gsp_t0_idx] = get_n_time_steps_from_config(
         input_data_configuration=gsp_config, include_forecast=False
     )
-    batch[BatchKey.gsp_system_row_number] = np.random.randint(0, 100, (batch_size, n_gsps))
     batch[BatchKey.gsp_id] = np.random.randint(0, 1000, (batch_size, n_gsps))
-    batch[BatchKey.gsp_mask] = np.random.randint(0, 1, (batch_size, n_gsps))
     batch[BatchKey.gsp_x_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
     batch[BatchKey.gsp_y_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
 
