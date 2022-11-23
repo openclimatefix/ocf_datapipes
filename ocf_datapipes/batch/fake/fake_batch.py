@@ -87,7 +87,7 @@ def fake_data_pipeline(configuration: Union[str, Configuration]):
 
     """
 
-    if isinstance(configuration,str):
+    if isinstance(configuration, str):
         configuration = load_yaml_configuration(configuration)
 
     batch = make_fake_batch(configuration=configuration, to_torch=True)

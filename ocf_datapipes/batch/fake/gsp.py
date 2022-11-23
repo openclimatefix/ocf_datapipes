@@ -40,14 +40,15 @@ def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) 
     batch = {}
     batch[BatchKey.gsp_time_utc] = time_utc  # Seconds since UNIX epoch (1970-01-01).
     batch[BatchKey.gsp] = np.random.random((batch_size, n_times, n_gsps))
-    batch[BatchKey.gsp_capacity_megawatt_power] = np.random.randint(0, 1000, (batch_size, n_times, n_gsps))
+    batch[BatchKey.gsp_capacity_megawatt_power] = np.random.randint(
+        0, 1000, (batch_size, n_times, n_gsps)
+    )
     batch[BatchKey.gsp_t0_idx] = get_n_time_steps_from_config(
         input_data_configuration=gsp_config, include_forecast=False
     )
     batch[BatchKey.gsp_id] = np.random.randint(0, 1000, (batch_size, n_gsps))
-    batch[BatchKey.gsp_x_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
-    batch[BatchKey.gsp_y_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
-
+    batch[BatchKey.gsp_x_osgb] = np.random.randint(0, 10 ** 6, (batch_size, n_gsps))
+    batch[BatchKey.gsp_y_osgb] = np.random.randint(0, 10 ** 6, (batch_size, n_gsps))
 
     batch[BatchKey.gsp_x_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
     batch[BatchKey.gsp_y_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
