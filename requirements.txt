@@ -1,5 +1,5 @@
-torch==1.12.1
-torchdata==0.4.1
+torch
+torchdata
 Cartopy>=0.20.3
 torch
 xarray
