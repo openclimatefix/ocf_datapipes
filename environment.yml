@@ -5,9 +5,9 @@ channels:
   - defaults
 dependencies:
   - pip
-  - pytorch
+  - pytorch>=1.13
   - rioxarray
-  - torchdata
+  - torchdata>=0.5
   - torchvision
   - xarray
   - fsspec
