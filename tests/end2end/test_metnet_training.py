@@ -5,6 +5,7 @@ import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Mapper
 from torchdata.datapipes.utils import to_graph
+import pytest
 
 xarray.set_options(keep_attrs=True)
 
@@ -48,7 +49,7 @@ from ocf_datapipes.transform.xarray import (
 )
 from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
 
-
+@pytest.mark.skip("Takes a long time")
 def test_metnet_production(
     sat_hrv_datapipe, sat_datapipe, passiv_datapipe, topo_datapipe, gsp_datapipe, nwp_datapipe
 ):
