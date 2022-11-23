@@ -40,6 +40,7 @@ Modules have their own README's as well to go into further detail.
     ├── production
     ├── select
     ├── training
+    │   ├── datamodules
     ├── transform/
     │   ├── numpy/
     │   │   └── batch

@@ -38,22 +38,22 @@ def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) 
     n_times = time_utc.shape[1]
 
     batch = {}
-    batch[BatchKey.pv_time_utc] = time_utc  # Seconds since UNIX epoch (1970-01-01).
-    batch[BatchKey.pv] = np.random.random((batch_size, n_times, n_gsps))
-    batch[BatchKey.pv_t0_idx] = get_n_time_steps_from_config(
+    batch[BatchKey.gsp_time_utc] = time_utc  # Seconds since UNIX epoch (1970-01-01).
+    batch[BatchKey.gsp] = np.random.random((batch_size, n_times, n_gsps))
+    batch[BatchKey.gsp_capacity_megawatt_power] = np.random.randint(0, 1000, (batch_size, n_times, n_gsps))
+    batch[BatchKey.gsp_t0_idx] = get_n_time_steps_from_config(
         input_data_configuration=gsp_config, include_forecast=False
     )
-    batch[BatchKey.pv_system_row_number] = np.random.randint(0, 100, (batch_size, n_gsps))
-    batch[BatchKey.pv_id] = np.random.randint(0, 1000, (batch_size, n_gsps))
-    batch[BatchKey.pv_mask] = np.random.randint(0, 1, (batch_size, n_gsps))
-    batch[BatchKey.pv_x_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
-    batch[BatchKey.pv_y_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
+    batch[BatchKey.gsp_id] = np.random.randint(0, 1000, (batch_size, n_gsps))
+    batch[BatchKey.gsp_x_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
+    batch[BatchKey.gsp_y_osgb] = np.random.randint(0, 10**6, (batch_size, n_gsps))
 
-    batch[BatchKey.pv_x_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
-    batch[BatchKey.pv_y_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
-    batch[BatchKey.pv_time_utc_fourier] = np.random.random(
+
+    batch[BatchKey.gsp_x_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
+    batch[BatchKey.gsp_y_osgb_fourier] = np.random.random((batch_size, n_gsps, n_fourier_features))
+    batch[BatchKey.gsp_time_utc_fourier] = np.random.random(
         (batch_size, n_times, n_fourier_features)
     )
-    batch[BatchKey.pv_time_utc_fourier_t0] = np.random.random((batch_size, n_fourier_features))
+    batch[BatchKey.gsp_time_utc_fourier_t0] = np.random.random((batch_size, n_fourier_features))
 
     return batch

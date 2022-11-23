@@ -1,5 +1,12 @@
 """ Make fake batch """
 from datetime import datetime, timezone
+from typing import Optional, Union
+
+import numpy as np
+import torch
+from torchdata.datapipes.iter import IterableWrapper
+
+from ocf_datapipes.config.load import load_yaml_configuration
 
 from ocf_datapipes.batch.fake.gsp import make_fake_gsp_data
 from ocf_datapipes.batch.fake.nwp import make_fake_nwp_data
@@ -7,14 +14,16 @@ from ocf_datapipes.batch.fake.pv import make_fake_pv_data
 from ocf_datapipes.batch.fake.satellite import make_fake_satellite_data
 from ocf_datapipes.batch.fake.sun import make_fake_sun_data
 from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.utils.utils import datetime64_to_float
 
 
-def make_fake_batch(configuration: Configuration) -> dict:
+def make_fake_batch(configuration: Configuration, to_torch: Optional[bool] = False) -> dict:
     """
     Make a random fake batch, this is useful for models that use this object
 
     Args:
         configuration: a configuration file
+        to_torch: optional if we return the batch with torch.Tensor
 
     Returns: dictionary containing the batch
 
@@ -55,4 +64,36 @@ def make_fake_batch(configuration: Configuration) -> dict:
         **batch_sun,
     }
 
+    if to_torch:
+        for k, v in batch.items():
+
+            if isinstance(v, int):
+                batch[k] = torch.IntTensor(v)
+            elif isinstance(v, np.ndarray):
+                if v.dtype == "datetime64[s]":
+                    batch[k] = torch.from_numpy(datetime64_to_float(v))
+                else:
+                    batch[k] = torch.from_numpy(v)
+
     return batch
+
+
+def fake_data_pipeline(configuration: Union[str, Configuration]):
+    """
+    Make a fake data pipeline
+
+    Args:
+        configuration: a configuration file
+
+    """
+
+    if isinstance(configuration,str):
+        configuration = load_yaml_configuration(configuration)
+
+    batch = make_fake_batch(configuration=configuration, to_torch=True)
+
+    def fake_iter():
+        while True:
+            yield batch
+
+    return IterableWrapper(fake_iter())
