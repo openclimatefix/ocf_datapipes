@@ -1,8 +1,8 @@
 """ Data module for pytorch lightning """
+from typing import Callable, Union
+
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
-
-from typing import Union, Callable
 
 from ocf_datapipes.batch.fake.fake_batch import fake_data_pipeline
 
