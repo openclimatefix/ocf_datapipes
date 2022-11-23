@@ -654,7 +654,7 @@ class OutputData(Base):
     @validator("filepath")
     def filepath_pathy(cls, v):
         """Make sure filepath is a Pathy object"""
-        return Pathy(v)
+        return Pathy.fluid(v)
 
 
 class Process(Base):
