@@ -11,15 +11,27 @@ class DataModule(LightningDataModule):
     Example of LightningDataModule using ocf_datapipes
     """
 
-    def __init__(self, data_pipeline: Union[str, Callable], configuration, fake_data,n_train_data,n_val_data):
+    def __init__(
+        self,
+        data_pipeline: Union[str, Callable],
+        configuration,
+        fake_data,
+        n_train_data,
+        n_val_data,
+    ):
         """
         Set up datamodule
+
 
         Args:
             data_pipeline: the pipeline function to be called,
                 can also be the name of the data pipeline
             configuration: the configuration file
+            fake_data: option to load fake data or not
+            n_train_data: TODO
+            n_val_data: TODO
         """
+
         super().__init__()
         self.data_pipeline = data_pipeline
         self.configuration = configuration
@@ -27,7 +39,9 @@ class DataModule(LightningDataModule):
         self.n_train_data = n_train_data
         self.n_val_data = n_val_data
 
-        if isinstance(self.data_pipeline, str):
+        if self.fake_data:
+            self.data_pipeline = fake_data_pipeline
+        elif isinstance(self.data_pipeline, str):
             if self.data_pipeline == "pv_satellite_nwp":
                 from ocf_datapipes.training.pv_satellite_nwp import pv_nwp_satellite_data_pipeline
 
@@ -35,31 +49,24 @@ class DataModule(LightningDataModule):
 
     def train_dataloader(self):
         """Get the train dataloader"""
-        if self.fake_data:
-            train_dataset = fake_data_pipeline(configuration=self.configuration)
-        else:
-            train_dataset = self.data_pipeline(configuration=self.configuration)
+
+        train_dataset = self.data_pipeline(configuration=self.configuration)
         train_dataloader = DataLoader(train_dataset, batch_size=None)
 
         return train_dataloader
 
     def val_dataloader(self):
         """Get the validation dataloader"""
-        if self.fake_data:
-            validation_data_pipeline = fake_data_pipeline(configuration=self.configuration)
-        else:
-            validation_data_pipeline = self.data_pipeline(configuration=self.configuration)
+
+        validation_data_pipeline = self.data_pipeline(configuration=self.configuration)
         validation_dataloader = DataLoader(validation_data_pipeline, batch_size=None)
 
         return validation_dataloader
 
     def test_dataloader(self):
         """Get the test dataloader"""
-        if self.fake_data:
-            test_data_pipeline = fake_data_pipeline(configuration=self.configuration)
-        else:
-            test_data_pipeline = self.data_pipeline(configuration=self.configuration)
 
+        test_data_pipeline = self.data_pipeline(configuration=self.configuration)
         test_dataloader = DataLoader(test_data_pipeline, batch_size=None)
 
         return test_dataloader
