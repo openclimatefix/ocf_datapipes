@@ -1,3 +1,4 @@
+""" Data module for pytorch lightning """
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 
@@ -21,7 +22,6 @@ class DataModule(LightningDataModule):
     ):
         """
         Set up datamodule
-
 
         Args:
             data_pipeline: the pipeline function to be called,
