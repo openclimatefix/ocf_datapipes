@@ -1,7 +1,7 @@
-from ocf_datapipes.batch.fake.fake_batch import make_fake_batch, fake_data_pipeline
-from ocf_datapipes.config.model import Configuration
-
 from torch.utils.data import DataLoader
+
+from ocf_datapipes.batch.fake.fake_batch import fake_data_pipeline, make_fake_batch
+from ocf_datapipes.config.model import Configuration
 
 
 def test_make_fake_batch():
