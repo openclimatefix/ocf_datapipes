@@ -5,7 +5,6 @@ from typing import Union
 import rioxarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes.utils import StreamWrapper
 
 
 @functional_datapipe("open_topography")
