@@ -1,6 +1,5 @@
 import os
 
-import pytest
 from freezegun import freeze_time
 
 import ocf_datapipes
@@ -9,7 +8,6 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 @freeze_time("2022-01-01 08:00")
-@pytest.mark.skip("Fork error needs to be fixed")
 def test_pp_production_datapipe(pv_yields_and_systems, gsp_yields):
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
