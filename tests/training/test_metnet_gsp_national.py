@@ -1,10 +1,11 @@
 import os
-import pytest
 
+import pytest
 from torchdata.dataloader2 import DataLoader2
 
 import ocf_datapipes
 from ocf_datapipes.training.metnet_gsp_national import metnet_national_datapipe
+
 
 @pytest.mark.skip("Skip as takes too long")
 def test_metnet_datapipe():
