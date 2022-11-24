@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-
 from ocf_datapipes.select import SelectLiveT0Time, SelectLiveTimeSlice
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime
 
