@@ -220,7 +220,6 @@ def test_power_perceiver_production(
     assert batch[BatchKey.hrvsatellite_surface_height].shape == (4, 128, 256)
 
 
-@pytest.mark.skip("Takes a long time")
 def test_power_perceiver_production_functional(
     sat_hrv_datapipe, passiv_datapipe, topo_datapipe, gsp_datapipe, nwp_datapipe
 ):
