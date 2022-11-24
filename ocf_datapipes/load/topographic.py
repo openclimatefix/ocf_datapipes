@@ -5,7 +5,7 @@ from typing import Union
 import rioxarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-
+from torchdata.datapipes.utils import StreamWrapper
 
 @functional_datapipe("open_topography")
 class OpenTopographyIterDataPipe(IterDataPipe):
@@ -34,4 +34,4 @@ class OpenTopographyIterDataPipe(IterDataPipe):
         topo = topo.rename({"x": "x_osgb", "y": "y_osgb"})
 
         while True:
-            yield topo
+            yield StreamWrapper(topo)
