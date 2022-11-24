@@ -1,6 +1,6 @@
 import pytest
-from torchdata.datapipes.iter import IterDataPipe, Zipper
 from torchdata.dataloader2 import DataLoader2
+from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
@@ -65,6 +65,7 @@ def test_add_selected_time_slices_from_datapipes():
     assert sorted(list(used_datapipes.keys())) == sorted(
         ["nwp", "config", "topo", "gsp", "gsp_future", "pv", "sat", "hrv"]
     )
+
 
 @pytest.mark.skip("Too long for GitHub CI")
 def test_add_selected_time_slices_from_datapipes_fork_iterations():
