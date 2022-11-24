@@ -20,14 +20,7 @@ from ocf_datapipes.load import (
 )
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import (
-    NWP_MEAN,
-    NWP_STD,
-    SAT_MEAN,
-    SAT_MEAN_DA,
-    SAT_STD,
-    SAT_STD_DA,
-)
+from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
