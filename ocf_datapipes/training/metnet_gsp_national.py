@@ -116,7 +116,6 @@ def metnet_national_datapipe(
         use_gsp=use_gsp,
         use_pv=use_pv,
     )
-    configuration = used_datapipes["config"]
     # Load GSP national data
     used_datapipes["gsp"] = used_datapipes["gsp"].select_train_test_time(start_time, end_time)
 

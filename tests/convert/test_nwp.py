@@ -1,14 +1,11 @@
 from datetime import timedelta
 
-import pytest
-
 from ocf_datapipes.convert import ConvertNWPToNumpyBatch
 from ocf_datapipes.select import SelectLiveT0Time
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration, ConvertToNWPTargetTime
 from ocf_datapipes.utils.consts import BatchKey
 
 
-@pytest.mark.skip("Takes too long")
 def test_convert_nwp_to_numpy_batch(nwp_datapipe):
     nwp_datapipe = AddT0IdxAndSamplePeriodDuration(
         nwp_datapipe,

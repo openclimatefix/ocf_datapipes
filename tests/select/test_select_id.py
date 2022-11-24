@@ -1,11 +1,8 @@
-import pytest
-
 import ocf_datapipes  # noqa
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import OpenConfiguration, OpenNWPID, OpenPVFromNetCDF
 
 
-@pytest.mark.skip("Too long")
 def test_select_id(configuration_with_pv_parquet, nwp_data_with_id_filename):
 
     # load configuration
