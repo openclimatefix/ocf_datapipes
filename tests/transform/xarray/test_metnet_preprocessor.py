@@ -1,6 +1,7 @@
+import pytest
+
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime, CreatePVImage, PreProcessMetNet
-import pytest
 
 
 @pytest.mark.skip("Too Memory Intensive")

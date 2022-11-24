@@ -1,7 +1,7 @@
 import os
 
-from freezegun import freeze_time
 import pytest
+from freezegun import freeze_time
 
 import ocf_datapipes
 from ocf_datapipes.production.power_perceiver import power_perceiver_production_datapipe

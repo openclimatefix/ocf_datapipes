@@ -1,6 +1,7 @@
+import pytest
+
 from ocf_datapipes.training.nwp_pv import nwp_pv_datapipe
 from ocf_datapipes.utils.consts import BatchKey
-import pytest
 
 
 @pytest.mark.skip("Too Memory Intensive")

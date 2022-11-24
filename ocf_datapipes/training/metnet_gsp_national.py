@@ -19,6 +19,11 @@ from ocf_datapipes.load import (
     OpenTopography,
 )
 from ocf_datapipes.select import DropGSP, LocationPicker
+from ocf_datapipes.training.common import (
+    add_selected_time_slices_from_datapipes,
+    get_and_return_overlapping_time_periods_and_t0,
+    open_and_return_datapipes,
+)
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import (
     NWP_MEAN,
@@ -28,12 +33,6 @@ from ocf_datapipes.utils.consts import (
     SAT_MEAN_DA,
     SAT_STD,
     SAT_STD_DA,
-)
-
-from ocf_datapipes.training.common import (
-    open_and_return_datapipes,
-    get_and_return_overlapping_time_periods_and_t0,
-    add_selected_time_slices_from_datapipes,
 )
 
 xarray.set_options(keep_attrs=True)
@@ -115,7 +114,7 @@ def metnet_national_datapipe(
         use_sat=use_sat,
         use_hrv=use_hrv,
         use_gsp=use_gsp,
-        use_pv=use_pv
+        use_pv=use_pv,
     )
     configuration = used_datapipes["config"]
     # Load GSP national data
@@ -182,7 +181,7 @@ def metnet_national_datapipe(
         add_sun_features=use_sun,
     )
 
-    #metnet_datapipe = modalities[0].zip(*modalities[1:])
+    # metnet_datapipe = modalities[0].zip(*modalities[1:])
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     gsp_history = gsp_history.map(_remove_nans)
     gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)

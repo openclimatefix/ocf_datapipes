@@ -1,10 +1,10 @@
 import os
 
 import numpy as np
+import pytest
 
 import ocf_datapipes
 from ocf_datapipes.training.metnet_pv_national import metnet_national_datapipe
-import pytest
 
 
 @pytest.mark.skip("Too Memory Intensive")

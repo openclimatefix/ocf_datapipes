@@ -1,7 +1,7 @@
+import pytest
+
 from ocf_datapipes.training.pv_satellite_nwp import pv_nwp_satellite_data_pipeline
 from ocf_datapipes.utils.consts import BatchKey
-
-import pytest
 
 
 @pytest.mark.skip("Too Memory Intensive")

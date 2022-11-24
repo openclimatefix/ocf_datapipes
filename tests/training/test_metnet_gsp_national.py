@@ -1,9 +1,10 @@
 import os
 
-import ocf_datapipes
-from ocf_datapipes.training.metnet_gsp_national import metnet_national_datapipe
 import pytest
 from torchdata.dataloader2 import DataLoader2
+
+import ocf_datapipes
+from ocf_datapipes.training.metnet_gsp_national import metnet_national_datapipe
 
 
 @pytest.mark.skip("Too Long")
@@ -13,5 +14,5 @@ def test_metnet_datapipe():
     dataloader = DataLoader2(gsp_datapipe)
     for i, batch in enumerate(dataloader):
         _ = batch
-        if i+1 % 50000 == 0:
+        if i + 1 % 50000 == 0:
             break

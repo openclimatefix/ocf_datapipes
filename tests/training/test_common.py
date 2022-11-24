@@ -1,10 +1,11 @@
+import pytest
+from torchdata.datapipes.iter import IterDataPipe, Zipper
+
 from ocf_datapipes.training.common import (
+    add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
-    add_selected_time_slices_from_datapipes,
 )
-from torchdata.datapipes.iter import IterDataPipe, Zipper
-import pytest
 
 
 def test_open_and_return_datapipes():
@@ -64,7 +65,9 @@ def test_add_selected_time_slices_from_datapipes():
         ["nwp", "config", "topo", "gsp", "gsp_future", "pv", "sat", "hrv"]
     )
 
+
 from torchdata.dataloader2 import DataLoader2
+
 
 @pytest.mark.skip("Too long for GitHub CI")
 def test_add_selected_time_slices_from_datapipes_fork_iterations():
@@ -86,4 +89,3 @@ def test_add_selected_time_slices_from_datapipes_fork_iterations():
         _ = batch
         if i + 1 % 50000 == 0:
             break
-

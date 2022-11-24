@@ -1,6 +1,7 @@
+import pytest
+
 from ocf_datapipes.training.gsp_national import gsp_national_datapipe
 from ocf_datapipes.utils.consts import BatchKey
-import pytest
 
 
 @pytest.mark.skip("Too Memory Intensive")

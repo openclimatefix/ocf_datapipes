@@ -1,7 +1,7 @@
 import numpy as np
+import pytest
 
 from ocf_datapipes.transform.xarray import CreatePVImage
-import pytest
 
 
 @pytest.mark.skip("Too Memory Intensive")

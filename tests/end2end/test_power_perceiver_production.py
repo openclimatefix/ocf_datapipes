@@ -1,11 +1,11 @@
 import numpy as np
+import pytest
 import torch
 import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Mapper
 from torchdata.datapipes.utils import to_graph
-import pytest
 
 xarray.set_options(keep_attrs=True)
 
