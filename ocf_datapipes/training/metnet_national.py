@@ -206,16 +206,6 @@ def metnet_national_datapipe(
             .fork(2)
         )
 
-        pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe,
-            normalize=True,
-            max_num_pv_systems=max_num_pv_systems,
-            always_return_first=True,
-        ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-        )
-
         pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
