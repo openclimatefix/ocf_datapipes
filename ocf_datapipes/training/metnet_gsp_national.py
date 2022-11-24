@@ -76,11 +76,9 @@ def metnet_national_datapipe(
     use_nwp: bool = True,
     use_sat: bool = True,
     use_hrv: bool = True,
-    use_pv: bool = True,
+    use_pv: bool = False,
     use_gsp: bool = True,
     use_topo: bool = True,
-    mode: str = "train",
-    max_num_pv_systems: int = -1,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
@@ -97,9 +95,7 @@ def metnet_national_datapipe(
         use_sat: Whether to use non-HRV Satellite or not
         use_nwp: Whether to use NWP or not
         use_topo: Whether to use topographic map or not
-        mode: Either 'train', where random times are selected,
-            or 'test' or 'val' where times are sequential
-        max_num_pv_systems: max number of PV systems to include, <= 0 if no sampling
+        use_gsp: Whether to use GSP history
         start_time: Start time to select on
         end_time: End time to select from
 
@@ -145,11 +141,6 @@ def metnet_national_datapipe(
         logger.debug("Take HRV Satellite time slices")
         sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
 
-    if "pv" in used_datapipes.keys():
-        logger.debug("Take PV Time Slices")
-        # take pv time slices
-        pv_datapipe = used_datapipes["pv"].normalize(normalize_fn=normalize_pv)
-
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
 
@@ -180,13 +171,7 @@ def metnet_national_datapipe(
         add_sun_features=use_sun,
     )
 
-    # metnet_datapipe = modalities[0].zip(*modalities[1:])
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     gsp_history = gsp_history.map(_remove_nans)
     gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
-    # if use_gsp and use_pv:
-    #    return metnet_datapipe.zip(gsp_history, pv_datapipe, gsp_datapipe)
-    # if use_gsp:
     return metnet_datapipe.zip(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
-    # if use_pv:
-    #    return metnet_datapipe.zip(pv_datapipe, gsp_datapipe)
