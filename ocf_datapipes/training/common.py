@@ -280,10 +280,18 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             )
 
         if "gsp" == key:
-            datapipes_to_return[key] = datapipe.select_time_slice(
-                t0_datapipe=used_datapipes[key + "_t0"],
+            gsp_1, gsp_2 = used_datapipes[key + "_t0"].fork(2)
+            gsp_dp1, gsp_dp2 = datapipe.fork(2)
+            datapipes_to_return[key] = gsp_dp1.select_time_slice(
+                t0_datapipe=gsp_1,
                 history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
                 forecast_duration=timedelta(minutes=0),
+                sample_period_duration=timedelta(minutes=30),
+            )
+            datapipes_to_return[key+"_future"] = gsp_dp2.select_time_slice(
+                t0_datapipe=gsp_2,
+                history_duration=timedelta(minutes=0),
+                forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
                 sample_period_duration=timedelta(minutes=30),
             )
     if "topo" in used_datapipes.keys():

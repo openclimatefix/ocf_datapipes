@@ -30,7 +30,7 @@ from ocf_datapipes.utils.consts import (
     SAT_STD_DA,
 )
 
-from ocf_datapipes.training.common import open_and_return_datapipes
+from ocf_datapipes.training.common import open_and_return_datapipes, get_and_return_overlapping_time_periods_and_t0, add_selected_time_slices_from_datapipes
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -114,170 +114,40 @@ def metnet_national_datapipe(
     )
     configuration = used_datapipes["config"]
     # Load GSP national data
-    gsp_datapipe, gsp_history = (
-        used_datapipes["gsp"].select_train_test_time(start_time, end_time).fork(2)
+    used_datapipes["gsp"] = (
+        used_datapipes["gsp"].select_train_test_time(start_time, end_time)
     )
 
+    # Now get overlapping time periods
+    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
+
+    # And now get time slices
+    used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
+
+    # Now do the extra processing
+    gsp_history = used_datapipes["gsp"].normalize(normalize_fn=normalize_gsp)
+    gsp_datapipe = used_datapipes["gsp_future"].normalize(normalize_fn=normalize_gsp)
     # Split into GSP for target, only national, and one for history
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
-
-    logger.debug("Add t0 idx and normalize")
-
-    gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=normalize_gsp)
-        .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=0),
-        )
-        .fork(3)
-    )
-
-    gsp_history, gsp_history_time_periods_datapipe = (
-        gsp_history.normalize(normalize_fn=normalize_gsp)
-        .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-        )
-        .fork(2)
-    )
-    # get time periods
-    # get contiguous time periods
-    logger.debug("Getting contiguous time periods")
-    gsp_time_periods_datapipe = gsp_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(minutes=30),
-        history_duration=timedelta(minutes=0),
-        forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
-    )
-    gsp_history_time_periods_datapipe = (
-        gsp_history_time_periods_datapipe.get_contiguous_time_periods(
-            sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-            forecast_duration=timedelta(minutes=0),
-        )
-    )
-
-    secondary_datapipes = [gsp_history_time_periods_datapipe]
-
-    # Load NWP data
-    if "nwp" in used_datapipes.keys():
-        nwp_datapipe, nwp_time_periods_datapipe = used_datapipes["nwp"].fork(2)
-
-        nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(
-            sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
-            history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-            forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-            time_dim="init_time_utc",
-        )
-        secondary_datapipes.append(nwp_time_periods_datapipe)
-
-    if "sat" in used_datapipes.keys():
-        sat_datapipe, sat_time_periods_datapipe = used_datapipes["sat"].fork(2)
-
-        sat_time_periods_datapipe = sat_time_periods_datapipe.get_contiguous_time_periods(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
-            forecast_duration=timedelta(minutes=1),
-        )
-        secondary_datapipes.append(sat_time_periods_datapipe)
-
-    if "hrv" in used_datapipes.keys():
-        sat_hrv_datapipe, sat_hrv_time_periods_datapipe = used_datapipes["hrv"].fork(2)
-
-        sat_hrv_time_periods_datapipe = sat_hrv_time_periods_datapipe.get_contiguous_time_periods(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(
-                minutes=configuration.input_data.hrvsatellite.history_minutes
-            ),
-            forecast_duration=timedelta(minutes=1),
-        )
-        secondary_datapipes.append(sat_hrv_time_periods_datapipe)
-
-    if "pv" in used_datapipes.keys():
-        pv_datapipe, pv_time_periods_datapipe = used_datapipes["pv"].fork(2)
-
-        pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-            forecast_duration=timedelta(minutes=1),
-        )
-        secondary_datapipes.append(pv_time_periods_datapipe)
-
-    # find joint overlapping timer periods
-    logger.debug("Getting joint time periods")
-    overlapping_datapipe = gsp_time_periods_datapipe.select_overlapping_time_slice(
-        secondary_datapipes=secondary_datapipes,
-    )
-
-    # select time periods
-    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
-
-    # select t0 periods
-    logger.debug("Select t0 joint")
-    num_t0_datapipes = (
-        1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
-    )
-    num_t0_datapipes = 5
-    t0_datapipes = gsp_t0_datapipe.select_t0_time(
-        return_all_times=False  # if mode == "train" else True
-    ).fork(num_t0_datapipes)
-
-    # take pv time slices
-    logger.debug("Take GSP time slices")
-    gsp_datapipe = gsp_datapipe.select_time_slice(
-        t0_datapipe=t0_datapipes[0],
-        history_duration=timedelta(minutes=0),
-        forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
-        sample_period_duration=timedelta(minutes=30),
-    )
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
         logger.debug("Take NWP time slices")
-        nwp_datapipe = nwp_datapipe.convert_to_nwp_target_time(
-            t0_datapipe=t0_datapipes[1],
-            sample_period_duration=timedelta(hours=1),
-            history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-            forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-        ).normalize(mean=NWP_MEAN, std=NWP_STD)
+        nwp_datapipe = used_datapipes["nwp"].normalize(mean=NWP_MEAN, std=NWP_STD)
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
         # take sat time slices
-        sat_datapipe = sat_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[2],
-            history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
-            forecast_duration=timedelta(minutes=0),
-            sample_period_duration=timedelta(minutes=5),
-        ).normalize(mean=SAT_MEAN_DA, std=SAT_STD_DA)
+        sat_datapipe = used_datapipes["sat"].normalize(mean=SAT_MEAN_DA, std=SAT_STD_DA)
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
-        sat_hrv_datapipe = sat_hrv_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[3],
-            history_duration=timedelta(
-                minutes=configuration.input_data.hrvsatellite.history_minutes
-            ),
-            forecast_duration=timedelta(minutes=0),
-            sample_period_duration=timedelta(minutes=5),
-        ).normalize(mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
+        sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
 
     if "pv" in used_datapipes.keys():
         logger.debug("Take PV Time Slices")
         # take pv time slices
-        pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
-        pv_datapipe = pv_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv, use_pv])],
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-            forecast_duration=timedelta(minutes=0),
-            sample_period_duration=timedelta(minutes=5),
-        )
-    if "gsp" in used_datapipes.keys():
-        gsp_history = gsp_history.select_time_slice(
-            t0_datapipe=t0_datapipes[4],
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-            forecast_duration=timedelta(minutes=0),
-            sample_period_duration=timedelta(minutes=30),
-        )
+        pv_datapipe = used_datapipes["pv"].normalize(normalize_fn=normalize_pv)
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
@@ -308,25 +178,15 @@ def metnet_national_datapipe(
         output_height_pixels=256,
         add_sun_features=use_sun,
     )
-    if "pv" in used_datapipes.keys():
-        pv_datapipe = (
-            pv_datapipe.ensure_n_pv_systems_per_example(n_pv_systems_per_example=max_num_pv_systems)
-            .map(_remove_nans)
-            .convert_pv_to_numpy(return_pv_system_row=True)
-        )
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     gsp_history = gsp_history.map(_remove_nans)
     gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
-    if mode == "train":
-        if use_gsp and use_pv:
-            return metnet_datapipe.zip(gsp_history, pv_datapipe, gsp_datapipe)
-        if use_gsp:
-            return metnet_datapipe.zip(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
-        if use_pv:
-            return metnet_datapipe.zip(pv_datapipe, gsp_datapipe)
-    else:
-        start_time_datapipe = t0_datapipes[len(t0_datapipes) - 1]  # The one extra one
-        return metnet_datapipe.zip(gsp_history, gsp_datapipe, start_time_datapipe)
+    #if use_gsp and use_pv:
+    #    return metnet_datapipe.zip(gsp_history, pv_datapipe, gsp_datapipe)
+    #if use_gsp:
+    return metnet_datapipe.zip(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
+    #if use_pv:
+    #    return metnet_datapipe.zip(pv_datapipe, gsp_datapipe)
 
 datapipe = metnet_national_datapipe(use_pv=False, configuration_filename="/home/jacob/Development/ocf_datapipes/ocf_datapipes/config/on_premises.yaml")
 from torchdata.datapipes.utils import to_graph
