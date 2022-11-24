@@ -4,6 +4,7 @@ from ocf_datapipes.select import SelectLiveT0Time, SelectLiveTimeSlice
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime
 import pytest
 
+
 @pytest.mark.skip()
 def test_select_hrv(sat_hrv_datapipe):
     time_len = len(next(iter(sat_hrv_datapipe)).time_utc.values)
@@ -29,6 +30,7 @@ def test_select_gsp(gsp_datapipe):
     data = next(iter(gsp_datapipe))
     assert len(data.time_utc.values) == 5
     assert len(data.time_utc.values) < time_len
+
 
 @pytest.mark.skip("Too long")
 def test_select_nwp(nwp_datapipe):

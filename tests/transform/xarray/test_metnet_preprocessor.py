@@ -1,6 +1,8 @@
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime, CreatePVImage, PreProcessMetNet
 import pytest
+
+
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess_no_sun(sat_datapipe, gsp_datapipe):
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
@@ -18,6 +20,7 @@ def test_metnet_preprocess_no_sun(sat_datapipe, gsp_datapipe):
     )
     data = next(iter(datapipe))
     print(data.shape)
+
 
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess(sat_datapipe, gsp_datapipe):
@@ -37,6 +40,7 @@ def test_metnet_preprocess(sat_datapipe, gsp_datapipe):
     data = next(iter(datapipe))
     print(data.shape)
 
+
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess_both_sat(sat_datapipe, sat_hrv_datapipe, gsp_datapipe):
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
@@ -55,6 +59,7 @@ def test_metnet_preprocess_both_sat(sat_datapipe, sat_hrv_datapipe, gsp_datapipe
     data = next(iter(datapipe))
     print(data.shape)
 
+
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess_both_sat_other_order(sat_datapipe, sat_hrv_datapipe, gsp_datapipe):
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
@@ -72,6 +77,7 @@ def test_metnet_preprocess_both_sat_other_order(sat_datapipe, sat_hrv_datapipe, 
     )
     data = next(iter(datapipe))
     print(data.shape)
+
 
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess_both_sat_pv(
@@ -95,6 +101,7 @@ def test_metnet_preprocess_both_sat_pv(
     data = next(iter(datapipe))
     assert data.shape == (289, 14, 100, 100)
 
+
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess_sat_hrv_pv_nwp(
     sat_datapipe, sat_hrv_datapipe, gsp_datapipe, passiv_datapipe, nwp_datapipe
@@ -117,6 +124,7 @@ def test_metnet_preprocess_sat_hrv_pv_nwp(
     data = next(iter(datapipe))
     assert data.shape == (289, 14, 100, 100)
 
+
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess_sat_topo(sat_datapipe, gsp_datapipe, topo_datapipe):
     gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
@@ -134,6 +142,7 @@ def test_metnet_preprocess_sat_topo(sat_datapipe, gsp_datapipe, topo_datapipe):
     )
     data = next(iter(datapipe))
     assert data.shape == (25, 12, 100, 100)
+
 
 @pytest.mark.skip("Too Memory Intensive")
 def test_metnet_preprocess_sat_hrv_pv_nwp_topo(

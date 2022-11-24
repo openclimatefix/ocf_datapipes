@@ -30,7 +30,11 @@ from ocf_datapipes.utils.consts import (
     SAT_STD_DA,
 )
 
-from ocf_datapipes.training.common import open_and_return_datapipes, get_and_return_overlapping_time_periods_and_t0, add_selected_time_slices_from_datapipes
+from ocf_datapipes.training.common import (
+    open_and_return_datapipes,
+    get_and_return_overlapping_time_periods_and_t0,
+    add_selected_time_slices_from_datapipes,
+)
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -111,12 +115,11 @@ def metnet_national_datapipe(
         use_sat=use_sat,
         use_hrv=use_hrv,
         use_gsp=use_gsp,
+        use_pv=use_pv
     )
     configuration = used_datapipes["config"]
     # Load GSP national data
-    used_datapipes["gsp"] = (
-        used_datapipes["gsp"].select_train_test_time(start_time, end_time)
-    )
+    used_datapipes["gsp"] = used_datapipes["gsp"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
@@ -163,7 +166,7 @@ def metnet_national_datapipe(
     if "topo" in used_datapipes.keys():
         modalities.append(topo_datapipe)
 
-    gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2)
+    gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2, buffer_size=5)
 
     location_datapipe = LocationPicker(gsp_loc_datapipe)
 
@@ -178,18 +181,14 @@ def metnet_national_datapipe(
         output_height_pixels=256,
         add_sun_features=use_sun,
     )
+
+    #metnet_datapipe = modalities[0].zip(*modalities[1:])
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     gsp_history = gsp_history.map(_remove_nans)
     gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
-    #if use_gsp and use_pv:
+    # if use_gsp and use_pv:
     #    return metnet_datapipe.zip(gsp_history, pv_datapipe, gsp_datapipe)
-    #if use_gsp:
+    # if use_gsp:
     return metnet_datapipe.zip(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
-    #if use_pv:
+    # if use_pv:
     #    return metnet_datapipe.zip(pv_datapipe, gsp_datapipe)
-
-datapipe = metnet_national_datapipe(use_pv=False, configuration_filename="/home/jacob/Development/ocf_datapipes/ocf_datapipes/config/on_premises.yaml")
-from torchdata.datapipes.utils import to_graph
-
-graph = to_graph(datapipe)
-graph.view()

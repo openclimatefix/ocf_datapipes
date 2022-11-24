@@ -1,6 +1,8 @@
 from ocf_datapipes.training.nwp_pv import nwp_pv_datapipe
 from ocf_datapipes.utils.consts import BatchKey
 import pytest
+
+
 @pytest.mark.skip("Too Memory Intensive")
 def test_nwp_pv_datapipe(configuration_with_pv_parquet_and_nwp):
 

@@ -2,6 +2,8 @@ from ocf_datapipes.training.pv_satellite_nwp import pv_nwp_satellite_data_pipeli
 from ocf_datapipes.utils.consts import BatchKey
 
 import pytest
+
+
 @pytest.mark.skip("Too Memory Intensive")
 def test_gsp_pv_nwp_satellite_datapipe(configuration_filename):
 
