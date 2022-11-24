@@ -22,16 +22,13 @@ class OpenTopographyIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Load topo data and return it"""
-        topo = rioxarray.open_rasterio(
-            filename=self.topo_filename, parse_coordinates=True, masked=True
-        )
+        with rioxarray.open_rasterio(filename=self.topo_filename, parse_coordinates=True, masked=True) as topo:
+            # `band` and `spatial_ref` don't appear to hold any useful info. So get rid of them:
+            topo = topo.isel(band=0)
+            topo = topo.drop_vars(["spatial_ref", "band"])
 
-        # `band` and `spatial_ref` don't appear to hold any useful info. So get rid of them:
-        topo = topo.isel(band=0)
-        topo = topo.drop_vars(["spatial_ref", "band"])
-
-        # Use our standard naming:
-        topo = topo.rename({"x": "x_osgb", "y": "y_osgb"})
+            # Use our standard naming:
+            topo = topo.rename({"x": "x_osgb", "y": "y_osgb"})
 
         while True:
-            yield StreamWrapper(topo)
+            yield topo
