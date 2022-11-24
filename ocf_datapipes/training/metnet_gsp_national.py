@@ -30,7 +30,7 @@ from ocf_datapipes.utils.consts import (
     SAT_STD_DA,
 )
 
-from .common import open_and_return_datapipes
+from ocf_datapipes.training.common import open_and_return_datapipes
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -114,7 +114,6 @@ def metnet_national_datapipe(
     )
     configuration = used_datapipes["config"]
     # Load GSP national data
-    logger.debug("Opening GSP Data")
     gsp_datapipe, gsp_history = (
         used_datapipes["gsp"].select_train_test_time(start_time, end_time).fork(2)
     )
@@ -217,6 +216,7 @@ def metnet_national_datapipe(
     num_t0_datapipes = (
         1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
     )
+    num_t0_datapipes = 5
     t0_datapipes = gsp_t0_datapipe.select_t0_time(
         return_all_times=False  # if mode == "train" else True
     ).fork(num_t0_datapipes)
@@ -244,7 +244,7 @@ def metnet_national_datapipe(
         logger.debug("Take Satellite time slices")
         # take sat time slices
         sat_datapipe = sat_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat])],
+            t0_datapipe=t0_datapipes[2],
             history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
@@ -253,7 +253,7 @@ def metnet_national_datapipe(
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
         sat_hrv_datapipe = sat_hrv_datapipe.select_time_slice(
-            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv])],
+            t0_datapipe=t0_datapipes[3],
             history_duration=timedelta(
                 minutes=configuration.input_data.hrvsatellite.history_minutes
             ),
@@ -273,7 +273,7 @@ def metnet_national_datapipe(
         )
     if "gsp" in used_datapipes.keys():
         gsp_history = gsp_history.select_time_slice(
-            t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv, use_pv, use_gsp])],
+            t0_datapipe=t0_datapipes[4],
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=30),
@@ -326,4 +326,10 @@ def metnet_national_datapipe(
             return metnet_datapipe.zip(pv_datapipe, gsp_datapipe)
     else:
         start_time_datapipe = t0_datapipes[len(t0_datapipes) - 1]  # The one extra one
-        return combined_datapipe.zip(gsp_history, gsp_datapipe, start_time_datapipe)
+        return metnet_datapipe.zip(gsp_history, gsp_datapipe, start_time_datapipe)
+
+datapipe = metnet_national_datapipe(use_pv=False, configuration_filename="/home/jacob/Development/ocf_datapipes/ocf_datapipes/config/on_premises.yaml")
+from torchdata.datapipes.utils import to_graph
+
+graph = to_graph(datapipe)
+graph.view()

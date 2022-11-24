@@ -142,3 +142,16 @@ def open_and_return_datapipes(
         used_datapipes["topo"] = topo_datapipe
 
     return used_datapipes
+
+
+def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict):
+    """
+    Takes datapipes and obtains the overlapping time periods + t0 time datapipes
+
+
+    Args:
+        used_datapipes: Dictionary of datapipes to compute the time intersection of
+
+    Returns:
+        Dictionary of datapipes with the proper time slices selected
+    """
