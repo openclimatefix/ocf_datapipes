@@ -7,6 +7,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 from torchdata.datapipes.utils import StreamWrapper
 
+
 @functional_datapipe("open_topography")
 class OpenTopographyIterDataPipe(IterDataPipe):
     """Load topographic data"""
@@ -22,7 +23,9 @@ class OpenTopographyIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Load topo data and return it"""
-        with rioxarray.open_rasterio(filename=self.topo_filename, parse_coordinates=True, masked=True) as topo:
+        with rioxarray.open_rasterio(
+            filename=self.topo_filename, parse_coordinates=True, masked=True
+        ) as topo:
             # `band` and `spatial_ref` don't appear to hold any useful info. So get rid of them:
             topo = topo.isel(band=0)
             topo = topo.drop_vars(["spatial_ref", "band"])
