@@ -7,7 +7,7 @@ fsspec
 einops
 numpy
 pandas
-rioxarray>=0.13.1
+rioxarray
 pathy
 pyaml_env
 nowcasting_datamodel
