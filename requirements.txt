@@ -1,7 +1,6 @@
 torch==1.12.1
 torchdata==0.4.1
 Cartopy>=0.20.3
-torch
 xarray
 zarr
 fsspec
@@ -13,7 +12,6 @@ pathy
 pyaml_env
 nowcasting_datamodel
 gitpython
-torchdata>=0.4.1
 geopandas
 dask
 pvlib
