@@ -86,7 +86,8 @@ def metnet_national_datapipe(
             True if configuration.input_data.topographic.topographic_filename != "" else False
         )
     print(
-        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
+        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} "
+        f"PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
     )
     # Load GSP national data
     logger.debug("Opening GSP Data")
@@ -192,16 +193,6 @@ def metnet_national_datapipe(
                 history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             )
             .fork(2)
-        )
-
-        pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe,
-            normalize=True,
-            max_num_pv_systems=max_num_pv_systems,
-            always_return_first=True,
-        ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
 
         pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(

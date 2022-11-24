@@ -9,7 +9,7 @@ import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.convert import ConvertGSPToNumpy, ConvertPVToNumpy
+from ocf_datapipes.convert import ConvertGSPToNumpy
 from ocf_datapipes.load import (
     OpenConfiguration,
     OpenGSP,
@@ -23,7 +23,6 @@ from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import (
     NWP_MEAN,
     NWP_STD,
-    PV_YIELD,
     SAT_MEAN,
     SAT_MEAN_DA,
     SAT_STD,
@@ -120,7 +119,8 @@ def metnet_national_datapipe(
             True if configuration.input_data.topographic.topographic_filename != "" else False
         )
     print(
-        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
+        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv}"
+        f" PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
     )
     # Load GSP national data
     logger.debug("Opening GSP Data")
@@ -335,7 +335,7 @@ def metnet_national_datapipe(
     )
 
     pv_datapipe = (
-        pv_datapipe.ensure_n_pv_systems_per_example(n_pv_systems_per_example=1000)
+        pv_datapipe.ensure_n_pv_systems_per_example(n_pv_systems_per_example=max_num_pv_systems)
         .map(_remove_nans)
         .convert_pv_to_numpy(return_pv_system_row=True)
     )

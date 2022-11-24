@@ -99,7 +99,8 @@ def metnet_national_datapipe(
             True if configuration.input_data.topographic.topographic_filename != "" else False
         )
     print(
-        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
+        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} "
+        f"PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
     )
     # Load GSP national data
     logger.debug("Opening GSP Data")
