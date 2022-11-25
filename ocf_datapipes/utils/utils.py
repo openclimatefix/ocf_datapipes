@@ -181,6 +181,7 @@ def pandas_periods_to_our_periods_dt(
     return pd.DataFrame(new_periods)
 
 
+# https://github.com/pytorch/data/issues/865
 @functional_datapipe("zip_ocf")
 class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
     """
