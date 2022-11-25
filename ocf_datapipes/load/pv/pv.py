@@ -1,5 +1,6 @@
 """Datapipe and utils to load PV data from NetCDF for training"""
 import logging
+import io
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Union
@@ -166,12 +167,16 @@ def _load_pv_power_watts_and_capacity_watt_power(
 
     else:
         with fsspec.open(filename, mode="rb") as file:
-            pv_power_ds = xr.open_dataset(file, engine="h5netcdf")
-            pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
-            pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
-            pv_power_watts = pv_power_watts.astype(np.float32)
+            file_bytes = file.read()
 
-            del pv_power_ds
+        _log.info("Loaded solar PV power bytes, now converting to xarray")
+        with io.BytesIO(file_bytes) as file:
+            pv_power_ds = xr.load_dataset(file, engine="h5netcdf")
+
+        _log.info(f"Loaded solar PV power data and converting to pandas.")
+        pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
+        pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
+        pv_power_watts = pv_power_watts.astype(np.float32)
 
         if "passiv" not in str(filename):
             _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")

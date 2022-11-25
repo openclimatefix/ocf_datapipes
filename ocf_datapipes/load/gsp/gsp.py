@@ -65,7 +65,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
         )
         self._gsp_id_to_shape = gsp_id_to_shape  # Save, mostly for plotting to check all is fine!
 
-        logger.debug("Getting GSP data")
+        logger.debug(f"Getting GSP data from {self.gsp_pv_power_zarr_path}")
 
         # Load GSP generation xr.Dataset:
         gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")

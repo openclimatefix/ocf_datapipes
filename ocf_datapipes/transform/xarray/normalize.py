@@ -51,7 +51,8 @@ class NormalizeIterDataPipe(IterDataPipe):
         logger.debug("Normalizing data")
 
         for xr_data in self.source_datapipe:
-            if self.mean is not None and self.std is not None:
+            assert xr_data is not None
+            if (self.mean is not None) and (self.std is not None):
                 xr_data = xr_data - self.mean
                 xr_data = xr_data / self.std
             elif self.max_value is not None:
@@ -62,9 +63,12 @@ class NormalizeIterDataPipe(IterDataPipe):
                 xr_data /= xr_data.std().item()
             else:
                 try:
-                    xr_data = self.normalize_fn(xr_data)
+                    logger.debug(f'Normalizing by {self.normalize_fn}')
+                    xr_data_un_normalized = xr_data
+                    xr_data = self.normalize_fn(xr_data_un_normalized)
                 except Exception as e:
-                    logger.error(f"Could not run function {self.normalize_fn} on data {xr_data}")
+                    logger.error(f"Could not run function {self.normalize_fn}")
+                    logger.debug(xr_data_un_normalized)
                     raise e
 
             logger.debug("Normalizing data:done")
