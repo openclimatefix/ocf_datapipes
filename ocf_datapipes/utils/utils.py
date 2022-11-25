@@ -185,9 +185,11 @@ def pandas_periods_to_our_periods_dt(
 
 @functional_datapipe("zip_ocf")
 class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
-    r"""
+    """
     Aggregates elements into a tuple from each of the input DataPipes (functional name: ``zip``).
+
     The output is stopped as soon as the shortest input DataPipe is exhausted.
+
     Args:
         *datapipes: Iterable DataPipes being aggregated
     Example:
@@ -201,6 +203,7 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
     length: Optional[int]
 
     def __init__(self, *datapipes: IterDataPipe):
+        """ Init """
         if not all(isinstance(dp, IterDataPipe) for dp in datapipes):
             raise TypeError(
                 "All inputs are required to be `IterDataPipe` " "for `ZipIterDataPipe`."
@@ -210,11 +213,13 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
         self.length = None
 
     def __iter__(self) -> Iterator[Tuple[T_co]]:
+        """ Iter """
         iterators = [iter(datapipe) for datapipe in self.datapipes]
         for data in zip(*iterators):
             yield data
 
     def __len__(self) -> int:
+        """ Len """
         if self.length is not None:
             if self.length == -1:
                 raise TypeError("{} instance doesn't have valid length".format(type(self).__name__))
