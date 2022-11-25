@@ -51,7 +51,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
 
     # Load PV data
     logger.debug("Load PV data")
-    pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)  # .pv_fill_night_nans()
+    pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans()
 
     logger.debug("Load Satellite data")
     satellite_datapipe = OpenSatellite(
