@@ -62,9 +62,9 @@ class LocationPickerIterDataPipe(IterDataPipe):
             else:
                 # Assumes all datasets have osgb coordinates for selecting locations
                 # Pick 1 random location from the input dataset
-                logger.debug('Selecting random idx')
+                logger.debug("Selecting random idx")
                 location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))
-                logger.debug(f'{location_idx=}')
+                logger.debug(f"{location_idx=}")
                 location = Location(
                     x=xr_dataset[self.x_dim_name][location_idx].values,
                     y=xr_dataset[self.y_dim_name][location_idx].values,
@@ -72,5 +72,5 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 if "pv_system_id" in xr_dataset.coords.keys():
                     location.id = int(xr_dataset["pv_system_id"][location_idx].values)
                     logger.debug(f"Have selected location.id {location.id}")
-                logger.debug(f'{location=}')
+                logger.debug(f"{location=}")
                 yield location

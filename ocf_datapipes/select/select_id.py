@@ -34,7 +34,7 @@ class SelectIDIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
 
-            logger.debug(f'Selecting Data on id {location.id} for {self.data_source_name}')
+            logger.debug(f"Selecting Data on id {location.id} for {self.data_source_name}")
 
             if self.data_source_name == "nwp":
                 try:
@@ -49,5 +49,5 @@ class SelectIDIterDataPipe(IterDataPipe):
                 except Exception as e:
                     logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
                     raise e
-            logger.debug(f'Selected Data on id')
+            logger.debug(f"Selected Data on id")
             yield xr_data

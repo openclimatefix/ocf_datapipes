@@ -7,6 +7,7 @@ import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
 from ocf_datapipes.utils.utils import ZipperIterDataPipe as Zipper
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ class SelectLiveTimeSliceIterDataPipe(IterDataPipe):
         """Select the recent live data"""
         for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
 
-            logger.debug(f'Selecting time slice {t0} on dim {self.dim_name}')
+            logger.debug(f"Selecting time slice {t0} on dim {self.dim_name}")
 
             xr_data = xr_data.sel({self.dim_name: slice(t0 - self.history_duration, t0)})
 

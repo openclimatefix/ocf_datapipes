@@ -21,11 +21,11 @@ from .convert_to_nwp_target_times import (
 )
 from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage
 from .downsample import DownsampleIterDataPipe as Downsample
-from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
+from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography

@@ -63,7 +63,7 @@ class NormalizeIterDataPipe(IterDataPipe):
                 xr_data /= xr_data.std().item()
             else:
                 try:
-                    logger.debug(f'Normalizing by {self.normalize_fn}')
+                    logger.debug(f"Normalizing by {self.normalize_fn}")
                     xr_data_un_normalized = xr_data
                     xr_data = self.normalize_fn(xr_data_un_normalized)
                 except Exception as e:
