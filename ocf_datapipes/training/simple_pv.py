@@ -43,7 +43,7 @@ def simple_pv_datapipe(
     logger.debug("Opening Datasets")
     pv_datapipe, pv_location_datapipe = (
         OpenPVFromNetCDF(pv=configuration.input_data.pv)
-        .pv_fill_night_nans()
+        # .pv_fill_night_nans()
         .fork(2, buffer_size=BUFFERSIZE)
     )
 
@@ -58,7 +58,8 @@ def simple_pv_datapipe(
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
     location_datapipe1 = pv_location_datapipe.location_picker(
-        x_dim_name="longitude", y_dim_name="latitude"
+        x_dim_name="longitude",
+        y_dim_name="latitude",
     )
     logger.debug("Got locations")
 
@@ -95,6 +96,7 @@ def simple_pv_datapipe(
     # select time periods
     pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=pv_time_periods_datapipe)
     pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
+
     # take time slices
     pv_datapipe = (
         pv_datapipe.select_time_slice(

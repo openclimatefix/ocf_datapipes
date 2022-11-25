@@ -4,7 +4,7 @@ from typing import Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes.iter import IterDataPipe
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,9 @@ class SelectIDIterDataPipe(IterDataPipe):
         self.data_source_name = data_source_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
+        for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
+
+            logger.debug(f"Selecting Data on id {location.id} for {self.data_source_name}")
 
             if self.data_source_name == "nwp":
                 try:
@@ -42,5 +44,10 @@ class SelectIDIterDataPipe(IterDataPipe):
                     raise e
 
             if self.data_source_name == "pv":
-                xr_data = xr_data.sel(pv_system_id=[location.id])
+                try:
+                    xr_data = xr_data.sel(pv_system_id=[location.id])
+                except Exception as e:
+                    logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
+                    raise e
+            logger.debug("Selected Data on id")
             yield xr_data

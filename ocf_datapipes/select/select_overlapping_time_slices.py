@@ -38,7 +38,7 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
 
         if self.location_datapipe is None:
 
-            for set_of_pd_datas in self.source_datapipe.zip(*self.secondary_datapipes):
+            for set_of_pd_datas in self.source_datapipe.zip_ocf(*self.secondary_datapipes):
 
                 time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
 
@@ -47,7 +47,7 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
 
                 yield time_periods
         else:
-            for set_of_pd_datas in self.source_datapipe.zip(
+            for set_of_pd_datas in self.source_datapipe.zip_ocf(
                 *self.secondary_datapipes, self.location_datapipe
             ):
                 location = set_of_pd_datas[-1]

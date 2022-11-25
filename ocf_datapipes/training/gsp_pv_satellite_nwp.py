@@ -65,6 +65,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
             minutes=configuration.input_data.pv.time_resolution_minutes
         ),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+        name="pv",
     )
 
     logger.debug("Add t0 idx and normalize")
@@ -73,12 +74,14 @@ def gsp_pv_nwp_satellite_data_pipeline(
     ).add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+        name="gsp",
     )
 
     logger.debug("Add t0 idx")
     nwp_datapipe = nwp_datapipe.add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(hours=1),
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+        name="nwp",
     )
 
     logger.debug("Add t0 idx")
@@ -87,6 +90,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
             minutes=configuration.input_data.satellite.time_resolution_minutes
         ),
         history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
+        name="satellite",
     )
 
     # Pick locations
