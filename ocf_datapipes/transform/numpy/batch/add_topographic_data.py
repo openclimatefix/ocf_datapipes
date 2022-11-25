@@ -2,7 +2,8 @@
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes.iter import IterDataPipe
+from ocf_datapipes.utils.utils import ZipperIterDataPipe as Zipper
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 

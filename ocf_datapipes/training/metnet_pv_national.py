@@ -332,10 +332,10 @@ def metnet_national_datapipe(
         .map(_remove_nans)
         .convert_pv_to_numpy(return_pv_system_row=True)
     )
-    combined_datapipe = metnet_datapipe.zip(pv_datapipe)
+    combined_datapipe = metnet_datapipe.zip_ocf(pv_datapipe)
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     if mode == "train":
-        return combined_datapipe.zip(gsp_datapipe)  # Makes (Inputs, Label) tuples
+        return combined_datapipe.zip_ocf(gsp_datapipe)  # Makes (Inputs, Label) tuples
     else:
         start_time_datapipe = t0_datapipes[len(t0_datapipes) - 1]  # The one extra one
-        return combined_datapipe.zip(gsp_datapipe, start_time_datapipe)
+        return combined_datapipe.zip_ocf(gsp_datapipe, start_time_datapipe)

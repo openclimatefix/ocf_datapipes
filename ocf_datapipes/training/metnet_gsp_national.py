@@ -156,4 +156,4 @@ def metnet_national_datapipe(
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     gsp_history = gsp_history.map(_remove_nans)
     gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
-    return metnet_datapipe.zip(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
+    return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples

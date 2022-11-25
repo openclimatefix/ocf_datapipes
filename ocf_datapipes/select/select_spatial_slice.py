@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
@@ -45,7 +45,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         self.x_dim_name = x_dim_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
+        for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
             if "geostationary" in self.x_dim_name:
                 center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
                     xr_data=xr_data,
@@ -127,7 +127,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         self.x_dim_name = x_dim_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
+        for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
             # Compute the index for left and right:
             logger.debug("Getting Spatial Slice Meters")
 
