@@ -198,11 +198,12 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
         >>> list(dp1.zip(dp2, dp3))
         [(0, 10, 20), (1, 11, 21), (2, 12, 22), (3, 13, 23), (4, 14, 24)]
     """
+
     datapipes: Tuple[IterDataPipe]
     length: Optional[int]
 
     def __init__(self, *datapipes: IterDataPipe):
-        """ Init """
+        """Init"""
         if not all(isinstance(dp, IterDataPipe) for dp in datapipes):
             raise TypeError(
                 "All inputs are required to be `IterDataPipe` " "for `ZipIterDataPipe`."
@@ -212,13 +213,13 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
         self.length = None
 
     def __iter__(self) -> Iterator[Tuple[T_co]]:
-        """ Iter """
+        """Iter"""
         iterators = [iter(datapipe) for datapipe in self.datapipes]
         for data in zip(*iterators):
             yield data
 
     def __len__(self) -> int:
-        """ Len """
+        """Len"""
         if self.length is not None:
             if self.length == -1:
                 raise TypeError("{} instance doesn't have valid length".format(type(self).__name__))
