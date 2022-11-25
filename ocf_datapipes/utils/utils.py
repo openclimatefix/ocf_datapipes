@@ -11,7 +11,6 @@ from pathy import Pathy
 from torch.utils.data.datapipes._decorator import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes.iter.combining import T_co
-from torch.utils.data.datapipes.utils.common import StreamWrapper
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
@@ -194,15 +193,17 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
     Example:
         >>> # xdoctest: +REQUIRES(module:torchdata)
         >>> from torchdata.datapipes.iter import IterableWrapper
-        >>> dp1, dp2, dp3 = IterableWrapper(range(5)), IterableWrapper(range(10, 15)), IterableWrapper(range(20, 25))
+        >>> dp1, dp2, dp3 = IterableWrapper(range(5)), IterableWrapper(range(10, 15)),
+        >>> IterableWrapper(range(20, 25))
         >>> list(dp1.zip(dp2, dp3))
         [(0, 10, 20), (1, 11, 21), (2, 12, 22), (3, 13, 23), (4, 14, 24)]
     """
+
     datapipes: Tuple[IterDataPipe]
     length: Optional[int]
 
     def __init__(self, *datapipes: IterDataPipe):
-        """ Init """
+        """Init"""
         if not all(isinstance(dp, IterDataPipe) for dp in datapipes):
             raise TypeError(
                 "All inputs are required to be `IterDataPipe` " "for `ZipIterDataPipe`."
@@ -212,13 +213,13 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
         self.length = None
 
     def __iter__(self) -> Iterator[Tuple[T_co]]:
-        """ Iter """
+        """Iter"""
         iterators = [iter(datapipe) for datapipe in self.datapipes]
         for data in zip(*iterators):
             yield data
 
     def __len__(self) -> int:
-        """ Len """
+        """Len"""
         if self.length is not None:
             if self.length == -1:
                 raise TypeError("{} instance doesn't have valid length".format(type(self).__name__))

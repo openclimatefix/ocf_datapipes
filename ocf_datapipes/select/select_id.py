@@ -49,5 +49,5 @@ class SelectIDIterDataPipe(IterDataPipe):
                 except Exception as e:
                     logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
                     raise e
-            logger.debug(f"Selected Data on id")
+            logger.debug("Selected Data on id")
             yield xr_data

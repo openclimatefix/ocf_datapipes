@@ -173,7 +173,7 @@ def _load_pv_power_watts_and_capacity_watt_power(
         with io.BytesIO(file_bytes) as file:
             pv_power_ds = xr.load_dataset(file, engine="h5netcdf")
 
-        _log.info(f"Loaded solar PV power data and converting to pandas.")
+        _log.info("Loaded solar PV power data and converting to pandas.")
         pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
         pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
         pv_power_watts = pv_power_watts.astype(np.float32)
