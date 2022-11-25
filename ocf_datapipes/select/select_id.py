@@ -34,6 +34,8 @@ class SelectIDIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
 
+            logger.debug(f'Selecting Data on id {location.id} for {self.data_source_name}')
+
             if self.data_source_name == "nwp":
                 try:
                     xr_data = xr_data.sel(id=location.id)
@@ -42,5 +44,10 @@ class SelectIDIterDataPipe(IterDataPipe):
                     raise e
 
             if self.data_source_name == "pv":
-                xr_data = xr_data.sel(pv_system_id=[location.id])
+                try:
+                    xr_data = xr_data.sel(pv_system_id=[location.id])
+                except Exception as e:
+                    logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
+                    raise e
+            logger.debug(f'Selected Data on id')
             yield xr_data

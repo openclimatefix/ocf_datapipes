@@ -30,11 +30,11 @@ class RemoveNansIterDataPipe(IterDataPipe):
                 f"Currently there are {len(xr_data[self.time_dim])}"
             )
             xr_data_new = xr_data.dropna(dim=self.time_dim)
+            if len(xr_data_new[self.time_dim]) == 0:
+                logger.debug(xr_data)
+                raise Exception("Data has only nans in it")
             logger.debug(
                 f"After dropping nans on {self.time_dim}, "
                 f"there are {len(xr_data_new[self.time_dim])}"
             )
-            if len(xr_data_new[self.time_dim]) == 0:
-                logger.debug(xr_data)
-                raise Exception("Data has only nans in it")
             yield xr_data_new

@@ -57,6 +57,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
                 history_duration=self.history_duration,
                 forecast_duration=self.forecast_duration,
             )
+            logger.debug("Get contiguous time periods:done")
             yield contiguous_time_periods
 
 

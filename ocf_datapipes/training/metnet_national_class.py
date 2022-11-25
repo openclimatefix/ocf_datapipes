@@ -27,19 +27,6 @@ logger = logging.getLogger("metnet_datapipe")
 logger.setLevel(logging.DEBUG)
 
 
-def normalize_gsp(x):  # So it can be pickled
-    """
-    Normalize the GSP data
-
-    Args:
-        x: Input DataArray
-
-    Returns:
-        Normalized DataArray
-    """
-    return x / x.capacity_megawatt_power
-
-
 def _remove_nans(x):
     return x.fillna(0.0)
 
@@ -112,13 +99,15 @@ def metnet_national_datapipe(
 
     logger.debug("Add t0 idx and normalize")
 
-    gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=normalize_gsp)
-        .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-        )
-        .fork(3)
+    (
+        gsp_datapipe,
+        gsp_time_periods_datapipe,
+        gsp_t0_datapipe,
+    ) = gsp_datapipe.add_t0_idx_and_sample_period_duration(
+        sample_period_duration=timedelta(minutes=30),
+        history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+    ).fork(
+        3
     )
     # get time periods
     # get contiguous time periods
