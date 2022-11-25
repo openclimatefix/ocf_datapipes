@@ -28,6 +28,7 @@ class AddT0IdxAndSamplePeriodDurationIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe emitting a Xarray DataSet or DataArray
             sample_period_duration: Time between samples
             history_duration: Amount of history in each example
+            name: the name of the datasource
         """
         self.source_datapipe = source_datapipe
         self.sample_period_duration = sample_period_duration
