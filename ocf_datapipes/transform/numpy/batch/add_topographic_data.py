@@ -4,8 +4,8 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 from ocf_datapipes.utils import Zipper
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 
 @functional_datapipe("add_topographic_data")
