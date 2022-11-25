@@ -1,6 +1,6 @@
 """Datapipe and utils to load PV data from NetCDF for training"""
-import logging
 import io
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Union

@@ -7,13 +7,13 @@ import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from ocf_datapipes.utils.utils import ZipperIterDataPipe
 
 from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_osgb,
     load_geostationary_area_definition_and_transform_to_latlon,
     osgb_to_lat_lon,
 )
+from ocf_datapipes.utils.utils import ZipperIterDataPipe
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
@@ -83,7 +83,9 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self.add_sun_features = add_sun_features
 
     def __iter__(self) -> np.ndarray:
-        for xr_datas, location in ZipperIterDataPipe(ZipperIterDataPipe(*self.source_datapipes), self.location_datapipe):
+        for xr_datas, location in ZipperIterDataPipe(
+            ZipperIterDataPipe(*self.source_datapipes), self.location_datapipe
+        ):
             # TODO Use the Lat/Long coordinates of the center array for the lat/lon stuff
             centers = []
             contexts = []

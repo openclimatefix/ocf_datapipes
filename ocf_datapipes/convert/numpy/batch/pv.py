@@ -8,8 +8,8 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float
 
-
 logger = logging.getLogger(__name__)
+
 
 @functional_datapipe("convert_pv_to_numpy_batch")
 class ConvertPVToNumpyBatchIterDataPipe(IterDataPipe):
@@ -29,7 +29,7 @@ class ConvertPVToNumpyBatchIterDataPipe(IterDataPipe):
         """Iterate and convert PV Xarray to NumpyBatch"""
         for xr_data in self.source_datapipe:
 
-            logger.debug('Converting PV xarray to numpy example')
+            logger.debug("Converting PV xarray to numpy example")
 
             example: NumpyBatch = {
                 BatchKey.pv: xr_data.values,

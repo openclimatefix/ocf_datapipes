@@ -6,10 +6,10 @@ import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from ocf_datapipes.utils.utils import ZipperIterDataPipe as Zipper
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
+from ocf_datapipes.utils.utils import ZipperIterDataPipe as Zipper
 
 logger = logging.getLogger(__name__)
 

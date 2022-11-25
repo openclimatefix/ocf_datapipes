@@ -1,8 +1,7 @@
 """Various utilites that didn't fit elsewhere"""
 import logging
 from pathlib import Path
-from typing import Iterator, Optional, Sized, Tuple
-from typing import Sequence, Union
+from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
 
 import fsspec.asyn
 import numpy as np
@@ -11,8 +10,8 @@ import xarray as xr
 from pathy import Pathy
 from torch.utils.data.datapipes._decorator import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
-from torch.utils.data.datapipes.utils.common import StreamWrapper
 from torch.utils.data.datapipes.iter.combining import T_co
+from torch.utils.data.datapipes.utils.common import StreamWrapper
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
