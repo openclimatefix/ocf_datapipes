@@ -21,7 +21,7 @@ from .convert_to_nwp_target_times import (
 )
 from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage
 from .downsample import DownsampleIterDataPipe as Downsample
-from .drop_nans import RemoveNansIterDataPipe as RemoveNans
+from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )

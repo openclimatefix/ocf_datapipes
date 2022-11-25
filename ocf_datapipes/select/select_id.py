@@ -4,7 +4,7 @@ from typing import Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torchdata.datapipes.iter import IterDataPipe
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class SelectIDIterDataPipe(IterDataPipe):
         self.data_source_name = data_source_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data, location in Zipper(self.source_datapipe, self.location_datapipe):
+        for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
 
             logger.debug(f'Selecting Data on id {location.id} for {self.data_source_name}')
 

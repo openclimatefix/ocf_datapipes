@@ -1,4 +1,5 @@
 """Convert NWP data to the target time"""
+import logging
 from datetime import timedelta
 from typing import Union
 
@@ -6,6 +7,8 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+
+logger =logging.getLogger(__name__)
 
 
 @functional_datapipe("convert_to_nwp_target_time")
@@ -41,7 +44,10 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
-        for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
+        for xr_data, t0 in self.source_datapipe.zip_ocf(self.t0_datapipe):
+
+            logger.debug('convert_to_nwp_target_time ')
+
             t0_datetime_utc = pd.Timestamp(t0)
             start_dt = t0_datetime_utc - self.history_duration
             end_dt = t0_datetime_utc + self.forecast_duration

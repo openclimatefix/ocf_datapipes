@@ -32,8 +32,7 @@ class SelectTimePeriodsIterDataPipe(IterDataPipe):
         self.dim_name = dim_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data, time_periods in Zipper(self.source_datapipe, self.time_periods):
-
+        for xr_data, time_periods in self.source_datapipe.zip_ocf(self.time_periods):
             new_xr_data = []
             logger.debug(f"Selecting Time periods ({len(time_periods)})")
             for _, row in time_periods.iterrows():
