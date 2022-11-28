@@ -2,18 +2,18 @@
 from typing import List
 
 import numpy as np
-import pandas as pd
 import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_osgb,
     load_geostationary_area_definition_and_transform_to_latlon,
     osgb_to_lat_lon,
 )
-from ocf_datapipes.utils.utils import ZipperIterDataPipe
+from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
@@ -83,9 +83,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self.add_sun_features = add_sun_features
 
     def __iter__(self) -> np.ndarray:
-        for xr_datas, location in ZipperIterDataPipe(
-            ZipperIterDataPipe(*self.source_datapipes), self.location_datapipe
-        ):
+        for xr_datas, location in Zipper(Zipper(*self.source_datapipes), self.location_datapipe):
             # TODO Use the Lat/Long coordinates of the center array for the lat/lon stuff
             centers = []
             contexts = []
@@ -236,34 +234,12 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
 
 
 def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output_width_pixels: int):
-    times = pd.DatetimeIndex(xr_data[time_dim].values)
-    # Sin+Cos of month, day, hour, after dividing by 12, 366, and 24 respecitvely
-    months = times.month
-    days = times.day
-    hours = times.hour
-    months /= 12
-    days /= 366
-    hours /= 24
-
-    months = np.expand_dims(months, axis=[1, 2, 3])
-    days = np.expand_dims(days, axis=[1, 2, 3])
-    hours = np.expand_dims(hours, axis=[1, 2, 3])
-
-    tile_reps = (
-        1,
-        output_height_pixels,
-        output_width_pixels,
-    )  # Has time dimension, so tile other ones by
-    sin_months = np.tile(np.sin(months), reps=tile_reps)
-    cos_months = np.tile(np.cos(months), reps=tile_reps)
-    sin_hours = np.tile(np.sin(hours), reps=tile_reps)
-    cos_hours = np.tile(np.cos(hours), reps=tile_reps)
-    sin_days = np.tile(np.sin(days), reps=tile_reps)
-    cos_days = np.tile(np.cos(days), reps=tile_reps)
-
-    return np.concatenate(
-        [sin_months, cos_months, sin_days, cos_days, sin_hours, cos_hours], axis=1
-    )
+    # Create trig decomposition of datetime values, tiled over output height and width
+    datetimes = xr_data[time_dim].values
+    trig_decomposition = trigonometric_datetime_transformation(datetimes)
+    tiled_data = np.expand_dims(trig_decomposition, (2, 3))
+    tiled_data = np.tile(tiled_data, (1, 1, output_height_pixels, output_width_pixels))
+    return tiled_data
 
 
 def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
