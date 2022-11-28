@@ -168,8 +168,9 @@ def metnet_national_datapipe(
         output_height_pixels=output_size,
         add_sun_features=use_sun,
     )
+    gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
+
     if not gsp_in_image:
-        gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
         gsp_history = gsp_history.map(_remove_nans)
         gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
         return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
