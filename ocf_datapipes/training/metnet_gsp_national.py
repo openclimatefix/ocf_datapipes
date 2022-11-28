@@ -62,6 +62,7 @@ def metnet_national_datapipe(
     use_gsp: bool = True,
     use_topo: bool = True,
     output_size: int = 256,
+    gsp_in_image: bool = False,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
@@ -82,6 +83,7 @@ def metnet_national_datapipe(
         start_time: Start time to select on
         end_time: End time to select from
         output_size: Size, in pixels, of the output image
+        gsp_in_image: Add GSP history as channels in MetNet image
 
     Returns: datapipe
     """
@@ -142,7 +144,8 @@ def metnet_national_datapipe(
     gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2, buffer_size=5)
 
     location_datapipe = LocationPicker(gsp_loc_datapipe)
-
+    if gsp_in_image:
+        modalities.append(gsp_history.map(_remove_nans))
     metnet_datapipe = PreProcessMetNet(
         modalities,
         location_datapipe=location_datapipe,
@@ -154,8 +157,10 @@ def metnet_national_datapipe(
         output_height_pixels=output_size,
         add_sun_features=use_sun,
     )
-
-    gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
-    gsp_history = gsp_history.map(_remove_nans)
-    gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
-    return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
+    if not gsp_in_image:
+        gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
+        gsp_history = gsp_history.map(_remove_nans)
+        gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
+        return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
+    else:
+        metnet_datapipe.zip(gsp_datapipe)

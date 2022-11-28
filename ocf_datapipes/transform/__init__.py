@@ -1,3 +1,3 @@
 """Transforms for the data in both xarray and numpy formats"""
-import ocf_datapipes.transform.numpy
-import ocf_datapipes.transform.xarray
+from ocf_datapipes.transform.numpy import *
+from ocf_datapipes.transform.xarray import *
