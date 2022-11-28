@@ -61,6 +61,7 @@ def metnet_national_datapipe(
     use_pv: bool = False,
     use_gsp: bool = True,
     use_topo: bool = True,
+    output_size: int = 256,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
@@ -80,6 +81,7 @@ def metnet_national_datapipe(
         use_gsp: Whether to use GSP history
         start_time: Start time to select on
         end_time: End time to select from
+        output_size: Size, in pixels, of the output image
 
     Returns: datapipe
     """
@@ -148,8 +150,8 @@ def metnet_national_datapipe(
         center_height=1_000_000,
         context_height=10_000_000,
         context_width=10_000_000,
-        output_width_pixels=256,
-        output_height_pixels=256,
+        output_width_pixels=output_size,
+        output_height_pixels=output_size,
         add_sun_features=use_sun,
     )
 
