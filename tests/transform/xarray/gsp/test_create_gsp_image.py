@@ -1,6 +1,7 @@
 import numpy as np
 
-from ocf_datapipes import CreateGSPImage, DropGSP
+from ocf_datapipes.transform.xarray import CreateGSPImage
+from ocf_datapipes.select import DropGSP
 
 
 def test_create_gsp_image(gsp_datapipe, sat_datapipe):

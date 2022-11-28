@@ -1,10 +1,10 @@
 """Datapipes"""
-from ocf_datapipes.batch import *
-from ocf_datapipes.convert import *
-from ocf_datapipes.experimental import *
-from ocf_datapipes.fake import *
-from ocf_datapipes.load import *
-from ocf_datapipes.select import *
-from ocf_datapipes.transform import *
-from ocf_datapipes.utils import *
-from ocf_datapipes.validation import *
+import ocf_datapipes.batch
+import ocf_datapipes.convert
+import ocf_datapipes.experimental
+import ocf_datapipes.fake
+import ocf_datapipes.load
+import ocf_datapipes.select
+import ocf_datapipes.transform
+import ocf_datapipes.utils
+import ocf_datapipes.validation
