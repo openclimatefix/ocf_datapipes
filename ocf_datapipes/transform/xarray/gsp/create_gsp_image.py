@@ -62,7 +62,7 @@ class CreateGSPImageIterDataPipe(IterDataPipe):
                 gsp_system = gsp_systems_xr.sel(gsp_id=gsp_system_id)
                 for time_step in range(len(gsp_system.time_utc.values)):
                     # Now go by the timestep to create cube of GSP data
-                    pv_image[time_step :, :] = gsp_system.isel(time_utc=time_step).values
+                    pv_image[time_step:, :] = gsp_system.isel(time_utc=time_step).values
 
             pv_image = np.nan_to_num(pv_image)
 
