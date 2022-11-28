@@ -12,7 +12,8 @@ from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_to_latlon,
     osgb_to_lat_lon,
 )
-from ocf_datapipes.utils.utils import ZipperIterDataPipe, trigonometric_datetime_transformation
+from ocf_datapipes import Zipper
+from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
