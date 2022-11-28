@@ -7,12 +7,12 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes import Zipper
 from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_osgb,
     load_geostationary_area_definition_and_transform_to_latlon,
     osgb_to_lat_lon,
 )
-from ocf_datapipes import Zipper
 from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
 
 ELEVATION_MEAN = 37.4
