@@ -62,6 +62,7 @@ def metnet_national_datapipe(
     use_gsp: bool = True,
     use_topo: bool = True,
     output_size: int = 256,
+    gsp_in_image: bool = False,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
@@ -82,6 +83,7 @@ def metnet_national_datapipe(
         start_time: Start time to select on
         end_time: End time to select from
         output_size: Size, in pixels, of the output image
+        gsp_in_image: Add GSP history as channels in MetNet image
 
     Returns: datapipe
     """
@@ -130,6 +132,16 @@ def metnet_national_datapipe(
 
     # Now combine in the MetNet format
     modalities = []
+    if gsp_in_image and "hrv" in used_datapipes.keys():
+        sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
+        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+            image_datapipe=sat_gsp_datapipe
+        )
+    elif gsp_in_image and "sat" in used_datapipes.keys():
+        sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
+        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+            image_datapipe=sat_gsp_datapipe
+        )
     if "nwp" in used_datapipes.keys():
         modalities.append(nwp_datapipe)
     if "hrv" in used_datapipes.keys():
@@ -138,6 +150,8 @@ def metnet_national_datapipe(
         modalities.append(sat_datapipe)
     if "topo" in used_datapipes.keys():
         modalities.append(topo_datapipe)
+    if gsp_in_image:
+        modalities.append(gsp_history)
 
     gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2, buffer_size=5)
 
@@ -154,8 +168,10 @@ def metnet_national_datapipe(
         output_height_pixels=output_size,
         add_sun_features=use_sun,
     )
-
-    gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
-    gsp_history = gsp_history.map(_remove_nans)
-    gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
-    return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
+    if not gsp_in_image:
+        gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
+        gsp_history = gsp_history.map(_remove_nans)
+        gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
+        return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
+    else:
+        return metnet_datapipe.zip(gsp_datapipe)

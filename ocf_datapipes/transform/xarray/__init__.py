@@ -24,6 +24,7 @@ from .downsample import DownsampleIterDataPipe as Downsample
 from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )
+from .gsp.create_gsp_image import CreateGSPImageIterDataPipe as CreateGSPImage
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
