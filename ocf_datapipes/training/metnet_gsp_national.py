@@ -132,6 +132,12 @@ def metnet_national_datapipe(
 
     # Now combine in the MetNet format
     modalities = []
+    if gsp_in_image and "hrv" in used_datapipes.keys():
+        sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
+        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(image_datapipe=sat_gsp_datapipe)
+    elif gsp_in_image and "sat" in used_datapipes.keys():
+        sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
+        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(image_datapipe=sat_gsp_datapipe)
     if "nwp" in used_datapipes.keys():
         modalities.append(nwp_datapipe)
     if "hrv" in used_datapipes.keys():
@@ -140,12 +146,13 @@ def metnet_national_datapipe(
         modalities.append(sat_datapipe)
     if "topo" in used_datapipes.keys():
         modalities.append(topo_datapipe)
+    if gsp_in_image:
+        modalities.append(gsp_history)
 
     gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2, buffer_size=5)
 
     location_datapipe = LocationPicker(gsp_loc_datapipe)
-    if gsp_in_image:
-        modalities.append(gsp_history.map(_remove_nans))
+
     metnet_datapipe = PreProcessMetNet(
         modalities,
         location_datapipe=location_datapipe,
