@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from nowcasting_datamodel.models.pv import providers
+from datetime import datetime, date, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -111,3 +112,33 @@ def encode_label(indexes: List[str], label: str) -> List[str]:
     new_index = [int(int(col) * 10 + label_index) for col in indexes]
 
     return new_index
+
+def xr_to_df(
+    pv_power:xr.Dataset,
+    ssid:str ,
+    date_oi:str
+    )-> pd.DataFrame():
+    """
+    converts xarray dataset into a pandas dataframe, 
+    and its values for a single pv systme and a single day
+    """                            
+    date_1 = datetime.strptime(date_oi, '%Y-%m-%d')
+    on_pv_system = pv_power[ssid].to_dataframe()                               
+    next_day = date_1+timedelta(days=1)
+    on_pv_system = on_pv_system[
+        (on_pv_system.index < next_day)
+        &
+        (on_pv_system.index > date_1)]
+    return on_pv_system
+
+def dates_list(
+    pv_power: xr.Dataset
+    )->List:
+    """
+    Converts dates as coordinates from xarray dataset to a list
+    """
+    dates_lst = pv_power["datetime"].values
+    dates_lst = [pd.to_datetime(str(i))for i in dates_lst]
+    dates_lst = [i.strftime('%Y-%m-%d') for i in dates_lst]
+    dates_lst = list(set(dates_lst))
+    return dates_lst 
