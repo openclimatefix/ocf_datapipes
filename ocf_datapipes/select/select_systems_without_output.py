@@ -1,23 +1,39 @@
+"""Select PV systems and Dates with No output for the entire day"""
+import logging
+
 import xarray as xr
 import pandas as pd
 import numpy as np
 from typing import Union, List, Dict
+
 from ocf_datapipes.load.pv.utils import xr_to_df
 from ocf_datapipes.load.pv.utils import dates_list as dt_list
 
     
-class no_pv_df:
+class DatesOfPVSystemsWithoutOutput:
+    """Returns a dataframe with one column of pv system ids and another column
+    
+    of dates of those ids with no pv output """
     def __init__(
         self,
         pv_power:xr.Dataset)->None:
+        """
+
+        Args: 
+            pv_power: pv.netcdf file which has pv system ids as variables
+                     and dates as coordniates, and their corresponding pv output
+        """
+
         self.pv_power = pv_power
  
-    def no_pv_df(
+    def __iter__(
         self
         )-> pd.DataFrame():
         """
+
         This function gives a pandas dataframe that stores 
         all the SSID with corresponding dates with no PV output
+        
         """
         no_pv_df = pd.DataFrame()
         ssid_list = list(self.pv_power)

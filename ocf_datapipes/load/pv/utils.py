@@ -119,8 +119,10 @@ def xr_to_df(
     date_oi:str
     )-> pd.DataFrame():
     """
-    converts xarray dataset into a pandas dataframe, 
+
+    Converts xarray dataset into a pandas dataframe, 
     and its values for a single pv systme and a single day
+    
     """                            
     date_1 = datetime.strptime(date_oi, '%Y-%m-%d')
     on_pv_system = pv_power[ssid].to_dataframe()                               
@@ -135,7 +137,9 @@ def dates_list(
     pv_power: xr.Dataset
     )->List:
     """
+
     Converts dates as coordinates from xarray dataset to a list
+    
     """
     dates_lst = pv_power["datetime"].values
     dates_lst = [pd.to_datetime(str(i))for i in dates_lst]
