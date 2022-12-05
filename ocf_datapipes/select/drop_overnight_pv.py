@@ -52,7 +52,7 @@ class XarrayDatasetAfterNighttimeVarsDroppedIterDataPipe(IterDataPipe):
             source_datapipe: A datapipe that emmits Xarray Dataset of the pv.netcdf file
         """
         self.source_datapipe = source_datapipe
-    
+
     def __iter__(
         self)-> xr.Dataset():
         """Function provides ssid's with night time pv output
@@ -96,7 +96,7 @@ class XarrayDatasetAfterNighttimeVarsDroppedIterDataPipe(IterDataPipe):
                 else:
                     logger.debug(f"The datetime {dtime} is not an appropriate date")
                 return status_day
-            
+
             status = [day_status(i) for i in dates_list]
             assert len(dates_list) == len(status)
             xr_dataset = xr_dataset.assign_ccords(daynight_status = ("datetime",status))
