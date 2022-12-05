@@ -1,4 +1,5 @@
 """Drop PV systems that report overnight"""
+
 import logging
 import random
 from datetime import datetime
