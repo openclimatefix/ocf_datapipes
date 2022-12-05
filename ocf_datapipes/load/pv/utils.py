@@ -1,12 +1,12 @@
 """ Util functions for PV data source"""
 import logging
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 from nowcasting_datamodel.models.pv import providers
-from datetime import datetime, date, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -113,44 +113,37 @@ def encode_label(indexes: List[str], label: str) -> List[str]:
 
     return new_index
 
-def xr_to_df(
-    pv_power:xr.Dataset,
-    ssid:str ,
-    date_oi:str
-    )-> pd.DataFrame():
-    """Function that gives a pv system df of a single day with its output 
 
-    Converts xarray dataset into a pandas dataframe, 
+def xr_to_df(pv_power: xr.Dataset, ssid: str, date_oi: str) -> pd.DataFrame():
+    """Function that gives a pv system df of a single day with its output
+
+    Converts xarray dataset into a pandas dataframe,
     and its values for a single pv systme and a single day
-    
+
     Args
         pv_power: pv.netcdf file which contains system is and datetime
                     with corresponding pv output values
         ssid: A single ID of the pv system
-        date_oi: Date of Interest    
-    """                            
-    date_1 = datetime.strptime(date_oi, '%Y-%m-%d')
-    on_pv_system = pv_power[ssid].to_dataframe()                               
-    next_day = date_1+timedelta(days=1)
-    on_pv_system = on_pv_system[
-        (on_pv_system.index < next_day)
-        &
-        (on_pv_system.index > date_1)]
+        date_oi: Date of Interest
+    """
+    date_1 = datetime.strptime(date_oi, "%Y-%m-%d")
+    on_pv_system = pv_power[ssid].to_dataframe()
+    next_day = date_1 + timedelta(days=1)
+    on_pv_system = on_pv_system[(on_pv_system.index < next_day) & (on_pv_system.index > date_1)]
     return on_pv_system
 
-def dates_list(
-    pv_power: xr.Dataset
-    )->List:
+
+def dates_list(pv_power: xr.Dataset) -> List:
     """Provides a list of all the dates in the xr dataset
 
     Converts dates as coordinates from xarray dataset to a list
-    
+
     Args
         pv_power: pv.netcdf file which contains system is and datetime
                     with corresponding pv output values
     """
     dates_lst = pv_power["datetime"].values
-    dates_lst = [pd.to_datetime(str(i))for i in dates_lst]
-    dates_lst = [i.strftime('%Y-%m-%d') for i in dates_lst]
+    dates_lst = [pd.to_datetime(str(i)) for i in dates_lst]
+    dates_lst = [i.strftime("%Y-%m-%d") for i in dates_lst]
     dates_lst = list(set(dates_lst))
-    return dates_lst 
+    return dates_lst
