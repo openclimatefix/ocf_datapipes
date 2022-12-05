@@ -118,11 +118,16 @@ def xr_to_df(
     ssid:str ,
     date_oi:str
     )-> pd.DataFrame():
-    """
+    """Function that gives a pv system df of a single day with its output 
 
     Converts xarray dataset into a pandas dataframe, 
     and its values for a single pv systme and a single day
     
+    Args
+        pv_power: pv.netcdf file which contains system is and datetime
+                    with corresponding pv output values
+        ssid: A single ID of the pv system
+        date_oi: Date of Interest    
     """                            
     date_1 = datetime.strptime(date_oi, '%Y-%m-%d')
     on_pv_system = pv_power[ssid].to_dataframe()                               
@@ -136,10 +141,13 @@ def xr_to_df(
 def dates_list(
     pv_power: xr.Dataset
     )->List:
-    """
+    """Provides a list of all the dates in the xr dataset
 
     Converts dates as coordinates from xarray dataset to a list
     
+    Args
+        pv_power: pv.netcdf file which contains system is and datetime
+                    with corresponding pv output values
     """
     dates_lst = pv_power["datetime"].values
     dates_lst = [pd.to_datetime(str(i))for i in dates_lst]

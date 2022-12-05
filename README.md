@@ -9,7 +9,10 @@ Datapipes. There are some great docs on how they can be composed and used [here]
 
 End to end examples are given in `ocf_datapipes.training` and `ocf_datapipes.production`.
 
+## Potential errors to look for
 
+For a user using the modules to test, or develop, after creating and installing necessary packages, you might
+come across `ModuleNotFoundError: No module named 'ocf_datapipes'`, and the work around for this error apart from appending `PYTHONPATH` is to use `pip install -e .` from the root directory of the package i.e `ocf_datapipes`, which makes the package editable
 ## Organization
 
 This repo is organized as follows. The general flow of data loading and processing
