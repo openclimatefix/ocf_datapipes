@@ -5,8 +5,8 @@ import random
 from datetime import datetime
 from typing import Dict, List, Union
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
@@ -42,9 +42,7 @@ class DropNightPVIterDataPipe(IterDataPipe):
     Select systems IDs with pv output at the night time
     """
 
-    def __init__(
-        self,
-        source_datapipe: IterDataPipe):
+    def __init__(self, source_datapipe: IterDataPipe):
         """
         This function provides all the system ids which are giving pv output at the night time
 
@@ -53,52 +51,48 @@ class DropNightPVIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
 
-    def __iter__(
-        self)-> xr.Dataset():
-        """Function provides ssid's with night time pv output
-        """
-        logger.warning("This dropping of the nighttime pv is only applicable to the UK PV datasets")        
-        #Classifying the night time
+    def __iter__(self) -> xr.Dataset():
+        """Function provides ssid's with night time pv output"""
+        logger.warning("This dropping of the nighttime pv is only applicable to the UK PV datasets")
+        # Classifying the night time
         for xr_dataset in self.source_datapipe:
-            dates_list = xr_dataset.coords['datetime'].values.astype('datetime64[s]').tolist()
+            dates_list = xr_dataset.coords["datetime"].values.astype("datetime64[s]").tolist()
 
-            def day_status(
-                date_time_of_day: datetime
-                ):
+            def day_status(date_time_of_day: datetime):
                 dtime = date_time_of_day
                 date_month = int(dtime.month)
                 date_hr = int(dtime.strftime("%H"))
-                status_day = 'day'
-                if (date_month == 1 and (date_hr>=17 and date_hr<=7)):
-                    status_day = 'night'
-                elif (date_month == 2 and (date_hr>=18 and date_hr<=7)):
-                    status_day = 'night'
-                elif (date_month == 3 and (date_hr>=19 and date_hr<=6)):
-                    status_day = 'night'
-                elif (date_month == 4 and (date_hr>=20 and date_hr<=6)):
-                    status_day = 'night'
-                elif (date_month == 5 and (date_hr>=21 and date_hr<=5)):
-                    status_day = 'night'
-                elif (date_month == 6 and (date_hr>=22 and date_hr<=4)):
-                    status_day = 'night'
-                elif (date_month == 7 and (date_hr>=22 and date_hr<=5)):
-                    status_day = 'night'
-                elif (date_month == 8 and (date_hr>21 and date_hr<=5)):
-                    status_day = 'night'
-                elif (date_month == 9 and (date_hr>=20 and date_hr<=6)):
-                    status_day = 'night'
-                elif (date_month == 10 and (date_hr>=21 and date_hr<=7)):
-                    status_day = 'night'
-                elif (date_month == 11 and (date_hr>=17 and date_hr<=7)):
-                    status_day = 'night'
-                elif (date_month == 12 and (date_hr>=17 and date_hr<=7)):
-                    status_day = 'night'
+                status_day = "day"
+                if date_month == 1 and (date_hr >= 17 and date_hr <= 7):
+                    status_day = "night"
+                elif date_month == 2 and (date_hr >= 18 and date_hr <= 7):
+                    status_day = "night"
+                elif date_month == 3 and (date_hr >= 19 and date_hr <= 6):
+                    status_day = "night"
+                elif date_month == 4 and (date_hr >= 20 and date_hr <= 6):
+                    status_day = "night"
+                elif date_month == 5 and (date_hr >= 21 and date_hr <= 5):
+                    status_day = "night"
+                elif date_month == 6 and (date_hr >= 22 and date_hr <= 4):
+                    status_day = "night"
+                elif date_month == 7 and (date_hr >= 22 and date_hr <= 5):
+                    status_day = "night"
+                elif date_month == 8 and (date_hr > 21 and date_hr <= 5):
+                    status_day = "night"
+                elif date_month == 9 and (date_hr >= 20 and date_hr <= 6):
+                    status_day = "night"
+                elif date_month == 10 and (date_hr >= 21 and date_hr <= 7):
+                    status_day = "night"
+                elif date_month == 11 and (date_hr >= 17 and date_hr <= 7):
+                    status_day = "night"
+                elif date_month == 12 and (date_hr >= 17 and date_hr <= 7):
+                    status_day = "night"
                 else:
                     logger.debug(f"The datetime {dtime} is not an appropriate date")
                 return status_day
 
             status = [day_status(i) for i in dates_list]
             assert len(dates_list) == len(status)
-            xr_dataset = xr_dataset.assign_ccords(daynight_status = ("datetime",status))
+            xr_dataset = xr_dataset.assign_ccords(daynight_status=("datetime", status))
             xr_dataset = xr_dataset.where(xr_dataset.daynight_status == "day")
             return xr_dataset
