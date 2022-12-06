@@ -61,6 +61,13 @@ def nwp_datapipe():
     )
     return OpenNWP(zarr_path=filename)
 
+@pytest.fixture()
+def simple_netcdf_datapipe():
+    filename = (
+        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
+    )
+    ncxr = xr.open_dataset(filename, engine = "h5netcdf")
+    return ncxr
 
 @pytest.fixture()
 def passiv_datapipe():
