@@ -60,38 +60,31 @@ class DropNightPVIterDataPipe(IterDataPipe):
             xr_dataset = self.source_datapipe
             dates_list = xr_dataset.coords["datetime"].values.astype("datetime64[s]").tolist()
 
+            uk_daynight_dict = {
+                '1':['17','7'],
+                '2':['18','7'],
+                '3':['19','9'],
+                '4':['20','6'],
+                '5':['21','5'],
+                '6':['22','4'],
+                '7':['22','5'],
+                '8':['21','5'],
+                '9':['20','6'],
+                '10':['21','7'],
+                '11':['17','7'],
+                '12':['17','7']
+            }
+
             def day_status(date_time_of_day: datetime):
                 dtime = date_time_of_day
-                date_month = int(dtime.month)
-                date_hr = int(dtime.strftime("%H"))
-                status_day = "day"
-                if date_month == 1 and (date_hr >= 17 and date_hr <= 7):
-                    status_day = "night"
-                elif date_month == 2 and (date_hr >= 18 and date_hr <= 7):
-                    status_day = "night"
-                elif date_month == 3 and (date_hr >= 19 and date_hr <= 6):
-                    status_day = "night"
-                elif date_month == 4 and (date_hr >= 20 and date_hr <= 6):
-                    status_day = "night"
-                elif date_month == 5 and (date_hr >= 21 and date_hr <= 5):
-                    status_day = "night"
-                elif date_month == 6 and (date_hr >= 22 and date_hr <= 4):
-                    status_day = "night"
-                elif date_month == 7 and (date_hr >= 22 and date_hr <= 5):
-                    status_day = "night"
-                elif date_month == 8 and (date_hr > 21 and date_hr <= 5):
-                    status_day = "night"
-                elif date_month == 9 and (date_hr >= 20 and date_hr <= 6):
-                    status_day = "night"
-                elif date_month == 10 and (date_hr >= 21 and date_hr <= 7):
-                    status_day = "night"
-                elif date_month == 11 and (date_hr >= 17 and date_hr <= 7):
-                    status_day = "night"
-                elif date_month == 12 and (date_hr >= 17 and date_hr <= 7):
+                date_month = str(dtime.month)
+                date_hr = str(dtime.strftime("%H"))
+                status = uk_daynight_dict[date_month]
+                if (date_hr >= status[0] and date_hr <= status[1]):
                     status_day = "night"
                 else:
-                    logger.debug(f"The datetime {dtime} is not an appropriate date")
-                return status_day
+                    status_day = "day"
+                return status_day                     
 
             status = [day_status(i) for i in dates_list]
             assert len(dates_list) == len(status)
