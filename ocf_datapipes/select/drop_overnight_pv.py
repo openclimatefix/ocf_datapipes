@@ -61,18 +61,18 @@ class DropNightPVIterDataPipe(IterDataPipe):
             dates_list = xr_dataset.coords["datetime"].values.astype("datetime64[s]").tolist()
 
             uk_daynight_dict = {
-                '1':['17','7'],
-                '2':['18','7'],
-                '3':['19','9'],
-                '4':['20','6'],
-                '5':['21','5'],
-                '6':['22','4'],
-                '7':['22','5'],
-                '8':['21','5'],
-                '9':['20','6'],
-                '10':['21','7'],
-                '11':['17','7'],
-                '12':['17','7']
+                "1": ["17", "7"],
+                "2": ["18", "7"],
+                "3": ["19", "9"],
+                "4": ["20", "6"],
+                "5": ["21", "5"],
+                "6": ["22", "4"],
+                "7": ["22", "5"],
+                "8": ["21", "5"],
+                "9": ["20", "6"],
+                "10": ["21", "7"],
+                "11": ["17", "7"],
+                "12": ["17", "7"],
             }
 
             def day_status(date_time_of_day: datetime):
@@ -80,11 +80,11 @@ class DropNightPVIterDataPipe(IterDataPipe):
                 date_month = str(dtime.month)
                 date_hr = str(dtime.strftime("%H"))
                 status = uk_daynight_dict[date_month]
-                if (date_hr >= status[0] and date_hr <= status[1]):
+                if date_hr >= status[0] and date_hr <= status[1]:
                     status_day = "night"
                 else:
                     status_day = "day"
-                return status_day                     
+                return status_day
 
             status = [day_status(i) for i in dates_list]
             assert len(dates_list) == len(status)
