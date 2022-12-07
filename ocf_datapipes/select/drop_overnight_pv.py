@@ -39,12 +39,12 @@ December	07:57 am	03:53 pm	7:56 h
 @functional_datapipe("drop_night_pv")
 class DropNightPVIterDataPipe(IterDataPipe):
     """
-    Drop the pv output of the over night date times in a timeseries Xarray Dataset  
+    Drop the pv output of the over night date times in a timeseries Xarray Dataset
     """
 
     def __init__(self, source_datapipe: IterDataPipe):
         """
-        This function provides an extra dimenion of day and night status for each time step 
+        This function provides an extra dimenion of day and night status for each time step
         in a timeseries Xarray Dataset
 
         Args
@@ -52,15 +52,13 @@ class DropNightPVIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
 
-    def __iter__(
-        self)-> xr.Dataset():
-        """Function provides ssid's with night time pv output
-        """
-        logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")        
-        #Classifying the night time
+    def __iter__(self) -> xr.Dataset():
+        """Function provides ssid's with night time pv output"""
+        logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
+        # Classifying the night time
         for xr_dataset in self.source_datapipe:
             xr_dataset = self.source_datapipe
-            dates_list = xr_dataset.coords['datetime'].values.astype('datetime64[s]').tolist()
+            dates_list = xr_dataset.coords["datetime"].values.astype("datetime64[s]").tolist()
 
             def day_status(date_time_of_day: datetime):
                 dtime = date_time_of_day
@@ -97,6 +95,6 @@ class DropNightPVIterDataPipe(IterDataPipe):
 
             status = [day_status(i) for i in dates_list]
             assert len(dates_list) == len(status)
-            xr_dataset = xr_dataset.assign_coords(daynight_status = ("datetime",status))
+            xr_dataset = xr_dataset.assign_coords(daynight_status=("datetime", status))
             xr_dataset = xr_dataset.where(xr_dataset.daynight_status == "day")
             yield xr_dataset
