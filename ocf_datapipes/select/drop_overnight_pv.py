@@ -44,7 +44,7 @@ class DropNightPVIterDataPipe(IterDataPipe):
 
     def __init__(self, source_datapipe: IterDataPipe):
         """
-        This function provides an extra dimenion of day and night status for each time step
+        This function provides an extra dimension of day and night status for each time step
         in a timeseries Xarray Dataset
 
         Args
@@ -53,7 +53,6 @@ class DropNightPVIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
 
     def __iter__(self) -> xr.Dataset():
-        """Function provides ssid's with night time pv output"""
         logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
         # Classifying the night time
         for xr_dataset in self.source_datapipe:
