@@ -47,6 +47,8 @@ class DropNightPVIterDataPipe(IterDataPipe):
         This function provides an extra dimension of day and night status for each time step
         in a timeseries Xarray Dataset
 
+        With that, it fills NaNs in all the datavariables where the status is "night" 
+
         Args
             source_datapipe: A datapipe that emmits Xarray Dataset of the pv.netcdf file
         """
@@ -86,6 +88,7 @@ class DropNightPVIterDataPipe(IterDataPipe):
                 return status_day
 
             status = [day_status(i) for i in dates_list]
+            #sanity check
             assert len(dates_list) == len(status)
             xr_dataset = xr_dataset.assign_coords(daynight_status=("datetime", status))
             xr_dataset = xr_dataset.where(xr_dataset.daynight_status == "day")
