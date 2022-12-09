@@ -38,14 +38,14 @@ December	07:57 am	03:53 pm	7:56 h
 
 @functional_datapipe("drop_night_pv")
 class DropNightPVIterDataPipe(IterDataPipe):
-    """ Drop the pv output of the over night date times in a timeseries Xarray Dataset.
+    """Drop the pv output of the over night date times in a timeseries Xarray Dataset.
 
-        This function provides an extra dimension of day and night status for each time step
-        in a timeseries Xarray Dataset.With that, it fills NaNs in all the datavariables
-        where the status is "night".
+    This function provides an extra dimension of day and night status for each time step
+    in a timeseries Xarray Dataset.With that, it fills NaNs in all the datavariables
+    where the status is "night".
 
-        Args:
-            source_datapipe: A datapipe that emmits Xarray Dataset of the pv.netcdf file.
+    Args:
+        source_datapipe: A datapipe that emmits Xarray Dataset of the pv.netcdf file.
     """
 
     def __init__(self, source_datapipe: IterDataPipe):

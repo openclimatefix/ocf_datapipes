@@ -23,7 +23,7 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
     Returns a two key pair (pvsystem id and date) dictionary with values as the status
     "Active" or "Inactive" in a given day.
 
-    Yield example: 
+    Yield example:
         default dict(<class dict>,{"10003:{"2020-04-01 : "Inactive", "2020-05-01" : "Active"}, "10004": {"2020-04-01" : "Active"}})
 
         Args:
