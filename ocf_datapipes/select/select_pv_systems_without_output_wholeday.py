@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("select_pv_systems_without_output")
 class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
-    """ Remove any PV systems with less than 1 day of data.
+    """Remove any PV systems with less than 1 day of data.
 
     This is done, by counting all the non values and check the
     count is greater than 289 (number of 5 minute intervals in a day)
