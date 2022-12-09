@@ -18,16 +18,19 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("select_pv_systems_without_output")
 class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
-    """
+    """Function to select pv system ids with dates that has no output whatsoever in a given day.
+
     Returns a two key pair (pvsystem id and date) dictionary with values as the status
-    "Active" or "Inactive" in a given day
+    "Active" or "Inactive" in a given day.
+
+    Yield example: 
+        default dict(<class dict>,{"10003:{"2020-04-01 : "Inactive", "2020-05-01" : "Active"}, "10004": {"2020-04-01" : "Active"}})
+
+        Args:
+            source_datapipe: Datapipe of Xarray Dataset emitting timeseries data
     """
 
     def __init__(self, source_datapipe: IterDataPipe) -> None:
-        """
-        Args:
-            source_datapipe: Datapipe of Xarray Dataset emitting timeseries data
-        """
 
         self.source_datapipe = source_datapipe
 

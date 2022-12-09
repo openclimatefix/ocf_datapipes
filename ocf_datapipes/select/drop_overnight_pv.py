@@ -38,8 +38,14 @@ December	07:57 am	03:53 pm	7:56 h
 
 @functional_datapipe("drop_night_pv")
 class DropNightPVIterDataPipe(IterDataPipe):
-    """
-    Drop the pv output of the over night date times in a timeseries Xarray Dataset
+    """ Drop the pv output of the over night date times in a timeseries Xarray Dataset.
+
+        This function provides an extra dimension of day and night status for each time step
+        in a timeseries Xarray Dataset.With that, it fills NaNs in all the datavariables
+        where the status is "night".
+
+        Args:
+            source_datapipe: A datapipe that emmits Xarray Dataset of the pv.netcdf file.
     """
 
     def __init__(self, source_datapipe: IterDataPipe):
@@ -58,7 +64,7 @@ class DropNightPVIterDataPipe(IterDataPipe):
         logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
         # Classifying the night time
         for xr_dataset in self.source_datapipe:
-            xr_dataset = self.source_datapipe
+            # xr_dataset = self.source_datapipe
             dates_list = xr_dataset.coords["datetime"].values.astype("datetime64[s]").tolist()
 
             uk_daynight_dict = {

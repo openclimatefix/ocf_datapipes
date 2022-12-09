@@ -120,7 +120,7 @@ def xr_to_df(pv_power: xr.Dataset, ssid: str, date_oi: str) -> pd.DataFrame():
     Converts xarray dataset into a pandas dataframe,
     and its values for a single pv systme and a single day
 
-    Args
+    Args:
         pv_power: pv.netcdf file which contains system is and datetime
                     with corresponding pv output values
         ssid: A single ID of the pv system
@@ -138,7 +138,7 @@ def dates_list(pv_power: xr.Dataset) -> List:
 
     Converts dates as coordinates from xarray dataset to a list
 
-    Args
+    Args:
         pv_power: pv.netcdf file which contains system is and datetime
                     with corresponding pv output values
     """
