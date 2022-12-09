@@ -1,19 +1,6 @@
-"""Drop PV systems that report overnight"""
+"""Drop PV systems that report overnight
 
-import logging
-import random
-from datetime import datetime
-from typing import Dict, List, Union
-
-import numpy as np
-import pandas as pd
-import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
-
-logger = logging.getLogger(__name__)
-
-"""According to the UK Met office- https://www.metoffice.gov.uk/weather/learn-about/met-office-for-schools/other-content/other-resources/our-seasons
+According to the UK Met office- https://www.metoffice.gov.uk/weather/learn-about/met-office-for-schools/other-content/other-resources/our-seasons
 
 Summer  - starts in June in the UK and finishes at the end of August.
 Autumn -  starts in September and finishes in November
@@ -34,6 +21,30 @@ October	    07:22 am	06:09 pm	10:47 h
 November	07:16 am	04:13 pm	8:57 h
 December	07:57 am	03:53 pm	7:56 h
 """
+
+import logging
+from datetime import datetime
+
+import xarray as xr
+from torchdata.datapipes import functional_datapipe
+from torchdata.datapipes.iter import IterDataPipe
+
+logger = logging.getLogger(__name__)
+
+uk_daynight_dict = {
+    "1": ["17", "7"],
+    "2": ["18", "7"],
+    "3": ["19", "9"],
+    "4": ["20", "6"],
+    "5": ["21", "5"],
+    "6": ["22", "4"],
+    "7": ["22", "5"],
+    "8": ["21", "5"],
+    "9": ["20", "6"],
+    "10": ["21", "7"],
+    "11": ["17", "7"],
+    "12": ["17", "7"],
+}
 
 
 @functional_datapipe("drop_night_pv")
@@ -60,41 +71,34 @@ class DropNightPVIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
 
+    @staticmethod
+    def day_status(date_time_of_day: datetime):
+        dtime = date_time_of_day
+        date_month = str(dtime.month)
+        date_hr = str(dtime.strftime("%H"))
+        status = uk_daynight_dict[date_month]
+        if (date_hr >= status[0]) and (date_hr <= status[1]):
+            status_day = "night"
+        else:
+            status_day = "day"
+        return status_day
+
     def __iter__(self) -> xr.Dataset():
         logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
         # Classifying the night time
         for xr_dataset in self.source_datapipe:
             dates_list = xr_dataset.coords["time_utc"].values.astype("datetime64[s]").tolist()
 
-            uk_daynight_dict = {
-                "1": ["17", "7"],
-                "2": ["18", "7"],
-                "3": ["19", "9"],
-                "4": ["20", "6"],
-                "5": ["21", "5"],
-                "6": ["22", "4"],
-                "7": ["22", "5"],
-                "8": ["21", "5"],
-                "9": ["20", "6"],
-                "10": ["21", "7"],
-                "11": ["17", "7"],
-                "12": ["17", "7"],
-            }
+            # TODO in a different PR, try to do this without a loop, this is normally quicker
+            status = [self.day_status(i) for i in dates_list]
 
-            def day_status(date_time_of_day: datetime):
-                dtime = date_time_of_day
-                date_month = str(dtime.month)
-                date_hr = str(dtime.strftime("%H"))
-                status = uk_daynight_dict[date_month]
-                if date_hr >= status[0] and date_hr <= status[1]:
-                    status_day = "night"
-                else:
-                    status_day = "day"
-                return status_day
-
-            status = [day_status(i) for i in dates_list]
             # sanity check
             assert len(dates_list) == len(status)
+
+            # assign new variable
             xr_dataset = xr_dataset.assign_coords(daynight_status=("time_utc", status))
+
+            # select only day
+            # TODO drop system is producing power over night
             xr_dataset = xr_dataset.where(xr_dataset.daynight_status == "day")
             yield xr_dataset
