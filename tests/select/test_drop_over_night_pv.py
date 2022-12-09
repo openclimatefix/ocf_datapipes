@@ -1,7 +1,8 @@
-from ocf_datapipes.select import DropNightPV
+import numpy as np
 import pandas as pd
 import xarray as xr
-import numpy as np
+
+from ocf_datapipes.select import DropNightPV
 
 
 def test_drop_night_pv(passiv_datapipe):
