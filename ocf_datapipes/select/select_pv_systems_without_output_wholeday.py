@@ -15,7 +15,14 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("select_pv_systems_without_output")
 class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
-    """Function to select pv system ids with dates that has no output whatsoever in a given day.
+    """ Remove any PV systems with less than 1 day of data.
+
+    This is done, by counting all the non values and check the
+    count is greater than 289 (number of 5 minute intervals in a day)
+
+
+
+    Function to select pv system ids with dates that has no output whatsoever in a given day.
 
     Returns a two key pair (pvsystem id and date) dictionary with values as the status
     "Active" or "Inactive" in a given day.
@@ -34,7 +41,6 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.Dataset():
 
         for xr_dataset in self.source_datapipe:
-            xr_dataset = self.source_datapipe
             dates_list = xr_dataset.coords["datetime"].values
             ssid_list = list(xr_dataset)
             dates_list = [
@@ -46,11 +52,13 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
 
             xr_dataset = xr_dataset.assign_coords(just_date=("datetime", dates_list))
             pvstatus_dict = defaultdict(dict)
+
+            # TODO, think how to do this, not a in 2 loops
             for sysid in ssid_list:
                 for date in list(set(dates_list)):
                     xr_array = xr_dataset.groupby("just_date")[date][sysid].values
 
-                    if np.isnan(xr_array).all() and np.all(xr_array == 0) == False:
+                    if np.isnan(xr_array).all() or np.all(xr_array == 0) == False:
                         pvstatus = "Active"
                     else:
                         pvstatus = "Inactive"
@@ -60,4 +68,6 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
 
             # sanity check
             assert len(xr_dataset) == len(pvstatus_dict)
+
+            # TODO need to return xarray
             yield pvstatus_dict
