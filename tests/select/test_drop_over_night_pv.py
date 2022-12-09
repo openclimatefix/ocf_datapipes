@@ -7,3 +7,4 @@ def test_drop_night_pv(passiv_datapipe):
 
     data = next(iter(night_drop_pv))
     assert "day" or "night" in data.coords["daynight_status"].values
+    

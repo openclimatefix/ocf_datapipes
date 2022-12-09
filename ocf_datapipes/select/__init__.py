@@ -4,6 +4,7 @@ from .drop_overnight_pv import DropNightPVIterDataPipe as DropNightPV
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations
 from .offset_t0 import OffsetT0IterDataPipe as OffsetT0
+from .remove_bad_pv_systems import RemoveBadPVSystemsIterDataPipe as RemoveBadSystems
 from .select_channels import SelectChannelsIterDataPipe as SelectChannels
 from .select_id import SelectIDIterDataPipe as SelectID
 from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Time
