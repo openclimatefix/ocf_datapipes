@@ -10,9 +10,6 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.load.pv.utils import dates_list as dt_list
-from ocf_datapipes.load.pv.utils import xr_to_df
-
 logger = logging.getLogger(__name__)
 
 
