@@ -64,8 +64,7 @@ class DropNightPVIterDataPipe(IterDataPipe):
         logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
         # Classifying the night time
         for xr_dataset in self.source_datapipe:
-            xr_dataset = self.source_datapipe
-            dates_list = xr_dataset.coords["datetime"].values.astype("datetime64[s]").tolist()
+            dates_list = xr_dataset.coords["time_utc"].values.astype("datetime64[s]").tolist()
 
             uk_daynight_dict = {
                 "1": ["17", "7"],
@@ -96,6 +95,6 @@ class DropNightPVIterDataPipe(IterDataPipe):
             status = [day_status(i) for i in dates_list]
             # sanity check
             assert len(dates_list) == len(status)
-            xr_dataset = xr_dataset.assign_coords(daynight_status=("datetime", status))
+            xr_dataset = xr_dataset.assign_coords(daynight_status=("time_utc", status))
             xr_dataset = xr_dataset.where(xr_dataset.daynight_status == "day")
             yield xr_dataset
