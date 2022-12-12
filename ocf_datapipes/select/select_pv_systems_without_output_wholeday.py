@@ -47,7 +47,7 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
             pvstatus_dict = defaultdict(dict)
 
             # TODO, think how to do this, not a in 2 loops
-            #Still needed to work on this
+            # Still needed to work on this
             for sysid in ssid_list:
                 for date in list(set(dates_list)):
                     xr_array = xr_dataset.groupby("just_date")[date][sysid].values
@@ -64,5 +64,5 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
             assert len(xr_dataset) == len(pvstatus_dict)
 
             # TODO need to return xarray
-            #Still needed to work on this
+            # Still needed to work on this
             yield pvstatus_dict
