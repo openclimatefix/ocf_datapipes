@@ -1,10 +1,10 @@
 """Various utilites that didn't fit elsewhere"""
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
 
 import fsspec.asyn
-from datetime import datetime
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -35,9 +35,10 @@ def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     mask = np.isfinite(datetimes)
     return np.where(mask, nums, np.NaN)
 
+
 def datetime64_to_datetime(
-    datetime_64:np.ndarray,
-    just_date:Optional[bool] = False) ->np.ndarray:
+    datetime_64: np.ndarray, just_date: Optional[bool] = False
+) -> np.ndarray:
     """
     Converts numpy.datetime64 to datetime.datetime
 
@@ -48,8 +49,8 @@ def datetime64_to_datetime(
     Returns:
         Converted numpy.datetime64 to datetime.datetime in an array
     """
-    unix_epoch = np.datetime64(0, 's')
-    one_second = np.timedelta64(1, 's')
+    unix_epoch = np.datetime64(0, "s")
+    one_second = np.timedelta64(1, "s")
     seconds_since_epoch = (datetime_64 - unix_epoch) / one_second
     dt = [datetime.utcfromtimestamp(i) for i in seconds_since_epoch]
     if just_date == True:

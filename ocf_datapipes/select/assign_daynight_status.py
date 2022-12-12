@@ -1,11 +1,12 @@
 import logging
 from datetime import datetime
-import numpy as np
 
+import numpy as np
 import xarray as xr
-from ocf_datapipes.utils.utils import datetime64_to_datetime
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+from ocf_datapipes.utils.utils import datetime64_to_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -24,20 +25,19 @@ uk_daynight_dict = {
     12: [7, 17],
 }
 
+
 @functional_datapipe("assign_daynight_status")
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
     """Adds a new dimension of day/night status"""
-    
-    def __init__(
-        self,
-        source_datapipe: IterDataPipe):
+
+    def __init__(self, source_datapipe: IterDataPipe):
         """
         This method takes in an numpy.datetime64 values in an Xarray Dataset
         and adds and extra dimesion of day/night status
 
         Args:
             source: Datapipe emiiting Xarray Dataset
-        
+
         Result:
             <xarray.Dataset>
             Dimensions:   (datetime: 289)
@@ -47,29 +47,27 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
         """
 
         self.source_datapipe = source_datapipe
-    
-    def __iter__(self)-> xr.DataArray():
+
+    def __iter__(self) -> xr.DataArray():
         """Returns an xarray dataset with extra dimesion"""
         for xr_dataset in self.source_datapipe:
-            
+
             logger.debug(f"Reading the Xarray dataset")
             dates_list = xr_dataset.coords["time_utc"].values
             dtime = datetime64_to_datetime(dates_list)
-            date_month = np.asarray([str(i.month) for i in dtime], dtype = int)
-            date_hr = np.asarray([str(i.strftime("%H")) for i in dtime], dtype = int)
+            date_month = np.asarray([str(i.month) for i in dtime], dtype=int)
+            date_hr = np.asarray([str(i.strftime("%H")) for i in dtime], dtype=int)
             month_hr_stack = np.stack((date_month, date_hr))
             status_day = []
             for i in range(len(month_hr_stack[0])):
                 if month_hr_stack[1][i] in range(
                     uk_daynight_dict[month_hr_stack[0][i]][0],
-                    uk_daynight_dict[month_hr_stack[0][i]][1]
-                    ):
+                    uk_daynight_dict[month_hr_stack[0][i]][1],
+                ):
                     status = "day"
                 else:
                     status = "night"
                 status_day.append(status)
-            xr_dataset = xr_dataset.assign_coords(status_day = (("time_utc"),status_day))
+            xr_dataset = xr_dataset.assign_coords(status_day=(("time_utc"), status_day))
             xr_dataset = xr_dataset.set_xindex("status_day")
             yield xr_dataset
-
-

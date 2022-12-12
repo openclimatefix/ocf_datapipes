@@ -103,6 +103,7 @@ class DropNightPVIterDataPipe(IterDataPipe):
             xr_dataset = xr_dataset.where(xr_dataset.daynight_status == "day")
             yield xr_dataset
 
+
 import logging
 import random
 from datetime import datetime
@@ -140,14 +141,16 @@ December	07:57 am	03:53 pm	7:56 h
 
 import logging
 from datetime import datetime
-import numpy as np
 
+import numpy as np
 import xarray as xr
-from ocf_datapipes.utils.utils import datetime64_to_datetime
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.utils.utils import datetime64_to_datetime
+
 logger = logging.getLogger(__name__)
+
 
 @functional_datapipe("drop_night_pv")
 class DropNightPVIterDataPipe(IterDataPipe):
@@ -164,30 +167,29 @@ class DropNightPVIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
 
-    def __iter__(
-        self) -> xr.DataArray():
+    def __iter__(self) -> xr.DataArray():
 
         logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
 
         for xr_dataset in self.source_datapipe:
 
-            id_list = xr_dataset.coords["pv_system_id"].values                                   
+            id_list = xr_dataset.coords["pv_system_id"].values
             nopvid = []
             for i in id_list:
                 data = xr_dataset.sel(
-                    #TODO bug regarding indexing xarray with coordinates
-                    status_day = "night", 
-                    pv_system_id = i
-                    )
-                check = np.all(data.values == 0.)
+                    # TODO bug regarding indexing xarray with coordinates
+                    status_day="night",
+                    pv_system_id=i,
+                )
+                check = np.all(data.values == 0.0)
                 while not check:
                     nopvid.append(i)
                     break
-            xr_dataset = xr_dataset.drop_sel(pv_system_id = nopvid)
+            xr_dataset = xr_dataset.drop_sel(pv_system_id=nopvid)
             yield xr_dataset
 
             # TODO in a different PR, try to do this without a loop, this is normally quicker
             # It has been moved to a different .py file : assign_daynight_status.py
             # select only day
             # TODO drop system is producing power over night
-            #This method drops the systems producing overnight
+            # This method drops the systems producing overnight

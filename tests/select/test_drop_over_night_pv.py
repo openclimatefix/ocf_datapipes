@@ -1,13 +1,14 @@
-import pandas as pd
 from datetime import datetime
-import xarray as xr
-import numpy as np
 from typing import Optional
 
-from ocf_datapipes.select import DropNightPV
-from ocf_datapipes.select import AssignDayNightStatus
+import numpy as np
+import pandas as pd
+import xarray as xr
 
-#TODO Still needed to be worked on this a bit
+from ocf_datapipes.select import AssignDayNightStatus, DropNightPV
+
+
+# TODO Still needed to be worked on this a bit
 def test_drop_night_pv(passiv_datapipe):
 
     night_drop_pv = AssignDayNightStatus(passiv_datapipe)
@@ -26,10 +27,7 @@ def test_drop_night_pv_one_system_power_overnight():
 
     time = pd.date_range(start="2022-01-01", freq="5T", periods=289)
     pv_system_id = [1, 2, 3]
-    ALL_COORDS = {
-        "time_utc": time,
-        "pv_system_id": pv_system_id
-        }
+    ALL_COORDS = {"time_utc": time, "pv_system_id": pv_system_id}
 
     data = np.zeros((len(time), len(pv_system_id)))
     data[:, 2] = 1.0
