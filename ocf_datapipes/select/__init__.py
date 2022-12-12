@@ -14,10 +14,10 @@ from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Tim
 from .select_live_time_slice import SelectLiveTimeSliceIterDataPipe as SelectLiveTimeSlice
 from .select_overlapping_time_slices import (
     SelectOverlappingTimeSliceIterDataPipe as SelectOverlappingTimeSlice,
-)
+    )
 from .select_pv_systems_without_output_wholeday import (
-    SelectPVSystemsWithoutOutputIterDataPipe as SelectSysWithoutOutputWholeday,
-)
+    SelectPVSystemsWithoutOutputIterDataPipe as SelectSysWithoutOutputWholeday
+    )
 from .select_spatial_slice import SelectSpatialSliceMetersIterDataPipe as SelectSpatialSliceMeters
 from .select_spatial_slice import SelectSpatialSlicePixelsIterDataPipe as SelectSpatialSlicePixels
 from .select_t0_time import SelectT0TimeIterDataPipe as SelectT0Time
