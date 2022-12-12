@@ -3,8 +3,8 @@ from .assign_daynight_status import AssignDayNightStatusIterDataPipe as AssignDa
 from .drop_national_gsp import DropGSPIterDataPipe as DropGSP
 from .drop_overnight_pv import DropNightPVIterDataPipe as DropNightPV
 from .drop_systems_with_lessthan_oneday_data import (
-    DropSystemsWithLessThanOneDayDataIterDataPipe as DropLessThanOneDay,
-)
+    DropSystemsWithLessThanOneDayDataIterDataPipe as DropLessThanOneDay
+    )
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations
 from .offset_t0 import OffsetT0IterDataPipe as OffsetT0
@@ -14,7 +14,7 @@ from .select_id import SelectIDIterDataPipe as SelectID
 from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Time
 from .select_live_time_slice import SelectLiveTimeSliceIterDataPipe as SelectLiveTimeSlice
 from .select_overlapping_time_slices import (
-    SelectOverlappingTimeSliceIterDataPipe as SelectOverlappingTimeSlice,
+    SelectOverlappingTimeSliceIterDataPipe as SelectOverlappingTimeSlice
     )
 from .select_pv_systems_without_output_wholeday import (
     SelectPVSystemsWithoutOutputIterDataPipe as SelectSysWithoutOutputWholeday
