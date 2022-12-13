@@ -93,6 +93,8 @@ def open_sat_data(
     # exactly 5 minutes past the hour.
     assert (datetime_index == datetime_index.round("5T")).all()
 
+    _log.info("Opened satellite data")
+
     return data_array
 
 

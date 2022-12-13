@@ -85,5 +85,8 @@ class OpenGSPIterDataPipe(IterDataPipe):
         )
 
         del gsp_id_to_shape, gsp_pv_power_mw_ds
+
+        logger.info("Opened GSP data")
+
         while True:
             yield data_array

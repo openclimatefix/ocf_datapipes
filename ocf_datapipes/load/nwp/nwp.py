@@ -29,6 +29,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
         """Opens the NWP data"""
         _log.info("Opening NWP data: %s", self.zarr_path)
         ukv = open_nwp(self.zarr_path)
+        _log.info("Opened NWP data")
         while True:
             yield ukv
 
