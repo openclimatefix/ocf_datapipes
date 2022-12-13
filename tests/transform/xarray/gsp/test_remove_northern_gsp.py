@@ -1,4 +1,3 @@
-
 from ocf_datapipes.transform.xarray import RemoveNorthernGSP
 
 
@@ -24,5 +23,3 @@ def test_remove_northern_gsp_some(gsp_datapipe):
 
     assert len(data.gsp_id) == 5
     assert (data.y_osgb < northern_y_osgb_limit).all()
-
-
