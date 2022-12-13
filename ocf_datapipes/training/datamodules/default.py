@@ -83,7 +83,7 @@ class DataModule(LightningDataModule):
         """Get the test dataloader"""
 
         test_data_pipeline = self.data_pipeline(configuration=self.configuration)
-        test_dataloader = DataLoader(
+        test_dataloader = DataLoader2(
             test_data_pipeline, batch_size=None, num_workers=self.num_workers
         )
 
