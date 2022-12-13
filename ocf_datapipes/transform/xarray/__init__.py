@@ -25,6 +25,7 @@ from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
 )
 from .gsp.create_gsp_image import CreateGSPImageIterDataPipe as CreateGSPImage
+from .gsp.remove_northern_gsp import RemoveNorthernGSPIterDataPipe as RemoveNorthernGSP
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
