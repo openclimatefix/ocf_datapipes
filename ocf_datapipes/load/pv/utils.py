@@ -85,6 +85,8 @@ def put_pv_data_into_an_xr_dataarray(
 
     assert len(pv_system_row_number) > 0
 
+    logger.info('Loaded PV data into xarray')
+
     return data_array
 
 
