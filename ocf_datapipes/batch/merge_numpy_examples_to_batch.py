@@ -4,9 +4,6 @@ import logging
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-import contextlib
-import time
-
 from ocf_datapipes.utils.consts import NumpyBatch
 from ocf_datapipes.utils.utils import profile, stack_np_examples_into_batch
 
