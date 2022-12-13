@@ -216,7 +216,6 @@ def gsp_pv_nwp_satellite_data_pipeline(
             sample_period_duration=timedelta(hours=1),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-            data_pipename='NWP',
         )
         .normalize(mean=NWP_MEAN, std=NWP_STD)
         .convert_nwp_to_numpy_batch()
