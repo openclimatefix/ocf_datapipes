@@ -2,7 +2,7 @@
 from typing import Callable, Union
 
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader2
 
 from ocf_datapipes.batch.fake.fake_batch import fake_data_pipeline
 
@@ -19,6 +19,7 @@ class DataModule(LightningDataModule):
         fake_data,
         n_train_data,
         n_val_data,
+        num_workers=0,
     ):
         """
         Set up datamodule
@@ -30,6 +31,7 @@ class DataModule(LightningDataModule):
             fake_data: option to load fake data or not
             n_train_data: TODO
             n_val_data: TODO
+            num_workers: number of workers of loading data
         """
 
         super().__init__()
@@ -38,6 +40,7 @@ class DataModule(LightningDataModule):
         self.fake_data = fake_data
         self.n_train_data = n_train_data
         self.n_val_data = n_val_data
+        self.num_workers = num_workers
 
         if self.fake_data:
             self.data_pipeline = fake_data_pipeline
@@ -58,7 +61,7 @@ class DataModule(LightningDataModule):
         """Get the train dataloader"""
 
         train_dataset = self.data_pipeline(configuration=self.configuration)
-        train_dataloader = DataLoader(train_dataset, batch_size=None)
+        train_dataloader = DataLoader2(train_dataset, batch_size=None, num_workers=self.num_workers)
 
         return train_dataloader
 
@@ -66,7 +69,9 @@ class DataModule(LightningDataModule):
         """Get the validation dataloader"""
 
         validation_data_pipeline = self.data_pipeline(configuration=self.configuration)
-        validation_dataloader = DataLoader(validation_data_pipeline, batch_size=None)
+        validation_dataloader = DataLoader2(
+            validation_data_pipeline, batch_size=None, num_workers=self.num_workers
+        )
 
         return validation_dataloader
 
@@ -74,6 +79,8 @@ class DataModule(LightningDataModule):
         """Get the test dataloader"""
 
         test_data_pipeline = self.data_pipeline(configuration=self.configuration)
-        test_dataloader = DataLoader(test_data_pipeline, batch_size=None)
+        test_dataloader = DataLoader(
+            test_data_pipeline, batch_size=None, num_workers=self.num_workers
+        )
 
         return test_dataloader
