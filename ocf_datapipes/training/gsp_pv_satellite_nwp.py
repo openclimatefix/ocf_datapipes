@@ -52,7 +52,8 @@ def gsp_pv_nwp_satellite_data_pipeline(
 
     # Load PV data
     logger.debug("Load PV data")
-    pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans()
+    pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
+    # .pv_fill_night_nans()
 
     logger.debug("Load Satellite data")
     satellite_datapipe = OpenSatellite(
@@ -95,7 +96,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
     )
 
     # Pick locations
-    location_datapipes = gsp_location_datapipe.location_picker().fork(4, buffer_size=BUFFER_SIZE)
+    location_datapipes = gsp_location_datapipe.location_picker().fork(5, buffer_size=BUFFER_SIZE)
 
     # take GSP space slice
     (
@@ -178,6 +179,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
             pv_time_periods_datapipe,
             satellite_time_periods_datapipe,
         ],
+        location_datapipe=location_datapipes[4]
     )
 
     # select time periods
