@@ -43,7 +43,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
     logger.debug("Load GSP data")
     gsp_datapipe, gsp_location_datapipe = OpenGSP(
         gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
-    ).fork(2)
+    ).remove_northern_gsp().fork(2)
 
     # Load NWP data
     logger.debug("Load NWP data")
