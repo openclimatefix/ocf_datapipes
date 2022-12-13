@@ -44,7 +44,7 @@ class EnsureNGSPSPerExampleIterDataPipe(IterDataPipe):
                 # will repeat some PV systems at the expense of leaving some on the table.
                 # TODO: Don't repeat GSP. Pad with NaNs and mask the loss. Issue #73.
                 assert len(xr_data.gsp_id) > 0, (
-                    "There are no PV systems at all. " "We need at least one in an example"
+                    "There are no GSPS at all. " "We need at least one in an example"
                 )
                 n_random_gsps = self.n_gsps_per_example - len(xr_data.gsp_id)
                 allow_replacement = n_random_gsps > len(xr_data.gsp_id)
