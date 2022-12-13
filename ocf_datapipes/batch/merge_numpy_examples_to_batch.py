@@ -32,9 +32,9 @@ class MergeNumpyExamplesToBatchIterDataPipe(IterDataPipe):
         """Merge individual examples into a batch"""
         np_examples = []
         logger.debug("Merging numpy batch")
-        with profile('Making numpy batches'):
-            for np_batch in self.source_datapipe:
-                np_examples.append(np_batch)
-                if len(np_examples) == self.n_examples_per_batch:
-                    yield stack_np_examples_into_batch(np_examples)
-                    np_examples = []
+        for np_batch in self.source_datapipe:
+            with profile('Making numpy batches'):
+            np_examples.append(np_batch)
+            if len(np_examples) == self.n_examples_per_batch:
+                yield stack_np_examples_into_batch(np_examples)
+                np_examples = []
