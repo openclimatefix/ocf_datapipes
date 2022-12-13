@@ -84,9 +84,7 @@ class DataModule(LightningDataModule):
         validation_data_pipeline = self.data_pipeline(configuration=self.configuration).set_length(
             self.n_val_data
         )
-        validation_dataloader = DataLoader2(
-            validation_data_pipeline, batch_size=None, **self.dataloader_config
-        )
+        validation_dataloader = DataLoader2(validation_data_pipeline, **self.dataloader_config)
 
         return validation_dataloader
 
@@ -94,8 +92,6 @@ class DataModule(LightningDataModule):
         """Get the test dataloader"""
 
         test_data_pipeline = self.data_pipeline(configuration=self.configuration)
-        test_dataloader = DataLoader2(
-            test_data_pipeline, batch_size=None, **self.dataloader_config
-        )
+        test_dataloader = DataLoader2(test_data_pipeline, **self.dataloader_config)
 
         return test_dataloader
