@@ -202,7 +202,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
             sample_period_duration=timedelta(minutes=30),
         )
         .convert_gsp_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size, datapipe_name='GSP')
     )
 
     # take nwp time slices
@@ -216,7 +216,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
         )
         .normalize(mean=NWP_MEAN, std=NWP_STD)
         .convert_nwp_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size, datapipe_name='NWP')
     )
 
     # take pv time slices
@@ -229,7 +229,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
         )
         .convert_pv_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size, datapipe_name='PV')
     )
 
     # take pv time slices
@@ -246,7 +246,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
             ),
         )
         .convert_satellite_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size, datapipe_name='Satellite')
     )
 
     ####################################

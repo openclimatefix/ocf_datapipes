@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class MergeNumpyExamplesToBatchIterDataPipe(IterDataPipe):
     """Merge individual examples into a batch"""
 
-    def __init__(self, source_datapipe: IterDataPipe, n_examples_per_batch: int):
+    def __init__(self, source_datapipe: IterDataPipe, n_examples_per_batch: int, datapipe_name: str = 'not-set'):
         """
         Merge individual examples into a batch
 
@@ -27,13 +27,14 @@ class MergeNumpyExamplesToBatchIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
         self.n_examples_per_batch = n_examples_per_batch
+        self.datapipe_name = datapipe_name
 
     def __iter__(self) -> NumpyBatch:
         """Merge individual examples into a batch"""
         np_examples = []
         logger.debug("Merging numpy batch")
         for np_batch in self.source_datapipe:
-            with profile('Making numpy batches'):
+            with profile(f'Making numpy batches {self.datapipe_name}'):
                 np_examples.append(np_batch)
                 if len(np_examples) == self.n_examples_per_batch:
                     yield stack_np_examples_into_batch(np_examples)
