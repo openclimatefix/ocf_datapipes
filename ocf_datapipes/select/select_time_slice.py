@@ -23,6 +23,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         history_duration: timedelta,
         forecast_duration: timedelta,
         sample_period_duration: timedelta,
+        data_pipename:str = None
     ):
         """
         Selects time slice
@@ -39,11 +40,12 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         self.history_duration = np.timedelta64(history_duration)
         self.forecast_duration = np.timedelta64(forecast_duration)
         self.sample_period_duration = sample_period_duration
+        self.data_pipename = data_pipename
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
 
-            with profile('select_time_slice'):
+            with profile(f'select_time_slice {self.data_pipename}'):
 
                 t0_datetime_utc = pd.Timestamp(t0)
                 start_dt = t0_datetime_utc - self.history_duration

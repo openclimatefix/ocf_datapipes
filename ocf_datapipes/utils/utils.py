@@ -283,7 +283,7 @@ def profile(name: str):
     t0 = time.time()
     yield
     t1 = time.time()
-    if t1 - t0 > 0.1:
+    if t1 - t0 > 1:
         print(f'"{name}" took {t1 - t0}s')
-        print(f'{name}: This took longer than 0.1 second!!!!!')
+        print(f'{name}: This took longer than 1 second!!!!!')
 
