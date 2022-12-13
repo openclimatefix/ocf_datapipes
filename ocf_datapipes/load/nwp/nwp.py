@@ -27,7 +27,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Opens the NWP data"""
-        _log.debug("Opening NWP data: %s", self.zarr_path)
+        _log.info("Opening NWP data: %s", self.zarr_path)
         ukv = open_nwp(self.zarr_path)
         while True:
             yield ukv

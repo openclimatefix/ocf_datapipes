@@ -20,7 +20,7 @@ def open_sat_data(
     Args:
       zarr_path: Cloud URL or local path pattern.  If GCP URL, must start with 'gs://'
     """
-    _log.debug("Opening satellite data: %s", zarr_path)
+    _log.info("Opening satellite data: %s", zarr_path)
 
     # Silence the warning about large chunks.
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
