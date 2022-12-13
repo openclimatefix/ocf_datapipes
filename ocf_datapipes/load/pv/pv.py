@@ -18,6 +18,7 @@ from ocf_datapipes.load.pv.utils import (
     put_pv_data_into_an_xr_dataarray,
 )
 from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
+from ocf_datapipes.utils.utils import profile
 
 _log = logging.getLogger(__name__)
 
@@ -48,18 +49,20 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.end_datetime = pv.end_datetime
 
     def __iter__(self):
-        pv_datas_xr = []
-        for i in range(len(self.pv_power_filenames)):
-            one_data: xr.DataArray = load_everything_into_ram(
-                self.pv_power_filenames[i],
-                self.pv_metadata_filenames[i],
-                start_dateime=self.start_dateime,
-                end_datetime=self.end_datetime,
-                time_resolution_minutes=self.pv.time_resolution_minutes,
-            )
-            pv_datas_xr.append(one_data)
+        
+        with profile('Loading PV data'):
+            pv_datas_xr = []
+            for i in range(len(self.pv_power_filenames)):
+                one_data: xr.DataArray = load_everything_into_ram(
+                    self.pv_power_filenames[i],
+                    self.pv_metadata_filenames[i],
+                    start_dateime=self.start_dateime,
+                    end_datetime=self.end_datetime,
+                    time_resolution_minutes=self.pv.time_resolution_minutes,
+                )
+                pv_datas_xr.append(one_data)
 
-        data = join_pv(pv_datas_xr)
+            data = join_pv(pv_datas_xr)
 
         while True:
             yield data
