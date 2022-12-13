@@ -4,6 +4,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import NumpyBatch
+from ocf_datapipes.utils.utils import profile
 
 
 @functional_datapipe("convert_pv_to_numpy")
@@ -32,12 +33,15 @@ class ConvertPVToNumpyIterDataPipe(IterDataPipe):
     def __iter__(self) -> NumpyBatch:
         """Iterate and convert PV Xarray to NumpyBatch"""
         for xr_data in self.source_datapipe:
-            pv_yield_history = xr_data.values
-            returned_values = [pv_yield_history]
-            if self.return_pv_system_row:
-                pv_system_ids = xr_data["pv_system_row_number"].values
-                returned_values.append(pv_system_ids)
-            if self.return_pv_id:
-                pv_id = xr_data["pv_system_id"].values.astype(np.float32)
-                returned_values.append(pv_id)
-            yield returned_values
+
+            with profile('convert_pv_to_numpy'):
+
+                pv_yield_history = xr_data.values
+                returned_values = [pv_yield_history]
+                if self.return_pv_system_row:
+                    pv_system_ids = xr_data["pv_system_row_number"].values
+                    returned_values.append(pv_system_ids)
+                if self.return_pv_id:
+                    pv_id = xr_data["pv_system_id"].values.astype(np.float32)
+                    returned_values.append(pv_id)
+                yield returned_values

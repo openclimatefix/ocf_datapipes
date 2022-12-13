@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+from ocf_datapipes.utils.utils import profile
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +29,13 @@ class ConvertGSPToNumpyIterDataPipe(IterDataPipe):
         """Convert from Xarray to Numpy array"""
         logger.debug("Converting GSP to numpy")
         for xr_data in self.source_datapipe:
-            returned_values = [xr_data.values]
-            if self.return_id:
-                pv_system_ids = xr_data["gsp_id"].values
-                returned_values.append(pv_system_ids)
-                yield returned_values
-            else:
-                yield returned_values[0]
+
+            with profile('convert_gsp_to_numpy'):
+
+                returned_values = [xr_data.values]
+                if self.return_id:
+                    pv_system_ids = xr_data["gsp_id"].values
+                    returned_values.append(pv_system_ids)
+                    yield returned_values
+                else:
+                    yield returned_values[0]
