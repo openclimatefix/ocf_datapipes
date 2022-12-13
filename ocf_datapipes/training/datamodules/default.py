@@ -60,7 +60,9 @@ class DataModule(LightningDataModule):
     def train_dataloader(self):
         """Get the train dataloader"""
 
-        train_dataset = self.data_pipeline(configuration=self.configuration)
+        train_dataset = self.data_pipeline(configuration=self.configuration).set_length(
+            self.n_train_data
+        )
         train_dataloader = DataLoader2(train_dataset, batch_size=None, num_workers=self.num_workers)
 
         return train_dataloader
@@ -68,7 +70,9 @@ class DataModule(LightningDataModule):
     def val_dataloader(self):
         """Get the validation dataloader"""
 
-        validation_data_pipeline = self.data_pipeline(configuration=self.configuration)
+        validation_data_pipeline = self.data_pipeline(configuration=self.configuration).set_length(
+            self.n_val_data
+        )
         validation_dataloader = DataLoader2(
             validation_data_pipeline, batch_size=None, num_workers=self.num_workers
         )
