@@ -179,11 +179,9 @@ def gsp_pv_nwp_satellite_data_pipeline(
             satellite_time_periods_datapipe,
         ],
     )
-    gsp_time_periods, nwp_time_periods, pv_time_periods = overlapping_datapipe.fork(
-        3, buffer_size=BUFFER_SIZE
-    )
+
     # select time periods
-    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=gsp_time_periods)
+    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
 
     # select t0 periods
     logger.debug("Select t0 joint")
