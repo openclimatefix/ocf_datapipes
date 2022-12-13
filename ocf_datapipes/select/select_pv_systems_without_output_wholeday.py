@@ -16,11 +16,17 @@ logger = logging.getLogger(__name__)
 @functional_datapipe("select_pv_systems_without_output")
 class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
     """Remove any PV systems with less than 1 day of data.
+    
     This is done, by counting all the non values and check the
     count is greater than 289 (number of 5 minute intervals in a day)
+
     Function to select pv system ids with dates that has no output whatsoever in a given day.
     Returns a two key pair (pvsystem id and date) dictionary with values as the status
     "Active" or "Inactive" in a given day.
+
+    Notes:
+        Drop the systems or dates with Inactive
+        
     Yield example:
         default dict(<class dict>,{"10003:{"2020-04-01 : "Inactive", "2020-05-01" : "Active"}, "10004": {"2020-04-01" : "Active"}})
         Args:
