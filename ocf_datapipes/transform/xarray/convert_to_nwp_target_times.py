@@ -8,6 +8,8 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.utils.utils import profile
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,34 +48,36 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         """Iterate through both datapipes and convert Xarray dataset"""
         for xr_data, t0 in self.source_datapipe.zip_ocf(self.t0_datapipe):
 
-            logger.debug("convert_to_nwp_target_time ")
+            with profile('convert_to_nwp_target_time'):
 
-            t0_datetime_utc = pd.Timestamp(t0)
-            start_dt = t0_datetime_utc - self.history_duration
-            end_dt = t0_datetime_utc + self.forecast_duration
-            target_times = pd.date_range(
-                start_dt.ceil(self.sample_period_duration),
-                end_dt.ceil(self.sample_period_duration),
-                freq=self.sample_period_duration,
-            )
-            # Get the most recent NWP initialisation time for each target_time_hourly.
-            init_times = xr_data.sel(init_time_utc=target_times, method="pad").init_time_utc.values
-            # Find the NWP init time for just the 'future' portion of the example.
-            init_time_t0 = init_times[self.t0_idx]
+                logger.debug("convert_to_nwp_target_time ")
 
-            # For the 'future' portion of the example, replace all the NWP
-            # init times with the NWP init time most recent to t0.
-            init_times[self.t0_idx :] = init_time_t0
+                t0_datetime_utc = pd.Timestamp(t0)
+                start_dt = t0_datetime_utc - self.history_duration
+                end_dt = t0_datetime_utc + self.forecast_duration
+                target_times = pd.date_range(
+                    start_dt.ceil(self.sample_period_duration),
+                    end_dt.ceil(self.sample_period_duration),
+                    freq=self.sample_period_duration,
+                )
+                # Get the most recent NWP initialisation time for each target_time_hourly.
+                init_times = xr_data.sel(init_time_utc=target_times, method="pad").init_time_utc.values
+                # Find the NWP init time for just the 'future' portion of the example.
+                init_time_t0 = init_times[self.t0_idx]
 
-            steps = target_times - init_times
+                # For the 'future' portion of the example, replace all the NWP
+                # init times with the NWP init time most recent to t0.
+                init_times[self.t0_idx :] = init_time_t0
 
-            # We want one timestep for each target_time_hourly (obviously!) If we simply do
-            # nwp.sel(init_time=init_times, step=steps) then we'll get the *product* of
-            # init_times and steps, which is not what # we want! Instead, we use xarray's
-            # vectorized-indexing mode by using a DataArray indexer.  See the last example here:
-            # https://docs.xarray.dev/en/latest/user-guide/indexing.html#more-advanced-indexing
-            coords = {"target_time_utc": target_times}
-            init_time_indexer = xr.DataArray(init_times, coords=coords)
-            step_indexer = xr.DataArray(steps, coords=coords)
-            xr_data = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
-            yield xr_data
+                steps = target_times - init_times
+
+                # We want one timestep for each target_time_hourly (obviously!) If we simply do
+                # nwp.sel(init_time=init_times, step=steps) then we'll get the *product* of
+                # init_times and steps, which is not what # we want! Instead, we use xarray's
+                # vectorized-indexing mode by using a DataArray indexer.  See the last example here:
+                # https://docs.xarray.dev/en/latest/user-guide/indexing.html#more-advanced-indexing
+                coords = {"target_time_utc": target_times}
+                init_time_indexer = xr.DataArray(init_times, coords=coords)
+                step_indexer = xr.DataArray(steps, coords=coords)
+                xr_data = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
+                yield xr_data
