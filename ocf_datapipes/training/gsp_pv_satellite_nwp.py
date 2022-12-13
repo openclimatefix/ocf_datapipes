@@ -47,7 +47,8 @@ def gsp_pv_nwp_satellite_data_pipeline(
 
     # Load NWP data
     logger.debug("Load NWP data")
-    nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+    nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path).\
+        select_channels(channels=configuration.input_data.nwp.nwp_channels)
 
     # Load PV data
     logger.debug("Load PV data")
@@ -257,7 +258,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
     combined_datapipe = (
         MergeNumpyModalities([gsp_datapipe, nwp_datapipe, pv_datapipe, satellite_datapipe])
         # .encode_space_time()
-        # .add_sun_position(modality_name="gsp")
+        .add_sun_position(modality_name="gsp")
     )
 
     return combined_datapipe
