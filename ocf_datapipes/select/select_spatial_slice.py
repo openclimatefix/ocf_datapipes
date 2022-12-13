@@ -10,6 +10,8 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
 
+from ocf_datapipes.utils.utils import profile
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,47 +48,50 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
-            if "geostationary" in self.x_dim_name:
-                center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
-                    xr_data=xr_data,
-                    center_osgb=location,
-                    x_dim_name=self.x_dim_name,
-                    y_dim_name=self.y_dim_name,
+
+            with profile('select_spatial_slice_pixels'):
+
+                if "geostationary" in self.x_dim_name:
+                    center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
+                        xr_data=xr_data,
+                        center_osgb=location,
+                        x_dim_name=self.x_dim_name,
+                        y_dim_name=self.y_dim_name,
+                    )
+                else:
+                    center_idx: Location = _get_idx_of_pixel_closest_to_poi(
+                        xr_data=xr_data,
+                        center_osgb=location,
+                        x_dim_name=self.x_dim_name,
+                        y_dim_name=self.y_dim_name,
+                    )
+
+                # Compute the index for left and right:
+                half_height = self.roi_height_pixels // 2
+                half_width = self.roi_width_pixels // 2
+
+                left_idx = int(center_idx.x - half_width)
+                right_idx = int(center_idx.x + half_width)
+                top_idx = int(center_idx.y - half_height)
+                bottom_idx = int(center_idx.y + half_height)
+
+                # Sanity check!
+                assert left_idx >= 0, f"{left_idx=} must be >= 0!"
+                data_width_pixels = len(xr_data[self.x_dim_name])
+                assert right_idx <= data_width_pixels, f"{right_idx=} must be <= {data_width_pixels=}"
+                assert top_idx >= 0, f"{top_idx=} must be >= 0!"
+                data_height_pixels = len(xr_data[self.y_dim_name])
+                assert (
+                    bottom_idx <= data_height_pixels
+                ), f"{bottom_idx=} must be <= {data_height_pixels=}"
+
+                selected = xr_data.isel(
+                    {
+                        self.x_dim_name: slice(left_idx, right_idx),
+                        self.y_dim_name: slice(top_idx, bottom_idx),
+                    }
                 )
-            else:
-                center_idx: Location = _get_idx_of_pixel_closest_to_poi(
-                    xr_data=xr_data,
-                    center_osgb=location,
-                    x_dim_name=self.x_dim_name,
-                    y_dim_name=self.y_dim_name,
-                )
-
-            # Compute the index for left and right:
-            half_height = self.roi_height_pixels // 2
-            half_width = self.roi_width_pixels // 2
-
-            left_idx = int(center_idx.x - half_width)
-            right_idx = int(center_idx.x + half_width)
-            top_idx = int(center_idx.y - half_height)
-            bottom_idx = int(center_idx.y + half_height)
-
-            # Sanity check!
-            assert left_idx >= 0, f"{left_idx=} must be >= 0!"
-            data_width_pixels = len(xr_data[self.x_dim_name])
-            assert right_idx <= data_width_pixels, f"{right_idx=} must be <= {data_width_pixels=}"
-            assert top_idx >= 0, f"{top_idx=} must be >= 0!"
-            data_height_pixels = len(xr_data[self.y_dim_name])
-            assert (
-                bottom_idx <= data_height_pixels
-            ), f"{bottom_idx=} must be <= {data_height_pixels=}"
-
-            selected = xr_data.isel(
-                {
-                    self.x_dim_name: slice(left_idx, right_idx),
-                    self.y_dim_name: slice(top_idx, bottom_idx),
-                }
-            )
-            yield selected
+                yield selected
 
 
 @functional_datapipe("select_spatial_slice_meters")
@@ -128,26 +133,29 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
-            # Compute the index for left and right:
-            logger.debug("Getting Spatial Slice Meters")
 
-            half_height = self.roi_height_meters // 2
-            half_width = self.roi_width_meters // 2
+            with profile('select_spatial_slice_meters'):
 
-            left = location.x - half_width
-            right = location.x + half_width
-            bottom = location.y - half_height
-            top = location.y + half_height
-            # Select data in the region of interest:
-            id_mask = (
-                (left <= getattr(xr_data, self.x_dim_name))
-                & (getattr(xr_data, self.x_dim_name) <= right)
-                & (getattr(xr_data, self.y_dim_name) <= top)
-                & (bottom <= getattr(xr_data, self.y_dim_name))
-            )
+                # Compute the index for left and right:
+                logger.debug("Getting Spatial Slice Meters")
 
-            selected = xr_data.isel({self.dim_name: id_mask})
-            yield selected
+                half_height = self.roi_height_meters // 2
+                half_width = self.roi_width_meters // 2
+
+                left = location.x - half_width
+                right = location.x + half_width
+                bottom = location.y - half_height
+                top = location.y + half_height
+                # Select data in the region of interest:
+                id_mask = (
+                    (left <= getattr(xr_data, self.x_dim_name))
+                    & (getattr(xr_data, self.x_dim_name) <= right)
+                    & (getattr(xr_data, self.y_dim_name) <= top)
+                    & (bottom <= getattr(xr_data, self.y_dim_name))
+                )
+
+                selected = xr_data.isel({self.dim_name: id_mask})
+                yield selected
 
 
 def _get_idx_of_pixel_closest_to_poi(
