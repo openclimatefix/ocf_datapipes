@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("remove_northern_gsp")
 class RemoveNorthernGSPIterDataPipe(IterDataPipe):
-    """Remove northn GSPs"""
+    """Remove northern GSPs"""
 
     def __init__(
         self,
@@ -19,7 +19,7 @@ class RemoveNorthernGSPIterDataPipe(IterDataPipe):
         northern_y_osgb_limit: Optional[int] = 1_036_975,
     ):
         """
-        Remove northern GSP. This might becasue satellite data is not available
+        Remove northern GSP. This might be because satellite data is not available
 
         Args:
             source_datapipe: Source datapipe of GSP data
@@ -38,12 +38,9 @@ class RemoveNorthernGSPIterDataPipe(IterDataPipe):
             )
 
             keep_index = source_datapipe.y_osgb < self.northern_y_osgb_limit
-
-            print(keep_index)
             keep_gsp_ids = source_datapipe.gsp_id[keep_index]
 
             source_datapipe = source_datapipe.sel(gsp_id=keep_gsp_ids)
-
             logger.debug(f"There are now {len(source_datapipe.gsp_id)} GSPs")
 
             yield source_datapipe
