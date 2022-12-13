@@ -54,9 +54,14 @@ class LocationPickerIterDataPipe(IterDataPipe):
                         x=xr_dataset[self.x_dim_name][location_idx].values,
                         y=xr_dataset[self.y_dim_name][location_idx].values,
                     )
+                    # for pv
                     if "pv_system_id" in xr_dataset.coords.keys():
-
                         location.id = int(xr_dataset["pv_system_id"][location_idx].values)
+
+                    # for gsp
+                    if "gsp_id" in xr_dataset.coords.keys():
+                        location.id = int(xr_dataset["gsp_id"][location_idx].values)
+
                     logger.debug(f"Got all location {location}")
                     yield location
             else:
