@@ -66,20 +66,20 @@ class DropNightPVIterDataPipe(IterDataPipe):
         logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
 
         for xr_dataset in self.source_datapipe:
-            
+
             id_list = xr_dataset.coords["pv_system_id"].values
             groups_idx = xr_dataset.groupby("status_day").groups
             night_idx = groups_idx["night"]
             night_ds = xr_dataset.groupby("status_day")["night"]
             nopvid = []
             for i in id_list:
-                data = night_ds.loc[dict(pv_system_id = i)]
+                data = night_ds.loc[dict(pv_system_id=i)]
                 check = np.all(data.values == 0.0) or np.isnan(data.values).all()
                 while not check:
                     nopvid.append(i)
                     break
-            xr_dataset = xr_dataset.drop_sel(pv_system_id = nopvid)
-            yield xr_dataset                
+            xr_dataset = xr_dataset.drop_sel(pv_system_id=nopvid)
+            yield xr_dataset
 
             # TODO in a different PR, try to do this without a loop, this is normally quicker
             # It has been moved to a different .py file : assign_daynight_status.py

@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional 
+from typing import Optional
 
 import numpy as np
 import xarray as xr
@@ -29,10 +29,7 @@ uk_daynight_dict = {
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
     """Adds a new dimension of day/night status"""
 
-    def __init__(
-        self, 
-        source_datapipe: IterDataPipe,
-        assign_status : Optional[bool] = False):
+    def __init__(self, source_datapipe: IterDataPipe, assign_status: Optional[bool] = False):
         """
         If assign_status is False, this method replaces all night time pv values with NaN's
         IF it is True, just adds extra coordinate of day night status
@@ -78,7 +75,7 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
                 yield xr_dataset
 
             else:
-                night_idx = [i for i, s in enumerate(status_day) if 'night' in s]
+                night_idx = [i for i, s in enumerate(status_day) if "night" in s]
                 for idx in night_idx:
-                    xr_dataset.loc[dict(time_utc = dates[idx])] = np.nan                
+                    xr_dataset.loc[dict(time_utc=dates[idx])] = np.nan
                 yield xr_dataset
