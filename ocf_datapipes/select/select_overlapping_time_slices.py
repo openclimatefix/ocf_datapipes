@@ -6,6 +6,8 @@ import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.utils.utils import profile
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,12 +42,14 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
 
             for set_of_pd_datas in self.source_datapipe.zip_ocf(*self.secondary_datapipes):
 
-                time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
+                with profile('Get over-lapping datetimes'):
 
-                logger.debug(f"Found {len(time_periods)} time periods")
-                assert len(time_periods) > 0
+                    time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
 
-                yield time_periods
+                    logger.debug(f"Found {len(time_periods)} time periods")
+                    assert len(time_periods) > 0
+
+                    yield time_periods
         else:
             for set_of_pd_datas in self.source_datapipe.zip_ocf(
                 *self.secondary_datapipes, self.location_datapipe
@@ -53,25 +57,27 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
                 location = set_of_pd_datas[-1]
                 set_of_pd_datas = set_of_pd_datas[:-1]
 
-                id = int(location.id)
+                with profile('Get over-lapping datetimes, using location'):
 
-                if id in self.time_periods_id.keys():
-                    logger.debug(f"Time periods for id {id} from store")
-                    logger.debug(len(self.time_periods_id[id]))
-                    time_periods = self.time_periods_id[id]
-                else:
-                    logger.debug(f"Time periods for id {id} not in store")
-                    time_periods = intersection_of_multiple_dataframes_of_periods(
-                        list(set_of_pd_datas)
-                    )
+                    id = int(location.id)
 
-                    logger.debug(f"Found {len(time_periods)} time periods")
-                    assert len(time_periods) > 0
+                    if id in self.time_periods_id.keys():
+                        logger.debug(f"Time periods for id {id} from store")
+                        logger.debug(len(self.time_periods_id[id]))
+                        time_periods = self.time_periods_id[id]
+                    else:
+                        logger.debug(f"Time periods for id {id} not in store")
+                        time_periods = intersection_of_multiple_dataframes_of_periods(
+                            list(set_of_pd_datas)
+                        )
 
-                    self.time_periods_id[id] = time_periods
-                    logger.debug(len(time_periods))
+                        logger.debug(f"Found {len(time_periods)} time periods")
+                        assert len(time_periods) > 0
 
-                yield time_periods
+                        self.time_periods_id[id] = time_periods
+                        logger.debug(len(time_periods))
+
+                    yield time_periods
 
 
 def intersection_of_multiple_dataframes_of_periods(
