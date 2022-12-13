@@ -4,8 +4,11 @@ import logging
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+import contextlib
+import time
+
 from ocf_datapipes.utils.consts import NumpyBatch
-from ocf_datapipes.utils.utils import stack_np_examples_into_batch
+from ocf_datapipes.utils.utils import profile, stack_np_examples_into_batch
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +32,9 @@ class MergeNumpyExamplesToBatchIterDataPipe(IterDataPipe):
         """Merge individual examples into a batch"""
         np_examples = []
         logger.debug("Merging numpy batch")
-        for np_batch in self.source_datapipe:
-            np_examples.append(np_batch)
-            if len(np_examples) == self.n_examples_per_batch:
-                yield stack_np_examples_into_batch(np_examples)
-                np_examples = []
+        with profile('Making numpy batches'):
+            for np_batch in self.source_datapipe:
+                np_examples.append(np_batch)
+                if len(np_examples) == self.n_examples_per_batch:
+                    yield stack_np_examples_into_batch(np_examples)
+                    np_examples = []

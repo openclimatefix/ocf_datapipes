@@ -1,5 +1,7 @@
 """Various utilites that didn't fit elsewhere"""
 import logging
+import contextlib
+import time
 from pathlib import Path
 from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
 
@@ -274,3 +276,11 @@ def trigonometric_datetime_transformation(datetimes: npt.ArrayLike) -> np.ndarra
     return np.concatenate(
         [sine_month, cosine_month, sine_day, cosine_day, sine_hour, cosine_hour], axis=1
     )
+
+
+@contextlib.contextmanager
+def profile(name: str):
+    t0 = time.time()
+    yield
+    t1 = time.time()
+    print(f'"{name}" took {t1 - t0}ms')

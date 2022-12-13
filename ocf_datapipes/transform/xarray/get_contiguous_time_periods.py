@@ -7,6 +7,8 @@ import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.utils.utils import profile
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,17 +48,19 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
             logger.debug("Getting contiguous time periods")
-            contiguous_time_periods = get_contiguous_time_periods(
-                datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
-                min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
-                max_gap_duration=self.sample_period_duration,
-            )
+            with profile('Getting contiguous time periods'):
+                contiguous_time_periods = get_contiguous_time_periods(
+                    datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
+                    min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
+                    max_gap_duration=self.sample_period_duration,
+                )
             logger.debug("Getting contiguous t0 time periods")
-            contiguous_time_periods = get_contiguous_t0_time_periods(
-                contiguous_time_periods=contiguous_time_periods,
-                history_duration=self.history_duration,
-                forecast_duration=self.forecast_duration,
-            )
+            with profile('Getting contiguous t0 time periods'):
+                contiguous_time_periods = get_contiguous_t0_time_periods(
+                    contiguous_time_periods=contiguous_time_periods,
+                    history_duration=self.history_duration,
+                    forecast_duration=self.forecast_duration,
+                )
             logger.debug("Get contiguous time periods:done")
             yield contiguous_time_periods
 
