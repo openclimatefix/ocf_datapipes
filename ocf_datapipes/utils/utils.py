@@ -35,6 +35,7 @@ def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     mask = np.isfinite(datetimes)
     return np.where(mask, nums, np.NaN)
 
+
 def assert_num_dims(tensor, num_expected_dims: int) -> None:
     """
     Asserts the tensor shape is correct

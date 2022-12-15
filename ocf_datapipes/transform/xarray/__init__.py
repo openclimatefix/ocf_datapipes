@@ -27,7 +27,7 @@ from .get_contiguous_time_periods import (
 from .gsp.create_gsp_image import CreateGSPImageIterDataPipe as CreateGSPImage
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
-from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .pv.assign_daynight_status import AssignDayNightStatusIterDataPipe as AssignDayNightStatus
+from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography

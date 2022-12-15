@@ -41,8 +41,8 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
 
         for xr_dataset in self.source_datapipe:
             sysid = xr_dataset.coords["pv_system_id"].values
-            only_dates = np.asarray(xr_dataset.time_utc.dt.day.values, dtype = int)
-            xr_dataset = xr_dataset.assign_coords(only_dates = ("time_utc", only_dates))
+            only_dates = np.asarray(xr_dataset.time_utc.dt.day.values, dtype=int)
+            xr_dataset = xr_dataset.assign_coords(only_dates=("time_utc", only_dates))
             sys_groups = list(xr_dataset.groupby("pv_system_id").groups)
 
             drop_pv = []

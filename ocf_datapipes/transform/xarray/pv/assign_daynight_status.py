@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional 
+from typing import Optional
 
 import numpy as np
 import xarray as xr
@@ -29,9 +29,7 @@ uk_daynight_dict = {
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
     """Adds a new dimension of day/night status"""
 
-    def __init__(
-        self, 
-        source_datapipe: IterDataPipe):
+    def __init__(self, source_datapipe: IterDataPipe):
         """
         This method adds extra coordinate of day night status.
 
@@ -69,5 +67,5 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
                 status_day.append(status)
 
-            xr_dataset = xr_dataset.assign_coords( status_day=(("time_utc"), status_day))
+            xr_dataset = xr_dataset.assign_coords(status_day=(("time_utc"), status_day))
             yield xr_dataset

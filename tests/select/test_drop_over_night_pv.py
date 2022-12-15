@@ -5,18 +5,20 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from ocf_datapipes.transform.xarray import AssignDayNightStatus
 from ocf_datapipes.select import DropNightPV
+from ocf_datapipes.transform.xarray import AssignDayNightStatus
 
 # TODO Tests with PVOuptput_datapipe
+
 
 def test_assign_status_night(passiv_datapipe):
     night_status = AssignDayNightStatus(passiv_datapipe)
     data = next(iter(night_status))
     coords = data.coords["status_day"].values
     print(data)
-    assert np.count_nonzero(coords == "night") == 121.
+    assert np.count_nonzero(coords == "night") == 121.0
     assert "day" and "night" in data.coords["status_day"].values
+
 
 def test_drop_night_pv_one_system_power_overnight():
 

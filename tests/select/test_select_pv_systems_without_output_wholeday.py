@@ -4,8 +4,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from ocf_datapipes.select import TrimDatesWithInsufficentData, RemoveBadSystems
+from ocf_datapipes.select import RemoveBadSystems
 from ocf_datapipes.select import SelectSysWithoutOutputWholeday as SysWithoutPV
+from ocf_datapipes.select import TrimDatesWithInsufficentData
 
 
 # TODO Still needed to work on this tests a bit
@@ -13,12 +14,13 @@ def test_sys_with_lessthan_oneday_pv(passiv_datapipe):
     data = TrimDatesWithInsufficentData(passiv_datapipe)
     data = next(iter(data))
     count = len(data.coords["time_utc"].values)
-    assert count % 288. == 0.
+    assert count % 288.0 == 0.0
 
-        # Removes any PV systems with less than 1 day of data.
+    # Removes any PV systems with less than 1 day of data.
 
-        # This is done, by counting all the nan values and check the
-        # count is greater than 289 (number of 5 minute intervals in a day)
+    # This is done, by counting all the nan values and check the
+    # count is greater than 289 (number of 5 minute intervals in a day)
+
 
 # def test_sys_without_pv(passiv_datapipe):
 #     no_pv_wholeday = SysWithoutPV(passiv_datapipe)
