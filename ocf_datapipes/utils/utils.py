@@ -35,31 +35,6 @@ def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     mask = np.isfinite(datetimes)
     return np.where(mask, nums, np.NaN)
 
-
-def datetime64_to_datetime(
-    datetime_64: np.ndarray, just_date: Optional[bool] = False
-) -> np.ndarray:
-    """
-    Converts numpy.datetime64 to datetime.datetime
-
-    Args:
-        datetime_64 : Array of numpy datetime
-        just_date: Boolean: If true, gives an array of just dates
-
-    Returns:
-        Converted numpy.datetime64 to datetime.datetime in an array
-    """
-    unix_epoch = np.datetime64(0, "s")
-    one_second = np.timedelta64(1, "s")
-    seconds_since_epoch = (datetime_64 - unix_epoch) / one_second
-    dt = [datetime.utcfromtimestamp(i) for i in seconds_since_epoch]
-    if just_date == True:
-        dt = [datetime.date(i) for i in dt]
-    else:
-        pass
-    return np.asarray(dt)
-
-
 def assert_num_dims(tensor, num_expected_dims: int) -> None:
     """
     Asserts the tensor shape is correct

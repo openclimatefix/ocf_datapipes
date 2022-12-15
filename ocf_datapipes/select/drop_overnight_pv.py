@@ -41,8 +41,6 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils.utils import datetime64_to_datetime
-
 logger = logging.getLogger(__name__)
 
 
@@ -80,9 +78,3 @@ class DropNightPVIterDataPipe(IterDataPipe):
                     break
             xr_dataset = xr_dataset.drop_sel(pv_system_id = nopvid)
             yield xr_dataset                
-
-            # TODO in a different PR, try to do this without a loop, this is normally quicker
-            # It has been moved to a different .py file : assign_daynight_status.py
-            # select only day
-            # TODO drop system is producing power over night
-            # This method drops the systems producing overnight

@@ -40,21 +40,21 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.Dataset():
 
         for xr_dataset in self.source_datapipe:
-            dates_list = xr_dataset.coords["datetime"].values
-            ssid_list = list(xr_dataset)
-            dates_list = [
-                datetime.strptime(str(x)[:10], "%Y-%m-%d").strftime("%Y-%m-%d") for x in dates_list
-            ]
+            sysid = xr_dataset.coords["pv_system_id"].values
+            only_dates = np.asarray(xr_dataset.time_utc.dt.day.values, dtype = int)
+            xr_dataset = xr_dataset.assign_coords(only_dates = ("time_utc", only_dates))
+            sys_groups = list(xr_dataset.groupby("pv_system_id").groups)
 
-            # sanity check
-            assert len(xr_dataset.coords["datetime"].values) == len(dates_list)
+            drop_pv = []
+            for i in range(len(sysid)):
+                dates = sys_groups[i]
 
             xr_dataset = xr_dataset.assign_coords(just_date=("datetime", dates_list))
             pvstatus_dict = defaultdict(dict)
 
             # TODO, think how to do this, not a in 2 loops
             # Still needed to work on this
-            for sysid in ssid_list:
+            for sysid in sysid:
                 for date in list(set(dates_list)):
                     xr_array = xr_dataset.groupby("just_date")[date][sysid].values
 

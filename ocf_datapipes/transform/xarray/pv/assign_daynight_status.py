@@ -31,16 +31,12 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
     def __init__(
         self, 
-        source_datapipe: IterDataPipe,
-        assign_status : Optional[bool] = False):
+        source_datapipe: IterDataPipe):
         """
-        If assign_status is False, this method replaces all night time pv values with NaN's
-        IF it is True, just adds extra coordinate of day night status
+        This method adds extra coordinate of day night status.
 
         Args:
             source: Datapipe emiiting Xarray Dataset
-            assign_status: If True, adds a new dimension of day/night status
-             to xarray datadrray
 
         Result:
             <xarray.Dataset>
@@ -51,7 +47,6 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
         """
 
         self.source_datapipe = source_datapipe
-        self.assign_status = assign_status
 
     def __iter__(self) -> xr.DataArray():
         """Returns an xarray dataset with extra dimesion"""
@@ -71,14 +66,8 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
                     status = "day"
                 else:
                     status = "night"
+
                 status_day.append(status)
 
-            if self.assign_status is True:
-                xr_dataset = xr_dataset.assign_coords(status_day=(("time_utc"), status_day))
-                yield xr_dataset
-
-            else:
-                night_idx = [i for i, s in enumerate(status_day) if 'night' in s]
-                for idx in night_idx:
-                    xr_dataset.loc[dict(time_utc = dates[idx])] = np.nan                
-                yield xr_dataset
+            xr_dataset = xr_dataset.assign_coords( status_day=(("time_utc"), status_day))
+            yield xr_dataset
