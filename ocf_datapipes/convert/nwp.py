@@ -4,9 +4,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
-from ocf_datapipes.utils.utils import datetime64_to_float
-
-from ocf_datapipes.utils.utils import profile
+from ocf_datapipes.utils.utils import datetime64_to_float, profile
 
 
 @functional_datapipe("convert_nwp_to_numpy_batch")
@@ -27,7 +25,7 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
         """Convert from Xarray to NumpyBatch"""
         for xr_data in self.source_datapipe:
 
-            with profile('convert_nwp_to_numpy_batch'):
+            with profile("convert_nwp_to_numpy_batch"):
 
                 example: NumpyBatch = {
                     BatchKey.nwp: xr_data.values,
@@ -40,7 +38,9 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
                 example[BatchKey.nwp_step] = (xr_data.step.values / np.timedelta64(1, "h")).astype(
                     np.int64
                 )
-                example[BatchKey.nwp_init_time_utc] = datetime64_to_float(xr_data.init_time_utc.values)
+                example[BatchKey.nwp_init_time_utc] = datetime64_to_float(
+                    xr_data.init_time_utc.values
+                )
 
                 for batch_key, dataset_key in (
                     (BatchKey.nwp_y_osgb, "y_osgb"),

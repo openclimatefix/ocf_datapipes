@@ -1,6 +1,6 @@
 """Various utilites that didn't fit elsewhere"""
-import logging
 import contextlib
+import logging
 import time
 from pathlib import Path
 from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
@@ -293,5 +293,4 @@ def profile(name: str):
     t1 = time.time()
     if t1 - t0 > 1:
         print(f'"{name}" took {t1 - t0}s')
-        print(f'{name}: This took longer than 1 second!!!!!')
-
+        print(f"{name}: This took longer than 1 second!!!!!")

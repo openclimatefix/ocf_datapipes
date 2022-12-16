@@ -3,8 +3,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
-from ocf_datapipes.utils.utils import datetime64_to_float
-from ocf_datapipes.utils.utils import profile
+from ocf_datapipes.utils.utils import datetime64_to_float, profile
 
 
 @functional_datapipe("convert_satellite_to_numpy_batch")
@@ -27,12 +26,14 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
         """Convert each example to a NumpyBatch object"""
         for xr_data in self.source_datapipe:
 
-            with profile('convert_satellite_to_numpy_batch'):
+            with profile("convert_satellite_to_numpy_batch"):
                 if self.is_hrv:
                     example: NumpyBatch = {
                         BatchKey.hrvsatellite_actual: xr_data.values,
                         BatchKey.hrvsatellite_t0_idx: xr_data.attrs["t0_idx"],
-                        BatchKey.hrvsatellite_time_utc: datetime64_to_float(xr_data["time_utc"].values),
+                        BatchKey.hrvsatellite_time_utc: datetime64_to_float(
+                            xr_data["time_utc"].values
+                        ),
                     }
 
                     for batch_key, dataset_key in (
@@ -47,7 +48,9 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
                     example: NumpyBatch = {
                         BatchKey.satellite_actual: xr_data.values,
                         BatchKey.satellite_t0_idx: xr_data.attrs["t0_idx"],
-                        BatchKey.satellite_time_utc: datetime64_to_float(xr_data["time_utc"].values),
+                        BatchKey.satellite_time_utc: datetime64_to_float(
+                            xr_data["time_utc"].values
+                        ),
                     }
 
                     for batch_key, dataset_key in (

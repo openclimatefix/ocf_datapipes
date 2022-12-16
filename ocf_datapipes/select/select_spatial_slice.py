@@ -9,7 +9,6 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
-
 from ocf_datapipes.utils.utils import profile
 
 logger = logging.getLogger(__name__)
@@ -81,7 +80,9 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
                 # Sanity check!
                 assert left_idx >= 0, f"{left_idx=} must be >= 0!"
                 data_width_pixels = len(xr_data[self.x_dim_name])
-                assert right_idx <= data_width_pixels, f"{right_idx=} must be <= {data_width_pixels=}"
+                assert (
+                    right_idx <= data_width_pixels
+                ), f"{right_idx=} must be <= {data_width_pixels=}"
                 assert top_idx >= 0, f"{top_idx=} must be >= 0!"
                 data_height_pixels = len(xr_data[self.y_dim_name])
                 assert (
@@ -137,7 +138,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
 
-            with profile('select_spatial_slice_meters'):
+            with profile("select_spatial_slice_meters"):
 
                 # Compute the index for left and right:
                 logger.debug("Getting Spatial Slice Meters")

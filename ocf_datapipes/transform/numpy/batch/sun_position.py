@@ -9,7 +9,6 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
-
 from ocf_datapipes.utils.utils import profile
 
 ELEVATION_MEAN = 37.4
@@ -44,7 +43,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
     def __iter__(self):
         for np_batch in self.source_datapipe:
 
-            with profile(f'add sun position to {self.modality_name}'):
+            with profile(f"add sun position to {self.modality_name}"):
 
                 # TODO Make work with Lat/Lons instead
                 if self.modality_name == "hrvsatellite":
