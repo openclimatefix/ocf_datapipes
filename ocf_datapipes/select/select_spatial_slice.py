@@ -26,7 +26,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         roi_width_pixels: int,
         y_dim_name: str = "y",
         x_dim_name: str = "x",
-        datapipe_name: str = 'not-set'
+        datapipe_name: str = "not-set",
     ):
         """
         Select spatial slice based off pixels from point of interest
@@ -51,7 +51,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
 
-            with profile(f'select_spatial_slice_pixels {self.datapipe_name}'):
+            with profile(f"select_spatial_slice_pixels {self.datapipe_name}"):
 
                 if "geostationary" in self.x_dim_name:
                     center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
