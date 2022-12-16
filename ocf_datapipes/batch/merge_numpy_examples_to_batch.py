@@ -21,6 +21,7 @@ class MergeNumpyExamplesToBatchIterDataPipe(IterDataPipe):
         Args:
             source_datapipe: Datapipe of NumpyBatch data
             n_examples_per_batch: Number of examples per batch
+            datapipe_name: data pipe name, useful for profiling
         """
         self.source_datapipe = source_datapipe
         self.n_examples_per_batch = n_examples_per_batch

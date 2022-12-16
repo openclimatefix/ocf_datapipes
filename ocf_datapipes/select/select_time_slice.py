@@ -34,6 +34,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             history_duration: History time used
             forecast_duration: Forecast time used
             sample_period_duration: Sample period of xarray data
+            data_pipename: the name of the data pipe. This is useful when profiling
         """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe

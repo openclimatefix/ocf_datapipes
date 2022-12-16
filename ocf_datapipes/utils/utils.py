@@ -280,6 +280,14 @@ def trigonometric_datetime_transformation(datetimes: npt.ArrayLike) -> np.ndarra
 
 @contextlib.contextmanager
 def profile(name: str):
+    """
+    This says how long each process runs.
+
+    A print statement is only made when the process runs over 1 second
+
+    Args:
+        name: the name of the process
+    """
     t0 = time.time()
     yield
     t1 = time.time()
