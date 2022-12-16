@@ -66,13 +66,13 @@ class DropNightPVIterDataPipe(IterDataPipe):
         for xr_dataset in self.source_datapipe:
 
             logger.info(f"Collecting all pv system IDs")
-            
+
             id_list = xr_dataset.coords["pv_system_id"].values
 
             logger.info(f"Grouping the Xarray by status{'night'}")
 
             night_ds = xr_dataset.groupby("status_day")["night"]
-            
+
             logger.info(f"Checking if the night time has any pv output")
             logger.info(f"if so, stroing the pv system IDs to drop")
 
