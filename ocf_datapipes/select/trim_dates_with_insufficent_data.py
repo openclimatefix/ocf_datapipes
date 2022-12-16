@@ -13,7 +13,10 @@ logger = logging.getLogger(__name__)
 class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
     """Trim the date values of the Xarray Timeseries data"""
 
-    def __init__(self, source_datapipe: IterDataPipe):
+    def __init__(
+        self, 
+        source_datapipe: IterDataPipe,
+        intervals: int):
         """
         For the five minute interval, If the time_utc dates are insufficent and
         less than multiple of 289, this method trims that extended dates
@@ -23,8 +26,16 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
 
         This method trims the inusfficent less than one day data at the end and provides full set of complete one day
         data intervals
+
+        Args:
+            source_datapipe: Xarray emitting timeseries data
+            intervals: 
+                5min xarray interval data = 288
+                15min xarray interval data = 96
+                .........
         """
         self.source_datapipe = source_datapipe
+        self.intervals = intervals
 
     def __iter__(self) -> xr.Dataset():
 
@@ -39,11 +50,10 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
             dates, counts = np.unique(only_dates, return_counts=True)
             drop_dates = []
             for idx in range(len(counts)):
-                check = counts[idx] == 288.0
+                check = counts[idx] == self.intervals
                 if not check:
                     drop_dates.append(dates[idx])
 
             for dates in drop_dates:
-                xr_dataset = xr_dataset.where(xr_dataset.only_dates != dates, drop=True)
-            xr_dataset = xr_dataset.reset_coords("only_dates", drop=True)
+                xr_dataset = xr_dataset.where(xr_dataset.only_dates != dates, drop = True)
             yield xr_dataset

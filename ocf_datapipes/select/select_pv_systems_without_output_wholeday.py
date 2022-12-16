@@ -7,6 +7,7 @@ from typing import Dict, List, Union
 import numpy as np
 import pandas as pd
 import xarray as xr
+from ocf_datapipes.utils.utils import return_sys_idx_with_cont_nan as sys_idx_cont_nan
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -20,15 +21,6 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
     This is done, by counting all the non values and check the
     count is greater than 289 (number of 5 minute intervals in a day)
 
-    Function to select pv system ids with dates that has no output whatsoever in a given day.
-    Returns a two key pair (pvsystem id and date) dictionary with values as the status
-    "Active" or "Inactive" in a given day.
-
-    Notes:
-        Drop the systems or dates with Inactive
-
-    Yield example:
-        default dict(<class dict>,{"10003:{"2020-04-01 : "Inactive", "2020-05-01" : "Active"}, "10004": {"2020-04-01" : "Active"}})
         Args:
             source_datapipe: Datapipe of Xarray Dataset emitting timeseries data
     """
@@ -40,35 +32,15 @@ class SelectPVSystemsWithoutOutputIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.Dataset():
 
         for xr_dataset in self.source_datapipe:
-            sysid = xr_dataset.coords["pv_system_id"].values
-            only_dates = np.asarray(xr_dataset.time_utc.dt.day.values, dtype=int)
-            xr_dataset = xr_dataset.assign_coords(only_dates=("time_utc", only_dates))
-            sys_groups = list(xr_dataset.groupby("pv_system_id").groups)
-
-            drop_pv = []
-            for i in range(len(sysid)):
-                dates = sys_groups[i]
-
-            xr_dataset = xr_dataset.assign_coords(just_date=("datetime", dates_list))
-            pvstatus_dict = defaultdict(dict)
-
-            # TODO, think how to do this, not a in 2 loops
-            # Still needed to work on this
-            for sysid in sysid:
-                for date in list(set(dates_list)):
-                    xr_array = xr_dataset.groupby("just_date")[date][sysid].values
-
-                    if np.isnan(xr_array).all() or np.all(xr_array == 0) == False:
-                        pvstatus = "Active"
-                    else:
-                        pvstatus = "Inactive"
-
-                    pvstatus_dict[sysid][date] = pvstatus
-            xr_dataset = xr_dataset.drop_vars("just_date")
-
-            # sanity check
-            assert len(xr_dataset) == len(pvstatus_dict)
-
-            # TODO need to return xarray
-            # Still needed to work on this
-            yield pvstatus_dict
+            dates_groups = xr_dataset.groupby("only_dates")
+            dates = np.asarray(xr_dataset.coords["only_dates"].values, dtype = int)
+            dates = np.unique(dates)
+            for date in dates:
+                xr_ds = dates_groups[date]
+                sys_ids = sys_idx_cont_nan(xr_ds.values)
+                if not len(sys_ids) == 0.:
+                    xr_dataset = xr_dataset.drop_isel(pv_system_id = sysids)
+                else:
+                    pass
+            xr_dataset = xr_dataset.reset_coords("only_dates", drop =True)
+            yield xr_dataset

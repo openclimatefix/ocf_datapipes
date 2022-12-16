@@ -9,30 +9,40 @@ from ocf_datapipes.select import SelectSysWithoutOutputWholeday as SysWithoutPV
 from ocf_datapipes.select import TrimDatesWithInsufficentData
 
 
-# TODO Still needed to work on this tests a bit
-def test_sys_with_lessthan_oneday_pv(passiv_datapipe):
-    data = TrimDatesWithInsufficentData(passiv_datapipe)
+
+def test_trim_lessthan_oneday(passiv_datapipe):
+    data = TrimDatesWithInsufficentData(passiv_datapipe, intervals = 288)
     data = next(iter(data))
     count = len(data.coords["time_utc"].values)
     assert count % 288.0 == 0.0
 
-    # Removes any PV systems with less than 1 day of data.
+def test_sys_without_pv(passiv_datapipe):
+    no_pv_wholeday = TrimDatesWithInsufficentData(passiv_datapipe, intervals = 288)
+    no_pv_wholeday = SysWithoutPV(no_pv_wholeday)
+    data = next(iter(no_pv_wholeday))
+    count = len(data.coords["pv_system_id"].values)
+    assert count == 2.
 
-    # This is done, by counting all the nan values and check the
-    # count is greater than 289 (number of 5 minute intervals in a day)
+def test_constructed_xarray(passiv_datapipe):
+    time = pd.date_range(start="2022-01-01", freq="5T", periods=350)
+    arr1 = np.random.rand(350)
+    arr2 = np.tile(np.nan, 350)
+    data_array = np.transpose([arr1,arr2])
 
+    ds = xr.DataArray(
+        data = data_array,
+        dims = ["time_utc", "pv_system_id"],
+        coords = dict(
+            pv_system_id = (["pv_system_id"], ["ID1", "ID2"]),
+            time_utc = (["time_utc"], time)
+        )
+    )
 
-# def test_sys_without_pv(passiv_datapipe):
-#     no_pv_wholeday = SysWithoutPV(passiv_datapipe)
-#     data = next(iter(no_pv_wholeday))
-#     key1 = sorted(data.keys())
-#     key2 = sorted(list({k2 for v in data.values() for k2 in v}))
-#     for x in key1:
-#         for y in key2:
-#             assert data[x][y] == "Active" or "Inactive"
+    trim_dates = TrimDatesWithInsufficentData(passiv_datapipe, intervals = 288)
+    sys_without_pv = SysWithoutPV(ds)
 
+    trim_dates = next(iter(trim_dates))
+    sys_without_pv = next(iter(sys_without_pv))
 
-# def test_sys_without_passivpv(passiv_datapipe):
-#     no_pv_wholeday = RemoveBadSystems(passiv_datapipe)
-#     data = next(iter(no_pv_wholeday))
-#     assert len(list(data)) != 0
+    assert len(trim_dates.time_utc.values) == 288.
+    assert len(test_sys_without_pv.coords["pv_system_id"]) == 1.
