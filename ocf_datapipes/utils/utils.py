@@ -292,5 +292,5 @@ def profile(name: str):
     yield
     t1 = time.time()
     if t1 - t0 > 1:
-        print(f'"{name}" took {t1 - t0}s')
-        print(f"{name}: This took longer than 1 second!!!!!")
+        logger.info(f'"{name}" took {t1 - t0}s')
+        logger.warning(f"{name}: This took longer than 1 second!!!!!")
