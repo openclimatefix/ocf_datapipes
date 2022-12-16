@@ -19,9 +19,8 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 logger = logging.getLogger(__name__)
 
-def return_sys_idx_with_cont_nan(
-    arr: np.ndarray
-    )-> np.ndarray:
+
+def return_sys_idx_with_cont_nan(arr: np.ndarray) -> np.ndarray:
     """
     Returns indexes of system id's in which if they have
     contigous 289 NaN's
@@ -30,18 +29,19 @@ def return_sys_idx_with_cont_nan(
     number_of_sys = arr.shape[1]
     sys_idx = []
     for i in range(0, number_of_sys):
-        array = arr[:,i]
+        array = arr[:, i]
         for e in array:
             if np.isnan(e):
                 count += 1
                 max_count = max(max_count, count)
             else:
                 count = 0
-        if max_count == 289.:
+        if max_count == 289.0:
             sys_idx.append(i)
 
     return sys_idx
-    
+
+
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     """
     Converts datetime64 to floats
