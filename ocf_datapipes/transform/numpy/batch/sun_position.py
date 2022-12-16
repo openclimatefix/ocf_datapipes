@@ -99,7 +99,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                         latitude=lat,
                         longitude=lon,
                         # Which `method` to use?
-                        # pyephem seemed to be a good mix between speed and ease but causes segfaults!
+                        # pyephem seemed to be a good mix between speed and ease
+                        # but causes segfaults!
                         # nrel_numba doesn't work when using multiple worker processes.
                         # nrel_c is probably fastest but requires C code to be manually compiled:
                         # https://midcdmz.nrel.gov/spa/
