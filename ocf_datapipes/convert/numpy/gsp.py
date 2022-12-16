@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
 from ocf_datapipes.utils.utils import profile
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class ConvertGSPToNumpyIterDataPipe(IterDataPipe):
         logger.debug("Converting GSP to numpy")
         for xr_data in self.source_datapipe:
 
-            with profile('convert_gsp_to_numpy'):
+            with profile("convert_gsp_to_numpy"):
 
                 returned_values = [xr_data.values]
                 if self.return_id:

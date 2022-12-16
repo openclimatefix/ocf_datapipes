@@ -4,7 +4,6 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.consts import NumpyBatch
-
 from ocf_datapipes.utils.utils import profile
 
 
@@ -24,7 +23,7 @@ class MergeNumpyModalitiesIterDataPipe(IterDataPipe):
     def __iter__(self) -> NumpyBatch:
         """Merge multiple modalities together in NumpyBatch"""
         for np_batches in Zipper(*self.source_datapipes):
-            with profile('merging all datapipes'):
+            with profile("merging all datapipes"):
                 example: NumpyBatch = {}
                 for np_batch in np_batches:
                     example.update(np_batch)

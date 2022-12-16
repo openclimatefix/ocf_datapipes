@@ -48,14 +48,14 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
             logger.debug("Getting contiguous time periods")
-            with profile('Getting contiguous time periods'):
+            with profile("Getting contiguous time periods"):
                 contiguous_time_periods = get_contiguous_time_periods(
                     datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                     min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
                     max_gap_duration=self.sample_period_duration,
                 )
             logger.debug("Getting contiguous t0 time periods")
-            with profile('Getting contiguous t0 time periods'):
+            with profile("Getting contiguous t0 time periods"):
                 contiguous_time_periods = get_contiguous_t0_time_periods(
                     contiguous_time_periods=contiguous_time_periods,
                     history_duration=self.history_duration,

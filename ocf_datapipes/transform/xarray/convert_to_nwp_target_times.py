@@ -48,7 +48,7 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         """Iterate through both datapipes and convert Xarray dataset"""
         for xr_data, t0 in self.source_datapipe.zip_ocf(self.t0_datapipe):
 
-            with profile('convert_to_nwp_target_time'):
+            with profile("convert_to_nwp_target_time"):
 
                 logger.debug("convert_to_nwp_target_time ")
 
@@ -61,7 +61,9 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
                     freq=self.sample_period_duration,
                 )
                 # Get the most recent NWP initialisation time for each target_time_hourly.
-                init_times = xr_data.sel(init_time_utc=target_times, method="pad").init_time_utc.values
+                init_times = xr_data.sel(
+                    init_time_utc=target_times, method="pad"
+                ).init_time_utc.values
                 # Find the NWP init time for just the 'future' portion of the example.
                 init_time_t0 = init_times[self.t0_idx]
 
