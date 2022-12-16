@@ -23,7 +23,7 @@ uk_daynight_dict = {
     11: [7, 17],
     12: [7, 17],
 }
-
+logger.info(f'The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}')
 
 @functional_datapipe("assign_daynight_status")
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
@@ -48,13 +48,21 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray():
         """Returns an xarray dataset with extra dimesion"""
+        logger.info(f"Reading the Xarray dataset")
         for xr_dataset in self.source_datapipe:
 
-            logger.debug(f"Reading the Xarray dataset")
+            logger.info(f"Getting all the {'time_utc'} datetime coordinates")
+
             dates = xr_dataset.coords["time_utc"].values
+            
+            logger.info(f"Getting Month and Hour values from {'time_utc'} and stacking them")
+
             date_month = np.asarray(xr_dataset.time_utc.dt.month.values, dtype=int)
             date_hr = np.asarray(xr_dataset.time_utc.dt.hour.values, dtype=int)
             month_hr_stack = np.stack((date_month, date_hr))
+
+            logger.info(f"Getting the status of day/night for each timestamp in the timeseries")
+
             status_day = []
             for i in range(len(dates)):
                 if month_hr_stack[1][i] in range(
@@ -67,5 +75,7 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
                 status_day.append(status)
 
+            logger.info(f"Assigning a new coordinates of {'status_day'} in the DataArray")
+            
             xr_dataset = xr_dataset.assign_coords(status_day=(("time_utc"), status_day))
             yield xr_dataset
