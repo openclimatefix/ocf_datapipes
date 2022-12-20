@@ -23,7 +23,10 @@ uk_daynight_dict = {
     11: [7, 17],
     12: [7, 17],
 }
-logger.info(f'The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}')
+logger.info(
+    f"The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}"
+)
+
 
 @functional_datapipe("assign_daynight_status")
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
@@ -54,7 +57,7 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
             logger.info(f"Getting all the {'time_utc'} datetime coordinates")
 
             dates = xr_dataset.coords["time_utc"].values
-            
+
             logger.info(f"Getting Month and Hour values from {'time_utc'} and stacking them")
 
             date_month = np.asarray(xr_dataset.time_utc.dt.month.values, dtype=int)
@@ -76,6 +79,6 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
                 status_day.append(status)
 
             logger.info(f"Assigning a new coordinates of {'status_day'} in the DataArray")
-            
+
             xr_dataset = xr_dataset.assign_coords(status_day=(("time_utc"), status_day))
             yield xr_dataset
