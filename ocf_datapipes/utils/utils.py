@@ -27,8 +27,6 @@ def return_sys_indices_which_has_cont_nan(
     Returns indexes of system id's in which if they have
     contigous 289 NaN's
     """
-    count, max_count = 0, 0
-
     logger.info(f"\nChecking the shape of the input array\n")
     # The array would be a 2d-array which consists of number of (time_utc, pv_system_id)
     number_of_sys = arr.shape[1]
@@ -42,12 +40,13 @@ def return_sys_indices_which_has_cont_nan(
         logger.info(f"\nPV system ouputs for the system index{i} is \n {single_system_single_day_pv_values}\n")
         # This loop checks NaN in every element in the array and if the count of NaN
         # is equal to defined interval, it stores the index of the pv system 
-        for s in single_system_single_day_pv_values:
-            if np.isnan(s):
-                count += 1
-                max_count = max(max_count, count)
-            else:
-                count = 0
+        mask = np.concatenate(([False],np.isnan(single_system_single_day_pv_values),[False]))
+        if ~mask.any():
+            continue
+        else:
+            idx = np.nonzero(mask[1:] != mask[:-1])[0]
+            max_count = (idx[1::2] - idx[::2]).max()
+            
         if max_count == check_interval:
             system_index_values_to_be_dropped.append(i)
 
