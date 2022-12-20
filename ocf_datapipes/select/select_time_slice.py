@@ -2,6 +2,8 @@
 from datetime import timedelta
 from typing import Union
 
+import logging
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -10,6 +12,8 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.utils import profile
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("select_time_slice")
@@ -51,10 +55,19 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
                 t0_datetime_utc = pd.Timestamp(t0)
                 start_dt = t0_datetime_utc - self.history_duration
                 end_dt = t0_datetime_utc + self.forecast_duration
+
+                start_dt = start_dt.ceil(self.sample_period_duration)
+                end_dt = end_dt.ceil(self.sample_period_duration)
+
+                # change to debug
+                logger.info(f'Change from {len(xr_data.time_utc)} time steps')
+
                 xr_data = xr_data.sel(
                     time_utc=slice(
-                        start_dt.ceil(self.sample_period_duration),
-                        end_dt.ceil(self.sample_period_duration),
+                        start_dt,
+                        end_dt,
                     )
                 )
+                logger.info(f'Changed to {len(xr_data.time_utc)} time steps')
+
                 yield xr_data
