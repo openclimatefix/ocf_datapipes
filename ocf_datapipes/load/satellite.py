@@ -20,7 +20,7 @@ def open_sat_data(
     Args:
       zarr_path: Cloud URL or local path pattern.  If GCP URL, must start with 'gs://'
     """
-    _log.debug("Opening satellite data: %s", zarr_path)
+    _log.info("Opening satellite data: %s", zarr_path)
 
     # Silence the warning about large chunks.
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
@@ -92,6 +92,8 @@ def open_sat_data(
     # These slight offsets will break downstream code, which expects satellite data to be at
     # exactly 5 minutes past the hour.
     assert (datetime_index == datetime_index.round("5T")).all()
+
+    _log.info("Opened satellite data")
 
     return data_array
 

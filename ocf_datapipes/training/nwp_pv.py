@@ -10,7 +10,13 @@ from torchdata.datapipes.iter import IterDataPipe
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenConfiguration, OpenGFSForecast, OpenNWPID, OpenPVFromNetCDF
+from ocf_datapipes.load import (
+    OpenConfiguration,
+    OpenGFSForecast,
+    OpenNWP,
+    OpenNWPID,
+    OpenPVFromNetCDF,
+)
 from ocf_datapipes.utils.consts import NWP_GFS_MEAN, NWP_GFS_STD, NWP_MEAN, NWP_STD
 
 logger = logging.getLogger(__name__)
@@ -44,12 +50,15 @@ def nwp_pv_datapipe(
     logger.debug("Opening Datasets")
     pv_datapipe, pv_location_datapipe = (
         OpenPVFromNetCDF(pv=configuration.input_data.pv)
-        .pv_fill_night_nans()
+        # .pv_fill_night_nans()
         .fork(2, buffer_size=BUFFER_SIZE)
     )
 
     if configuration.input_data.nwp.nwp_provider == "UKMetOffice":
-        nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
+        if configuration.input_data.nwp.index_by_id:
+            nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
+        else:
+            nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
     elif configuration.input_data.nwp.nwp_provider == "GFS":
         nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
     else:
@@ -66,9 +75,7 @@ def nwp_pv_datapipe(
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
     ).normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
     nwp_datapipe = nwp_datapipe.add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.nwp.time_resolution_minutes
-        ),
+        sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
     )
 
@@ -134,9 +141,7 @@ def nwp_pv_datapipe(
     )
 
     nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.nwp.time_resolution_minutes
-        ),
+        sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
         time_dim="init_time_utc",

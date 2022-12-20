@@ -1,5 +1,7 @@
 """Various utilites that didn't fit elsewhere"""
+import contextlib
 import logging
+import time
 from pathlib import Path
 from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
 
@@ -274,3 +276,21 @@ def trigonometric_datetime_transformation(datetimes: npt.ArrayLike) -> np.ndarra
     return np.concatenate(
         [sine_month, cosine_month, sine_day, cosine_day, sine_hour, cosine_hour], axis=1
     )
+
+
+@contextlib.contextmanager
+def profile(name: str):
+    """
+    This says how long each process runs.
+
+    A print statement is only made when the process runs over 1 second
+
+    Args:
+        name: the name of the process
+    """
+    t0 = time.time()
+    yield
+    t1 = time.time()
+    if t1 - t0 > 1:
+        logger.info(f'"{name}" took {t1 - t0}s')
+        logger.warning(f"{name}: This took longer than 1 second!!!!!")

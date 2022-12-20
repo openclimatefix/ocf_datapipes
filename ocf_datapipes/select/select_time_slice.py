@@ -1,4 +1,5 @@
 """Selects time slice"""
+import logging
 from datetime import timedelta
 from typing import Union
 
@@ -9,6 +10,9 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils import Zipper
+from ocf_datapipes.utils.utils import profile
+
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("select_time_slice")
@@ -22,6 +26,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         history_duration: timedelta,
         forecast_duration: timedelta,
         sample_period_duration: timedelta,
+        data_pipename: str = None,
     ):
         """
         Selects time slice
@@ -32,22 +37,36 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             history_duration: History time used
             forecast_duration: Forecast time used
             sample_period_duration: Sample period of xarray data
+            data_pipename: the name of the data pipe. This is useful when profiling
         """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
         self.history_duration = np.timedelta64(history_duration)
         self.forecast_duration = np.timedelta64(forecast_duration)
         self.sample_period_duration = sample_period_duration
+        self.data_pipename = data_pipename
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
-            t0_datetime_utc = pd.Timestamp(t0)
-            start_dt = t0_datetime_utc - self.history_duration
-            end_dt = t0_datetime_utc + self.forecast_duration
-            xr_data = xr_data.sel(
-                time_utc=slice(
-                    start_dt.ceil(self.sample_period_duration),
-                    end_dt.ceil(self.sample_period_duration),
+
+            with profile(f"select_time_slice {self.data_pipename}"):
+
+                t0_datetime_utc = pd.Timestamp(t0)
+                start_dt = t0_datetime_utc - self.history_duration
+                end_dt = t0_datetime_utc + self.forecast_duration
+
+                start_dt = start_dt.ceil(self.sample_period_duration)
+                end_dt = end_dt.ceil(self.sample_period_duration)
+
+                # change to debug
+                logger.info(f"Change from {len(xr_data.time_utc)} time steps")
+
+                xr_data = xr_data.sel(
+                    time_utc=slice(
+                        start_dt,
+                        end_dt,
+                    )
                 )
-            )
-            yield xr_data
+                logger.info(f"Changed to {len(xr_data.time_utc)} time steps")
+
+                yield xr_data

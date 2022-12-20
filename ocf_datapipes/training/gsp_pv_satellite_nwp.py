@@ -41,17 +41,22 @@ def gsp_pv_nwp_satellite_data_pipeline(
 
     # Load GSP data
     logger.debug("Load GSP data")
-    gsp_datapipe, gsp_location_datapipe = OpenGSP(
-        gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
-    ).fork(2)
+    gsp_datapipe, gsp_location_datapipe = (
+        OpenGSP(gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path)
+        .remove_northern_gsp()
+        .fork(2)
+    )
 
     # Load NWP data
     logger.debug("Load NWP data")
-    nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+    nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path).select_channels(
+        channels=configuration.input_data.nwp.nwp_channels
+    )
 
     # Load PV data
     logger.debug("Load PV data")
-    pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans()
+    pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
+    # .pv_fill_night_nans()
 
     logger.debug("Load Satellite data")
     satellite_datapipe = OpenSatellite(
@@ -94,7 +99,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
     )
 
     # Pick locations
-    location_datapipes = gsp_location_datapipe.location_picker().fork(4, buffer_size=BUFFER_SIZE)
+    location_datapipes = gsp_location_datapipe.location_picker().fork(5, buffer_size=BUFFER_SIZE)
 
     # take GSP space slice
     (
@@ -108,6 +113,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
         y_dim_name="y_osgb",
         x_dim_name="x_osgb",
         dim_name="gsp_id",
+        datapipe_name="GSP",
     ).fork(
         3
     )
@@ -118,6 +124,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
         roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
         y_dim_name="y_osgb",
         x_dim_name="x_osgb",
+        datapipe_name="PV",
     ).fork(2)
     # take NWP space slice
     nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(
@@ -126,6 +133,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
         roi_width_pixels=configuration.input_data.nwp.nwp_image_size_pixels_width,
         y_dim_name="y_osgb",
         x_dim_name="x_osgb",
+        datapipe_name="NWP",
     ).fork(2)
 
     # take Satellite space slice
@@ -138,6 +146,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
         roi_width_pixels=configuration.input_data.satellite.satellite_image_size_pixels_width,
         y_dim_name="y_geostationary",
         x_dim_name="x_geostationary",
+        datapipe_name="Satellite",
     ).fork(
         2
     )
@@ -177,12 +186,11 @@ def gsp_pv_nwp_satellite_data_pipeline(
             pv_time_periods_datapipe,
             satellite_time_periods_datapipe,
         ],
+        location_datapipe=location_datapipes[4],
     )
-    gsp_time_periods, nwp_time_periods, pv_time_periods = overlapping_datapipe.fork(
-        3, buffer_size=BUFFER_SIZE
-    )
+
     # select time periods
-    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=gsp_time_periods)
+    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
 
     # select t0 periods
     logger.debug("Select t0 joint")
@@ -201,9 +209,12 @@ def gsp_pv_nwp_satellite_data_pipeline(
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
             sample_period_duration=timedelta(minutes=30),
+            data_pipename="GSP",
         )
         .convert_gsp_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(
+            n_examples_per_batch=configuration.process.batch_size, datapipe_name="GSP"
+        )
     )
 
     # take nwp time slices
@@ -217,7 +228,9 @@ def gsp_pv_nwp_satellite_data_pipeline(
         )
         .normalize(mean=NWP_MEAN, std=NWP_STD)
         .convert_nwp_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(
+            n_examples_per_batch=configuration.process.batch_size, datapipe_name="NWP"
+        )
     )
 
     # take pv time slices
@@ -228,9 +241,12 @@ def gsp_pv_nwp_satellite_data_pipeline(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
+            data_pipename="PV",
         )
         .convert_pv_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(
+            n_examples_per_batch=configuration.process.batch_size, datapipe_name="PV"
+        )
     )
 
     # take pv time slices
@@ -245,9 +261,12 @@ def gsp_pv_nwp_satellite_data_pipeline(
             forecast_duration=timedelta(
                 minutes=configuration.input_data.satellite.forecast_minutes
             ),
+            data_pipename="Satellite",
         )
         .convert_satellite_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+        .merge_numpy_examples_to_batch(
+            n_examples_per_batch=configuration.process.batch_size, datapipe_name="Satellite"
+        )
     )
 
     ####################################
@@ -257,7 +276,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
     combined_datapipe = (
         MergeNumpyModalities([gsp_datapipe, nwp_datapipe, pv_datapipe, satellite_datapipe])
         # .encode_space_time()
-        # .add_sun_position(modality_name="gsp")
+        .add_sun_position(modality_name="gsp")
     )
 
     return combined_datapipe

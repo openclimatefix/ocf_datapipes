@@ -44,9 +44,9 @@ def make_fake_sun_data(configuration: Configuration):
 
     # GSP
     if configuration.input_data.gsp is not None:
-        n_satellite_timesteps = get_n_time_steps_from_config(configuration.input_data.gsp)
-        batch[BatchKey.gsp_solar_azimuth] = np.random.random((batch_size, n_satellite_timesteps))
-        batch[BatchKey.gsp_solar_elevation] = np.random.random((batch_size, n_satellite_timesteps))
+        n_gsp_timesteps = get_n_time_steps_from_config(configuration.input_data.gsp)
+        batch[BatchKey.gsp_solar_azimuth] = np.random.random((batch_size, n_gsp_timesteps))
+        batch[BatchKey.gsp_solar_elevation] = np.random.random((batch_size, n_gsp_timesteps))
 
     # PV
     if configuration.input_data.pv is not None:
