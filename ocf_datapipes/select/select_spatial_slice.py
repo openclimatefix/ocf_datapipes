@@ -114,6 +114,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         dim_name: str = "pv_system_id",
         y_dim_name: str = "y_osgb",
         x_dim_name: str = "x_osgb",
+        datapipe_name: str = "not-set",
     ):
         """
         Select spatial slice based off pixels from point of interest
@@ -126,6 +127,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             dim_name: Dimension name to select for ID
             y_dim_name: the y dimension name, this is so we can switch between osgb and lat,lon
             x_dim_name: the x dimension name, this is so we can switch between osgb and lat,lon
+            datapipe_name: data pipe name, use for profiling
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
@@ -134,11 +136,12 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         self.dim_name = dim_name
         self.y_dim_name = y_dim_name
         self.x_dim_name = x_dim_name
+        self.datapipe_name = datapipe_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
 
-            with profile("select_spatial_slice_meters"):
+            with profile(f"select_spatial_slice_meters {self.datapipe_name}"):
 
                 # Compute the index for left and right:
                 logger.debug("Getting Spatial Slice Meters")
