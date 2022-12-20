@@ -8,6 +8,7 @@ from ocf_datapipes.select import RemoveBadSystems
 from ocf_datapipes.select import SelectSysWithoutOutputWholeday as SysWithoutPV
 from ocf_datapipes.select import TrimDatesWithInsufficentData
 
+
 def test_trim_lessthan_oneday(passiv_datapipe):
     data = TrimDatesWithInsufficentData(passiv_datapipe, intervals=288)
     data = next(iter(data))

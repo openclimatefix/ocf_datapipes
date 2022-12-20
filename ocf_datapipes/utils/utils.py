@@ -20,9 +20,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 logger = logging.getLogger(__name__)
 
 
-def return_sys_indices_which_has_cont_nan(
-    arr: np.ndarray,
-    check_interval: int = 287) -> np.ndarray:
+def return_sys_indices_which_has_cont_nan(arr: np.ndarray, check_interval: int = 287) -> np.ndarray:
     """
     Returns indexes of system id's in which if they have
     contigous 289 NaN's
@@ -36,8 +34,10 @@ def return_sys_indices_which_has_cont_nan(
 
         logger.info(f"\nfor each system id\n")
         single_system_single_day_pv_values = arr[:, i]
-        
-        logger.info(f"\nPV system ouputs for the system index{i} is \n {single_system_single_day_pv_values}\n")
+
+        logger.info(
+            f"\nPV system ouputs for the system index{i} is \n {single_system_single_day_pv_values}\n"
+        )
         # This loop checks NaN in every element in the array and if the count of NaN
         # is equal to defined interval, it stores the index of the pv system 
         mask = np.concatenate(([False],np.isnan(single_system_single_day_pv_values),[False]))
