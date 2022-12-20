@@ -4,18 +4,21 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from ocf_datapipes.select import DropPVSysWithNan
-from ocf_datapipes.select import TrimDatesWithInsufficentData
+from ocf_datapipes.select import DropPVSysWithNan, TrimDatesWithInsufficentData
+
 
 def test_with_pvoutput_datapipe(pvoutput_datapipe):
-    before_trim_date_and_drop_sys = TrimDatesWithInsufficentData(pvoutput_datapipe, intervals = 288)
-    after_trim_date_and_drop_sys = DropPVSysWithNan(before_trim_date_and_drop_sys, intervals= 288)
+    before_trim_date_and_drop_sys = TrimDatesWithInsufficentData(pvoutput_datapipe, intervals=288)
+    after_trim_date_and_drop_sys = DropPVSysWithNan(before_trim_date_and_drop_sys, intervals=288)
 
     before_data = next(iter(before_trim_date_and_drop_sys))
     after_data = next(iter(after_trim_date_and_drop_sys))
 
     assert len(before_data.coords["time_utc"].values) == len(after_data.coords["time_utc"].values)
-    assert len(before_data.coords["pv_system_id"].values) != len(after_data.coords["pv_system_id"].values)
+    assert len(before_data.coords["pv_system_id"].values) != len(
+        after_data.coords["pv_system_id"].values
+    )
+
 
 def test_trim_lessthan_oneday(passiv_datapipe):
     data = TrimDatesWithInsufficentData(passiv_datapipe, intervals=288)
@@ -45,7 +48,7 @@ def test_constructed_xarray():
         coords=ALL_COORDS,
     )
     trim_dates = TrimDatesWithInsufficentData([data_array], intervals=288)
-    sys_without_pv = DropPVSysWithNan(trim_dates, intervals = 288)
+    sys_without_pv = DropPVSysWithNan(trim_dates, intervals=288)
 
     data = next(iter(sys_without_pv))
 
