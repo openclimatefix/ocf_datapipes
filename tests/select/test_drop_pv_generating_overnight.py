@@ -31,13 +31,6 @@ def test_drop_overnight_pvoutput_datapipe(pvoutput_datapipe):
     coords = data.coords["status_day"].values
     assert "day" in coords
 
-def test_assign_status_night(passiv_datapipe):
-    night_status = AssignDayNightStatus(passiv_datapipe)
-    data = next(iter(night_status))
-    coords = data.coords["status_day"].values
-    assert np.count_nonzero(coords == "night") == 121.0
-    assert "day" and "night" in data.coords["status_day"].values
-
 
 def test_drop_night_pv_one_system_power_overnight():
 
@@ -58,8 +51,8 @@ def test_drop_night_pv_one_system_power_overnight():
     )
 
     # run the function
-    night_drop_pv = AssignDayNightStatus([data_array])
-    night_drop_pv = DropNightPV(night_drop_pv)
+    assign_daynight = AssignDayNightStatus([data_array])
+    night_drop_pv = DropNightPV(assign_daynight)
 
     # check output, has dropped system 3
     data = next(iter(night_drop_pv))
