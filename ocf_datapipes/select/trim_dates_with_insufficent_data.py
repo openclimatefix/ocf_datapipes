@@ -39,42 +39,43 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
             f"\nThis dropping of insufficent data considers just dates in a given datetime\n"
         )
         for xr_dataset in self.source_datapipe:
-
-            total_five_minutes = np.asarray(xr_dataset.time_utc.dt.minute.values, dtype=int)
-            count_five_minutes = np.count_nonzero(total_five_minutes) + np.count_nonzero(
-                total_five_minutes == 0
-            )
-            logger.info(f"\nCollecting five minute intervals and counting them\n")
-            logger.info(
-                f"\nTotal number of those five minutes are {count_five_minutes}\n"
-            )
-
             time_series = np.asarray(xr_dataset.coords["time_utc"].values)
-            logger.info(
-                f"\nCollecting the time series data from the xarray 'time_utc' coordinate {time_series}\n"
-            )
-
-            logger.info(
-                f"\nChecking if the count is a multiple of given interval {self.intervals}\n"
-            )
-            check = count_five_minutes % self.intervals == 0.0
-
-            if check == False:
-                logger.info(f"\nCounting number of intervals needed to be trimmed at the end\n")
-
-                # The check would be always false, as in a given day,
-                # the last time step would be of the next day
-                trim_dates_position = int(count_five_minutes % self.intervals)
+            logger.info(f"Checking length of time series{len(time_series)} longer than standard intervals {self.intervals}")
+                        
+            if len(time_series) >= self.intervals:
+                
+                total_five_minutes = np.asarray(xr_dataset.time_utc.dt.minute.values, dtype=int)
+                count_five_minutes = np.count_nonzero(total_five_minutes) + np.count_nonzero(
+                    total_five_minutes == 0
+                )
+                logger.info(f"\nCollecting five minute intervals and counting them\n")
                 logger.info(
-                    f"\nNumber of intervals needed to be trimmed at the end are {trim_dates_position}\n"
+                    f"\nTotal number of those five minutes are {count_five_minutes}\n"
                 )
 
-                trim_dates = time_series[-trim_dates_position:]
-                logger.info(f"\nThe trimmed dates are as follows {trim_dates}\n")
-
-                logger.warning(
-                    f"\nDropping the dates coordinate variable data and its data in the xarray\n"
+                logger.info(
+                    f"\nChecking if the count is a multiple of given interval {self.intervals}\n"
                 )
-                new_xr_dataset = xr_dataset.drop_sel(time_utc=trim_dates)
+                check = count_five_minutes % self.intervals == 0.0
 
-                yield new_xr_dataset
+                if check == False:
+                    logger.info(f"\nCounting number of intervals needed to be trimmed at the end\n")
+
+                    # The check would be always false, as in a given day,
+                    # the last time step would be of the next day
+                    trim_dates_position = int(count_five_minutes % self.intervals)
+                    logger.info(
+                        f"\nNumber of intervals needed to be trimmed at the end are {trim_dates_position}\n"
+                    )
+
+                    trim_dates = time_series[-trim_dates_position:]
+                    logger.info(f"\nThe trimmed dates are as follows {trim_dates}\n")
+
+                    logger.warning(
+                        f"\nDropping the dates coordinate variable data and its data in the xarray\n"
+                    )
+                    xr_dataset = xr_dataset.drop_sel(time_utc=trim_dates)
+            else:
+                pass
+
+            yield xr_dataset

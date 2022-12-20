@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("drop_night_pv")
-class DropNightPVIterDataPipe(IterDataPipe):
+class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
     """
     Drop the pv systems which generates power over night date from a timeseries xarray Dataset.
     """

@@ -1,6 +1,6 @@
 """Selection datapipes"""
 from .drop_national_gsp import DropGSPIterDataPipe as DropGSP
-from .drop_overnight_pv import DropNightPVIterDataPipe as DropNightPV
+from .drop_pv_sys_generating_overnight import DropPvSysGeneratingOvernightIterDataPipe as DropNightPV
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations
 from .offset_t0 import OffsetT0IterDataPipe as OffsetT0
@@ -12,8 +12,8 @@ from .select_live_time_slice import SelectLiveTimeSliceIterDataPipe as SelectLiv
 from .select_overlapping_time_slices import (
     SelectOverlappingTimeSliceIterDataPipe as SelectOverlappingTimeSlice,
 )
-from .select_pv_systems_without_output_wholeday import (
-    SelectPVSystemsWithoutOutputIterDataPipe as SelectSysWithoutOutputWholeday,
+from .drop_pv_sys_with_only_nan_in_a_day import (
+    DropPVSysWithOnlyNanInADayIterDataPipe as DropPVSysWithNan,
 )
 from .select_spatial_slice import SelectSpatialSliceMetersIterDataPipe as SelectSpatialSliceMeters
 from .select_spatial_slice import SelectSpatialSlicePixelsIterDataPipe as SelectSpatialSlicePixels
