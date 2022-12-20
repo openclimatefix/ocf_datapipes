@@ -1,8 +1,7 @@
 """Selects time slice"""
+import logging
 from datetime import timedelta
 from typing import Union
-
-import logging
 
 import numpy as np
 import pandas as pd
@@ -60,7 +59,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
                 end_dt = end_dt.ceil(self.sample_period_duration)
 
                 # change to debug
-                logger.info(f'Change from {len(xr_data.time_utc)} time steps')
+                logger.info(f"Change from {len(xr_data.time_utc)} time steps")
 
                 xr_data = xr_data.sel(
                     time_utc=slice(
@@ -68,6 +67,6 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
                         end_dt,
                     )
                 )
-                logger.info(f'Changed to {len(xr_data.time_utc)} time steps')
+                logger.info(f"Changed to {len(xr_data.time_utc)} time steps")
 
                 yield xr_data
