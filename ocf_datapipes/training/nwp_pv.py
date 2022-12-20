@@ -141,9 +141,7 @@ def nwp_pv_datapipe(
     )
 
     nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.nwp.time_resolution_minutes
-        ),
+        sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
         time_dim="init_time_utc",
