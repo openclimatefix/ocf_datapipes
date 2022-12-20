@@ -10,7 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenConfiguration, OpenGFSForecast, OpenNWPID, OpenPVFromNetCDF
+from ocf_datapipes.load import OpenConfiguration, OpenGFSForecast, OpenNWPID, OpenPVFromNetCDF, OpenNWP
 from ocf_datapipes.utils.consts import NWP_GFS_MEAN, NWP_GFS_STD, NWP_MEAN, NWP_STD
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,10 @@ def nwp_pv_datapipe(
     )
 
     if configuration.input_data.nwp.nwp_provider == "UKMetOffice":
-        nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
+        if configuration.input_data.nwp.index_by_id:
+            nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
+        else:
+            nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
     elif configuration.input_data.nwp.nwp_provider == "GFS":
         nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
     else:
