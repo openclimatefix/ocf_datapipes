@@ -20,26 +20,38 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 logger = logging.getLogger(__name__)
 
 
-def return_sys_idx_with_cont_nan(arr: np.ndarray) -> np.ndarray:
+def return_sys_indices_which_has_cont_nan(
+    arr: np.ndarray,
+    check_interval: int = 287) -> np.ndarray:
     """
     Returns indexes of system id's in which if they have
     contigous 289 NaN's
     """
     count, max_count = 0, 0
+
+    logger.info(f"\nChecking the shape of the input array\n")
+    # The array would be a 2d-array which consists of number of (time_utc, pv_system_id)
     number_of_sys = arr.shape[1]
-    sys_idx = []
+
+    system_index_values_to_be_dropped = []
     for i in range(0, number_of_sys):
-        array = arr[:, i]
-        for e in array:
-            if np.isnan(e):
+
+        logger.info(f"\nfor each system id\n")
+        single_system_single_day_pv_values = arr[:, i]
+        
+        logger.info(f"\nPV system ouputs for the system index{i} is \n {single_system_single_day_pv_values}\n")
+        # This loop checks NaN in every element in the array and if the count of NaN
+        # is equal to defined interval, it stores the index of the pv system 
+        for s in single_system_single_day_pv_values:
+            if np.isnan(s):
                 count += 1
                 max_count = max(max_count, count)
             else:
                 count = 0
-        if max_count == 289.0:
-            sys_idx.append(i)
+        if max_count == check_interval:
+            system_index_values_to_be_dropped.append(i)
 
-    return sys_idx
+    return system_index_values_to_be_dropped
 
 
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:

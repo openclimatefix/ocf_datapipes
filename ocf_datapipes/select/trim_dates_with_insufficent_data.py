@@ -9,7 +9,7 @@ from torchdata.datapipes.iter import IterDataPipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("drop_systems_with_lessthan_oneday_data")
+@functional_datapipe("trim_dates_with_insufficent_data")
 class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
     """Trim the date values of the Xarray Timeseries data"""
 
@@ -22,7 +22,7 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
             <xr.DataArray> time_utc : "2020-01-01T00:00"........"2020-01-02T00:00"....."2020-01-02T06:00"
 
         This method trims the inusfficent less than one day data at the end and provides full set of complete one day
-        data intervals
+        interval (5min or 15min or........)
 
         Args:
             source_datapipe: Xarray emitting timeseries data
@@ -34,23 +34,36 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
         self.intervals = intervals
 
-    def __iter__(self) -> xr.Dataset():
-
+    def __iter__(self) -> xr.DataArray():
+        logger.info(
+            f"\nThis dropping of insufficent data considers just dates in a given datetime\n"
+            )        
         for xr_dataset in self.source_datapipe:
+            
+            total_five_minutes = np.asarray(xr_dataset.time_utc.dt.minute.values, dtype = int)
+            count_five_minutes = np.count_nonzero(total_five_minutes) + np.count_nonzero(total_five_minutes == 0)
+            logger.info(f"\nCollecting five minute intervals and counting them\n")
+            logger.info(f"\nTotal five minute intervals are {total_five_minutes}\nand number of those five minutes are {count_five_minutes}\n")
 
-            logger.warning(
-                f"This dropping of insufficent data considers just dates in a given datetime"
-            )
-            only_dates = np.asarray(xr_dataset.time_utc.dt.day.values, dtype=int)
-            xr_dataset = xr_dataset.assign_coords(only_dates=(("time_utc"), only_dates))
-            dates_groups = xr_dataset.groupby("only_dates").groups
-            dates, counts = np.unique(only_dates, return_counts=True)
-            drop_dates = []
-            for idx in range(len(counts)):
-                check = counts[idx] == self.intervals
-                if not check:
-                    drop_dates.append(dates[idx])
+            time_series = np.asarray(xr_dataset.coords["time_utc"].values)
+            logger.info(f"\nCollecting the time series data from the xarray 'time_utc' coordinate {time_series}\n")            
 
-            for dates in drop_dates:
-                xr_dataset = xr_dataset.where(xr_dataset.only_dates != dates, drop=True)
-            yield xr_dataset
+            logger.info(f"\nChecking if the count is a multiple of given interval {self.intervals}\n")
+            check  = count_five_minutes % self.intervals == 0.
+
+            if check == False:
+                logger.info(f"\nCounting number of intervals needed to be trimmed at the end\n")
+
+                #The check would be always false, as in a given day,
+                # the last time step would be of the next day
+                trim_dates_position = int(count_five_minutes % self.intervals)
+                logger.info(f"\nNumber of intervals needed to be trimmed at the end are {trim_dates_position}\n")
+
+                trim_dates = time_series[-trim_dates_position:]
+                logger.info(f"\nThe trimmed dates are as follows {trim_dates}\n")
+
+                logger.warning(f"\nDropping the dates coordinate variable data and its data in the xarray\n")
+                new_xr_dataset = xr_dataset.drop_sel(time_utc = trim_dates)
+
+                yield new_xr_dataset         
+  
