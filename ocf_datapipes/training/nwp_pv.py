@@ -69,9 +69,7 @@ def nwp_pv_datapipe(
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
     ).normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
     nwp_datapipe = nwp_datapipe.add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.nwp.time_resolution_minutes
-        ),
+        sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
         history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
     )
 
