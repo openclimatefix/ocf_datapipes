@@ -46,7 +46,7 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
             )
             logger.info(f"\nCollecting five minute intervals and counting them\n")
             logger.info(
-                f"\nTotal five minute intervals are {total_five_minutes}\nand number of those five minutes are {count_five_minutes}\n"
+                f"\nTotal number of those five minutes are {count_five_minutes}\n"
             )
 
             time_series = np.asarray(xr_dataset.coords["time_utc"].values)

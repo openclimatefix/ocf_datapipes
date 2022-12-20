@@ -24,22 +24,22 @@ def test_sys_without_pv(passiv_datapipe):
     assert count == 2.0
 
 
-# def test_constructed_xarray():
-#     time = pd.date_range(start="2022-01-01", freq="5T", periods=350)
-#     arr1 = np.random.rand(350)
-#     arr2 = np.tile(np.nan, 350)
-#     data_array = np.transpose([arr1, arr2])
+def test_constructed_xarray():
+    time = pd.date_range(start="2022-01-01", freq="5T", periods=350)
+    arr1 = np.random.rand(350)
+    arr2 = np.tile(np.nan, 350)
+    data_array = np.transpose([arr1, arr2])
 
-#     ds = xr.DataArray(
-#         data=data_array,
-#         dims=["time_utc", "pv_system_id"],
-#         coords=dict(pv_system_id=(["pv_system_id"], ["ID1", "ID2"]), time_utc=(["time_utc"], time)),
-#     )
+    ds = xr.DataArray(
+        data=data_array,
+        dims=["time_utc", "pv_system_id"],
+        coords=dict(pv_system_id=(["pv_system_id"], ["ID1", "ID2"]), time_utc=(["time_utc"], time)),
+    )
 
-#     trim_dates = TrimDatesWithInsufficentData(ds, intervals=288)
-#     # sys_without_pv = SysWithoutPV(trim_dates, intervals = 288)
+    trim_dates = TrimDatesWithInsufficentData([ds], intervals=288)
+    # sys_without_pv = SysWithoutPV(trim_dates, intervals = 288)
 
-#     sys_without_pv = next(iter(trim_dates))
+    sys_without_pv = next(iter(trim_dates))
 
-#     assert len(trim_dates.time_utc.values) == 288.0
-#     # assert len(test_sys_without_pv.coords["pv_system_id"]) == 1.0
+    assert len(trim_dates.time_utc.values) == 288.0
+    # assert len(test_sys_without_pv.coords["pv_system_id"]) == 1.0
