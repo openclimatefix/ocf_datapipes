@@ -39,14 +39,14 @@ def return_sys_indices_which_has_cont_nan(arr: np.ndarray, check_interval: int =
             f"\nPV system ouputs for the system index{i} is \n {single_system_single_day_pv_values}\n"
         )
         # This loop checks NaN in every element in the array and if the count of NaN
-        # is equal to defined interval, it stores the index of the pv system 
-        mask = np.concatenate(([False],np.isnan(single_system_single_day_pv_values),[False]))
+        # is equal to defined interval, it stores the index of the pv system
+        mask = np.concatenate(([False], np.isnan(single_system_single_day_pv_values), [False]))
         if ~mask.any():
             continue
         else:
             idx = np.nonzero(mask[1:] != mask[:-1])[0]
             max_count = (idx[1::2] - idx[::2]).max()
-            
+
         if max_count == check_interval:
             system_index_values_to_be_dropped.append(i)
 
