@@ -15,7 +15,7 @@ def test_assign_status_night(passiv_datapipe):
     coords = data.coords["status_daynight"].values    
     # For the fourth month in the passiv_datapipe, according to
     # the uk daynight dictionary set in the assign_daynight_status.py
-    # total night status count of 5 minute timseries data is 121 
+    # total night status count of 5 minute timseries data is 121
     assert np.count_nonzero(coords == "night") == 121.0
     assert "day" and "night" in data.coords["status_daynight"].values
  
@@ -41,7 +41,7 @@ def test_with_constructed_array():
     data_array = xr.DataArray(
         data,
         coords=ALL_COORDS,
-    )    
+    )
 
     night_status = AssignDayNightStatus([data_array])
     data = next(iter(night_status))
@@ -49,4 +49,4 @@ def test_with_constructed_array():
 
     # As the time range only includes night timestamps
     # status "day" is not assigned to any of the timestamps
-    assert "day"  not in data_coords
+    assert "day" not in data_coords
