@@ -24,7 +24,7 @@ uk_daynight_dict = {
     12: [7, 17],
 }
 logger.info(
-    f"The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}"
+    f"\nThe day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}\n"
 )
 
 
@@ -66,7 +66,7 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
             logger.info(f"\nGetting the status of day/night for each timestamp in the timeseries\n")
 
-            status_day = []
+            status_daynight = []
             for i in range(len(dates)):
                 if month_hr_stack[1][i] in range(
                     uk_daynight_dict[month_hr_stack[0][i]][0],
@@ -76,9 +76,9 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
                 else:
                     status = "night"
 
-                status_day.append(status)
+                status_daynight.append(status)
 
-            logger.info(f"\nAssigning a new coordinates of {'status_day'} in the DataArray\n")
+            logger.info(f"\nAssigning a new coordinates of 'status_day' in the DataArray\n")
 
-            xr_dataset = xr_dataset.assign_coords(status_day=(("time_utc"), status_day))
+            xr_dataset = xr_dataset.assign_coords(status_daynight=(("time_utc"), status_daynight))
             yield xr_dataset
