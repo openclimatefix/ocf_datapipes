@@ -40,18 +40,18 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
         )
         for xr_dataset in self.source_datapipe:
             time_series = np.asarray(xr_dataset.coords["time_utc"].values)
-            logger.info(f"Checking length of time series{len(time_series)} longer than standard intervals {self.intervals}")
-                        
+            logger.info(
+                f"Checking length of time series{len(time_series)} longer than standard intervals {self.intervals}"
+            )
+
             if len(time_series) >= self.intervals:
-                
+
                 total_five_minutes = np.asarray(xr_dataset.time_utc.dt.minute.values, dtype=int)
                 count_five_minutes = np.count_nonzero(total_five_minutes) + np.count_nonzero(
                     total_five_minutes == 0
                 )
                 logger.info(f"\nCollecting five minute intervals and counting them\n")
-                logger.info(
-                    f"\nTotal number of those five minutes are {count_five_minutes}\n"
-                )
+                logger.info(f"\nTotal number of those five minutes are {count_five_minutes}\n")
 
                 logger.info(
                     f"\nChecking if the count is a multiple of given interval {self.intervals}\n"

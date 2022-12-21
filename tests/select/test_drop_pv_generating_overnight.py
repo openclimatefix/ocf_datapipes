@@ -15,14 +15,17 @@ def test_with_pvoutput_datapipe(pvoutput_datapipe):
 
     data_before_drop = next(iter(before_dropping_pv_with_night_output))
     data_after_drop = next(iter(after_dropping_pv_with_night_output))
-    
+
     assign_status_before_drop = data_before_drop.coords["status_day"].values
     assign_status_after_drop = data_after_drop.coords["status_day"].values
 
-    assert len(data_before_drop.coords["pv_system_id"].values) != len(data_after_drop.coords["pv_system_id"].values)
+    assert len(data_before_drop.coords["pv_system_id"].values) != len(
+        data_after_drop.coords["pv_system_id"].values
+    )
 
     assert "day" and "night" in assign_status_before_drop
     assert "day" in assign_status_after_drop
+
 
 def test_drop_overnight_pvoutput_datapipe(pvoutput_datapipe):
     night_status = AssignDayNightStatus(pvoutput_datapipe)
