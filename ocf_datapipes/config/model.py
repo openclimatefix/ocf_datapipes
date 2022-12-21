@@ -224,7 +224,7 @@ class PVFiles(BaseModel):
     )
     pv_metadata_filename: str = Field(
         "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_metadata.csv",
-        description="Tthe CSV files describing each PV system.",
+        description="The CSV files describing each PV system.",
     )
 
     label: str = Field(pv_output, description="Label of where the pv data came from")

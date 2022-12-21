@@ -1,5 +1,6 @@
 """Various utilites that didn't fit elsewhere"""
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
 
@@ -17,6 +18,39 @@ from torch.utils.data.datapipes.iter.combining import T_co
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 logger = logging.getLogger(__name__)
+
+
+def return_sys_indices_which_has_cont_nan(arr: np.ndarray, check_interval: int = 287) -> np.ndarray:
+    """
+    Returns indexes of system id's in which if they have
+    contigous 289 NaN's
+    """
+    logger.info(f"\nChecking the shape of the input array\n")
+    # The array would be a 2d-array which consists of number of (time_utc, pv_system_id)
+    number_of_sys = arr.shape[1]
+
+    system_index_values_to_be_dropped = []
+    for i in range(0, number_of_sys):
+
+        logger.info(f"\nfor each system id\n")
+        single_system_single_day_pv_values = arr[:, i]
+
+        logger.info(
+            f"\nPV system ouputs for the system index{i} is \n {single_system_single_day_pv_values}\n"
+        )
+        # This loop checks NaN in every element in the array and if the count of NaN
+        # is equal to defined interval, it stores the index of the pv system
+        mask = np.concatenate(([False], np.isnan(single_system_single_day_pv_values), [False]))
+        if ~mask.any():
+            continue
+        else:
+            idx = np.nonzero(mask[1:] != mask[:-1])[0]
+            max_count = (idx[1::2] - idx[::2]).max()
+
+        if max_count == check_interval:
+            system_index_values_to_be_dropped.append(i)
+
+    return system_index_values_to_be_dropped
 
 
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
