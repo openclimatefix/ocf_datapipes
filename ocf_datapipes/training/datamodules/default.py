@@ -47,6 +47,13 @@ class DataModule(LightningDataModule):
 
                 self.data_pipeline = pv_nwp_satellite_data_pipeline
 
+            if self.data_pipeline == "gsp_pv_satellite_nwp":
+                from ocf_datapipes.training.gsp_pv_satellite_nwp import (
+                    gsp_pv_nwp_satellite_data_pipeline,
+                )
+
+                self.data_pipeline = gsp_pv_nwp_satellite_data_pipeline
+
     def train_dataloader(self):
         """Get the train dataloader"""
 
