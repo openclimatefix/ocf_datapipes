@@ -39,12 +39,12 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
             f"\nThis dropping of insufficent data considers just dates in a given datetime\n"
         )
         for xr_dataset in self.source_datapipe:
-            time_series = np.asarray(xr_dataset.coords["time_utc"].values)
+            dates_array = np.asarray(xr_dataset.coords["time_utc"].values)
             logger.info(
-                f"Checking length of time series{len(time_series)} longer than standard intervals {self.intervals}"
+                f"Checking length of time series{len(dates_array)} longer than standard intervals {self.intervals}"
             )
 
-            if len(time_series) >= self.intervals:
+            if len(dates_array) >= self.intervals:
 
                 total_five_minutes = np.asarray(xr_dataset.time_utc.dt.minute.values, dtype=int)
                 count_five_minutes = np.count_nonzero(total_five_minutes) + np.count_nonzero(
@@ -68,7 +68,7 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
                         f"\nNumber of intervals needed to be trimmed at the end are {trim_dates_position}\n"
                     )
 
-                    trim_dates = time_series[-trim_dates_position:]
+                    trim_dates = dates_array[-trim_dates_position:]
                     logger.info(f"\nThe trimmed dates are as follows {trim_dates}\n")
 
                     logger.warning(

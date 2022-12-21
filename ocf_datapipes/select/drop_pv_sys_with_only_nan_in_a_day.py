@@ -38,29 +38,39 @@ class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
 
             dates_array = xr_dataset.coords["time_utc"].values
             logger.info(
-                f"\nCollecting the time series data from 'time_utc' coordinate\n {dates_array}\n"
+                f"\nChecking length of time series{len(dates_array)} longer than standard intervals {self.intervals}\n"
             )
 
-            for i in range(0, len(dates_array), self.intervals):
+            if len(dates_array) >= self.intervals:            
                 logger.info(
-                    f"\nGetting the first and last timestamp of the day based on {self.intervals} intervals\n"
+                    f"\nCollecting the time series data from 'time_utc' coordinate\n {dates_array}\n"
                 )
 
-                logger.info(
-                    f"\nSlicing the dataset by individual first timestamp in a day {dates_array[i]}\n"
-                )
-                logger.info(
-                    f"\nand last timestamp of the day {dates_array[i+(self.intervals-1)]}\n"
-                )
-                xr_ds = xr_dataset.sel(
-                    time_utc=slice(dates_array[i], dates_array[i + (self.intervals - 1)])
-                )
+                for i in range(0, len(dates_array), self.intervals):
+                    if i == self.intervals:
+                        break
+                    else:
+                        logger.info(
+                            f"\nGetting the first and last timestamp of the day based on {self.intervals} intervals\n"
+                        )
 
-                logger.info(f"\nExtracting system ids with continous NaN's\n")
-                sys_ids = sys_idx_cont_nan(xr_ds.values, check_interval=self.intervals)
+                        logger.info(
+                            f"\nSlicing the dataset by individual first timestamp in a day {dates_array[i]}\n"
+                        )
+                        logger.info(
+                            f"\nand last timestamp of the day {dates_array[i+(self.intervals-1)]}\n"
+                        )
+                        xr_ds = xr_dataset.sel(
+                            time_utc=slice(dates_array[i], dates_array[i + (self.intervals - 1)])
+                        )
 
-                logger.warning(f"\nDropping the systems which are inactive for the whole day\n")
-                if not len(sys_ids) == 0:
-                    xr_dataset = xr_dataset.drop_isel(pv_system_id=sys_ids)
+                        logger.info(f"\nExtracting system ids with continous NaN's\n")
+                        sys_ids = sys_idx_cont_nan(xr_ds.values, check_interval=self.intervals)
+
+                        logger.warning(f"\nDropping the systems which are inactive for the whole day\n")
+                        if not len(sys_ids) == 0:
+                            xr_dataset = xr_dataset.drop_isel(pv_system_id=sys_ids)
+            else:
+                pass
 
             yield xr_dataset

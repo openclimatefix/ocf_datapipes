@@ -16,7 +16,7 @@ def test_with_pvoutput_datapipe(pvoutput_datapipe):
     before_data = next(iter(before_drop_pv_sys_with_nan_wholeday))
     after_data = next(iter(after_drop_pv_sys_with_nan_wholeday))
 
-    assert len(before_data.coords["pv_system_id"].values) != len(
+    assert len(before_data.coords["pv_system_id"].values) == len(
         after_data.coords["pv_system_id"].values
     )
 
