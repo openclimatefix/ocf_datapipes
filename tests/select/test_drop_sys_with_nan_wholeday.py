@@ -6,14 +6,20 @@ import xarray as xr
 
 from ocf_datapipes.select import DropPVSysWithNan
 
+
 def test_with_pvoutput_datapipe(pvoutput_datapipe):
     before_drop_pv_sys_with_nan_wholeday = pvoutput_datapipe
-    after_drop_pv_sys_with_nan_wholeday = DropPVSysWithNan(before_drop_pv_sys_with_nan_wholeday, intervals= 288)
+    after_drop_pv_sys_with_nan_wholeday = DropPVSysWithNan(
+        before_drop_pv_sys_with_nan_wholeday, intervals=288
+    )
 
     before_data = next(iter(before_drop_pv_sys_with_nan_wholeday))
     after_data = next(iter(after_drop_pv_sys_with_nan_wholeday))
 
-    assert len(before_data.coords["pv_system_id"].values) != len(after_data.coords["pv_system_id"].values)
+    assert len(before_data.coords["pv_system_id"].values) != len(
+        after_data.coords["pv_system_id"].values
+    )
+
 
 def test_sys_without_pv(passiv_datapipe):
     drop_pv_sys_with_nan_wholeday = DropPVSysWithNan(passiv_datapipe, intervals=288)
@@ -35,7 +41,7 @@ def test_constructed_xarray():
         coords=ALL_COORDS,
     )
 
-    drop_pv_sys_with_nan_wholeday = DropPVSysWithNan([data_array], intervals = 288)
+    drop_pv_sys_with_nan_wholeday = DropPVSysWithNan([data_array], intervals=288)
 
     data = next(iter(drop_pv_sys_with_nan_wholeday))
 

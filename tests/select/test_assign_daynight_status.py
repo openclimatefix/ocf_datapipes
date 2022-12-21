@@ -7,6 +7,7 @@ import xarray as xr
 
 from ocf_datapipes.transform.xarray import AssignDayNightStatus
 
+
 def test_assign_status_night(passiv_datapipe):
     night_status = AssignDayNightStatus(passiv_datapipe)
     data = next(iter(night_status))

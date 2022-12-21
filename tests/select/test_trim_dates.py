@@ -6,20 +6,23 @@ import xarray as xr
 
 from ocf_datapipes.select import TrimDatesWithInsufficentData
 
+
 def test_trim_lessthan_oneday(passiv_datapipe):
     data = TrimDatesWithInsufficentData(passiv_datapipe, intervals=288)
     data = next(iter(data))
     count = len(data.coords["time_utc"].values)
     assert count % 288 == 0
 
+
 def test_with_pvoutput_datapipe(pvoutput_datapipe):
     before_trim_date = pvoutput_datapipe
-    after_trim_date = TrimDatesWithInsufficentData(before_trim_date, intervals= 288)
+    after_trim_date = TrimDatesWithInsufficentData(before_trim_date, intervals=288)
 
     before_data = next(iter(before_trim_date))
     after_data = next(iter(after_trim_date))
 
     assert len(before_data.coords["time_utc"].values) == len(after_data.coords["time_utc"].values)
+
 
 def test_constructed_xarray():
     time = pd.date_range(start="2022-01-01", freq="5T", periods=350)
@@ -34,7 +37,7 @@ def test_constructed_xarray():
         coords=ALL_COORDS,
     )
 
-    trim_date = TrimDatesWithInsufficentData([data_array], intervals = 288)
+    trim_date = TrimDatesWithInsufficentData([data_array], intervals=288)
 
     data = next(iter(trim_date))
 
