@@ -32,5 +32,6 @@ from .gsp.remove_northern_gsp import RemoveNorthernGSPIterDataPipe as RemoveNort
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
+from .pv.assign_daynight_status import AssignDayNightStatusIterDataPipe as AssignDayNightStatus
 from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
