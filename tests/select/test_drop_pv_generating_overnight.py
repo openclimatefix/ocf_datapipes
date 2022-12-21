@@ -22,6 +22,7 @@ def test_drop_with_pvoutput_datapipe(pvoutput_datapipe):
         data_after_drop.coords["pv_system_id"].values
     )
 
+
 def test_drop_with_constructed_dataarray():
 
     # Make 3 pv systems
