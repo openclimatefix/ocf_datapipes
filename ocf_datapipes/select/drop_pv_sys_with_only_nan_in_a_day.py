@@ -41,7 +41,7 @@ class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
                 f"\nChecking length of time series{len(dates_array)} longer than standard intervals {self.intervals}\n"
             )
 
-            if len(dates_array) >= self.intervals:            
+            if len(dates_array) >= self.intervals:
                 logger.info(
                     f"\nCollecting the time series data from 'time_utc' coordinate\n {dates_array}\n"
                 )
@@ -67,7 +67,9 @@ class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
                         logger.info(f"\nExtracting system ids with continous NaN's\n")
                         sys_ids = sys_idx_cont_nan(xr_ds.values, check_interval=self.intervals)
 
-                        logger.warning(f"\nDropping the systems which are inactive for the whole day\n")
+                        logger.warning(
+                            f"\nDropping the systems which are inactive for the whole day\n"
+                        )
                         if not len(sys_ids) == 0:
                             xr_dataset = xr_dataset.drop_isel(pv_system_id=sys_ids)
             else:
