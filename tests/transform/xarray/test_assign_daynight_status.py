@@ -1,6 +1,5 @@
 from datetime import datetime
 from timeit import timeit
-from timeit import timeit
 from typing import Optional
 
 import numpy as np
@@ -22,8 +21,6 @@ def test_assign_status_night(passiv_datapipe):
     assert "day" and "night" in data.coords["status_daynight"].values
 
 
-
-
 def test_time(passiv_datapipe):
     # Create the instance of the AssignDayNightStatusIterDataPipe class
     datapipe = AssignDayNightStatus(passiv_datapipe)
@@ -35,7 +32,6 @@ def test_time(passiv_datapipe):
     execution_time = timeit(lambda: next(iter((datapipe))), number=365)
 
     print(f"\nExecution time: {execution_time:.4f} seconds")
-
 
 
 def test_with_constructed_array():
