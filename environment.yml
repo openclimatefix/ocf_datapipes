@@ -19,6 +19,7 @@ dependencies:
   - geopandas
   - h5netcdf
   - scipy
+  - numba
   - pip:
       - einops
       - pathy
