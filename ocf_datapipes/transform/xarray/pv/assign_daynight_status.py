@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
+from numba import jit, prange
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -24,10 +25,35 @@ uk_daynight_dict = {
     12: [7, 17],
 }
 logger.info(
-    f"\nThe day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}\n"
+    f"The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}"
 )
 
+@jit(parallel=True)
+def add_day_night_status(xr_dataset: xr.DataArray, uk_daynight_dict: dict) -> xr.DataArray:
+    """Adds a new dimension of day/night status to the input xarray.DataArray"""
 
+    # Get the month and hour values for each time stamp
+    date_month = np.asarray(xr_dataset.time_utc.dt.month.values, dtype=int)
+    date_hr = np.asarray(xr_dataset.time_utc.dt.hour.values, dtype=int)
+    month_hr_stack = np.stack((date_month, date_hr))
+
+    # Get the day/night status for each time stamp
+    status_daynight = []
+    for i in prange(len(xr_dataset.coords["time_utc"].values)):
+        if month_hr_stack[1][i] in range(
+            uk_daynight_dict[month_hr_stack[0][i]][0],
+            uk_daynight_dict[month_hr_stack[0][i]][1],
+        ):
+            status = "day"
+        else:
+            status = "night"
+
+        status_daynight.append(status)
+
+    # Add the day/night status as a new coordinate
+    xr_dataset = xr_dataset.assign_coords(status_daynight=(("time_utc"), status_daynight))
+
+    return xr_dataset
 @functional_datapipe("assign_daynight_status")
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
     """Adds a new dimension of day/night status"""
@@ -51,34 +77,6 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray():
         """Returns an xarray dataset with extra dimesion"""
-        logger.info(f"\nReading the Xarray dataset\n")
         for xr_dataset in self.source_datapipe:
-
-            logger.info(f"\nGetting all the 'time_utc' datetime coordinates\n")
-
-            dates = xr_dataset.coords["time_utc"].values
-
-            logger.info(f"\n Getting Month and Hour values from 'time_utc'and stacking them\n")
-
-            date_month = np.asarray(xr_dataset.time_utc.dt.month.values, dtype=int)
-            date_hr = np.asarray(xr_dataset.time_utc.dt.hour.values, dtype=int)
-            month_hr_stack = np.stack((date_month, date_hr))
-
-            logger.info(f"\nGetting the status of day/night for each timestamp in the timeseries\n")
-
-            status_daynight = []
-            for i in range(len(dates)):
-                if month_hr_stack[1][i] in range(
-                    uk_daynight_dict[month_hr_stack[0][i]][0],
-                    uk_daynight_dict[month_hr_stack[0][i]][1],
-                ):
-                    status = "day"
-                else:
-                    status = "night"
-
-                status_daynight.append(status)
-
-            logger.info(f"\nAssigning a new coordinates of 'status_day' in the DataArray\n")
-
-            xr_dataset = xr_dataset.assign_coords(status_daynight=(("time_utc"), status_daynight))
+            xr_dataset = add_day_night_status(xr_dataset, uk_daynight_dict)
             yield xr_dataset
