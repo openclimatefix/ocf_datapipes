@@ -1,10 +1,14 @@
-import logging
-from datetime import datetime
-from typing import Optional
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
 
-from numba import jit, prange
+"""
+This is a class function that assigns day night status
+"""
+import logging
+
 import numpy as np
 import xarray as xr
+from numba import jit, prange
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -25,8 +29,9 @@ uk_daynight_dict = {
     12: [7, 17],
 }
 logger.info(
-    f"The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}"
+    f"The day and night standard hours are set by {'https://www.timeanddate.com/sun/uk/london'}"
 )
+
 
 @jit(parallel=True)
 def add_day_night_status(xr_dataset: xr.DataArray, uk_daynight_dict: dict) -> xr.DataArray:
@@ -54,6 +59,8 @@ def add_day_night_status(xr_dataset: xr.DataArray, uk_daynight_dict: dict) -> xr
     xr_dataset = xr_dataset.assign_coords(status_daynight=(("time_utc"), status_daynight))
 
     return xr_dataset
+
+
 @functional_datapipe("assign_daynight_status")
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
     """Adds a new dimension of day/night status"""
@@ -63,7 +70,7 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
         This method adds extra coordinate of day night status.
 
         Args:
-            source: Datapipe emiiting Xarray Dataset
+            source_datapipe: Datapipe emiiting Xarray Dataset
 
         Result:
             <xarray.Dataset>
