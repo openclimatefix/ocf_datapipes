@@ -2,9 +2,9 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from numba import jit, prange
 import numpy as np
 import xarray as xr
+from numba import jit, prange
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -27,6 +27,7 @@ uk_daynight_dict = {
 logger.info(
     f"The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}"
 )
+
 
 @jit(parallel=True)
 def add_day_night_status(xr_dataset: xr.DataArray, uk_daynight_dict: dict) -> xr.DataArray:
@@ -54,6 +55,8 @@ def add_day_night_status(xr_dataset: xr.DataArray, uk_daynight_dict: dict) -> xr
     xr_dataset = xr_dataset.assign_coords(status_daynight=(("time_utc"), status_daynight))
 
     return xr_dataset
+
+
 @functional_datapipe("assign_daynight_status")
 class AssignDayNightStatusIterDataPipe(IterDataPipe):
     """Adds a new dimension of day/night status"""
