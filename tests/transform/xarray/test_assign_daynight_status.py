@@ -31,7 +31,7 @@ def test_time(passiv_datapipe):
     # as the datapipe considers one day worth of data
     execution_time = timeit(lambda: next(iter((datapipe))), number=365)
 
-    print(f"\nExecution time: {execution_time:.4f} seconds")
+    print(f"\nExecution time to test for 365 times:\n{execution_time:.4f} seconds")
 
 
 def test_with_constructed_array():
