@@ -1,10 +1,10 @@
 from datetime import datetime
+from timeit import timeit
 from typing import Optional
 
 import numpy as np
 import pandas as pd
 import xarray as xr
-from timeit import timeit
 
 from ocf_datapipes.select import DropNightPV
 from ocf_datapipes.transform.xarray import AssignDayNightStatus
@@ -23,6 +23,7 @@ def test_drop_with_pvoutput_datapipe(pvoutput_datapipe):
         data_after_drop.coords["pv_system_id"].values
     )
 
+
 def test_time(passiv_datapipe):
     # Create the instance of the AssignDayNightStatusIterDataPipe class
     before_dropping_pv_with_night_output = AssignDayNightStatus(passiv_datapipe)
@@ -36,6 +37,7 @@ def test_time(passiv_datapipe):
     execution_time = timeit(lambda: next(iter((data_after_drop))), number=365)
 
     print(f"\nExecution time to test for 365 times:\n{execution_time:.4f} seconds")
+
 
 def test_drop_with_constructed_dataarray():
 
