@@ -71,7 +71,7 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
 
             logger.info(f"Grouping the Xarray by status{'night'}")
 
-            night_ds = xr_dataset.groupby("status_day")["night"]
+            night_ds = xr_dataset.groupby("status_daynight")["night"]
 
             logger.info(f"Checking if the night time has any pv output")
             logger.info(f"if so, stroing the pv system IDs to drop")
