@@ -48,7 +48,7 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
             nopvid = []
             for i in id_list:
                 data = night_ds.loc[dict(pv_system_id=i)]
-                check = np.all(data.values == 0.0) or np.isnan(data.values).all()
+                check = np.all(data.values == 0.0)
                 while not check:
                     nopvid.append(i)
                     break

@@ -31,12 +31,11 @@ def test_time(passiv_datapipe):
     data_after_drop = next(iter(after_dropping_pv_with_night_output))
 
     # Using timeit to measure the execution time of the __iter__ method
-    # number of simulations takes place are 365 (meaning for a year),
-    # number of simulations takes place are 365 (meaning for a year),
-    # as the datapipe considers one day worth of data
-    execution_time = timeit(lambda: next(iter((data_after_drop))), number=365)
+    # The number has been chnaged to 10,000 which means running the loop
+    # 10k times
+    execution_time = timeit(lambda: next(iter((data_after_drop))), number=10000)
 
-    print(f"\nExecution time to test for 365 times:\n{execution_time:.4f} seconds")
+    print(f"\nExecution time to test for 10k times:\n{execution_time:.4f} seconds")
 
 
 def test_drop_with_constructed_dataarray():
