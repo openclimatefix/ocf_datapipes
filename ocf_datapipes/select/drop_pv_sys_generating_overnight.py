@@ -35,24 +35,32 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
 
         for xr_dataset in self.source_datapipe:
 
-            # Collecting all pv system IDs
+            # Getting the list of the pv system id
+            pv_sys_id_list = xr_dataset.coords["pv_system_id"].values
 
-            id_list = xr_dataset.coords["pv_system_id"].values
+            # Grouping the datastet with only night status
+            night_ds = xr_dataset.groupby("status_daynight")["night"].values
 
-            night_ds = xr_dataset.groupby("status_daynight")["night"]
-            logger.info(f"Grouping the Xarray by status{night_ds}")
+            # Getting the shape of the array
+            night_ds_shape = night_ds.shape
 
-            # Checking if the night time has any pv output
-            # if so, stroing the pv system IDs to drop
+            # Checking if all the systems has any values other than zero (including NaN)
+            check_nonzero = [(np.array(night_ds[:, m]) != 0) for m in range(night_ds_shape[1])]
 
-            nopvid = []
-            for i in id_list:
-                data = night_ds.loc[dict(pv_system_id=i)]
-                check = np.all(data.values == 0.0)
-                while not check:
-                    nopvid.append(i)
-                    break
+            # Checking if all the systems has NaN in their daily outputs
+            check_isnan = [
+                np.logical_not(np.isnan(night_ds[:, m])) for m in range(night_ds_shape[1])
+            ]
 
-            logger.info(f"Dropping the pv systems{nopvid} with night time pv output")
-            xr_dataset = xr_dataset.drop_sel(pv_system_id=nopvid)
+            # Checking if there are any systems which has numeric values (not including np.zeros)
+            # and (not including np.nan)
+            final_check = np.logical_and(check_nonzero, check_isnan)
+
+            # Getting the indices of system ids to drop
+            drop_pv_sys_id = np.where(final_check.any(axis=1))[0]
+
+            logger.info(
+                f"Dropping the pv systems{pv_sys_id_list[drop_pv_sys_id]} with night time pv output"
+            )
+            xr_dataset = xr_dataset.drop_sel(pv_system_id=pv_sys_id_list[drop_pv_sys_id])
             yield xr_dataset

@@ -1,6 +1,4 @@
-from datetime import datetime
 from timeit import timeit
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -10,18 +8,24 @@ from ocf_datapipes.select import DropNightPV
 from ocf_datapipes.transform.xarray import AssignDayNightStatus
 
 
-def test_drop_with_pvoutput_datapipe(pvoutput_datapipe):
-    before_dropping_pv_with_night_output = AssignDayNightStatus(pvoutput_datapipe)
+def test_drop_with_passiv_datapipe(passiv_datapipe):
+    before_dropping_pv_with_night_output = AssignDayNightStatus(passiv_datapipe)
     after_dropping_pv_with_night_output = DropNightPV(before_dropping_pv_with_night_output)
 
     data_before_drop = next(iter(before_dropping_pv_with_night_output))
     data_after_drop = next(iter(after_dropping_pv_with_night_output))
+    after_id = data_after_drop.coords["pv_system_id"].values
+
+    Num_of_sys_before_drop = len(data_before_drop.coords["pv_system_id"].values)
+    Num_of_sys_after_drop = len(data_after_drop.coords["pv_system_id"].values)
 
     # In 'pvoutput_datapipe', there are 41 or so systems and some of the systems have been dropped
     # as they generate power over night.
-    assert len(data_before_drop.coords["pv_system_id"].values) != len(
-        data_after_drop.coords["pv_system_id"].values
-    )
+    print("\nTest1")
+    print(f"For the {'pvoutput_datapipe'}")
+    print(f"Number of systems before dropping are {Num_of_sys_before_drop}")
+    print(f"Number of remaining systems after dropping are {Num_of_sys_after_drop}")
+    assert Num_of_sys_before_drop != Num_of_sys_after_drop
 
 
 def test_time(passiv_datapipe):
@@ -34,8 +38,8 @@ def test_time(passiv_datapipe):
     # The number has been chnaged to 10,000 which means running the loop
     # 10k times
     execution_time = timeit(lambda: next(iter((data_after_drop))), number=10000)
-
-    print(f"\nExecution time to test for 10k times:\n{execution_time:.4f} seconds")
+    print("\nTest2")
+    print(f"Execution time to test for 10k times:\n{execution_time:.4f} seconds")
 
 
 def test_drop_with_constructed_dataarray():
@@ -48,8 +52,14 @@ def test_drop_with_constructed_dataarray():
     pv_system_id = [1, 2, 3]
     ALL_COORDS = {"time_utc": time, "pv_system_id": pv_system_id}
 
+    # This data array has three systems with comination of pv outputs
+    # sys1 = combination of [np.nan,...... 0.,....]
+    # sys2 = just zeros [0., 0., 0., ....]
+    # sys3 = combination of [np.nan,...... 1.,.....]
     data = np.zeros((len(time), len(pv_system_id)))
     data[:, 2] = 1.0
+    data[: data.shape[0] // 2, 0] = np.nan
+    data[: data.shape[0] // 2, 2] = np.nan
 
     data_array = xr.DataArray(
         data,
@@ -57,12 +67,14 @@ def test_drop_with_constructed_dataarray():
     )
 
     # run the function
+    # Drop Night PV function drops only the third system (sys3)
     before_drop = AssignDayNightStatus([data_array])
     after_drop = DropNightPV(before_drop)
 
     # check output, has dropped system 3
     before_drop_data = next(iter(before_drop))
     after_drop_data = next(iter(after_drop))
-
+    print("\nTest3")
+    print(f"Remaining systems are dropping are {after_drop_data.pv_system_id.values}")
     assert len(before_drop_data.pv_system_id) == 3
     assert len(after_drop_data.pv_system_id) == 2
