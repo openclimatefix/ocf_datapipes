@@ -51,9 +51,9 @@ class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
                     if i == self.intervals:
                         break
                     else:
-                        
+
                         # Getting the first and last timestamp of the day based on intervals
-                        # Slicing the dataset by individual first timestamp in a day 
+                        # Slicing the dataset by individual first timestamp in a day
                         # and last timestamp of the day
                         xr_ds = xr_dataset.sel(
                             time_utc=slice(dates_array[i], dates_array[i + (self.intervals - 1)])
