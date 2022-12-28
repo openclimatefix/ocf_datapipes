@@ -75,8 +75,8 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
                     # The check would be always false, as in a given day,
                     # the last time step would be of the next day
                     trim_dates_position = int(count_five_minutes % self.intervals)
-                    
-                    # Number of intervalsneeded to be trimmed 
+
+                    # Number of intervalsneeded to be trimmed
                     # at the end are trim_dates_position
                     trim_dates = dates_array[-trim_dates_position:]
                     logger.info(f"The trimmed dates are as follows {trim_dates}")
