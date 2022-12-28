@@ -49,11 +49,7 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
 
             # Checking if the total length of 'datetime' is
             # greater than provided time intervals
-            logger.info(
-                f"Checking length of time series{len(dates_array)} longer than",
-                f"standard intervals {self.intervals}",
-            )
-            if len(dates_array) >= self.intervals:
+            if dates_array.size >= self.intervals:
 
                 # Counting the minute intervals (both non_zero and zero),
                 # as every 5min, 15min, or 30 min
@@ -79,11 +75,9 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
                     # The check would be always false, as in a given day,
                     # the last time step would be of the next day
                     trim_dates_position = int(count_five_minutes % self.intervals)
-                    logger.info(
-                        f"Number of {'intervals'} needed to be trimmed at the",
-                        f"end are {trim_dates_position}",
-                    )
-
+                    
+                    # Number of intervalsneeded to be trimmed 
+                    # at the end are trim_dates_position
                     trim_dates = dates_array[-trim_dates_position:]
                     logger.info(f"The trimmed dates are as follows {trim_dates}")
 
