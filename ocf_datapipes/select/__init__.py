@@ -1,5 +1,8 @@
 """Selection datapipes"""
 from .drop_national_gsp import DropGSPIterDataPipe as DropGSP
+from .drop_pv_sys_with_only_nan_in_a_day import (
+    DropPVSysWithOnlyNanInADayIterDataPipe as DropPVSysWithOnlyNanInADay,
+)
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations
 from .offset_t0 import OffsetT0IterDataPipe as OffsetT0
@@ -16,3 +19,6 @@ from .select_t0_time import SelectT0TimeIterDataPipe as SelectT0Time
 from .select_time_periods import SelectTimePeriodsIterDataPipe as SelectTimePeriods
 from .select_time_slice import SelectTimeSliceIterDataPipe as SelectTimeSlice
 from .select_train_test import SelectTrainTestTimePeriodsIterDataPipe as SelectTrainTestTimePeriod
+from .trim_dates_with_insufficent_data import (
+    TrimDatesWithInsufficentDataIterDataPipe as TrimDatesWithInsufficentData,
+)
