@@ -134,3 +134,4 @@ dmypy.json
 
 # VSCode settings
 .vscode/
+ocf_datapipes.code-workspace
