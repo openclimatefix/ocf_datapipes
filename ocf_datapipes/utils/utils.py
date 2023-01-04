@@ -37,7 +37,7 @@ def return_system_indices_which_has_contiguous_nan(
     number_of_systems = arr.shape[1]
 
     system_index_values_to_be_dropped = []
-    for i in range(0, number_of_sys):
+    for i in range(0, number_of_systems):
 
         # For each system id
         single_system_single_day_pv_values = arr[:, i]
