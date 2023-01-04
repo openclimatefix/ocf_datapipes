@@ -32,7 +32,7 @@ def return_system_indices_which_has_contiguous_nan(arr: np.ndarray, check_interv
     """
     # Checking the shape of the input array
     # The array would be a 2d-array which consists of number of (time_utc, pv_system_id)
-    number_of_sys = arr.shape[1]
+    number_of_systems = arr.shape[1]
 
     system_index_values_to_be_dropped = []
     for i in range(0, number_of_sys):
