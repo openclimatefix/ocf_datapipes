@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
-
 """
 This is a class function that slices a contigous datetime range to the 12th hour
 """
