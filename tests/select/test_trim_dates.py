@@ -6,14 +6,16 @@ from ocf_datapipes.select import TrimDatesWithInsufficentData
 
 
 def test_trim_lessthan_oneday(passiv_datapipe):
-    data = TrimDatesWithInsufficentData(passiv_datapipe, intervals=288)
+    data = TrimDatesWithInsufficentData(passiv_datapipe, minimum_number_data_points=288)
     data = next(iter(data))
     count = len(data.coords["time_utc"].values)
     assert count % 288 == 0
 
 
 def test_with_pvoutput_datapipe(pvoutput_datapipe):
-    after_trim_date = TrimDatesWithInsufficentData(pvoutput_datapipe, intervals=288)
+    after_trim_date = TrimDatesWithInsufficentData(
+        pvoutput_datapipe, minimum_number_data_points=288
+    )
 
     before_data = next(iter(pvoutput_datapipe))
     after_data = next(iter(after_trim_date))
@@ -43,9 +45,15 @@ def test_constructed_xarray():
     data_array1 = construct_multi_daterange(freq="5T", periods=350)
     data_array2 = construct_multi_daterange(freq="30T", periods=25)
     data_array3 = construct_multi_daterange(freq="5T", periods=2500)
-    trim_date1_5min_interval = TrimDatesWithInsufficentData([data_array1], intervals=288)
-    trim_date2_30min_interval = TrimDatesWithInsufficentData([data_array2], intervals=48)
-    trim_date3_5min_interval = TrimDatesWithInsufficentData([data_array3], intervals=288)
+    trim_date1_5min_interval = TrimDatesWithInsufficentData(
+        [data_array1], minimum_number_data_points=288
+    )
+    trim_date2_30min_interval = TrimDatesWithInsufficentData(
+        [data_array2], minimum_number_data_points=48
+    )
+    trim_date3_5min_interval = TrimDatesWithInsufficentData(
+        [data_array3], minimum_number_data_points=288
+    )
 
     data1 = next(iter(trim_date1_5min_interval))
     data2 = next(iter(trim_date2_30min_interval))
