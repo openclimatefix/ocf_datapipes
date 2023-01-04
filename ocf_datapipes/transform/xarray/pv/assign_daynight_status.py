@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
-
 """
 This is a class function that assigns day night status
 """
@@ -57,31 +54,20 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
         # Reading the Xarray dataset
         for xr_dataset in self.source_datapipe:
 
-            logger.info(f"Getting all the {'time_utc'} datetime coordinates")
-
-            dates = xr_dataset.coords["time_utc"].values
-
-            logger.info(f"Getting Month and Hour values from {'time_utc'}and stacking them")
-
+            # Getting Month and Hour values from time_utc and stacking them
             date_month = np.asarray(xr_dataset.time_utc.dt.month.values, dtype=int)
             date_hr = np.asarray(xr_dataset.time_utc.dt.hour.values, dtype=int)
             month_hr_stack = np.stack((date_month, date_hr))
 
-            logger.info(f"Getting the status of day/night for each timestamp in the {'dates'}")
+            # Getting the status of day/night for each timestamp in the dates'
+            day_start = np.asarray([uk_daynight_dict[m][0] for m in month_hr_stack[0]])
+            day_end = np.asarray([uk_daynight_dict[m][1] for m in month_hr_stack[0]])
+            status_daynight = np.where(
+                np.logical_and(month_hr_stack[1] >= day_start, month_hr_stack[1] < day_end),
+                "day",
+                "night",
+            )
 
-            status_daynight = []
-            for i in range(len(dates)):
-                if month_hr_stack[1][i] in range(
-                    uk_daynight_dict[month_hr_stack[0][i]][0],
-                    uk_daynight_dict[month_hr_stack[0][i]][1],
-                ):
-                    status = "day"
-                else:
-                    status = "night"
-
-                status_daynight.append(status)
-
-            logger.info(f"Assigning a new coordinates of {'status_daynight'}' in the DataArray")
-
+            # Assigning a new coordinates of 'status_daynight' in the DataArray
             xr_dataset = xr_dataset.assign_coords(status_daynight=(("time_utc"), status_daynight))
             yield xr_dataset

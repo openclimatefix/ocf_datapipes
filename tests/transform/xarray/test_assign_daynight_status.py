@@ -1,13 +1,13 @@
-from datetime import datetime
+import logging
 from timeit import timeit
-from typing import Optional
 
 import numpy as np
 import pandas as pd
 import xarray as xr
-from numba import jit
 
 from ocf_datapipes.transform.xarray import AssignDayNightStatus
+
+logger = logging.getLogger(__name__)
 
 
 def test_assign_status_night(passiv_datapipe):
@@ -31,6 +31,7 @@ def test_time(passiv_datapipe):
     # as the datapipe considers one day worth of data
     execution_time = timeit(lambda: next(iter((datapipe))), number=365)
 
+    logger.info(f"Execution time to test for 365 times:\n{execution_time:.4f} seconds")
     print(f"\nExecution time to test for 365 times:\n{execution_time:.4f} seconds")
 
 
