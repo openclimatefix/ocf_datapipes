@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
-
 """
 This is a class function that slices a contigous datetime range to the 12th hour
 """
@@ -45,7 +42,7 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
         for xr_dataset in self.source_datapipe:
 
             # Getting the 'datetime' values into a single 1D array
-            dates_array = np.asarray(xr_dataset.coords["time_utc"].values)
+            dates_array = xr_dataset.coords["time_utc"].values
 
             # Checking if the total length of 'datetime' is
             # greater than provided time intervals
@@ -53,13 +50,13 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
 
                 # Counting the minute intervals (both non_zero and zero),
                 # as every 5min, 15min, or 30 min
-                # has intervals such as, for 15 min [0, 15, 20, 45, 0,........]
-                total_five_minutes = np.asarray(xr_dataset.time_utc.dt.minute.values, dtype=int)
-                count_five_minutes = np.count_nonzero(total_five_minutes) + np.count_nonzero(
-                    total_five_minutes == 0
-                )
+                # has intervals such as, for 15 min [0, 15, 30, 45, 0,........]
+                total_minute_intervals = xr_dataset.time_utc.dt.minute.values
+                count_minute_intervals = np.count_nonzero(
+                    total_minute_intervals
+                ) + np.count_nonzero(total_minute_intervals == 0)
                 # Collecting five minute intervals and counting them
-                logger.info(f"Total number of those five minutes are {count_five_minutes}")
+                logger.info(f"Total number of those five minutes are {count_minute_intervals}")
 
                 logger.info(
                     f"Checking if the count is a multiple of given interval {self.intervals}"
@@ -68,15 +65,15 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
                 # Checking if the minute intervals are multiples of total intervals in a day
                 # For example, datet time values of one day with five minute intervals
                 # consists of 288 five-minutes
-                check = count_five_minutes % self.intervals == 0.0
+                check = count_minute_intervals % self.intervals == 0.0
 
                 if not check:
                     # Counting number of intervals needed to be trimmed at the end
                     # The check would be always false, as in a given day,
                     # the last time step would be of the next day
-                    trim_dates_position = int(count_five_minutes % self.intervals)
+                    trim_dates_position = int(count_minute_intervals % self.intervals)
 
-                    # Number of intervalsneeded to be trimmed
+                    # Number of intervals needed to be trimmed
                     # at the end are trim_dates_position
                     trim_dates = dates_array[-trim_dates_position:]
                     logger.info(f"The trimmed dates are as follows {trim_dates}")
