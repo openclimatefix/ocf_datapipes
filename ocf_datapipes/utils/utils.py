@@ -19,7 +19,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 logger = logging.getLogger(__name__)
 
 
-def return_sys_indices_which_has_cont_nan(arr: np.ndarray, check_interval: int = 287) -> np.ndarray:
+def return_system_indices_which_has_contiguous_nan(arr: np.ndarray, check_interval: int = 287) -> np.ndarray:
     """This function return system indices
 
     Returns indexes of system id's in which if they have
