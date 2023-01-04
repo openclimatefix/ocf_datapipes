@@ -7,7 +7,7 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils.utils import return_sys_indices_which_has_cont_nan
+from ocf_datapipes.utils.utils import return_system_indices_which_has_contiguous_nan
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
                         )
 
                         # Extracting system ids with continous NaN's
-                        sys_ids = return_sys_indices_which_has_cont_nan(
+                        sys_ids = return_system_indices_which_has_contiguous_nan(
                             xr_ds.values, check_interval=self.intervals
                         )
 
