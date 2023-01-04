@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
     """Remove any PV systems with less than 1 day of data"""
 
-    def __init__(self, source_datapipe: IterDataPipe, intervals: int) -> None:
+    def __init__(self, source_datapipe: IterDataPipe, minimum_number_data_points: int) -> None:
         """Remove any PV systems with less than 1 day of data
 
         This is done, by counting all the non values and check the
@@ -24,13 +24,13 @@ class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of Xarray Dataset emitting timeseries data
-            intervals: Intervals for the timesteps in the xarray dataset
+            minimum_number_data_points: Minimum number of intervals in a given day
                 For 5min time series, intervals = 288
                 For 30min time series, intervals = 48
         """
 
         self.source_datapipe = source_datapipe
-        self.intervals = intervals
+        self.intervals = minimum_number_data_points
 
     def __iter__(self) -> xr.Dataset():
 

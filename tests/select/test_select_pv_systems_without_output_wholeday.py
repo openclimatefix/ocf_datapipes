@@ -6,7 +6,7 @@ from ocf_datapipes.select import DropPVSysWithOnlyNanInADay, TrimDatesWithInsuff
 
 
 def test_trim_12th_hour_timestep(passiv_datapipe):
-    data = TrimDatesWithInsufficentData(passiv_datapipe, intervals=288)
+    data = TrimDatesWithInsufficentData(passiv_datapipe, minimum_number_data_points=288)
     data = next(iter(data))
     count = len(data.coords["time_utc"].values)
     assert count % 288 == 0
@@ -24,7 +24,7 @@ def test_trim_dates_lessthan_oneday():
         data,
         coords=ALL_COORDS,
     )
-    trim_dates = TrimDatesWithInsufficentData([data_array], intervals=288)
+    trim_dates = TrimDatesWithInsufficentData([data_array], minimum_number_data_points=288)
     data = next(iter(trim_dates))
     assert data.time_utc.values.size == 150
 
@@ -41,8 +41,8 @@ def test_constructed_xarray():
         data,
         coords=ALL_COORDS,
     )
-    trim_dates = TrimDatesWithInsufficentData([data_array], intervals=288)
-    drop_sys_with_only_nan = DropPVSysWithOnlyNanInADay(trim_dates, intervals=288)
+    trim_dates = TrimDatesWithInsufficentData([data_array], minimum_number_data_points=288)
+    drop_sys_with_only_nan = DropPVSysWithOnlyNanInADay(trim_dates, minimum_number_data_points=288)
 
     trim_dates = next(iter(trim_dates))
     drop_sys_with_only_nan = next(iter(drop_sys_with_only_nan))
