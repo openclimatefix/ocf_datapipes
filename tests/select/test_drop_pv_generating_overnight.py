@@ -1,3 +1,4 @@
+import logging
 from timeit import timeit
 
 import numpy as np
@@ -6,6 +7,8 @@ import xarray as xr
 
 from ocf_datapipes.select import DropNightPV
 from ocf_datapipes.transform.xarray import AssignDayNightStatus
+
+logger = logging.getLogger(__name__)
 
 
 def test_drop_with_passiv_datapipe(passiv_datapipe):
@@ -21,10 +24,10 @@ def test_drop_with_passiv_datapipe(passiv_datapipe):
 
     # In 'pvoutput_datapipe', there are 41 or so systems and some of the systems have been dropped
     # as they generate power over night.
-    print("\nTest1")
-    print(f"For the {'pvoutput_datapipe'}")
-    print(f"Number of systems before dropping are {Num_of_sys_before_drop}")
-    print(f"Number of remaining systems after dropping are {Num_of_sys_after_drop}")
+    logger.info("Test1")
+    logger.info(f"For the {'pvoutput_datapipe'}")
+    logger.info(f"Number of systems before dropping are {Num_of_sys_before_drop}")
+    logger.info(f"Number of remaining systems after dropping are {Num_of_sys_after_drop}")
     assert Num_of_sys_before_drop != Num_of_sys_after_drop
 
 
@@ -38,8 +41,8 @@ def test_time(passiv_datapipe):
     # The number has been chnaged to 10,000 which means running the loop
     # 10k times
     execution_time = timeit(lambda: next(iter((data_after_drop))), number=10000)
-    print("\nTest2")
-    print(f"Execution time to test for 10k times:\n{execution_time:.4f} seconds")
+    logger.info("Test2")
+    logger.info(f"Execution time to test for 10k times:\n{execution_time:.4f} seconds")
 
 
 def test_drop_with_constructed_dataarray():
@@ -74,7 +77,7 @@ def test_drop_with_constructed_dataarray():
     # check output, has dropped system 3
     before_drop_data = next(iter(before_drop))
     after_drop_data = next(iter(after_drop))
-    print("\nTest3")
-    print(f"Remaining systems are dropping are {after_drop_data.pv_system_id.values}")
+    logger.info("Test3")
+    logger.info(f"Remaining systems are dropping are {after_drop_data.pv_system_id.values}")
     assert len(before_drop_data.pv_system_id) == 3
     assert len(after_drop_data.pv_system_id) == 2
