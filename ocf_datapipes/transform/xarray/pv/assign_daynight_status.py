@@ -1,6 +1,7 @@
+"""
+This is a class function that assigns day night status
+"""
 import logging
-from datetime import datetime
-from typing import Optional
 
 import numpy as np
 import xarray as xr
@@ -24,7 +25,7 @@ uk_daynight_dict = {
     12: [7, 17],
 }
 logger.info(
-    f"The day and night standard hours are set by https://www.timeanddate.com/sun/uk/london, {uk_daynight_dict}"
+    f"The day and night standard hours are set by {'https://www.timeanddate.com/sun/uk/london'}"
 )
 
 
@@ -33,12 +34,10 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
     """Adds a new dimension of day/night status"""
 
     def __init__(self, source_datapipe: IterDataPipe):
-        """
-        This method adds extra coordinate of day night status.
+        """This method adds extra coordinate of day night status.
 
         Args:
-            source: Datapipe emiiting Xarray Dataset
-
+            source_datapipe: Datapipe emiiting Xarray Dataset
         Result:
             <xarray.Dataset>
             Dimensions:   (datetime: 289)
@@ -51,34 +50,24 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray():
         """Returns an xarray dataset with extra dimesion"""
-        logger.info(f"\nReading the Xarray dataset\n")
+
+        # Reading the Xarray dataset
         for xr_dataset in self.source_datapipe:
 
-            logger.info(f"\nGetting all the 'time_utc' datetime coordinates\n")
-
-            dates = xr_dataset.coords["time_utc"].values
-
-            logger.info(f"\n Getting Month and Hour values from 'time_utc'and stacking them\n")
-
-            date_month = np.asarray(xr_dataset.time_utc.dt.month.values, dtype=int)
-            date_hr = np.asarray(xr_dataset.time_utc.dt.hour.values, dtype=int)
+            # Getting Month and Hour values from time_utc and stacking them
+            date_month = xr_dataset.time_utc.dt.month.values
+            date_hr = xr_dataset.time_utc.dt.hour.values
             month_hr_stack = np.stack((date_month, date_hr))
 
-            logger.info(f"\nGetting the status of day/night for each timestamp in the timeseries\n")
+            # Getting the status of day/night for each timestamp in the dates'
+            day_start = np.asarray([uk_daynight_dict[m][0] for m in month_hr_stack[0]])
+            day_end = np.asarray([uk_daynight_dict[m][1] for m in month_hr_stack[0]])
+            status_daynight = np.where(
+                np.logical_and(month_hr_stack[1] >= day_start, month_hr_stack[1] < day_end),
+                "day",
+                "night",
+            )
 
-            status_day = []
-            for i in range(len(dates)):
-                if month_hr_stack[1][i] in range(
-                    uk_daynight_dict[month_hr_stack[0][i]][0],
-                    uk_daynight_dict[month_hr_stack[0][i]][1],
-                ):
-                    status = "day"
-                else:
-                    status = "night"
-
-                status_day.append(status)
-
-            logger.info(f"\nAssigning a new coordinates of {'status_day'} in the DataArray\n")
-
-            xr_dataset = xr_dataset.assign_coords(status_day=(("time_utc"), status_day))
+            # Assigning a new coordinates of 'status_daynight' in the DataArray
+            xr_dataset = xr_dataset.assign_coords(status_daynight=(("time_utc"), status_daynight))
             yield xr_dataset
