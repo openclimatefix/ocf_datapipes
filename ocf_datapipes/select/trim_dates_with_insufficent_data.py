@@ -80,7 +80,5 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
 
                     # Dropping the dates coordinate variable data and its data in the xarray
                     xr_dataset = xr_dataset.drop_sel(time_utc=trim_dates)
-            else:
-                pass
 
             yield xr_dataset
