@@ -55,8 +55,8 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
         for xr_dataset in self.source_datapipe:
 
             # Getting Month and Hour values from time_utc and stacking them
-            date_month = np.asarray(xr_dataset.time_utc.dt.month.values, dtype=int)
-            date_hr = np.asarray(xr_dataset.time_utc.dt.hour.values, dtype=int)
+            date_month = xr_dataset.time_utc.dt.month.values
+            date_hr = xr_dataset.time_utc.dt.hour.values
             month_hr_stack = np.stack((date_month, date_hr))
 
             # Getting the status of day/night for each timestamp in the dates'
