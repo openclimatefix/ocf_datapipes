@@ -32,7 +32,7 @@ def test_time(passiv_datapipe):
     execution_time = timeit(lambda: next(iter((datapipe))), number=365)
 
     logger.info(f"Execution time to test for 365 times:\n{execution_time:.4f} seconds")
-    print(f"\nExecution time to test for 365 times:\n{execution_time:.4f} seconds")
+    print(f"\nExecution time to test for 365 times: {execution_time:.4f} seconds")
 
 
 def test_with_constructed_array():
