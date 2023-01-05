@@ -8,7 +8,7 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from jpeg_xl_float_with_nans import jpeg_xl_float_with_nans
+from jpeg_xl_float_with_nans import jpeg_xl_float_with_nans # noqa: F401
 
 _log = logging.getLogger(__name__)
 
