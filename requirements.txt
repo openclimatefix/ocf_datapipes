@@ -24,4 +24,3 @@ pyresample
 fastparquet
 scipy
 pytorch_lightning
-numba
