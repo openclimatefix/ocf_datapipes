@@ -7,7 +7,7 @@ import xarray as xr
 
 logger = logging.getLogger(__name__)
 
-from ocf_datapipes.select import DropPVSysWithOnlyNanInADay, TrimDatesWithInsufficentData
+from ocf_datapipes.select import DropPVSystemsWithOnlyNanInADay, TrimDatesWithInsufficentData
 
 
 def test_execution_time():
@@ -22,7 +22,7 @@ def test_execution_time():
         data,
         coords=ALL_COORDS,
     )
-    drop_sys_with_only_nan = DropPVSysWithOnlyNanInADay(
+    drop_sys_with_only_nan = DropPVSystemsWithOnlyNanInADay(
         [data_array], minimum_number_data_points=288
     )
     data_after_drop = next(iter(drop_sys_with_only_nan))
@@ -69,7 +69,9 @@ def test_constructed_xarray():
         coords=ALL_COORDS,
     )
     trim_dates = TrimDatesWithInsufficentData([data_array], minimum_number_data_points=288)
-    drop_sys_with_only_nan = DropPVSysWithOnlyNanInADay(trim_dates, minimum_number_data_points=288)
+    drop_sys_with_only_nan = DropPVSystemsWithOnlyNanInADay(
+        trim_dates, minimum_number_data_points=288
+    )
 
     trim_dates = next(iter(trim_dates))
     drop_sys_with_only_nan = next(iter(drop_sys_with_only_nan))

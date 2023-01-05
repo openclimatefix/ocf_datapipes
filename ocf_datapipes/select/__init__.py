@@ -1,7 +1,7 @@
 """Selection datapipes"""
 from .drop_national_gsp import DropGSPIterDataPipe as DropGSP
 from .drop_pv_sys_with_only_nan_in_a_day import (
-    DropPVSysWithOnlyNanInADayIterDataPipe as DropPVSysWithOnlyNanInADay,
+    DropPVSystemsWithOnlyNanInADayIterDataPipe as DropPVSystemsWithOnlyNanInADay,
 )
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations

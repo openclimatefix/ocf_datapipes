@@ -12,8 +12,8 @@ from ocf_datapipes.utils.utils import return_system_indices_which_has_contiguous
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("select_pv_systems_without_output")
-class DropPVSysWithOnlyNanInADayIterDataPipe(IterDataPipe):
+@functional_datapipe("drop_pv_systems_with_only_nan_in_a_day")
+class DropPVSystemsWithOnlyNanInADayIterDataPipe(IterDataPipe):
     """Remove any PV systems with less than 1 day of data"""
 
     def __init__(self, source_datapipe: IterDataPipe, minimum_number_data_points: int) -> None:
