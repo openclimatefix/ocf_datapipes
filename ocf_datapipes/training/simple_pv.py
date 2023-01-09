@@ -10,7 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenConfiguration, OpenPVFromNetCDF
+from ocf_datapipes.load import OpenConfiguration, OpenPVFromNetCDF, OpenPVFromDB
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
@@ -41,11 +41,11 @@ def simple_pv_datapipe(
     configuration: Configuration = next(iter(config_datapipe))
 
     logger.debug("Opening Datasets")
-    pv_datapipe, pv_location_datapipe = (
-        OpenPVFromNetCDF(pv=configuration.input_data.pv)
-        # .pv_fill_night_nans()
-        .fork(2, buffer_size=BUFFERSIZE)
-    )
+    if configuration.input_data.pv.is_live:
+        pv_datapipe = OpenPVFromDB(pv=configuration.input_data.pv)
+    else:
+        pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
+    pv_datapipe, pv_location_datapipe = pv_datapipe.fork(2, buffer_size=BUFFERSIZE)
 
     logger.debug("Add t0 idx")
     pv_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
