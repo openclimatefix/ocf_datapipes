@@ -20,6 +20,7 @@ from nowcasting_datamodel.read.read_pv import get_pv_systems, get_pv_yield
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import encode_label, put_pv_data_into_an_xr_dataarray
 from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle, lat_lon_to_osgb
 
@@ -32,7 +33,8 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        providers: List[str],
+        pv_config: PV = None,
+        providers: List[str] = None,
         interpolate_minutes: int = 30,
         load_extra_minutes: int = 60,
         history_minutes: int = 30,
@@ -41,6 +43,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         Datapipe to get PV from database
 
         Args:
+            pv_config: PV configuration, if None, providers must be None.
             providers: Providers to use
             interpolate_minutes: How many minutes to interpolate
             load_extra_minutes: How many extra minutes to load
@@ -49,10 +52,17 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
 
         super().__init__()
 
-        self.providers = providers
-        self.interpolate_minutes = interpolate_minutes
-        self.load_extra_minutes = load_extra_minutes
-        self.history_minutes = history_minutes
+        self.pv_config = pv_config
+        if pv_config is not None:
+            self.providers = [pv_files.label for pv_files in pv_config.pv_files_groups]
+            self.interpolate_minutes = pv_config.live_interpolate_minutes
+            self.load_extra_minutes = pv_config.live_load_extra_minutes
+            self.history_minutes = pv_config.history_minutes
+        else:
+            self.providers = providers
+            self.interpolate_minutes = interpolate_minutes
+            self.load_extra_minutes = load_extra_minutes
+            self.history_minutes = history_minutes
 
         self.history_duration = pd.Timedelta(self.history_minutes, unit="minutes")
 
