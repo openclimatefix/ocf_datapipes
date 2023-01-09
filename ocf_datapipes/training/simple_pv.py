@@ -10,7 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenConfiguration, OpenPVFromNetCDF, OpenPVFromDB
+from ocf_datapipes.load import OpenConfiguration, OpenPVFromDB, OpenPVFromNetCDF
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
