@@ -42,7 +42,7 @@ def simple_pv_datapipe(
 
     logger.debug("Opening Datasets")
     if configuration.input_data.pv.is_live:
-        pv_datapipe = OpenPVFromDB(pv=configuration.input_data.pv)
+        pv_datapipe = OpenPVFromDB(pv_config=configuration.input_data.pv)
     else:
         pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
     pv_datapipe, pv_location_datapipe = pv_datapipe.fork(2, buffer_size=BUFFERSIZE)
