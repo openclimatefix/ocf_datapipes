@@ -43,7 +43,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         Datapipe to get PV from database
 
         Args:
-            pv_config: PV configuration, if None, providers cant not be None.
+            pv_config: PV configuration, if None, providers must be None.
             providers: Providers to use
             interpolate_minutes: How many minutes to interpolate
             load_extra_minutes: How many extra minutes to load
