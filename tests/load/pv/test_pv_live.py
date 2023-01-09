@@ -116,7 +116,9 @@ def test_open_pv_datasource_from_database(pv_yields_and_systems):
 @freeze_time("2022-01-01 05:00")
 def test_open_pv_datasource_from_database_config(pv_yields_and_systems):
 
-    pv_config = PV(history_minutes=60, forecast_minutes=60 * 24, pv_files_groups=[PVFiles()], is_live=True)
+    pv_config = PV(
+        history_minutes=60, forecast_minutes=60 * 24, pv_files_groups=[PVFiles()], is_live=True
+    )
     pv_datapipe = OpenPVFromDBIterDataPipe(pv_config=pv_config)
     data = next(iter(pv_datapipe))
     assert data is not None
