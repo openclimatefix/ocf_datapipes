@@ -98,7 +98,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             capacity_watt_power=pv_metadata.capacity_watt_power,
             pv_system_row_number=pv_system_row_number,
             latitude=pv_metadata.latitude,
-            longitude=pv_metadata.longitude
+            longitude=pv_metadata.longitude,
         )
 
         logger.info(f"Found {len(data_xr.pv_system_row_number)} PV systems")
