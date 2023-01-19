@@ -47,6 +47,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             history_minutes: How many history minutes to use
             interpolate_minutes:  How many minutes to interpolate
             load_extra_minutes: How many extra minutes to load
+            national_only: Optional to only load the national data. Default is False
         """
 
         self.interpolate_minutes = interpolate_minutes
