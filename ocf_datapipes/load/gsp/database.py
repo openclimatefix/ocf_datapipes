@@ -86,7 +86,6 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             x_osgb = gsp_id_to_shape.geometry.centroid.x.astype(np.float32)
             y_osgb = gsp_id_to_shape.geometry.centroid.y.astype(np.float32)
 
-
         data_array = put_gsp_data_into_an_xr_dataarray(
             gsp_pv_power_mw=gsp_pv_power_mw_df.astype(np.float32),
             time_utc=gsp_pv_power_mw_df.index.values,

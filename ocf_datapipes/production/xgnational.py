@@ -2,7 +2,6 @@
 Pipeline to return live GSP and NWP data
 """
 
-"""Wrapper for Power Perceiver Production Data Pipeline"""
 import logging
 from pathlib import Path
 from typing import Union
