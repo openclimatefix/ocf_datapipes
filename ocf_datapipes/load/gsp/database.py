@@ -38,7 +38,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
         history_minutes: int = 90,
         interpolate_minutes: int = 60,
         load_extra_minutes: int = 60,
-        national_only: bool = False
+        national_only: bool = False,
     ):
         """
         Get and open the GSP data
@@ -70,7 +70,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             history_duration=self.history_duration,
             interpolate_minutes=self.interpolate_minutes,
             load_extra_minutes=self.load_extra_minutes,
-            gsp_ids=self.gsp_ids
+            gsp_ids=self.gsp_ids,
         )
 
         if self.national_only:
