@@ -11,10 +11,7 @@ import xarray
 import ocf_datapipes  # noqa
 from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import (
-    OpenGSPFromDatabase,
-    OpenNWP,
-)
+from ocf_datapipes.load import OpenGSPFromDatabase, OpenNWP
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
