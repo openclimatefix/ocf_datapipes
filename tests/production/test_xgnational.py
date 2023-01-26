@@ -4,7 +4,7 @@ import xarray as xr
 from freezegun import freeze_time
 
 import ocf_datapipes
-from ocf_datapipes.production.xgnational import xgnational_production_datapipe
+from ocf_datapipes.production.xgnational import xgnational_production
 
 
 @freeze_time("2022-01-01 08:00")
@@ -12,7 +12,7 @@ def test_xgnational_production_datapipe(gsp_yields):
 
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
-    data = xgnational_production_datapipe(filename)
+    data = xgnational_production(filename)
 
     gsp_xr = data["gsp"]
     nwp_xr = data["nwp"]

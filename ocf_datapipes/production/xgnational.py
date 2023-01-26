@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
 
-def xgnational_production_datapipe(configuration_filename: Union[Path, str]) -> dict:
+def xgnational_production(configuration_filename: Union[Path, str]) -> dict:
     """
     Create the National XG Boost  using a configuration
 
