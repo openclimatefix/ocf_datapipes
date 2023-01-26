@@ -16,7 +16,7 @@ repos:
 
   # python code formatting/linting
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.2.3
+    rev: 6.3.0
     hooks:
       - id: pydocstyle
         args:
