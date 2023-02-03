@@ -35,3 +35,4 @@ from .pv.assign_daynight_status import AssignDayNightStatusIterDataPipe as Assig
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+from .pv.create_pv_history_image import CreatePVHistoryImageIterDataPipe as CreatePVHistoryImage

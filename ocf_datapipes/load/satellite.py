@@ -9,6 +9,7 @@ import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+from jpeg_xl_float_with_nans import jpeg_xl_float_with_nans
 
 _log = logging.getLogger(__name__)
 
