@@ -39,7 +39,7 @@ def _remove_nans(x):
     return x.fillna(0.0)
 
 
-def metnet_national_datapipe(
+def metnet_site_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
     use_nwp: bool = True,
