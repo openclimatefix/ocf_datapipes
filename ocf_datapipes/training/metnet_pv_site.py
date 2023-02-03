@@ -45,7 +45,7 @@ def metnet_site_datapipe(
     use_nwp: bool = True,
     use_sat: bool = True,
     use_hrv: bool = True,
-    use_pv: bool = False,
+    use_pv: bool = True,
     use_topo: bool = True,
     output_size: int = 256,
     pv_in_image: bool = False,
