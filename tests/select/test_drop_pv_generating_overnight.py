@@ -46,7 +46,6 @@ def test_time(passiv_datapipe):
 
 
 def test_drop_with_constructed_dataarray():
-
     # Make 3 pv systems
     # 1 and 2, produce no power in the night
     # 3 produces power in the night

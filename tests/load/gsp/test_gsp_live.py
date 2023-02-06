@@ -32,7 +32,6 @@ def test_get_pv_power_from_database(gsp_yields, db_session):
 
 @freeze_time("2022-01-01 03:00")
 def test_open_pv_datasource_from_database(gsp_yields):
-
     pv_dp = OpenGSPFromDatabaseIterDataPipe()
     data = next(iter(pv_dp))
     assert data is not None

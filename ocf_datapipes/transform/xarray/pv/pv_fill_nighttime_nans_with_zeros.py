@@ -34,14 +34,12 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
         """Run iter"""
 
         for xr_data in self.source_datapipe:
-
             logger.info("Going to fill night time nans")
 
             lats, lons = osgb_to_lat_lon(x=xr_data.x_osgb, y=xr_data.y_osgb)
 
             elevation = np.full_like(xr_data.data, fill_value=np.NaN).astype(np.float32)
             for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
-
                 logger.debug(
                     f"Getting solar elevation for {lat} {lon} " f"{example_idx} out of {len(lats)}"
                 )
