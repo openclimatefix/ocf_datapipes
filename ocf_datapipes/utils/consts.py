@@ -353,6 +353,48 @@ NWP_STD = {
 
 NWP_CHANNEL_NAMES = tuple(NWP_STD.keys())
 
+# Newer version_7 and higher, MetOffice values
+NEW_NWP_MEAN = {
+    "cdcb": 1.441e+03,
+    "lcc": 49.59,
+    "mcc": 41.06,
+    "hcc": 29.22,
+    "sde": 0.002727,
+    "hcct": -1.784e+04,
+    "dswrf": 111.6,
+    "dlwrf": 324.6,
+    "h": 2.078e+03,
+    "t": 283.6,
+    "r": 81.64,
+    "dpt": 280.5,
+    "vis": np.inf, # TODO Change
+    "si10": 6.914,
+    "wdir10": 200.5,
+    "prmsl": np.inf, # TODO Change
+    "prate": 3.497e-05,
+}
+
+NEW_NWP_STD = {
+    "cdcb": 2.154e+03,
+    "lcc": 39.27,
+    "mcc": 41.82,
+    "hcc": 38.06,
+    "sde": 0.09932,
+    "hcct": 1.851e+04,
+    "dswrf": 191.4,
+    "dlwrf": 39.55,
+    "h": 1.074e+03,
+    "t": 4.401,
+    "r": 11.5,
+    "dpt": 4.571,
+    "vis": np.inf, # TODO Change
+    "si10": 3.948,
+    "wdir10": 94.17,
+    "prmsl": 0.0,
+    "prate": 0.0002202,
+}
+
+
 NWP_GFS_MEAN = {
     "t": 285.7799539185846,
     "dswrf": 294.6696933986283,
@@ -382,6 +424,9 @@ def _to_data_array(d):
 
 NWP_MEAN = _to_data_array(NWP_MEAN)
 NWP_STD = _to_data_array(NWP_STD)
+
+NEW_NWP_MEAN = _to_data_array(NEW_NWP_MEAN)
+NEW_NWP_STD = _to_data_array(NEW_NWP_STD)
 
 SAT_MEAN = {
     "HRV": 236.13257536395903,
@@ -413,6 +458,10 @@ SAT_STD = {
     "WV_073": 106.8855172848904,
 }
 
+RSS_MEAN = {}
+
+RSS_STD = {}
+
 
 def _to_data_array(d):
     return xr.DataArray(
@@ -422,3 +471,7 @@ def _to_data_array(d):
 
 SAT_MEAN_DA = _to_data_array(SAT_MEAN)
 SAT_STD_DA = _to_data_array(SAT_STD)
+
+RSS_MEAN = _to_data_array(RSS_MEAN)
+RSS_STD = _to_data_array(RSS_STD)
+
