@@ -142,6 +142,11 @@ def metnet_national_datapipe(
         gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
             image_datapipe=sat_gsp_datapipe
         )
+    elif gsp_in_image and "nwp" in used_datapipes.keys():
+        nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
+        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+            image_datapipe=nwp_gsp_datapipe, image_dim="osgb"
+        )
     if "nwp" in used_datapipes.keys():
         modalities.append(nwp_datapipe)
     if "hrv" in used_datapipes.keys():
