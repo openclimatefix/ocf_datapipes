@@ -28,3 +28,4 @@ dependencies:
       - gitpython
       - tqdm
       - bottleneck
+      - ocf_blosc2

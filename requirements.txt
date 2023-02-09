@@ -15,7 +15,7 @@ gitpython
 geopandas
 dask
 pvlib
-jpeg_xl_float_with_nans
+ocf_blosc2
 h5netcdf
 tqdm
 bottleneck

@@ -6,6 +6,8 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import xarray as xr
+from ocf_blosc2 import Blosc2
+
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
