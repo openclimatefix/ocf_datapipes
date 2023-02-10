@@ -355,39 +355,39 @@ NWP_CHANNEL_NAMES = tuple(NWP_STD.keys())
 
 # Newer version_7 and higher, MetOffice values
 NEW_NWP_MEAN = {
-    "cdcb": 1.441e+03,
+    "cdcb": 1.441e03,
     "lcc": 49.59,
     "mcc": 41.06,
     "hcc": 29.22,
     "sde": 0.002727,
-    "hcct": -1.784e+04,
+    "hcct": -1.784e04,
     "dswrf": 111.6,
     "dlwrf": 324.6,
-    "h": 2.078e+03,
+    "h": 2.078e03,
     "t": 283.6,
     "r": 81.64,
     "dpt": 280.5,
-    "vis": np.inf, # TODO Change
+    "vis": np.inf,  # TODO Change
     "si10": 6.914,
     "wdir10": 200.5,
-    "prmsl": np.inf, # TODO Change
+    "prmsl": np.inf,  # TODO Change
     "prate": 3.497e-05,
 }
 
 NEW_NWP_STD = {
-    "cdcb": 2.154e+03,
+    "cdcb": 2.154e03,
     "lcc": 39.27,
     "mcc": 41.82,
     "hcc": 38.06,
     "sde": 0.09932,
-    "hcct": 1.851e+04,
+    "hcct": 1.851e04,
     "dswrf": 191.4,
     "dlwrf": 39.55,
-    "h": 1.074e+03,
+    "h": 1.074e03,
     "t": 4.401,
     "r": 11.5,
     "dpt": 4.571,
-    "vis": np.inf, # TODO Change
+    "vis": np.inf,  # TODO Change
     "si10": 3.948,
     "wdir10": 94.17,
     "prmsl": 0.0,
@@ -458,9 +458,35 @@ SAT_STD = {
     "WV_073": 106.8855172848904,
 }
 
-RSS_MEAN = {}
-
-RSS_STD = {}
+# RSS Mean and std taken from random 20% of 2020 RSS imagery
+RSS_STD = {
+    "HRV": 0.11405209,
+    "IR_016": 0.21462157,
+    "IR_039": 0.04618041,
+    "IR_087": 0.06687243,
+    "IR_097": 0.0468558,
+    "IR_108": 0.17482725,
+    "IR_120": 0.06115861,
+    "IR_134": 0.04492306,
+    "VIS006": 0.12184761,
+    "VIS008": 0.13090034,
+    "WV_062": 0.16111417,
+    "WV_073": 0.12924142,
+}
+RSS_MEAN = {
+    "HRV": 0.09298719,
+    "IR_016": 0.17594202,
+    "IR_039": 0.86167645,
+    "IR_087": 0.7719318,
+    "IR_097": 0.8014212,
+    "IR_108": 0.71254843,
+    "IR_120": 0.89058584,
+    "IR_134": 0.944365,
+    "VIS006": 0.09633306,
+    "VIS008": 0.11426069,
+    "WV_062": 0.7359355,
+    "WV_073": 0.62479186,
+}
 
 
 def _to_data_array(d):
@@ -474,4 +500,3 @@ SAT_STD_DA = _to_data_array(SAT_STD)
 
 RSS_MEAN = _to_data_array(RSS_MEAN)
 RSS_STD = _to_data_array(RSS_STD)
-

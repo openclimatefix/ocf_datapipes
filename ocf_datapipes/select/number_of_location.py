@@ -15,9 +15,7 @@ class NumberOfLocationsrIterDataPipe(IterDataPipe):
     """Picks locations from a dataset and returns them"""
 
     def __init__(
-        self,
-        source_datapipe: IterDataPipe,
-        x_dim_name: Optional[str] = "x_osgb",
+        self, source_datapipe: IterDataPipe, x_dim_name: Optional[str] = "x_osgb",
     ):
         """
         Get the total number locations from a dataset and returns them

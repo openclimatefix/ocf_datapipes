@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import xarray as xr
-from ocf_blosc2 import Blosc2
+from ocf_blosc2 import Blosc2  # noqa: F401
 
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
@@ -45,13 +45,7 @@ def open_nwp(zarr_path) -> xr.DataArray:
     Returns:
         Xarray DataArray of the NWP data
     """
-    nwp = xr.open_dataset(
-        zarr_path,
-        engine="zarr",
-        consolidated=True,
-        mode="r",
-        chunks="auto",
-    )
+    nwp = xr.open_dataset(zarr_path, engine="zarr", consolidated=True, mode="r", chunks="auto",)
     ukv: xr.DataArray = nwp["UKV"]
     del nwp
     ukv = ukv.transpose("init_time", "step", "variable", "y", "x")

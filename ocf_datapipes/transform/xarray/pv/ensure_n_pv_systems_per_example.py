@@ -32,9 +32,7 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
                 logger.debug(f"Reducing PV systems to  {self.n_pv_systems_per_example}")
                 # More PV systems are available than we need. Reduce by randomly sampling:
                 subset_of_pv_system_ids = self.rng.choice(
-                    xr_data.pv_system_id,
-                    size=self.n_pv_systems_per_example,
-                    replace=False,
+                    xr_data.pv_system_id, size=self.n_pv_systems_per_example, replace=False,
                 )
                 xr_data = xr_data.sel(pv_system_id=subset_of_pv_system_ids)
             elif len(xr_data.pv_system_id) < self.n_pv_systems_per_example:
@@ -49,12 +47,9 @@ class EnsureNPVSystemsPerExampleIterDataPipe(IterDataPipe):
                 n_random_pv_systems = self.n_pv_systems_per_example - len(xr_data.pv_system_id)
                 allow_replacement = n_random_pv_systems > len(xr_data.pv_system_id)
                 random_pv_system_ids = self.rng.choice(
-                    xr_data.pv_system_id,
-                    size=n_random_pv_systems,
-                    replace=allow_replacement,
+                    xr_data.pv_system_id, size=n_random_pv_systems, replace=allow_replacement,
                 )
                 xr_data = xr.concat(
-                    (xr_data, xr_data.sel(pv_system_id=random_pv_system_ids)),
-                    dim="pv_system_id",
+                    (xr_data, xr_data.sel(pv_system_id=random_pv_system_ids)), dim="pv_system_id",
                 )
             yield xr_data

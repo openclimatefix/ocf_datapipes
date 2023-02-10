@@ -14,9 +14,7 @@ class RemoveNorthernGSPIterDataPipe(IterDataPipe):
     """Remove northern GSPs"""
 
     def __init__(
-        self,
-        source_datapipe: IterDataPipe,
-        northern_y_osgb_limit: Optional[int] = 1_036_975,
+        self, source_datapipe: IterDataPipe, northern_y_osgb_limit: Optional[int] = 1_036_975,
     ):
         """
         Remove northern GSP. This might be because satellite data is not available
