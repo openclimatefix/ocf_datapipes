@@ -87,7 +87,7 @@ def metnet_site_datapipe(
     used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
-    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
+    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="pv")
 
     # And now get time slices
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
@@ -96,8 +96,9 @@ def metnet_site_datapipe(
     pv_history = used_datapipes["pv"].normalize(normalize_fn=normalize_pv)
     pv_datapipe = used_datapipes["pv_future"].normalize(normalize_fn=normalize_pv)
     # Split into GSP for target, only national, and one for history
-    pv_datapipe, pv_loc_datapipe, pv_id_datapipe = LocationPicker(pv_datapipe).fork(3)
-    pv_history = pv_history.select_id(pv_id_datapipe)
+    pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
+    pv_loc_datapipe, pv_id_datapipe = LocationPicker(pv_loc_datapipe).fork(2)
+    pv_history = pv_history.select_id(pv_id_datapipe, data_source_name="pv")
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
@@ -111,7 +112,7 @@ def metnet_site_datapipe(
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
-        sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=RSS_MEAN["HRV"], std=RSS_STD["HRV"])
+        sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=RSS_MEAN, std=RSS_STD)
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
@@ -159,7 +160,7 @@ def metnet_site_datapipe(
 
     if not pv_in_image:
         pv_history = pv_history.map(_remove_nans)
-        pv_history = ConvertPVToNumpy(pv_history, return_id=True)
+        pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
         return metnet_datapipe.zip_ocf(pv_history, pv_datapipe)  # Makes (Inputs, Label) tuples
     else:
         return metnet_datapipe.zip(pv_datapipe)

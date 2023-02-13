@@ -144,12 +144,13 @@ def open_and_return_datapipes(
     return used_datapipes
 
 
-def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict):
+def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for_t0: str = "gsp"):
     """
     Takes datapipes and obtains the overlapping time periods + t0 time datapipes
 
     Args:
         used_datapipes: Dictionary of datapipes to compute the time intersection of
+        key_for_t0: Key to use for the t0 datapipe
 
     Returns:
         Dictionary of datapipes with the proper time slices selected
@@ -161,7 +162,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict):
     for key, datapipe in used_datapipes.items():
         if "topo" in key:
             continue
-        if "gsp" in key:
+        if key_for_t0 in key:
             forked_datapipes = datapipe.fork(3, buffer_size=5)
             t0_datapipe = forked_datapipes[2]
         else:
