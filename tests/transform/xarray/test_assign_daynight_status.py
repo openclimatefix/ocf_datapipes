@@ -36,7 +36,7 @@ def test_time(passiv_datapipe):
 
 
 def test_with_constructed_array():
-    time = pd.date_range("17:00", "23:55", freq="5min")
+    time = pd.date_range("2022-01-01 17:00", "2022-01-01 23:55", freq="5min")
     pv_system_id = [1, 2, 3]
     ALL_COORDS = {"time_utc": time, "pv_system_id": pv_system_id}
 
