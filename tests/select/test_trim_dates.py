@@ -32,10 +32,7 @@ def test_constructed_xarray():
         data = np.zeros((len(time_range), len(pv_system_id)))
         data[:, 2] = np.nan
 
-        data_array = xr.DataArray(
-            data,
-            coords=ALL_COORDS,
-        )
+        data_array = xr.DataArray(data, coords=ALL_COORDS,)
         return data_array
 
     # Different data array with different time ranges

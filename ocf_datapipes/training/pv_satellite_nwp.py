@@ -134,10 +134,7 @@ def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration
     # find joint overlapping time periods
     logger.debug("Getting joint time periods")
     overlapping_datapipe = pv_time_periods_datapipe.select_overlapping_time_slice(
-        secondary_datapipes=[
-            nwp_time_periods_datapipe,
-            satellite_time_periods_datapipe,
-        ],
+        secondary_datapipes=[nwp_time_periods_datapipe, satellite_time_periods_datapipe,],
     )
     gsp_time_periods, nwp_time_periods, pv_time_periods = overlapping_datapipe.fork(
         3, buffer_size=BUFFER_SIZE
