@@ -159,4 +159,4 @@ def metnet_site_datapipe(
         pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
         return metnet_datapipe.zip_ocf(pv_history, pv_datapipe)  # Makes (Inputs, Label) tuples
     else:
-        return metnet_datapipe.zip(pv_datapipe)
+        return metnet_datapipe.zip_ocf(pv_datapipe)

@@ -58,7 +58,6 @@ class CreatePVHistoryImageIterDataPipe(IterDataPipe):
                 ),
                 dtype=np.float32,
             )
-            print(pv_systems_xr)
             # If only one, like chosen before, then use single one
             for time_step in range(len(pv_systems_xr.time_utc.values)):
                 # Now go by the timestep to create cube of pv data
