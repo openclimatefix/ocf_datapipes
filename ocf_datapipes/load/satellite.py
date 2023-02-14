@@ -29,7 +29,10 @@ def open_sat_data(
     dask.config.set({"array.slicing.split_large_chunks": False})
 
     # Open the data
-    dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
+    if "*" in zarr_path: # Multi-file dataset
+        dataset = xr.open_mfdataset(zarr_path, engine="zarr", concat_dim="time", combine="nested")
+    else:
+        dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
 
     # TODO add 15 mins data satellite option
 
