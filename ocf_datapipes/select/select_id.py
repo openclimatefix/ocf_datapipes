@@ -45,9 +45,13 @@ class SelectIDIterDataPipe(IterDataPipe):
 
             if self.data_source_name == "pv":
                 try:
-                    xr_data = xr_data.sel(pv_system_id=location.id)
-                except Exception as e:
-                    logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
-                    raise e
+                    xr_data = xr_data.sel(pv_system_id=[location.id])
+                except:
+                    try:
+                        # TODO Fix this, simple ones fail without the [], MetNet fails with []
+                        xr_data = xr_data.sel(pv_system_id=location.id)
+                    except Exception as e:
+                        logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
+                        raise e
             logger.debug("Selected Data on id")
             yield xr_data
