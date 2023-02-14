@@ -24,3 +24,4 @@ pyresample
 fastparquet
 scipy
 pytorch_lightning
+pvlive-api
