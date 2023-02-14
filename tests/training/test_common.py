@@ -80,7 +80,10 @@ def test_add_selected_time_slices_from_datapipes_fork_iterations():
     )
     # Zip together to see if any are missing
     zipped = Zipper(
-        *[used_datapipes[k] for k in ["nwp", "topo", "gsp", "gsp_future", "pv", "pv_future", "sat", "hrv"]]
+        *[
+            used_datapipes[k]
+            for k in ["nwp", "topo", "gsp", "gsp_future", "pv", "pv_future", "sat", "hrv"]
+        ]
     )
     dataloader = DataLoader2(zipped)
     for i, batch in enumerate(dataloader):
