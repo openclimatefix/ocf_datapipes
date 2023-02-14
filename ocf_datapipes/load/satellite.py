@@ -13,7 +13,9 @@ from torchdata.datapipes.iter import IterDataPipe
 _log = logging.getLogger(__name__)
 
 
-def open_sat_data(zarr_path: Union[Path, str], ) -> xr.DataArray:
+def open_sat_data(
+    zarr_path: Union[Path, str],
+) -> xr.DataArray:
     """Lazily opens the Zarr store.
 
     Args:
@@ -46,12 +48,24 @@ def open_sat_data(zarr_path: Union[Path, str], ) -> xr.DataArray:
     # Note that `rename` renames *both* the coordinates and dimensions, and keeps
     # the connection between the dims and coordinates, so we don't have to manually
     # use `data_array.set_index()`.
-    dataset = dataset.rename({"time": "time_utc", })
+    dataset = dataset.rename(
+        {
+            "time": "time_utc",
+        }
+    )
     if "y" in dataset.coords.keys():
-        dataset = dataset.rename({"y": "y_geostationary", })
+        dataset = dataset.rename(
+            {
+                "y": "y_geostationary",
+            }
+        )
 
     if "x" in dataset.coords.keys():
-        dataset = dataset.rename({"x": "x_geostationary", })
+        dataset = dataset.rename(
+            {
+                "x": "x_geostationary",
+            }
+        )
 
     # Flip coordinates to top-left first
     if dataset.y_geostationary[0] < dataset.y_geostationary[-1]:

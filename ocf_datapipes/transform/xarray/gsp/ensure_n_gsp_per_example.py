@@ -32,7 +32,9 @@ class EnsureNGSPSPerExampleIterDataPipe(IterDataPipe):
                 logger.debug(f"Reducing GSPS to  {self.n_gsps_per_example}")
                 # More PV systems are available than we need. Reduce by randomly sampling:
                 subset_of_gsp_ids = self.rng.choice(
-                    xr_data.gsp_id, size=self.n_gsps_per_example, replace=False,
+                    xr_data.gsp_id,
+                    size=self.n_gsps_per_example,
+                    replace=False,
                 )
                 xr_data = xr_data.sel(gsp_id=subset_of_gsp_ids)
             elif len(xr_data.gsp_id) < self.n_gsps_per_example:
@@ -47,7 +49,12 @@ class EnsureNGSPSPerExampleIterDataPipe(IterDataPipe):
                 n_random_gsps = self.n_gsps_per_example - len(xr_data.gsp_id)
                 allow_replacement = n_random_gsps > len(xr_data.gsp_id)
                 random_gsp_ids = self.rng.choice(
-                    xr_data.gsp_id, size=n_random_gsps, replace=allow_replacement,
+                    xr_data.gsp_id,
+                    size=n_random_gsps,
+                    replace=allow_replacement,
                 )
-                xr_data = xr.concat((xr_data, xr_data.sel(gsp_id=random_gsp_ids)), dim="gsp_id",)
+                xr_data = xr.concat(
+                    (xr_data, xr_data.sel(gsp_id=random_gsp_ids)),
+                    dim="gsp_id",
+                )
             yield xr_data

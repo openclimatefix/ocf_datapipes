@@ -27,7 +27,8 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     """Datapipe to load NetCDF"""
 
     def __init__(
-        self, pv: PV,
+        self,
+        pv: PV,
     ):
         """
         Datapipe to load PV from NetCDF

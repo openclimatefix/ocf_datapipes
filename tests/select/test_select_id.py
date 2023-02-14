@@ -15,6 +15,8 @@ def test_select_id(configuration_with_pv_parquet, nwp_data_with_id_filename):
 
     location_datapipe = pv_location_datapipe.location_picker()
 
-    nwp_datapipe = nwp_datapipe.select_id(location_datapipe=location_datapipe,)
+    nwp_datapipe = nwp_datapipe.select_id(
+        location_datapipe=location_datapipe,
+    )
     data = next(iter(nwp_datapipe))
     assert data.id is not None

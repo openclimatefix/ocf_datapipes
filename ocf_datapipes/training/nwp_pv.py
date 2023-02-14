@@ -109,7 +109,9 @@ def nwp_pv_datapipe(
 
     # select square from nwp data
     if configuration.input_data.nwp.index_by_id:
-        nwp_datapipe = nwp_datapipe.select_id(location_datapipe=location_datapipe2,)
+        nwp_datapipe = nwp_datapipe.select_id(
+            location_datapipe=location_datapipe2,
+        )
     else:
         nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
             location_datapipe=location_datapipe2,
@@ -142,7 +144,8 @@ def nwp_pv_datapipe(
 
     # find joint overlapping timer periods
     overlapping_datapipe = pv_time_periods_datapipe.select_overlapping_time_slice(
-        secondary_datapipes=[nwp_time_periods_datapipe], location_datapipe=location_datapipe3,
+        secondary_datapipes=[nwp_time_periods_datapipe],
+        location_datapipe=location_datapipe3,
     )
 
     # select time periods
