@@ -14,7 +14,10 @@ class SelectTimePeriodsIterDataPipe(IterDataPipe):
     """Select time periods"""
 
     def __init__(
-        self, source_datapipe: IterDataPipe, time_periods: IterDataPipe, dim_name: str = "time_utc",
+        self,
+        source_datapipe: IterDataPipe,
+        time_periods: IterDataPipe,
+        dim_name: str = "time_utc",
     ):
         """
         Select time periods

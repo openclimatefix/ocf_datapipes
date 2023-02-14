@@ -121,14 +121,10 @@ def metnet_site_datapipe(
     modalities = []
     if pv_in_image and "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        pv_history = pv_history.create_pv_history_image(
-            image_datapipe=sat_gsp_datapipe
-        )
+        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
     elif pv_in_image and "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        pv_history = pv_history.create_pv_history_image(
-            image_datapipe=sat_gsp_datapipe
-        )
+        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
     elif pv_in_image and "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
         pv_history = pv_history.create_pv_history_image(
@@ -149,9 +145,9 @@ def metnet_site_datapipe(
         modalities,
         location_datapipe=pv_loc_datapipe,
         center_width=64_000,
-        center_height=64_000, # 64km
+        center_height=64_000,  # 64km
         context_height=512_000,
-        context_width=512_000, # 512km
+        context_width=512_000,  # 512km
         output_width_pixels=output_size,
         output_height_pixels=output_size,
         add_sun_features=use_sun,

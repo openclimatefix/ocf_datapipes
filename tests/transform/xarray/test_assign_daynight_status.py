@@ -43,7 +43,10 @@ def test_with_constructed_array():
     data = np.zeros((len(time), len(pv_system_id)))
     data[:, 2] = 1.0
 
-    data_array = xr.DataArray(data, coords=ALL_COORDS,)
+    data_array = xr.DataArray(
+        data,
+        coords=ALL_COORDS,
+    )
 
     night_status = AssignDayNightStatus([data_array])
     data = next(iter(night_status))

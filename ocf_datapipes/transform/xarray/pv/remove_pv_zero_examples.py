@@ -14,7 +14,9 @@ class PVPowerRemoveZeroDataIterDataPipe(IterDataPipe):
     """Compute rolling mean of PV power."""
 
     def __init__(
-        self, source_datapipe: IterDataPipe, window: timedelta,
+        self,
+        source_datapipe: IterDataPipe,
+        window: timedelta,
     ):
         """
         Set zero pv data to nans

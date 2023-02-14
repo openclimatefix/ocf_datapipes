@@ -58,17 +58,19 @@ class CreatePVHistoryImageIterDataPipe(IterDataPipe):
                 ),
                 dtype=np.float32,
             )
-            for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
-                pv_system = pv_systems_xr.sel(pv_system_id=pv_system_id)
-                for time_step in range(len(pv_system.time_utc.values)):
-                    # Now go by the timestep to create cube of pv data
-                    pv_image[time_step:, :] = pv_system.isel(time_utc=time_step).values
+            print(pv_systems_xr)
+            # If only one, like chosen before, then use single one
+            for time_step in range(len(pv_systems_xr.time_utc.values)):
+                # Now go by the timestep to create cube of pv data
+                pv_image[time_step:, :] = pv_systems_xr.isel(time_utc=time_step).values
 
             pv_image = np.nan_to_num(pv_image)
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
-            pv_image = _create_data_array_from_image(pv_image, pv_systems_xr, image_xr, image_dim=self.x_dim.split("_")[-1])
+            pv_image = _create_data_array_from_image(
+                pv_image, pv_systems_xr, image_xr, image_dim=self.x_dim.split("_")[-1]
+            )
             yield pv_image
 
 
@@ -82,8 +84,8 @@ def _create_data_array_from_image(
         data=pv_image,
         coords=(
             ("time_utc", pv_systems_xr.time_utc.values),
-            ("y_"+image_dim, image_xr["y_"+image_dim].values),
-            ("x_"+image_dim, image_xr["x_"+image_dim].values),
+            ("y_" + image_dim, image_xr["y_" + image_dim].values),
+            ("x_" + image_dim, image_xr["x_" + image_dim].values),
         ),
         name="pv_image",
     ).astype(np.float32)

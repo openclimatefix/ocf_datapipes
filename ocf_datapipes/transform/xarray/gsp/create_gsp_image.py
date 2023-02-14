@@ -68,7 +68,9 @@ class CreateGSPImageIterDataPipe(IterDataPipe):
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
-            pv_image = _create_data_array_from_image(pv_image, gsp_systems_xr, image_xr, image_dim=self.x_dim.split("_")[-1])
+            pv_image = _create_data_array_from_image(
+                pv_image, gsp_systems_xr, image_xr, image_dim=self.x_dim.split("_")[-1]
+            )
             yield pv_image
 
 
@@ -82,8 +84,8 @@ def _create_data_array_from_image(
         data=pv_image,
         coords=(
             ("time_utc", pv_systems_xr.time_utc.values),
-            ("y_"+image_dim, image_xr["y_"+image_dim].values),
-            ("x_"+image_dim, image_xr["x_"+image_dim].values),
+            ("y_" + image_dim, image_xr["y_" + image_dim].values),
+            ("x_" + image_dim, image_xr["x_" + image_dim].values),
         ),
         name="gsp_image",
     ).astype(np.float32)
