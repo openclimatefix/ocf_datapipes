@@ -351,8 +351,6 @@ NWP_STD = {
     "hcc": 39.05157559763763,
 }
 
-NWP_CHANNEL_NAMES = tuple(NWP_STD.keys())
-
 # Newer version_7 and higher, MetOffice values
 NEW_NWP_STD = {
     "cdcb": 2126.99350113,
@@ -394,6 +392,51 @@ NEW_NWP_MEAN = {
 }
 
 
+NEW_NWP_MAX = {
+    "cdcb": 20632.0,
+    "lcc": 100.0,
+    "mcc": 100.0,
+    "hcc": 100.05,
+    "sde": 10.0,
+    "hcct": 11579.0,
+    "dswrf": 1018.4,
+    "dlwrf": 492.4,
+    "h": 5241.0,
+    "t": 315.8,
+    "r": 100.05,
+    "dpt": 302.535,
+    "vis": 99794.0,
+    "si10": 46.15,
+    "wdir10": 360.0,
+    "prmsl": 105440.0,
+    "prate": 0.055556,
+}
+NEW_NWP_MIN = {
+    "cdcb": 5.0,
+    "lcc": 0.0,
+    "mcc": 0.0,
+    "hcc": 0.0,
+    "sde": 0.0,
+    "hcct": -32766.0,
+    "dswrf": 0.0,
+    "dlwrf": 131.8,
+    "h": 0.0,
+    "t": 227.15,
+    "r": 7.84,
+    "dpt": 227.15,
+    "vis": 6.0,
+    "si10": 0.05,
+    "wdir10": 0.0,
+    "prmsl": 94160.0,
+    "prate": 0.0,
+}
+
+NWP_CHANNEL_NAMES = tuple(NEW_NWP_MEAN.keys())
+
+RSS_MAX = {}
+RSS_MIN = {}
+
+
 NWP_GFS_MEAN = {
     "t": 285.7799539185846,
     "dswrf": 294.6696933986283,
@@ -417,7 +460,8 @@ NWP_GFS_CHANNEL_NAMES = tuple(NWP_GFS_STD.keys())
 
 def _to_data_array(d):
     return xr.DataArray(
-        [d[key] for key in NWP_CHANNEL_NAMES], coords={"channel": list(NWP_CHANNEL_NAMES)}
+        [d[key] for key in NWP_CHANNEL_NAMES if key in d.keys()],
+        coords={"channel": list(NWP_CHANNEL_NAMES)},
     ).astype(np.float32)
 
 

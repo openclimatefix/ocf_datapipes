@@ -149,13 +149,11 @@ class XYDimensionalNames(Base):
     """X and Y dimensions names"""
 
     x_dim_name: str = Field(
-        "x_osgb",
-        description="The x dimension name. Should be either x_osgb or longitude",
+        "x_osgb", description="The x dimension name. Should be either x_osgb or longitude",
     )
 
     y_dim_name: str = Field(
-        "y_osgb",
-        description="The y dimension name. Should be either y_osgb or latitude",
+        "y_osgb", description="The y dimension name. Should be either y_osgb or latitude",
     )
 
     @root_validator
@@ -260,12 +258,10 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
     )
 
     pv_filename: str = Field(
-        None,
-        description="The NetCDF files holding the solar PV power timeseries.",
+        None, description="The NetCDF files holding the solar PV power timeseries.",
     )
     pv_metadata_filename: str = Field(
-        None,
-        description="Tthe CSV files describing each PV system.",
+        None, description="Tthe CSV files describing each PV system.",
     )
 
     is_live: bool = Field(

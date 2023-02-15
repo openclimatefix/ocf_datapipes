@@ -280,9 +280,7 @@ def metnet_national_datapipe(
             image_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
 
         pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe,
-            normalize=True,
-            max_num_pv_systems=max_num_pv_systems,
+            image_datapipe, normalize=True, max_num_pv_systems=max_num_pv_systems,
         )
 
     if use_topo:
