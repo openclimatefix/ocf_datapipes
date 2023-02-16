@@ -14,7 +14,10 @@ class SelectChannelsIterDataPipe(IterDataPipe):
     """Select channels"""
 
     def __init__(
-        self, source_datapipe: IterDataPipe, channels: List[str], dim_name: str = "channel",
+        self,
+        source_datapipe: IterDataPipe,
+        channels: List[str],
+        dim_name: str = "channel",
     ):
         """
         Select channels

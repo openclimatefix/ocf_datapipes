@@ -18,7 +18,10 @@ def test_execution_time():
     data = np.zeros((len(time), len(pv_system_id)))
     data[:, 2] = np.nan
 
-    data_array = xr.DataArray(data, coords=ALL_COORDS,)
+    data_array = xr.DataArray(
+        data,
+        coords=ALL_COORDS,
+    )
     drop_sys_with_only_nan = DropPVSystemsWithOnlyNanInADay(
         [data_array], minimum_number_data_points=288
     )
@@ -44,7 +47,10 @@ def test_trim_dates_lessthan_oneday():
     data = np.zeros((len(time), len(pv_system_id)))
     data[:, 2] = np.nan
 
-    data_array = xr.DataArray(data, coords=ALL_COORDS,)
+    data_array = xr.DataArray(
+        data,
+        coords=ALL_COORDS,
+    )
     trim_dates = TrimDatesWithInsufficentData([data_array], minimum_number_data_points=288)
     data = next(iter(trim_dates))
     assert data.time_utc.values.size == 150
@@ -58,7 +64,10 @@ def test_constructed_xarray():
     data = np.zeros((len(time), len(pv_system_id)))
     data[:, 2] = np.nan
 
-    data_array = xr.DataArray(data, coords=ALL_COORDS,)
+    data_array = xr.DataArray(
+        data,
+        coords=ALL_COORDS,
+    )
     trim_dates = TrimDatesWithInsufficentData([data_array], minimum_number_data_points=288)
     drop_sys_with_only_nan = DropPVSystemsWithOnlyNanInADay(
         trim_dates, minimum_number_data_points=288

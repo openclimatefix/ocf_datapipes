@@ -91,8 +91,14 @@ def _get_surface_height_for_satellite(
             .rename("sat")
         )
         surface_height_for_example = surface_height.sel(
-            y=slice(satellite_example.y[0], satellite_example.y[-1],),
-            x=slice(satellite_example.x[0], satellite_example.x[-1],),
+            y=slice(
+                satellite_example.y[0],
+                satellite_example.y[-1],
+            ),
+            x=slice(
+                satellite_example.x[0],
+                satellite_example.x[-1],
+            ),
         )
         # Align by coordinates. This will result in lots of NaNs in the surface height data:
         aligned = xr.combine_by_coords(

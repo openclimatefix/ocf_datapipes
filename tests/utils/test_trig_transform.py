@@ -61,4 +61,4 @@ def test_trigonometric_datetime_transformations():
 
     output = trigonometric_datetime_transformation(input)
     assert np.allclose(output, expected_output)
-    assert np.allclose(np.sum(output ** 2, axis=1), 3.0 * np.ones(output.shape[0]))
+    assert np.allclose(np.sum(output**2, axis=1), 3.0 * np.ones(output.shape[0]))

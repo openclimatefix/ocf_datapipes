@@ -43,7 +43,11 @@ def open_nwp(netcdf_path) -> xr.DataArray:
         Xarray DataArray of the NWP data
     """
     _log.debug("Loading NWP")
-    nwp = xr.load_dataset(netcdf_path, engine="h5netcdf", chunks="auto",)
+    nwp = xr.load_dataset(
+        netcdf_path,
+        engine="h5netcdf",
+        chunks="auto",
+    )
     ukv: xr.DataArray = nwp["UKV"]
     del nwp
     ukv = ukv.transpose("init_time", "step", "variable", "id")
