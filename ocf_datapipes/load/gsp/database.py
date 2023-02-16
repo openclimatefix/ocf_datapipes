@@ -2,7 +2,7 @@
 import logging
 import os
 from datetime import datetime, timedelta, timezone
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -16,6 +16,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray
+from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
 
 try:
     from ocf_datapipes.utils.eso import get_gsp_shape_from_eso
@@ -37,6 +38,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
         history_minutes: int = 90,
         interpolate_minutes: int = 60,
         load_extra_minutes: int = 60,
+        national_only: bool = False,
     ):
         """
         Get and open the GSP data
@@ -45,11 +47,19 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             history_minutes: How many history minutes to use
             interpolate_minutes:  How many minutes to interpolate
             load_extra_minutes: How many extra minutes to load
+            national_only: Optional to only load the national data. Default is False
         """
 
         self.interpolate_minutes = interpolate_minutes
         self.load_extra_minutes = load_extra_minutes
         self.history_duration = timedelta(minutes=history_minutes)
+        self.national_only = national_only
+
+        if national_only:
+            # This is becasue national is stored as '0' in PVLive
+            self.gsp_ids = [0]
+        else:
+            self.gsp_ids = list(range(1, N_GSP + 1))
 
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""
@@ -60,31 +70,45 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             history_duration=self.history_duration,
             interpolate_minutes=self.interpolate_minutes,
             load_extra_minutes=self.load_extra_minutes,
+            gsp_ids=self.gsp_ids,
         )
 
-        # get shape file
-        gsp_id_to_shape = get_gsp_shape_from_eso(return_filename=False)
+        if self.national_only:
+            x_osgb, y_osgb = lat_lon_to_osgb(latitude=55.3781, longitude=-3.4360)
+            x_osgb = [x_osgb]
+            y_osgb = [y_osgb]
+        else:
+            # get shape file
+            gsp_id_to_shape = get_gsp_shape_from_eso(return_filename=False)
 
-        # Ensure the centroids have the same GSP ID index as the GSP PV power:
-        gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_df.columns]
+            # Ensure the centroids have the same GSP ID index as the GSP PV power:
+            gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_df.columns]
+            x_osgb = gsp_id_to_shape.geometry.centroid.x.astype(np.float32)
+            y_osgb = gsp_id_to_shape.geometry.centroid.y.astype(np.float32)
 
         data_array = put_gsp_data_into_an_xr_dataarray(
             gsp_pv_power_mw=gsp_pv_power_mw_df.astype(np.float32),
             time_utc=gsp_pv_power_mw_df.index.values,
             gsp_id=gsp_pv_power_mw_df.columns,
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
-            x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
-            y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
+            x_osgb=x_osgb,
+            y_osgb=y_osgb,
             capacity_megawatt_power=gsp_capacity.astype(np.float32),
         )
 
-        del gsp_id_to_shape, gsp_pv_power_mw_df
+        if not self.national_only:
+            del gsp_id_to_shape
+        del gsp_pv_power_mw_df
+
         while True:
             yield data_array
 
 
 def get_gsp_power_from_database(
-    history_duration: timedelta, interpolate_minutes: int, load_extra_minutes: int
+    history_duration: timedelta,
+    interpolate_minutes: int,
+    load_extra_minutes: int,
+    gsp_ids: Optional[List[int]] = None,
 ) -> (pd.DataFrame, pd.DataFrame):
     """
     Get gsp power from database
@@ -94,6 +118,7 @@ def get_gsp_power_from_database(
         interpolate_minutes: how many minutes we should interpolate the data froward for
         load_extra_minutes: the extra minutes we should load, in order to load more data.
             This is because some data from a site lags significantly behind 'now'
+        gsp_ids: which GSP to be loaded, if None, 1 to 318 is used.
 
     Returns:pandas data frame with the following columns pv systems indexes
     The index is the datetime
@@ -104,6 +129,11 @@ def get_gsp_power_from_database(
     logger.debug(f"{history_duration=}")
     logger.debug(f"{interpolate_minutes=}")
     logger.debug(f"{load_extra_minutes=}")
+
+    if gsp_ids is None:
+        gsp_ids = list(range(1, N_GSP + 1))
+
+    logger.debug(f"Getting {len(gsp_ids)} gsp ids")
 
     extra_duration = timedelta(minutes=load_extra_minutes)
     now = pd.to_datetime(datetime.now(tz=timezone.utc)).floor("30T")
@@ -124,7 +154,7 @@ def get_gsp_power_from_database(
         gsp_yields: List[GSPYieldSQL] = get_gsp_yield(
             session=session,
             start_datetime_utc=start_utc_extra - timedelta(seconds=1),
-            gsp_ids=list(range(1, N_GSP + 1)),
+            gsp_ids=gsp_ids,
             filter_nans=False,
         )
 
