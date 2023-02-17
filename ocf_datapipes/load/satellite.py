@@ -13,7 +13,6 @@ from torchdata.datapipes.iter import IterDataPipe
 _log = logging.getLogger(__name__)
 
 
-
 def open_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
     """Lazily opens the Zarr store.
 
