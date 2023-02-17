@@ -64,7 +64,10 @@ def test_drop_with_constructed_dataarray():
     data[: data.shape[0] // 2, 0] = np.nan
     data[: data.shape[0] // 2, 2] = np.nan
 
-    data_array = xr.DataArray(data, coords=ALL_COORDS,)
+    data_array = xr.DataArray(
+        data,
+        coords=ALL_COORDS,
+    )
 
     # run the function
     # Drop Night PV function drops only the third system (sys3)

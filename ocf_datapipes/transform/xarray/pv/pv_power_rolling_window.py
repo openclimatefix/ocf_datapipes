@@ -70,7 +70,9 @@ class PVPowerRollingWindowIterDataPipe(IterDataPipe):
                 data_to_resample = xr_data
 
             resampled = data_to_resample.rolling(
-                dim={"time_utc": self.window}, min_periods=self.min_periods, center=self.center,
+                dim={"time_utc": self.window},
+                min_periods=self.min_periods,
+                center=self.center,
             ).mean()
 
             if self.expect_dataset:

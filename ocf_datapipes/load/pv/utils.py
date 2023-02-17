@@ -75,9 +75,13 @@ def put_pv_data_into_an_xr_dataarray(
     # Sample period duration is required so PVDownsample transform knows by how much
     # to change the pv_t0_idx:
     if latitude is not None:
-        data_array = data_array.assign_coords(latitude=("pv_system_id", latitude),)
+        data_array = data_array.assign_coords(
+            latitude=("pv_system_id", latitude),
+        )
     if longitude is not None:
-        data_array = data_array.assign_coords(longitude=("pv_system_id", longitude),)
+        data_array = data_array.assign_coords(
+            longitude=("pv_system_id", longitude),
+        )
 
     assert len(pv_system_row_number) > 0
 

@@ -117,15 +117,21 @@ def all_loc_np_datapipe(passiv_datapipe):
     )
     gsp_t0_datapipe = SelectLiveT0Time(gsp_datapipe)
     gsp_datapipe = SelectLiveTimeSlice(
-        gsp_datapipe, t0_datapipe=gsp_t0_datapipe, history_duration=timedelta(hours=2),
+        gsp_datapipe,
+        t0_datapipe=gsp_t0_datapipe,
+        history_duration=timedelta(hours=2),
     )
     sat_t0_datapipe = SelectLiveT0Time(sat_t0_datapipe)
     sat_datapipe = SelectLiveTimeSlice(
-        sat_datapipe, t0_datapipe=sat_t0_datapipe, history_duration=timedelta(hours=1),
+        sat_datapipe,
+        t0_datapipe=sat_t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     passiv_t0_datapipe = SelectLiveT0Time(pv_t0_datapipe)
     pv_datapipe = SelectLiveTimeSlice(
-        pv_datapipe, t0_datapipe=passiv_t0_datapipe, history_duration=timedelta(hours=1),
+        pv_datapipe,
+        t0_datapipe=passiv_t0_datapipe,
+        history_duration=timedelta(hours=1),
     )
     gsp_datapipe = GSPIterator(gsp_datapipe)
     sat_datapipe = ConvertSatelliteToNumpyBatch(sat_datapipe, is_hrv=True)
