@@ -12,6 +12,7 @@ import ocf_datapipes  # noqa
 from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import OpenGSPFromDatabase, OpenNWP
+from ocf_datapipes.load.nwp.nwp import OpenLatestNWPDataPipe
 
 logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
@@ -31,7 +32,8 @@ def xgnational_production(configuration_filename: Union[Path, str]) -> dict:
     configuration: Configuration = load_yaml_configuration(filename=configuration_filename)
 
     logger.debug("Opening Datasets")
-    nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+    base_nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+    nwp_datapipe = OpenLatestNWPDataPipe(base_nwp_datapipe)
     gsp_datapipe = OpenGSPFromDatabase(
         history_minutes=configuration.input_data.gsp.history_minutes,
         interpolate_minutes=configuration.input_data.gsp.live_interpolate_minutes,
