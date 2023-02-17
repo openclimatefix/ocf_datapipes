@@ -461,7 +461,7 @@ NWP_GFS_CHANNEL_NAMES = tuple(NWP_GFS_STD.keys())
 def _to_data_array(d):
     return xr.DataArray(
         [d[key] for key in NWP_CHANNEL_NAMES if key in d.keys()],
-        coords={"channel": list(NWP_CHANNEL_NAMES)},
+        coords={"channel": [_channel for _channel in NWP_CHANNEL_NAMES if _channel in d.keys()]},
     ).astype(np.float32)
 
 
