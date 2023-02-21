@@ -167,7 +167,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                     selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
                 else:
                     raise ValueError(
-                        f"{self.x_dim_name=} not in 'x', 'x_osgb', 'x_geostationary', and {self.dim_name=} is 'None'"
+                        f"{self.x_dim_name=} not in 'x', 'x_osgb',"
+                        f" 'x_geostationary', and {self.dim_name=} is 'None'"
                     )
             else:
                 # Select data in the region of interest and ID:
