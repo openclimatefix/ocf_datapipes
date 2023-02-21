@@ -20,6 +20,7 @@ class DataModule(LightningDataModule):
         n_train_data,
         n_val_data,
         num_workers=0,
+        prefetch_factor=2,
     ):
         """
         Set up datamodule
@@ -32,6 +33,7 @@ class DataModule(LightningDataModule):
             n_train_data: TODO
             n_val_data: TODO
             num_workers: number of workers of loading data
+            prefetch_factor: number of batches loaded in advance by each worker
         """
 
         super().__init__()
@@ -41,6 +43,7 @@ class DataModule(LightningDataModule):
         self.n_train_data = n_train_data
         self.n_val_data = n_val_data
         self.num_workers = num_workers
+        self.prefetch_factor = prefetch_factor
 
         if self.fake_data:
             self.data_pipeline = fake_data_pipeline
@@ -60,9 +63,10 @@ class DataModule(LightningDataModule):
         self.dataloader_config = dict(
             pin_memory=True,
             num_workers=self.num_workers,
-            prefetch_factor=8,
+            prefetch_factor=self.prefetch_factor,
             # worker_init_fn=worker_init_fn,
-            persistent_workers=True,
+            # Persistent_workers option needs num_workers > 0
+            persistent_workers=self.num_workers>0,
             # Disable automatic batching because dataset
             # returns complete batches.
             batch_size=None,
