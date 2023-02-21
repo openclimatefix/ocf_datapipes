@@ -114,7 +114,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             location_datapipe: Location datapipe
             roi_height_meters: ROI height in meters
             roi_width_meters: ROI width in meters
-            dim_name: Dimension name to select for ID
+            dim_name: Dimension name to select for ID, None for coordinates
             y_dim_name: the y dimension name, this is so we can switch between osgb and lat,lon
             x_dim_name: the x dimension name, this is so we can switch between osgb and lat,lon
         """
@@ -138,15 +138,47 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             right = location.x + half_width
             bottom = location.y - half_height
             top = location.y + half_height
-            # Select data in the region of interest:
-            id_mask = (
-                (left <= getattr(xr_data, self.x_dim_name))
-                & (getattr(xr_data, self.x_dim_name) <= right)
-                & (getattr(xr_data, self.y_dim_name) <= top)
-                & (bottom <= getattr(xr_data, self.y_dim_name))
-            )
+            if self.dim_name is None:  # Do it off coordinates, not ID
+                if "x_geostationary" == self.x_dim_name:
+                    # Convert to geostationary edges
+                    _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
+                        xr_data
+                    )
+                    left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
+                    right, top = _osgb_to_geostationary(xx=right, yy=top)
+                    x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
+                    y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
+                        bottom <= xr_data.y_geostationary
+                    )
+                    selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
+                elif "x" == self.x_dim_name:
+                    _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
+                        xr_data
+                    )
+                    left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
+                    right, top = _osgb_to_geostationary(xx=right, yy=top)
+                    x_mask = (left <= xr_data.x) & (xr_data.x <= right)
+                    y_mask = (xr_data.y <= top) & (bottom <= xr_data.y)  # Y is flipped
+                    selected = xr_data.isel(x=x_mask, y=y_mask)
+                elif "x_osgb" == self.x_dim_name:
+                    # Select data in the region of interest:
+                    x_mask = (left <= xr_data.x_osgb) & (xr_data.x_osgb <= right)
+                    y_mask = (xr_data.y_osgb <= top) & (bottom <= xr_data.y_osgb)
+                    selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
+                else:
+                    raise ValueError(
+                        f"{self.x_dim_name=} not in 'x', 'x_osgb', 'x_geostationary', and {self.dim_name=} is 'None'"
+                    )
+            else:
+                # Select data in the region of interest and ID:
+                id_mask = (
+                    (left <= getattr(xr_data, self.x_dim_name))
+                    & (getattr(xr_data, self.x_dim_name) <= right)
+                    & (getattr(xr_data, self.y_dim_name) <= top)
+                    & (bottom <= getattr(xr_data, self.y_dim_name))
+                )
 
-            selected = xr_data.isel({self.dim_name: id_mask})
+                selected = xr_data.isel({self.dim_name: id_mask})
             yield selected
 
 

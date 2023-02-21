@@ -123,14 +123,41 @@ def metnet_site_datapipe(
 
     # Now combine in the MetNet format
     modalities = []
+    if pv_in_image:
+        # Select spatial extant crop first, so that the array isn't too large
+        pv_loc_datapipe, pv_image_loc_datapipe = pv_loc_datapipe.fork(2)
     if pv_in_image and "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
+        sat_gsp_datapipe = sat_gsp_datapipe.select_spatial_slice_meters(
+            pv_image_loc_datapipe,
+            roi_height_meters=context_size_meters,
+            roi_width_meters=context_size_meters,
+            dim_name=None,
+            x_dim_name="x_geostationary",
+            y_dim_name="y_geostationary",
+        )
         pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
     elif pv_in_image and "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
+        sat_gsp_datapipe = sat_gsp_datapipe.select_spatial_slice_meters(
+            pv_image_loc_datapipe,
+            roi_height_meters=context_size_meters,
+            roi_width_meters=context_size_meters,
+            dim_name=None,
+            x_dim_name="x_geostationary",
+            y_dim_name="y_geostationary",
+        )
         pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
     elif pv_in_image and "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
+        nwp_gsp_datapipe = nwp_gsp_datapipe.select_spatial_slice_meters(
+            pv_image_loc_datapipe,
+            roi_height_meters=context_size_meters,
+            roi_width_meters=context_size_meters,
+            dim_name=None,
+            x_dim_name="x_osgb",
+            y_dim_name="y_osgb",
+        )
         pv_history = pv_history.create_pv_history_image(
             image_datapipe=nwp_gsp_datapipe, image_dim="osgb"
         )
