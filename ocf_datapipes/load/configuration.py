@@ -1,4 +1,5 @@
 """Configuration Loader"""
+from typing import Union
 import logging
 
 import fsspec
@@ -15,21 +16,25 @@ logger = logging.getLogger(__name__)
 class OpenConfigurationIterDataPipe(IterDataPipe):
     """Open and return the configuration data"""
 
-    def __init__(self, configuration_filename: str):
+    def __init__(self, configuration: Union[str, dict]):
         """
         Open and return config data
 
         Args:
-            configuration_filename: Filename to open
+            configuration: Filename to open or already opened configuration dictionary
         """
-        self.configuration_filename = configuration_filename
+        self.configuration = configuration
 
     def __iter__(self):
         """Open and return configuration file"""
-        logger.debug(f"Going to open {self.configuration_filename}")
-        with fsspec.open(self.configuration_filename, mode="r") as stream:
-            configuration = parse_config(data=stream)
-
+        
+        if isinstance(self.configuration, str):
+            logger.debug(f"Going to open {self.configuration}")
+            with fsspec.open(self.configuration, mode="r") as stream:
+                configuration = parse_config(data=stream)
+        else:
+            configuration = self.configuration
+        
         logger.debug(f"Converting to Configuration ({configuration})")
         configuration = Configuration(**configuration)
 
