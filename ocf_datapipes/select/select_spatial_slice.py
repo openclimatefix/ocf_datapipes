@@ -142,35 +142,36 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
 
             with profile(f"select_spatial_slice_meters {self.datapipe_name}"):
-                
+
                 # Compute the index for left and right:
                 logger.debug("Getting Spatial Slice Meters")
 
                 half_height = self.roi_height_meters // 2
                 half_width = self.roi_width_meters // 2
-                
+
                 left = location.x - half_width
                 right = location.x + half_width
                 bottom = location.y - half_height
                 top = location.y + half_height
 
-
                 if self.dim_name is None:  # Do it off coordinates, not ID
                     if "x_geostationary" == self.x_dim_name:
                         # Convert to geostationary edges
-                        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
-                            xr_data
+                        _osgb_to_geostationary = (
+                            load_geostationary_area_definition_and_transform_osgb(xr_data)
                         )
                         left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
                         right, top = _osgb_to_geostationary(xx=right, yy=top)
-                        x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
+                        x_mask = (left <= xr_data.x_geostationary) & (
+                            xr_data.x_geostationary <= right
+                        )
                         y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
                             bottom <= xr_data.y_geostationary
                         )
                         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
                     elif "x" == self.x_dim_name:
-                        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
-                            xr_data
+                        _osgb_to_geostationary = (
+                            load_geostationary_area_definition_and_transform_osgb(xr_data)
                         )
                         left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
                         right, top = _osgb_to_geostationary(xx=right, yy=top)
