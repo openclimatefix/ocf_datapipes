@@ -6,6 +6,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import xarray as xr
+from ocf_blosc2 import Blosc2  # noqa: F401
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -32,6 +33,34 @@ class OpenNWPIterDataPipe(IterDataPipe):
         _log.info("Opened NWP data")
         while True:
             yield ukv
+
+
+@functional_datapipe("open_latest_nwp")
+class OpenLatestNWPDataPipe(IterDataPipe):
+    """Yields the most recent observation from NWP data"""
+
+    def __init__(self, base_nwp_datapipe: OpenNWPIterDataPipe) -> None:
+        """Selects most recent observation from NWP data
+
+        Args:
+            base_nwp_datapipe (OpenNWPIterDataPipe): Base DataPipe, opening zarr
+        """
+        self.base_nwp_datapipe = base_nwp_datapipe
+
+    def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        """Selects most recent entry
+
+        Returns:
+            Union[xr.DataArray, xr.Dataset]: NWP slice
+
+        Yields:
+            Iterator[Union[xr.DataArray, xr.Dataset]]: Iterator of most recent NWP data
+        """
+        for nwp_data in self.base_nwp_datapipe:
+            _nwp = nwp_data.sel(init_time_utc=nwp_data.init_time_utc.max())
+            time = _nwp.init_time_utc.values
+            _log.debug(f"Selected most recent NWP observation, at: {time}")
+            yield _nwp
 
 
 def open_nwp(zarr_path) -> xr.DataArray:

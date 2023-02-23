@@ -16,7 +16,7 @@ repos:
 
   # python code formatting/linting
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.1.1
+    rev: 6.3.0
     hooks:
       - id: pydocstyle
         args:
@@ -41,7 +41,7 @@ repos:
           ]
         files: ^ocf_datapipes/
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
       - id: isort
         args: [--profile, black, --line-length, "100", "ocf_datapipes"]

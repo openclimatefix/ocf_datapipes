@@ -7,32 +7,19 @@ from typing import Union
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.convert import ConvertGSPToNumpy
-from ocf_datapipes.select import DropGSP, LocationPicker
+from ocf_datapipes.convert import ConvertPVToNumpy
+from ocf_datapipes.select import LocationPicker
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
 )
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
+from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
 logger.setLevel(logging.DEBUG)
-
-
-def normalize_gsp(x):  # So it can be pickled
-    """
-    Normalize the GSP data
-
-    Args:
-        x: Input DataArray
-
-    Returns:
-        Normalized DataArray
-    """
-    return x / x.capacity_megawatt_power
 
 
 def normalize_pv(x):  # So it can be pickled
@@ -52,19 +39,20 @@ def _remove_nans(x):
     return x.fillna(0.0)
 
 
-def metnet_national_datapipe(
+def metnet_site_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
     use_nwp: bool = True,
     use_sat: bool = True,
     use_hrv: bool = True,
-    use_pv: bool = False,
-    use_gsp: bool = True,
+    use_pv: bool = True,
     use_topo: bool = True,
     output_size: int = 256,
-    gsp_in_image: bool = False,
+    pv_in_image: bool = False,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
+    center_size_meters: int = 64_000,
+    context_size_meters: int = 512_000,
 ) -> IterDataPipe:
     """
     Make GSP national data pipe
@@ -79,11 +67,12 @@ def metnet_national_datapipe(
         use_sat: Whether to use non-HRV Satellite or not
         use_nwp: Whether to use NWP or not
         use_topo: Whether to use topographic map or not
-        use_gsp: Whether to use GSP history
         start_time: Start time to select on
         end_time: End time to select from
         output_size: Size, in pixels, of the output image
-        gsp_in_image: Add GSP history as channels in MetNet image
+        pv_in_image: Add PV history as channels in MetNet image
+        center_size_meters: Center size for MeNet cutouts, in meters
+        context_size_meters: Context area size in meters
 
     Returns: datapipe
     """
@@ -95,56 +84,83 @@ def metnet_national_datapipe(
         use_topo=use_topo,
         use_sat=use_sat,
         use_hrv=use_hrv,
-        use_gsp=use_gsp,
+        use_gsp=False,
         use_pv=use_pv,
     )
     # Load GSP national data
-    used_datapipes["gsp"] = used_datapipes["gsp"].select_train_test_time(start_time, end_time)
+    used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
-    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
+    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="pv")
 
     # And now get time slices
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
 
     # Now do the extra processing
-    gsp_history = used_datapipes["gsp"].normalize(normalize_fn=normalize_gsp)
-    gsp_datapipe = used_datapipes["gsp_future"].normalize(normalize_fn=normalize_gsp)
+    pv_history = used_datapipes["pv"].normalize(normalize_fn=normalize_pv)
+    pv_datapipe = used_datapipes["pv_future"].normalize(normalize_fn=normalize_pv)
     # Split into GSP for target, only national, and one for history
-    gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
+    pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
+    pv_loc_datapipe, pv_id_datapipe = LocationPicker(pv_loc_datapipe).fork(2)
+    pv_history = pv_history.select_id(pv_id_datapipe, data_source_name="pv")
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
         logger.debug("Take NWP time slices")
-        nwp_datapipe = used_datapipes["nwp"].normalize(mean=NWP_MEAN, std=NWP_STD)
+        nwp_datapipe = used_datapipes["nwp"].normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
+        pv_loc_datapipe, pv_nwp_image_loc_datapipe = pv_loc_datapipe.fork(2)
+        # context_size is the largest it would need
+        nwp_datapipe = nwp_datapipe.select_spatial_slice_meters(
+            pv_nwp_image_loc_datapipe,
+            roi_height_meters=context_size_meters,
+            roi_width_meters=context_size_meters,
+            dim_name=None,
+            x_dim_name="x_osgb",
+            y_dim_name="y_osgb",
+        )
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
         # take sat time slices
-        sat_datapipe = used_datapipes["sat"].normalize(mean=SAT_MEAN_DA, std=SAT_STD_DA)
+        sat_datapipe = used_datapipes["sat"].normalize(mean=RSS_MEAN, std=RSS_STD)
+        pv_loc_datapipe, pv_sat_image_loc_datapipe = pv_loc_datapipe.fork(2)
+        sat_datapipe = sat_datapipe.select_spatial_slice_meters(
+            pv_sat_image_loc_datapipe,
+            roi_height_meters=context_size_meters,
+            roi_width_meters=context_size_meters,
+            dim_name=None,
+            x_dim_name="x_geostationary",
+            y_dim_name="y_geostationary",
+        )
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
-        sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
+        sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=RSS_MEAN, std=RSS_STD)
+        pv_loc_datapipe, pv_hrv_image_loc_datapipe = pv_loc_datapipe.fork(2)
+        sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_meters(
+            pv_hrv_image_loc_datapipe,
+            roi_height_meters=context_size_meters,
+            roi_width_meters=context_size_meters,
+            dim_name=None,
+            x_dim_name="x_geostationary",
+            y_dim_name="y_geostationary",
+        )
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
 
     # Now combine in the MetNet format
     modalities = []
-    if gsp_in_image and "hrv" in used_datapipes.keys():
+
+    if pv_in_image and "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
-            image_datapipe=sat_gsp_datapipe
-        )
-    elif gsp_in_image and "sat" in used_datapipes.keys():
+        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
+    elif pv_in_image and "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
-            image_datapipe=sat_gsp_datapipe
-        )
-    elif gsp_in_image and "nwp" in used_datapipes.keys():
+        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
+    elif pv_in_image and "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+        pv_history = pv_history.create_pv_history_image(
             image_datapipe=nwp_gsp_datapipe, image_dim="osgb"
         )
     if "nwp" in used_datapipes.keys():
@@ -155,29 +171,25 @@ def metnet_national_datapipe(
         modalities.append(sat_datapipe)
     if "topo" in used_datapipes.keys():
         modalities.append(topo_datapipe)
-    if gsp_in_image:
-        modalities.append(gsp_history)
-
-    gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2, buffer_size=5)
-
-    location_datapipe = LocationPicker(gsp_loc_datapipe)
+    if pv_in_image:
+        modalities.append(pv_history)
 
     metnet_datapipe = PreProcessMetNet(
         modalities,
-        location_datapipe=location_datapipe,
-        center_width=500_000,
-        center_height=1_000_000,
-        context_height=10_000_000,
-        context_width=10_000_000,
+        location_datapipe=pv_loc_datapipe,
+        center_width=center_size_meters,
+        center_height=center_size_meters,  # 64km
+        context_height=context_size_meters,
+        context_width=context_size_meters,  # 512km
         output_width_pixels=output_size,
         output_height_pixels=output_size,
         add_sun_features=use_sun,
     )
-    gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
+    pv_datapipe = ConvertPVToNumpy(pv_datapipe)
 
-    if not gsp_in_image:
-        gsp_history = gsp_history.map(_remove_nans)
-        gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
-        return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
+    if not pv_in_image:
+        pv_history = pv_history.map(_remove_nans)
+        pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
+        return metnet_datapipe.zip_ocf(pv_history, pv_datapipe)  # Makes (Inputs, Label) tuples
     else:
-        return metnet_datapipe.zip(gsp_datapipe)
+        return metnet_datapipe.zip_ocf(pv_datapipe)

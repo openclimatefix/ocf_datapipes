@@ -5,6 +5,7 @@ import pandas as pd
 from freezegun import freeze_time
 from nowcasting_datamodel.models import PVSystem, PVSystemSQL, pv_output
 
+from ocf_datapipes.config.model import PV, PVFiles
 from ocf_datapipes.load.pv.live import (
     OpenPVFromDBIterDataPipe,
     get_metadata_from_database,
@@ -108,5 +109,16 @@ def test_get_pv_power_from_database_interpolate(pv_yields_and_systems):
 def test_open_pv_datasource_from_database(pv_yields_and_systems):
 
     pv_datapipe = OpenPVFromDBIterDataPipe(providers=["pvoutput.org"])
+    data = next(iter(pv_datapipe))
+    assert data is not None
+
+
+@freeze_time("2022-01-01 05:00")
+def test_open_pv_datasource_from_database_config(pv_yields_and_systems):
+
+    pv_config = PV(
+        history_minutes=60, forecast_minutes=60 * 24, pv_files_groups=[PVFiles()], is_live=True
+    )
+    pv_datapipe = OpenPVFromDBIterDataPipe(pv_config=pv_config)
     data = next(iter(pv_datapipe))
     assert data is not None

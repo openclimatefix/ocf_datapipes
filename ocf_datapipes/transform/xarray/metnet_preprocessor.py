@@ -36,6 +36,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         output_height_pixels: int,
         output_width_pixels: int,
         add_sun_features: bool = False,
+        only_sun: bool = False,
     ):
         """
 
@@ -57,8 +58,6 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         This also appends Lat/Lon coordinates to the stack,
          and returns a new Numpy array with the stacked data
 
-        TODO Could also add the national PV as a set of Layers, so also GSP input
-
         Args:
             source_datapipes: Datapipes that emit xarray datasets
                 with latitude/longitude coordinates included
@@ -71,6 +70,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             output_width_pixels: Output width in pixels
             add_sun_features: Whether to calculate and
             add Sun elevation and azimuth for each center pixel
+            only_sun: Whether to only output sun features
+                Assumes only one input to give the coordinates
         """
         self.source_datapipes = source_datapipes
         self.location_datapipe = location_datapipe
@@ -81,6 +82,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
         self.output_height_pixels = output_height_pixels
         self.output_width_pixels = output_width_pixels
         self.add_sun_features = add_sun_features
+        self.only_sun = only_sun
 
     def __iter__(self) -> np.ndarray:
         for xr_datas, location in Zipper(Zipper(*self.source_datapipes), self.location_datapipe):
@@ -126,7 +128,10 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                             time_dim=_extra_time_dim,
                             normalize=True,
                         )
-                        contexts.append(sun_image)
+                        if self.only_sun:
+                            contexts = [time_image, sun_image]
+                        else:
+                            contexts.append(sun_image)
                 xr_context = _resample_to_pixel_size(
                     xr_context, self.output_height_pixels, self.output_width_pixels
                 )

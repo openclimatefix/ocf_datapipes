@@ -47,7 +47,14 @@ class SelectIDIterDataPipe(IterDataPipe):
                 try:
                     xr_data = xr_data.sel(pv_system_id=[location.id])
                 except Exception as e:
-                    logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
-                    raise e
+                    logger.warning(
+                        f"Failed using [{location.id}], now trying without brackets, error: {e}"
+                    )
+                    try:
+                        # TODO Fix this, simple ones fail without the [], MetNet fails with []
+                        xr_data = xr_data.sel(pv_system_id=location.id)
+                    except Exception as e:
+                        logger.warning(f"Could not find {location.id} in pv {xr_data.pv_system_id}")
+                        raise e
             logger.debug("Selected Data on id")
             yield xr_data

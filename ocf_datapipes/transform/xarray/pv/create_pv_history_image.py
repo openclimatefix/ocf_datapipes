@@ -12,9 +12,9 @@ from ocf_datapipes.utils import Zipper
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("create_gsp_image")
-class CreateGSPImageIterDataPipe(IterDataPipe):
-    """Create GSP image from individual sites"""
+@functional_datapipe("create_pv_history_image")
+class CreatePVHistoryImageIterDataPipe(IterDataPipe):
+    """Create pv image from individual sites"""
 
     def __init__(
         self,
@@ -26,9 +26,9 @@ class CreateGSPImageIterDataPipe(IterDataPipe):
         seed=None,
     ):
         """
-        Creates a 3D data cube of GSP output image x number of timesteps
+        Creates a 3D data cube of PV output image x number of timesteps
 
-        This is primarily for national GSP, so single GSP inputs are preferred
+        This is primarily for site level PV, so single PV inputs are preferred
 
         Args:
             source_datapipe: Source datapipe of PV data
@@ -48,28 +48,27 @@ class CreateGSPImageIterDataPipe(IterDataPipe):
         self.always_return_first = always_return_first
 
     def __iter__(self) -> xr.DataArray:
-        for gsp_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
+        for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
             pv_image = np.zeros(
                 (
-                    len(gsp_systems_xr["time_utc"]),
+                    len(pv_systems_xr["time_utc"]),
                     len(image_xr[self.y_dim]),
                     len(image_xr[self.x_dim]),
                 ),
                 dtype=np.float32,
             )
-            for i, gsp_system_id in enumerate(gsp_systems_xr["gsp_id"]):
-                gsp_system = gsp_systems_xr.sel(gsp_id=gsp_system_id)
-                for time_step in range(len(gsp_system.time_utc.values)):
-                    # Now go by the timestep to create cube of GSP data
-                    pv_image[time_step:, :] = gsp_system.isel(time_utc=time_step).values
+            # If only one, like chosen before, then use single one
+            for time_step in range(len(pv_systems_xr.time_utc.values)):
+                # Now go by the timestep to create cube of pv data
+                pv_image[time_step:, :] = pv_systems_xr.isel(time_utc=time_step).values
 
             pv_image = np.nan_to_num(pv_image)
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
             pv_image = _create_data_array_from_image(
-                pv_image, gsp_systems_xr, image_xr, image_dim=self.x_dim.split("_")[-1]
+                pv_image, pv_systems_xr, image_xr, image_dim=self.x_dim.split("_")[-1]
             )
             yield pv_image
 
@@ -87,7 +86,7 @@ def _create_data_array_from_image(
             ("y_" + image_dim, image_xr["y_" + image_dim].values),
             ("x_" + image_dim, image_xr["x_" + image_dim].values),
         ),
-        name="gsp_image",
+        name="pv_image",
     ).astype(np.float32)
     data_array.attrs = image_xr.attrs
     return data_array

@@ -261,12 +261,12 @@ def pv_yields_and_systems(db_session):
 def gsp_yields(db_session):
     """Make fake GSP data"""
 
-    gsps = list(range(1, 4)) + [317]
+    gsps = list(range(0, 4)) + [317]
 
     gsp_yield_sqls = []
     for gsp_id in gsps:
         gsp_sql_1: LocationSQL = Location(
-            gsp_id=gsp_id, label="GSP_1", installed_capacity_mw=1
+            gsp_id=gsp_id, label=f"GSP_{gsp_id}", installed_capacity_mw=1
         ).to_orm()
 
         for hour in range(0, 8):

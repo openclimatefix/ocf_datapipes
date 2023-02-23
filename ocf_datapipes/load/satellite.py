@@ -6,15 +6,14 @@ from typing import Union
 import dask
 import pandas as pd
 import xarray as xr
+from ocf_blosc2 import Blosc2  # noqa: F401
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 _log = logging.getLogger(__name__)
 
 
-def open_sat_data(
-    zarr_path: Union[Path, str],
-) -> xr.DataArray:
+def open_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
     """Lazily opens the Zarr store.
 
     Args:
@@ -28,7 +27,18 @@ def open_sat_data(
     dask.config.set({"array.slicing.split_large_chunks": False})
 
     # Open the data
-    dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
+    if "*" in str(zarr_path):  # Multi-file dataset
+        dataset = (
+            xr.open_mfdataset(zarr_path, engine="zarr", concat_dim="time", combine="nested")
+            .drop_duplicates("time")
+            .sortby("time")
+        )
+    else:
+        dataset = (
+            xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
+            .drop_duplicates("time")
+            .sortby("time")
+        )
 
     # TODO add 15 mins data satellite option
 
