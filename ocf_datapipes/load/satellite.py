@@ -29,13 +29,20 @@ def open_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
     # Open the data
     if "*" in str(zarr_path):  # Multi-file dataset
         dataset = (
-            xr.open_mfdataset(zarr_path, engine="zarr", concat_dim="time", combine="nested")
+            xr.open_mfdataset(
+                zarr_path,
+                engine="zarr",
+                concat_dim="time",
+                combine="nested",
+                chunks={},
+                join="override",
+            )
             .drop_duplicates("time")
             .sortby("time")
         )
     else:
         dataset = (
-            xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
+            xr.open_dataset(zarr_path, engine="zarr", chunks={})
             .drop_duplicates("time")
             .sortby("time")
         )
