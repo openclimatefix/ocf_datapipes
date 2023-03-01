@@ -22,10 +22,9 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
         self.is_hrv = is_hrv
 
-
     def __iter__(self) -> NumpyBatch:
         """Convert each example to a NumpyBatch object"""
-                
+
         for xr_data in self.source_datapipe:
 
             with profile("convert_satellite_to_numpy_batch"):
@@ -59,6 +58,5 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
                     ):
                         # HRVSatellite coords are already float32.
                         example[batch_key] = xr_data[dataset_key].values
-
 
                 yield example

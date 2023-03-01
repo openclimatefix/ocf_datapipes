@@ -1,12 +1,12 @@
 """ Data module for pytorch lightning """
 from typing import Callable, Union
 
+import fsspec.asyn
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
-import fsspec.asyn
-
 
 from ocf_datapipes.batch.fake.fake_batch import fake_data_pipeline
+
 
 def set_fsspec_for_multiprocess() -> None:
     """
@@ -22,6 +22,7 @@ def set_fsspec_for_multiprocess() -> None:
     fsspec.asyn.iothread[0] = None
     fsspec.asyn.loop[0] = None
 
+
 def worker_init_fn(worker_id):
     """Configures each dataset worker process.
     1. Get fsspec ready for multi process
@@ -29,8 +30,8 @@ def worker_init_fn(worker_id):
     """
     # fix for fsspec when using multprocess
     set_fsspec_for_multiprocess()
-    
-    
+
+
 class DataModule(LightningDataModule):
     """
     Example of LightningDataModule using ocf_datapipes
