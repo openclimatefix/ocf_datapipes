@@ -2,11 +2,35 @@
 from typing import Callable, Union
 
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import DataLoader2
+from torch.utils.data import DataLoader
+import fsspec.asyn
+
 
 from ocf_datapipes.batch.fake.fake_batch import fake_data_pipeline
 
+def set_fsspec_for_multiprocess() -> None:
+    """
+    Clear reference to the loop and thread.
+    This is a nasty hack that was suggested but NOT recommended by the lead fsspec developer!
+    This appears necessary otherwise gcsfs hangs when used after forking multiple worker processes.
+    Only required for fsspec >= 0.9.0
+    See:
+    - https://github.com/fsspec/gcsfs/issues/379#issuecomment-839929801
+    - https://github.com/fsspec/filesystem_spec/pull/963#issuecomment-1131709948
+    TODO: Try deleting this two lines to make sure this is still relevant.
+    """
+    fsspec.asyn.iothread[0] = None
+    fsspec.asyn.loop[0] = None
 
+def worker_init_fn(worker_id):
+    """Configures each dataset worker process.
+    1. Get fsspec ready for multi process
+    2. To call NowcastingDataset.per_worker_init().
+    """
+    # fix for fsspec when using multprocess
+    set_fsspec_for_multiprocess()
+    
+    
 class DataModule(LightningDataModule):
     """
     Example of LightningDataModule using ocf_datapipes
@@ -64,7 +88,7 @@ class DataModule(LightningDataModule):
             pin_memory=True,
             num_workers=self.num_workers,
             prefetch_factor=self.prefetch_factor,
-            # worker_init_fn=worker_init_fn,
+            worker_init_fn=worker_init_fn,
             # Persistent_workers option needs num_workers > 0
             persistent_workers=self.num_workers>0,
             # Disable automatic batching because dataset
@@ -75,27 +99,26 @@ class DataModule(LightningDataModule):
     def train_dataloader(self):
         """Get the train dataloader"""
 
-        train_dataset = self.data_pipeline(configuration=self.configuration).set_length(
+        train_datapipe = self.data_pipeline(configuration=self.configuration).set_length(
             self.n_train_data
         )
-        train_dataloader = DataLoader2(train_dataset, **self.dataloader_config)
-
+        train_dataloader = DataLoader(train_datapipe, **self.dataloader_config)
         return train_dataloader
 
     def val_dataloader(self):
         """Get the validation dataloader"""
 
-        validation_data_pipeline = self.data_pipeline(configuration=self.configuration).set_length(
+        validation_datapipe = self.data_pipeline(configuration=self.configuration).set_length(
             self.n_val_data
         )
-        validation_dataloader = DataLoader2(validation_data_pipeline, **self.dataloader_config)
+        validation_dataloader = DataLoader(validation_datapipe, **self.dataloader_config)
 
         return validation_dataloader
 
     def test_dataloader(self):
         """Get the test dataloader"""
 
-        test_data_pipeline = self.data_pipeline(configuration=self.configuration)
-        test_dataloader = DataLoader2(test_data_pipeline, **self.dataloader_config)
+        test_datapipe = self.data_pipeline(configuration=self.configuration)
+        test_dataloader = DataLoader(test_datapipe, **self.dataloader_config)
 
         return test_dataloader
