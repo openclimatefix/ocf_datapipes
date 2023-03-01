@@ -1,6 +1,6 @@
 """Configuration Loader"""
-from typing import Union
 import logging
+from typing import Union
 
 import fsspec
 from pyaml_env import parse_config
@@ -27,14 +27,14 @@ class OpenConfigurationIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Open and return configuration file"""
-        
+
         if isinstance(self.configuration, str):
             logger.debug(f"Going to open {self.configuration}")
             with fsspec.open(self.configuration, mode="r") as stream:
                 configuration = parse_config(data=stream)
         else:
             configuration = self.configuration
-        
+
         logger.debug(f"Converting to Configuration ({configuration})")
         configuration = Configuration(**configuration)
 

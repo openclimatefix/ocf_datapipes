@@ -90,7 +90,7 @@ class DataModule(LightningDataModule):
             prefetch_factor=self.prefetch_factor,
             worker_init_fn=worker_init_fn,
             # Persistent_workers option needs num_workers > 0
-            persistent_workers=self.num_workers>0,
+            persistent_workers=self.num_workers > 0,
             # Disable automatic batching because dataset
             # returns complete batches.
             batch_size=None,
