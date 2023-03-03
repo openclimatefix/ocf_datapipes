@@ -107,7 +107,9 @@ def intersection_of_2_dataframes_of_periods(a: pd.DataFrame, b: pd.DataFrame) ->
     intersection:    |--|   |-|                         |--|    |---|
 
     Args:
-        a, b: pd.DataFrame where each row represents a time period.  The pd.DataFrame has
+        a: pd.DataFrame where each row represents a time period.  The pd.DataFrame has
+        two columns: start_dt and end_dt.
+        b: pd.DataFrame where each row represents a time period.  The pd.DataFrame has
         two columns: start_dt and end_dt.
 
     Returns:
