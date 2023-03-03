@@ -12,7 +12,7 @@ setup(
     name="ocf_datapipes",
     version="1.1.12",
     license="MIT",
-    description="Pytorch Datapipes built for use in Open Climate Fix's nowcasting/forecasting work ",
+    description="Pytorch Datapipes built for use in Open Climate Fix's forecasting work",
     author="Jacob Bieker, Jack Kelly, Peter Dudfield",
     author_email="info@openclimatefix.org",
     company="Open Climate Fix Ltd",

@@ -37,7 +37,7 @@ def open_nwp(netcdf_path) -> xr.DataArray:
     Opens the NWP data
 
     Args:
-        zarr_path: Path to the zarr to open
+        netcdf_path: Path to the zarr to open
 
     Returns:
         Xarray DataArray of the NWP data
