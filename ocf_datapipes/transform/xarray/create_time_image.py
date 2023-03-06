@@ -1,4 +1,4 @@
-"""Create image channels of sun position at each pixel"""
+"""Create image channels of time values at each pixel"""
 from typing import Union
 
 import numpy as np
@@ -11,7 +11,7 @@ from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
 
 @functional_datapipe("create_time_image")
 class CreateTimeImageIterDataPipe(IterDataPipe):
-    """Create Sun image from individual sites"""
+    """Create Time image"""
 
     def __init__(
         self,
@@ -20,7 +20,7 @@ class CreateTimeImageIterDataPipe(IterDataPipe):
         time_dim: str = "time_utc",
     ):
         """
-        Creates a 3D data cube of PV output image x number of timesteps
+        Creates a 3D data cube of Time output image x number of timesteps
 
         Args:
             source_datapipe: Source datapipe of PV data
@@ -34,7 +34,7 @@ class CreateTimeImageIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray:
         for image_xr in self.source_datapipe:
-            # Create empty image to use for the PV Systems, assumes image has x and y coordinates
+            # Create empty image to use, assumes image has x and y coordinates
             time_image = _create_time_image(
                 image_xr,
                 time_dim=self.time_dim,
@@ -42,7 +42,8 @@ class CreateTimeImageIterDataPipe(IterDataPipe):
                 output_height_pixels=len(image_xr[self.y_dim]),
             )
             time_image = _create_data_array_from_image(
-                time_image, image_xr, is_geostationary="x_geostationary" in image_xr.dims
+                time_image, image_xr, is_geostationary="x_geostationary" in image_xr.dims,
+                time_dim=self.time_dim
             )
             yield time_image
 

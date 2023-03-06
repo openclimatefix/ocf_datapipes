@@ -1,4 +1,4 @@
-"""Preprocessing for MetNet-type inputs"""
+"""Stacking Xarray objects to Numpy inputs"""
 from typing import List
 
 import numpy as np
@@ -10,7 +10,7 @@ from ocf_datapipes.utils import Zipper
 
 @functional_datapipe("stack_xarray")
 class StackXarrayIterDataPipe(IterDataPipe):
-    """Preprocess set of Xarray datasets similar to MetNet-1"""
+    """Stack Xarray datasets together"""
 
     def __init__(
         self,
