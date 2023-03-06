@@ -42,8 +42,10 @@ class CreateTimeImageIterDataPipe(IterDataPipe):
                 output_height_pixels=len(image_xr[self.y_dim]),
             )
             time_image = _create_data_array_from_image(
-                time_image, image_xr, is_geostationary="x_geostationary" in image_xr.dims,
-                time_dim=self.time_dim
+                time_image,
+                image_xr,
+                is_geostationary="x_geostationary" in image_xr.dims,
+                time_dim=self.time_dim,
             )
             yield time_image
 
