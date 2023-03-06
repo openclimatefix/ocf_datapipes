@@ -173,6 +173,10 @@ def metnet_site_datapipe(
         sat_datapipe, sun_image_datapipe = sat_datapipe.fork(2)
         sun_image_datapipe = sun_image_datapipe.create_sun_image(normalize=True)
 
+    # TODO Convert to Numpy and stack
+    # TODO Include time features
+    # TODO Include mask? Or calculate after?
+
     pv_datapipe = ConvertPVToNumpy(pv_datapipe)
 
     pv_history = pv_history.map(_remove_nans)
