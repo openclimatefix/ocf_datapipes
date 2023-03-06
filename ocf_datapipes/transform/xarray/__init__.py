@@ -36,3 +36,5 @@ from .pv.create_pv_history_image import CreatePVHistoryImageIterDataPipe as Crea
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+from .convert_to_numpy_stack import StackXarrayIterDataPipe as StackXarray
+from .create_time_image import CreateTimeImageIterDataPipe as CreateTimeImage
