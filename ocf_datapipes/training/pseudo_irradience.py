@@ -14,7 +14,6 @@ from ocf_datapipes.training.common import (
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
 )
-from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
 
 xarray.set_options(keep_attrs=True)
@@ -148,8 +147,6 @@ def metnet_site_datapipe(
             y_dim_name="y_geostationary",
         )
 
-    modalities = []
-
     if pv_in_image and "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
         pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe)
@@ -158,13 +155,13 @@ def metnet_site_datapipe(
         pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe)
     elif pv_in_image and "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
-        pv_history = pv_history.create_pv_image(
-            image_datapipe=nwp_gsp_datapipe, image_dim="osgb"
-        )
+        pv_history = pv_history.create_pv_image(image_datapipe=nwp_gsp_datapipe, image_dim="osgb")
 
     if "nwp" in used_datapipes.keys():
         nwp_datapipe, sun_image_datapipe = nwp_datapipe.fork(2)
-        sun_image_datapipe = sun_image_datapipe.create_sun_image(normalize=True, image_dim="osgb", time_dim="target_time_utc")
+        sun_image_datapipe = sun_image_datapipe.create_sun_image(
+            normalize=True, image_dim="osgb", time_dim="target_time_utc"
+        )
     if "hrv" in used_datapipes.keys():
         # Want it at highest resolution possible
         sat_hrv_datapipe, sun_image_datapipe = sat_hrv_datapipe.fork(2)

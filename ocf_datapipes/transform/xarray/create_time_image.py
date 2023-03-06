@@ -35,10 +35,15 @@ class CreateTimeImageIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.DataArray:
         for image_xr in self.source_datapipe:
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
-            time_image = _create_time_image(image_xr, time_dim=self.time_dim,
-                                            output_width_pixels=len(image_xr[self.x_dim]),
-                                            output_height_pixels=len(image_xr[self.y_dim]))
-            time_image = _create_data_array_from_image(time_image, image_xr, is_geostationary="x_geostationary" in image_xr.dims)
+            time_image = _create_time_image(
+                image_xr,
+                time_dim=self.time_dim,
+                output_width_pixels=len(image_xr[self.x_dim]),
+                output_height_pixels=len(image_xr[self.y_dim]),
+            )
+            time_image = _create_data_array_from_image(
+                time_image, image_xr, is_geostationary="x_geostationary" in image_xr.dims
+            )
             yield time_image
 
 
@@ -49,6 +54,7 @@ def _create_time_image(xr_data, time_dim: str, output_height_pixels: int, output
     tiled_data = np.expand_dims(trig_decomposition, (2, 3))
     tiled_data = np.tile(tiled_data, (1, 1, output_height_pixels, output_width_pixels))
     return tiled_data
+
 
 def _create_data_array_from_image(
     time_image: np.ndarray,
@@ -61,7 +67,10 @@ def _create_data_array_from_image(
             data=time_image,
             coords=(
                 ("time_utc", image_xr[time_dim].values),
-                ("channel", [f"time_channel_{i}" for i in range(time_image.shape[1])]), # Temp channel names
+                (
+                    "channel",
+                    [f"time_channel_{i}" for i in range(time_image.shape[1])],
+                ),  # Temp channel names
                 ("y_geostationary", image_xr.y_geostationary.values),
                 ("x_geostationary", image_xr.x_geostationary.values),
             ),
