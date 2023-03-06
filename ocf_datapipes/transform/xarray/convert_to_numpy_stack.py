@@ -39,8 +39,7 @@ class StackXarrayIterDataPipe(IterDataPipe):
                 stack.append(xr_data)
             # Pad out time dimension to be the same, using the largest one
             # All should have 4 dimensions at this point
-            max_time_len = max(
-                np.max([c.shape[0] for c in stack]))
+            max_time_len = max(np.max([c.shape[0] for c in stack]))
             for i in range(len(stack)):
                 stack[i] = np.pad(
                     stack[i],
@@ -56,4 +55,3 @@ class StackXarrayIterDataPipe(IterDataPipe):
 
             stacked_data = np.concatenate([*stack], axis=1)
             yield stacked_data
-

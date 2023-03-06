@@ -7,15 +7,14 @@ from typing import Union
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.convert import ConvertPVToNumpy
 from ocf_datapipes.select import LocationPicker
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
 )
-from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
 from ocf_datapipes.transform.xarray import StackXarray
+from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("pseudo_irradiance_datapipe")
@@ -44,17 +43,17 @@ def get_numpy_from_xarray(x):
 
 
 def pseudo_irradiance_datapipe(
-        configuration_filename: Union[Path, str],
-        use_sun: bool = True,
-        use_nwp: bool = True,
-        use_sat: bool = True,
-        use_hrv: bool = True,
-        use_pv: bool = True,
-        use_topo: bool = True,
-        use_future: bool = False,
-        size: int = 256,
-        start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
-        end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
+    configuration_filename: Union[Path, str],
+    use_sun: bool = True,
+    use_nwp: bool = True,
+    use_sat: bool = True,
+    use_hrv: bool = True,
+    use_pv: bool = True,
+    use_topo: bool = True,
+    use_future: bool = False,
+    size: int = 256,
+    start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
+    end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
 ) -> IterDataPipe:
     """
     Make Pseudo-Irradience Datapipe
@@ -170,7 +169,9 @@ def pseudo_irradiance_datapipe(
         pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=sat_future_datapipe)
     elif "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_future_datapipe = nwp_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=nwp_future_datapipe, image_dim="osgb")
+        pv_datapipe = pv_datapipe.create_pv_image(
+            image_datapipe=nwp_future_datapipe, image_dim="osgb"
+        )
 
     if use_sun:
         if "nwp" in used_datapipes.keys():
@@ -188,8 +189,9 @@ def pseudo_irradiance_datapipe(
 
     if "nwp" in used_datapipes.keys():
         nwp_datapipe, time_image_datapipe = nwp_datapipe.fork(2)
-        time_image_datapipe = time_image_datapipe.create_time_image(image_dim="osgb", time_dim="target_time_utc"
-                                                                    )
+        time_image_datapipe = time_image_datapipe.create_time_image(
+            image_dim="osgb", time_dim="target_time_utc"
+        )
     elif "hrv" in used_datapipes.keys():
         # Want it at highest resolution possible
         sat_hrv_datapipe, time_image_datapipe = sat_hrv_datapipe.fork(2)
