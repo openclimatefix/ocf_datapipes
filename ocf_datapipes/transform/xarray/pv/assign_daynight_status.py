@@ -53,7 +53,6 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
         # Reading the Xarray dataset
         for xr_dataset in self.source_datapipe:
-
             # Getting Month and Hour values from time_utc and stacking them
             date_month = xr_dataset.time_utc.dt.month.values
             date_hr = xr_dataset.time_utc.dt.hour.values

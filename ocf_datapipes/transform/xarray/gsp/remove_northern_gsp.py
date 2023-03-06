@@ -31,7 +31,6 @@ class RemoveNorthernGSPIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray:
         for source_datapipe in self.source_datapipe:
-
             logger.debug(
                 f"Removing any gsp with Y OSGB greater than {self.northern_y_osgb_limit}. "
                 f"There are currently {len(source_datapipe.gsp_id)} GSPs"

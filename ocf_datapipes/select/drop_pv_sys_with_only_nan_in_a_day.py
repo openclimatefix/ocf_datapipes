@@ -33,22 +33,17 @@ class DropPVSystemsWithOnlyNanInADayIterDataPipe(IterDataPipe):
         self.intervals = minimum_number_data_points
 
     def __iter__(self) -> xr.Dataset():
-
         # Reading the DataArray
         for xr_dataset in self.source_datapipe:
-
             dates_array = xr_dataset.coords["time_utc"].values
 
             # Checking length of time series longer than standard intervals
             if dates_array.size >= self.intervals:
-
                 # Collecting the time series data from 'time_utc' coordinate
                 for i in range(0, dates_array.size, self.intervals):
-
                     if i == self.intervals:
                         break
                     else:
-
                         # Getting the first and last timestamp of the day based on intervals
                         # Slicing the dataset by individual first timestamp in a day
                         # and last timestamp of the day

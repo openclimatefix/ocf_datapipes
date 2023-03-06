@@ -38,7 +38,6 @@ def test_location_picker_all_locations(gsp_datapipe):
 
 
 def test_location_picker_with_id(configuration_with_pv_parquet):
-
     # load configuration
     config_datapipe = OpenConfiguration(configuration_with_pv_parquet)
     configuration: Configuration = next(iter(config_datapipe))

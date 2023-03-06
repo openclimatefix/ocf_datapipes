@@ -40,14 +40,12 @@ class TrimDatesWithInsufficentDataIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.DataArray():
         # This dropping of insufficent data considers just dates in a given datetime
         for xr_dataset in self.source_datapipe:
-
             # Getting the 'datetime' values into a single 1D array
             dates_array = xr_dataset.coords["time_utc"].values
 
             # Checking if the total length of 'datetime' is
             # greater than provided time intervals
             if dates_array.size >= self.intervals:
-
                 # Counting the minute intervals (both non_zero and zero),
                 # as every 5min, 15min, or 30 min
                 # has intervals such as, for 15 min [0, 15, 30, 45, 0,........]

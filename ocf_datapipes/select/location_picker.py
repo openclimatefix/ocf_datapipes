@@ -41,11 +41,9 @@ class LocationPickerIterDataPipe(IterDataPipe):
     def __iter__(self) -> Location:
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
-
             logger.debug("Getting locations")
 
             if self.return_all_locations:
-
                 logger.debug("Going to return all locations")
 
                 # Iterate through all locations in dataset
@@ -55,7 +53,6 @@ class LocationPickerIterDataPipe(IterDataPipe):
                         y=xr_dataset[self.y_dim_name][location_idx].values,
                     )
                     if "pv_system_id" in xr_dataset.coords.keys():
-
                         location.id = int(xr_dataset["pv_system_id"][location_idx].values)
                     logger.debug(f"Got all location {location}")
                     yield location

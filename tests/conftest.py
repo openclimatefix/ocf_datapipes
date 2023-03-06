@@ -228,7 +228,6 @@ def pv_yields_and_systems(db_session):
 
     # pv system with gaps every 5 mins
     for minutes in [0, 10, 20, 30]:
-
         pv_yield_4 = PVYield(
             datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes),
             solar_generation_kw=4,
@@ -307,7 +306,6 @@ def pv_parquet_file():
     for id in ids:
         # 288 5 minutes stamps in each day
         for i in range(0, 288 * days):
-
             datestamp = date + timedelta(minutes=i * 5)
             if datestamp.hour > 21 or datestamp.hour < 3:
                 value = 0
@@ -321,7 +319,6 @@ def pv_parquet_file():
     data_df.loc[0:3, "generation_wh"] = np.nan
 
     with tempfile.TemporaryDirectory() as tmpdir:
-
         filename = tmpdir + "/data.parquet"
         data_df.to_parquet(filename, engine="fastparquet")
         yield filename
@@ -478,7 +475,6 @@ def nwp_gfs_data():
 
 @pytest.fixture()
 def configuration():
-
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
     return load_yaml_configuration(filename=filename)
@@ -486,7 +482,6 @@ def configuration():
 
 @pytest.fixture()
 def configuration_with_pv_parquet(pv_parquet_file):
-
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
     configuration = load_yaml_configuration(filename=filename)
@@ -504,7 +499,6 @@ def configuration_with_pv_parquet(pv_parquet_file):
 
 @pytest.fixture()
 def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_filename):
-
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
     configuration = load_yaml_configuration(filename=filename)
@@ -523,7 +517,6 @@ def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_file
 
 @pytest.fixture()
 def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
-
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
     configuration = load_yaml_configuration(filename=filename)
@@ -539,6 +532,5 @@ def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
 
 @pytest.fixture()
 def configuration_filename():
-
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
     yield filename

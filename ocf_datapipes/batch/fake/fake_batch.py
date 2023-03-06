@@ -65,7 +65,6 @@ def make_fake_batch(configuration: Configuration, to_torch: Optional[bool] = Fal
 
     if to_torch:
         for k, v in batch.items():
-
             if isinstance(v, int):
                 batch[k] = torch.IntTensor(v)
             elif isinstance(v, np.ndarray):

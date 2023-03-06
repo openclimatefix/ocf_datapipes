@@ -41,7 +41,6 @@ class SelectLiveTimeSliceIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Select the recent live data"""
         for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
-
             logger.debug(f"Selecting time slice {t0} on dim {self.dim_name}")
 
             xr_data = xr_data.sel({self.dim_name: slice(t0 - self.history_duration, t0)})

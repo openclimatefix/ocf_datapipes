@@ -3,7 +3,6 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def test_nwp_pv_datapipe(configuration_with_gsp_and_nwp):
-
     gsp_datapipe = gsp_national_datapipe(configuration_with_gsp_and_nwp).set_length(2)
 
     batch = next(iter(gsp_datapipe))

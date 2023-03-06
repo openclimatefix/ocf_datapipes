@@ -31,7 +31,6 @@ class PVPowerRemoveZeroDataIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         for xr_data in self.source_datapipe:
-
             logger.debug(f"Reducing Date if window ({self.window}) of zeros")
 
             # get rolling window values
