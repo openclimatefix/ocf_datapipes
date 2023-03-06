@@ -38,7 +38,7 @@ def _remove_nans(x):
     return x.fillna(0.0)
 
 
-def get_numpy_from_xarray(x):
+def _get_numpy_from_xarray(x):
     return x.to_numpy()
 
 
@@ -219,5 +219,5 @@ def pseudo_irradiance_datapipe(
 
     stacked_xarray_inputs = StackXarray(modalities)
 
-    pv_datapipe = pv_datapipe.map(get_numpy_from_xarray)
+    pv_datapipe = pv_datapipe.map(_get_numpy_from_xarray)
     return stacked_xarray_inputs.zip_ocf(pv_datapipe)  # Makes (Inputs, Label) tuples
