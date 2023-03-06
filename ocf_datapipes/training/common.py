@@ -15,6 +15,7 @@ from ocf_datapipes.load import (
 )
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def open_and_return_datapipes(
@@ -40,35 +41,25 @@ def open_and_return_datapipes(
     Returns:
         List of datapipes corresponding to the datapipes to open
     """
-    # load configuration
+    # Load configuration
     config_datapipe = OpenConfiguration(configuration_filename)
     configuration: Configuration = next(iter(config_datapipe))
 
-    # Check which modalities to use
-    if use_nwp:
-        use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != "" else False
-    if use_pv:
-        use_pv = True if configuration.input_data.pv.pv_files_groups[0].pv_filename != "" else False
-    if use_sat:
-        use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
-    if use_hrv:
-        use_hrv = (
-            True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
-        )
-    if use_topo:
-        use_topo = (
-            True if configuration.input_data.topographic.topographic_filename != "" else False
-        )
-    if use_gsp:
-        use_gsp = True if configuration.input_data.gsp.gsp_zarr_path != "" else False
+    # Filter modalities to those with filepaths
+    use_nwp &= (configuration.input_data.nwp.nwp_zarr_path != "")
+    use_pv &= (configuration.input_data.pv.pv_files_groups[0].pv_filename != "")
+    use_sat &= (configuration.input_data.satellite.satellite_zarr_path != "") 
+    use_hrv &= (configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "")
+    use_topo &= (configuration.input_data.topographic.topographic_filename != "")
+    use_gsp &= (configuration.input_data.gsp.gsp_zarr_path != "")
+    
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
         f" HRV: {use_hrv} PV: {use_pv} Topo: {use_topo}"
     )
-
-    used_datapipes = {}
-
-    used_datapipes["config"] = configuration
+    
+    # Initiate pipeline dict
+    used_datapipes = {"config":configuration}
 
     # Load GSP national data
     if use_gsp:
@@ -144,176 +135,187 @@ def open_and_return_datapipes(
     return used_datapipes
 
 
-def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for_t0: str = "gsp"):
+def get_and_return_overlapping_time_periods_and_t0(datapipes_dict: dict, key_for_t0: str = "gsp"):
     """
     Takes datapipes and obtains the overlapping time periods + t0 time datapipes
 
     Args:
-        used_datapipes: Dictionary of datapipes to compute the time intersection of
+        datapipes_dict: Dictionary of datapipes to compute the time intersection of
         key_for_t0: Key to use for the t0 datapipe
 
     Returns:
         Dictionary of datapipes with the proper time slices selected
     """
-    datapipes_for_time_periods = []  # Using later to compute intersections
+    assert key_for_t0 in datapipes_dict
+        
+    time_period_datapipes = []  # Using later to compute intersections
     datapipes_to_return = {}  # Returned along with original ones
-    t0_datapipe = None
-    configuration = used_datapipes.pop("config")
-    for key, datapipe in used_datapipes.items():
+    configuration = datapipes_dict.pop("config")
+    
+    datapipes_dict[key_for_t0], t0_datapipe = datapipes_dict[key_for_t0].fork(2, buffer_size=5)
+    
+    for key in datapipes_dict.keys():
         if "topo" in key:
             continue
-        if key_for_t0 in key:
-            forked_datapipes = datapipe.fork(3, buffer_size=5)
-            t0_datapipe = forked_datapipes[2]
+
+        elif key == "nwp":
+            sample_frequency = 180 # Init times are 3 hours apart
+            history_duration = configuration.input_data.nwp.history_minutes
+            forecast_duration = configuration.input_data.nwp.forecast_minutes
+            time_dim="init_time_utc"
+
+        elif key ==  "sat":            
+            sample_frequency = 5
+            history_duration = configuration.input_data.satellite.history_minutes
+            forecast_duration = 0
+            time_dim="time_utc"
+
+        elif key == "hrv":
+            sample_frequency = 5
+            history_duration = configuration.input_data.hrvsatellite.history_minutes
+            forecast_duration = 0
+            time_dim="time_utc"
+
+        elif key == "pv":
+            sample_frequency = 5
+            history_duration = configuration.input_data.pv.history_minutes
+            forecast_duration = configuration.input_data.pv.forecast_minutes
+            time_dim="time_utc"
+            
+        elif key == "gsp":
+            sample_frequency = 30
+            history_duration = configuration.input_data.gsp.history_minutes
+            forecast_duration = configuration.input_data.gsp.forecast_minutes
+            time_dim="time_utc"
+        
         else:
-            forked_datapipes = datapipe.fork(2, buffer_size=5)
-        datapipes_to_return[key] = forked_datapipes[0]
-        if "nwp" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
-                sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-                time_dim="init_time_utc",
-            )
-            datapipes_for_time_periods.append(time_periods_datapipe)
-
-        if "sat" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
-                sample_period_duration=timedelta(minutes=5),
-                history_duration=timedelta(
-                    minutes=configuration.input_data.satellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
-            )
-            datapipes_for_time_periods.append(time_periods_datapipe)
-
-        if "hrv" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
-                sample_period_duration=timedelta(minutes=5),
-                history_duration=timedelta(
-                    minutes=configuration.input_data.hrvsatellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
-            )
-            datapipes_for_time_periods.append(time_periods_datapipe)
-
-        if "pv" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
-                sample_period_duration=timedelta(minutes=5),
-                history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
-            )
-            datapipes_for_time_periods.append(time_periods_datapipe)
-        if "gsp" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
-                sample_period_duration=timedelta(minutes=30),
-                history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
-            )
-            datapipes_for_time_periods.append(time_periods_datapipe)
+            raise ValueError(f"Unexpected key: {key}")
+            
+        datapipes_to_return[key], time_periods = datapipes_dict[key].fork(2, buffer_size=5)
+            
+        time_periods = time_periods.get_contiguous_time_periods(
+            sample_period_duration=timedelta(minutes=sample_frequency),  
+            history_duration=timedelta(minutes=history_duration),
+            forecast_duration=timedelta(minutes=forecast_duration),
+            time_dim=time_dim,
+        )
+        
+        time_period_datapipes.append(time_periods)
 
     # Now have the forked ones
     # find joint overlapping timer periods
-    logger.debug("Getting joint time periods")
-    overlapping_datapipe = datapipes_for_time_periods[0].select_overlapping_time_slice(
-        secondary_datapipes=datapipes_for_time_periods[1:],
-    )
-
+    if len(time_period_datapipes)>1:
+        logger.debug("Getting joint time periods")
+        overlapping_datapipe = time_period_datapipes[0].select_overlapping_time_slice(
+            secondary_datapipes=time_period_datapipes[1:],
+        )
+    else:
+        logger.debug("Skipping getting joint time periods")
+        overlapping_datapipe = time_period_datapipes[0]
+        
     # select time periods
-    t0_datapipe = t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
-
-    num_t0_datapipes = len(datapipes_to_return.keys())  # One for each input
-    t0_datapipes = t0_datapipe.select_t0_time(return_all_times=False).fork(
-        num_t0_datapipes, buffer_size=5
+    t0_datapipe = (
+        t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+        .select_t0_time(return_all_times=False)
     )
 
-    for i, key in enumerate(list(datapipes_to_return.keys())):
-        datapipes_to_return[key + "_t0"] = t0_datapipes[i]
-
-    # Readd config for later
+    num_t0_datapipes = len(datapipes_to_return)  # One for each input
+    
+    if num_t0_datapipes>1:
+        t0_datapipes = t0_datapipe.fork(num_t0_datapipes, buffer_size=5)
+    else:
+        t0_datapipes = [t0_datapipe]
+    
+    for key, datapipe in zip(list(datapipes_to_return.keys()), t0_datapipes):
+        datapipes_to_return[key + "_t0"] = datapipe
+    
+    # Reattach ignored entries
     datapipes_to_return["config"] = configuration
-    if "topo" in used_datapipes.keys():
-        datapipes_to_return["topo"] = used_datapipes["topo"]
+    if "topo" in datapipes_dict:
+        datapipes_to_return["topo"] = datapipes_dict["topo"]
+    
     return datapipes_to_return
 
 
-def add_selected_time_slices_from_datapipes(used_datapipes: dict):
+def add_selected_time_slices_from_datapipes(used_datapipes: dict, split_future=True):
     """
     Takes datapipes and t0 datapipes and returns the sliced datapipes
 
     Args:
         used_datapipes: Dictionary of used datapipes and t0 ones
+        split_future: Boolean value of whether to split the history and
+            future of '"pv"` and `"gsp"` into `"key"` and `"key_future"`
+           entries in the datapipe dict
 
     Returns:
         Dictionary of datapipes after the time slices are selected
     """
     datapipes_to_return = {}  # Returned along with original ones
     configuration = used_datapipes.pop("config")
+        
+    for key in ["gsp", "pv"]:
+        if key in used_datapipes.keys() and split_future:
+            used_datapipes[f"{key}_future"], used_datapipes[key] = used_datapipes[key].fork(2, buffer_size=5)
+            used_datapipes[f"{key}_future_t0"], used_datapipes[f"{key}_t0"] = used_datapipes[f"{key}_t0"].fork(2, buffer_size=5)
+    
     for key, datapipe in used_datapipes.items():
-        if "topo" in key:
+        if ("topo" in key) or ("_t0" in key):
             continue
-        if "_t0" in key:
-            continue
-        if "nwp" == key:
-            datapipes_to_return[key] = datapipe.convert_to_nwp_target_time(
-                t0_datapipe=used_datapipes[key + "_t0"],
-                sample_period_duration=timedelta(hours=1),
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-            )
+           
+        elif key == "nwp":
+            datapipe_method = datapipe.convert_to_nwp_target_time
+            sample_frequency_mins = 60
+            history_mins = configuration.input_data.nwp.history_minutes
+            forecast_mins = configuration.input_data.nwp.forecast_minutes
+            
+        elif key == "sat":
+            datapipe_method = datapipe.select_time_slice
+            sample_frequency_mins = 5
+            history_mins = configuration.input_data.satellite.history_minutes
+            forecast_mins = 0
 
-        if "sat" == key:
-            datapipes_to_return[key] = datapipe.select_time_slice(
-                t0_datapipe=used_datapipes[key + "_t0"],
-                history_duration=timedelta(
-                    minutes=configuration.input_data.satellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(minutes=5),
-            )
+        elif key == "hrv":
+            datapipe_method = datapipe.select_time_slice
+            sample_frequency_mins = 5
+            history_mins = configuration.input_data.hrvsatellite.history_minutes
+            forecast_mins = 0
+            
+        elif key == "pv":
+            datapipe_method = datapipe.select_time_slice
+            sample_frequency_mins = 5
+            history_mins = configuration.input_data.pv.history_minutes
+            forecast_mins = 0 if split_future else configuration.input_data.pv.forecast_minutes
+            
+        elif key == "pv_future":
+            datapipe_method = datapipe.select_time_slice
+            sample_frequency_mins = 5
+            history_mins = 0
+            forecast_mins = configuration.input_data.pv.forecast_minutes
+            
+        elif key == "gsp":
+            datapipe_method = datapipe.select_time_slice
+            sample_frequency_mins = 30
+            history_mins = configuration.input_data.gsp.history_minutes
+            forecast_mins = 0 if split_future else configuration.input_data.gsp.forecast_minutes
+            
+        elif key == "gsp_future":
+            datapipe_method = datapipe.select_time_slice
+            sample_frequency_mins = 30
+            history_mins = 0
+            forecast_mins = configuration.input_data.gsp.forecast_minutes
+            
+        else:
+            raise ValueError(f"Uneexpected key: {key}")
+        
+        datapipes_to_return[key] = datapipe_method(
+            t0_datapipe=used_datapipes[key + "_t0"],
+            sample_period_duration=timedelta(minutes=sample_frequency_mins),
+            history_duration=timedelta(minutes=history_mins),
+            forecast_duration=timedelta(minutes=forecast_mins),
+        )
 
-        if "hrv" == key:
-            datapipes_to_return[key] = datapipe.select_time_slice(
-                t0_datapipe=used_datapipes[key + "_t0"],
-                history_duration=timedelta(
-                    minutes=configuration.input_data.hrvsatellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(minutes=5),
-            )
-
-        if "pv" == key:
-            pv_1, pv_2 = used_datapipes[key + "_t0"].fork(2)
-            pv_dp1, pv_dp2 = datapipe.fork(2)
-            datapipes_to_return[key] = pv_dp1.select_time_slice(
-                t0_datapipe=pv_1,
-                history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(minutes=5),
-            )
-            datapipes_to_return[key + "_future"] = pv_dp2.select_time_slice(
-                t0_datapipe=pv_2,
-                history_duration=timedelta(minutes=0),
-                forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
-                sample_period_duration=timedelta(minutes=5),
-            )
-
-        if "gsp" == key:
-            gsp_1, gsp_2 = used_datapipes[key + "_t0"].fork(2)
-            gsp_dp1, gsp_dp2 = datapipe.fork(2)
-            datapipes_to_return[key] = gsp_dp1.select_time_slice(
-                t0_datapipe=gsp_1,
-                history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(minutes=30),
-            )
-            datapipes_to_return[key + "_future"] = gsp_dp2.select_time_slice(
-                t0_datapipe=gsp_2,
-                history_duration=timedelta(minutes=0),
-                forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
-                sample_period_duration=timedelta(minutes=30),
-            )
-    if "topo" in used_datapipes.keys():
+    if "topo" in used_datapipes:
         datapipes_to_return["topo"] = used_datapipes["topo"]
     datapipes_to_return["config"] = configuration
+    
     return datapipes_to_return
