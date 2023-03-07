@@ -126,8 +126,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                         latitude=lat,
                         longitude=lon,
                     )
-                    azimuth = solpos["azimuth"]
-                    elevation = solpos["elevation"]
+                    azimuth = solpos["azimuth"].values
+                    elevation = solpos["elevation"].values
 
                 # Normalize.
                 azimuth = (azimuth - AZIMUTH_MEAN) / AZIMUTH_STD
