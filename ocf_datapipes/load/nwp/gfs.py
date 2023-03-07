@@ -28,8 +28,7 @@ class OpenGFSForecastIterDataPipe(IterDataPipe):
         _log.debug("Opening NWP data: %s", self.zarr_path)
         gfs = open_gfs(self.zarr_path)
 
-        while True:
-            yield gfs
+        yield gfs
 
 
 def open_gfs(zarr_path: Union[Path, str]) -> xr.Dataset:

@@ -31,8 +31,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
         _log.info("Opening NWP data: %s", self.zarr_path)
         ukv = open_nwp(self.zarr_path)
         _log.info("Opened NWP data")
-        while True:
-            yield ukv
+        yield ukv
 
 
 @functional_datapipe("open_latest_nwp")

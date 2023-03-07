@@ -100,8 +100,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             del gsp_id_to_shape
         del gsp_pv_power_mw_df
 
-        while True:
-            yield data_array
+        yield data_array
 
 
 def get_gsp_power_from_database(

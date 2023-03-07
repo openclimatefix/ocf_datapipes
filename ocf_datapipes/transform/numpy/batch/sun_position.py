@@ -11,11 +11,11 @@ from ocf_datapipes.utils.consts import BatchKey
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 from ocf_datapipes.utils.utils import profile
 
+
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
 AZIMUTH_MEAN = 177.7
 AZIMUTH_STD = 41.7
-
 
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
@@ -84,29 +84,50 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 azimuth = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
                 elevation = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
                 must_be_finite = True
-                for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
+                
+                if len(time_utc.shape)>1:
+                    for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
+                        if not np.isfinite([lat, lon]).all():
+                            assert (
+                                self.modality_name == "pv"
+                            ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
+                            # This is PV data, for a location which has no PV systems.
+                            must_be_finite = False
+                            continue  # Leave azimuth and elevation as NaN for this example_idx.
+
+                        dt = pd.to_datetime(time_utc[example_idx], unit="s")
+                        dt = pd.DatetimeIndex(dt)  # pvlib expects a `pd.DatetimeIndex`.
+                        solpos = pvlib.solarposition.get_solarposition(
+                            time=dt,
+                            latitude=lat,
+                            longitude=lon,
+                            # Which `method` to use?
+                            # pyephem seemed to be a good mix between speed and ease
+                            # but causes segfaults!
+                            # nrel_numba doesn't work when using multiple worker processes.
+                            # nrel_c is probably fastest but requires C code to be manually compiled:
+                            # https://midcdmz.nrel.gov/spa/
+                        )
+                        azimuth[example_idx] = solpos["azimuth"]
+                        elevation[example_idx] = solpos["elevation"]
+                else:
+                    lat, lon = lats[0], lons[0]
                     if not np.isfinite([lat, lon]).all():
                         assert (
                             self.modality_name == "pv"
                         ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
-                        # This is PV data, for a location which has no PV systems.
                         must_be_finite = False
-                        continue  # Leave azimuth and elevation as NaN for this example_idx.
-                    dt = pd.to_datetime(time_utc[example_idx], unit="s")
-                    dt = pd.DatetimeIndex(dt)  # pvlib expects a `pd.DatetimeIndex`.
+                        continue
+
+                    dt = pd.to_datetime(time_utc, unit="s")
+                    dt = pd.DatetimeIndex(dt)
                     solpos = pvlib.solarposition.get_solarposition(
                         time=dt,
                         latitude=lat,
                         longitude=lon,
-                        # Which `method` to use?
-                        # pyephem seemed to be a good mix between speed and ease
-                        # but causes segfaults!
-                        # nrel_numba doesn't work when using multiple worker processes.
-                        # nrel_c is probably fastest but requires C code to be manually compiled:
-                        # https://midcdmz.nrel.gov/spa/
                     )
-                    azimuth[example_idx] = solpos["azimuth"]
-                    elevation[example_idx] = solpos["elevation"]
+                    azimuth = solpos["azimuth"]
+                    elevation = solpos["elevation"]
 
                 # Normalize.
                 azimuth = (azimuth - AZIMUTH_MEAN) / AZIMUTH_STD
@@ -114,8 +135,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
 
                 # Check
                 if must_be_finite:
-                    assert np.isfinite(azimuth).all()
-                    assert np.isfinite(elevation).all()
+                    assert np.isfinite([azimuth, elevation]).all()
 
                 # Store.
                 azimuth_batch_key = BatchKey[self.modality_name + "_solar_azimuth"]
@@ -123,4 +143,4 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 np_batch[azimuth_batch_key] = azimuth
                 np_batch[elevation_batch_key] = elevation
 
-                yield np_batch
+            yield np_batch

@@ -64,8 +64,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
 
             data = join_pv(pv_datas_xr)
 
-        while True:
-            yield data
+        yield data
 
 
 def join_pv(data_arrays: List[xr.DataArray]) -> xr.DataArray:

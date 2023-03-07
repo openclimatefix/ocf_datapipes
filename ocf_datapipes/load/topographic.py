@@ -33,5 +33,4 @@ class OpenTopographyIterDataPipe(IterDataPipe):
         # Use our standard naming:
         topo = topo.rename({"x": "x_osgb", "y": "y_osgb"})
 
-        while True:
-            yield topo
+        yield topo

@@ -47,7 +47,8 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         self.data_pipename = data_pipename
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
+        xr_data = next(iter(self.source_datapipe))
+        for t0 in self.t0_datapipe:
 
             with profile(f"select_time_slice {self.data_pipename}"):
 
@@ -59,14 +60,10 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
                 end_dt = end_dt.ceil(self.sample_period_duration)
 
                 # change to debug
-                logger.info(f"Change from {len(xr_data.time_utc)} time steps")
-
-                xr_data = xr_data.sel(
+                xr_sel = xr_data.sel(
                     time_utc=slice(
                         start_dt,
                         end_dt,
                     )
                 )
-                logger.info(f"Changed to {len(xr_data.time_utc)} time steps")
-
-                yield xr_data
+            yield xr_sel

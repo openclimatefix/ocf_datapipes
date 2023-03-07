@@ -125,5 +125,4 @@ class OpenSatelliteIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.DataArray:
         """Open the Zarr file"""
         data: xr.DataArray = open_sat_data(zarr_path=self.zarr_path)
-        while True:
-            yield data
+        yield data

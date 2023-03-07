@@ -5,6 +5,8 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float, profile
 
+import numpy as np
+
 
 @functional_datapipe("convert_satellite_to_numpy_batch")
 class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
@@ -26,8 +28,11 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
         """Convert each example to a NumpyBatch object"""
 
         for xr_data in self.source_datapipe:
-
-            with profile("convert_satellite_to_numpy_batch"):
+            
+            with profile(f"convert_satellite_to_numpy_batch(is_hrv={self.is_hrv})"):
+                
+                xr_data = xr_data.compute()
+                
                 if self.is_hrv:
                     example: NumpyBatch = {
                         BatchKey.hrvsatellite_actual: xr_data.values,
@@ -42,7 +47,8 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
                         (BatchKey.hrvsatellite_x_geostationary, "x_geostationary"),
                     ):
                         # HRVSatellite coords are already float32.
-                        example[batch_key] = xr_data[dataset_key].values
+                        # Copy needed due to flipping in the (HRV)satellite loading pipe
+                        example[batch_key] = np.copy(xr_data[dataset_key].values)
                 else:
                     example: NumpyBatch = {
                         BatchKey.satellite_actual: xr_data.values,
@@ -57,6 +63,7 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
                         (BatchKey.satellite_x_geostationary, "x_geostationary"),
                     ):
                         # HRVSatellite coords are already float32.
-                        example[batch_key] = xr_data[dataset_key].values
+                        # Copy needed due to flipping in the (HRV)satellite loading pipe
+                        example[batch_key] = np.copy(xr_data[dataset_key].values)
 
-                yield example
+            yield example

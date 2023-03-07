@@ -41,6 +41,7 @@ def pvnet_datapipe(
     configuration: str,
     start_time,
     end_time,
+    add_sun=True,
     
 ) -> IterDataPipe:
     """
@@ -69,9 +70,10 @@ def pvnet_datapipe(
         use_pv=   False,
         use_sat=  True,
         use_hrv=  False,
-        use_nwp=  False,
+        use_nwp=  True,
         use_topo= False,
     )
+    # These now only return one-time-yielding iters
     
     print(f"\n\n\n{used_datapipes.keys()}\n\n\n")
     
@@ -95,7 +97,6 @@ def pvnet_datapipe(
     location_pipe = location_pipe.location_picker()
     
     
-
     if "nwp" in used_datapipes.keys():
         logger.debug("Take NWP time slices")
         nwp_image_loc_datapipe, location_pipe = location_pipe.fork(2)
@@ -138,8 +139,7 @@ def pvnet_datapipe(
             y_dim_name="y_geostationary",
             datapipe_name="HRVSatellite",
         )
-        numpy_modalities.append(hrv_datapipe.convert_satellite_to_numpy_batch())
-    
+        numpy_modalities.append(hrv_datapipe.convert_satellite_to_numpy_batch(is_hrv=True))
     
     logger.debug("Combine all the data sources")
     combined_datapipe = (
@@ -147,5 +147,8 @@ def pvnet_datapipe(
         # .encode_space_time()
         #.add_sun_position(modality_name="gsp")
     )
+    
+    if add_sun:
+        combined_datapipe = combined_datapipe.add_sun_position(modality_name="gsp")
 
     return combined_datapipe

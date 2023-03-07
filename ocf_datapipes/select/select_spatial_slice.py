@@ -95,7 +95,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
                         self.y_dim_name: slice(top_idx, bottom_idx),
                     }
                 )
-                yield selected
+            yield selected
 
 
 @functional_datapipe("select_spatial_slice_meters")
@@ -198,7 +198,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                     )
 
                     selected = xr_data.isel({self.dim_name: id_mask})
-                yield selected
+            yield selected
 
 
 def _get_idx_of_pixel_closest_to_poi(

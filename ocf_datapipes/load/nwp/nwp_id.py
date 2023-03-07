@@ -28,8 +28,7 @@ class OpenNWPIDIterDataPipe(IterDataPipe):
         """Opens the NWP data"""
         _log.debug("Opening NWP data: %s", self.netcdf_path)
         ukv = open_nwp(self.netcdf_path)
-        while True:
-            yield ukv
+        yield ukv
 
 
 def open_nwp(netcdf_path) -> xr.DataArray:

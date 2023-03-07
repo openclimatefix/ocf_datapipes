@@ -46,7 +46,10 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
-        for xr_data, t0 in self.source_datapipe.zip_ocf(self.t0_datapipe):
+        
+        xr_data = next(iter(self.source_datapipe))
+        
+        for t0 in self.t0_datapipe:
 
             with profile("convert_to_nwp_target_time"):
 
@@ -81,5 +84,6 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
                 coords = {"target_time_utc": target_times}
                 init_time_indexer = xr.DataArray(init_times, coords=coords)
                 step_indexer = xr.DataArray(steps, coords=coords)
-                xr_data = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
-                yield xr_data
+                xr_sel = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
+            
+            yield xr_sel

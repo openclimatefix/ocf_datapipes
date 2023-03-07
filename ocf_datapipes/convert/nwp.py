@@ -26,7 +26,9 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
         for xr_data in self.source_datapipe:
 
             with profile("convert_nwp_to_numpy_batch"):
-
+                
+                xr_data = xr_data.compute()
+                
                 example: NumpyBatch = {
                     BatchKey.nwp: xr_data.values,
                     BatchKey.nwp_t0_idx: xr_data.attrs["t0_idx"],
@@ -49,4 +51,4 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
                     if dataset_key in xr_data.coords.keys():
                         example[batch_key] = xr_data[dataset_key].values
 
-                yield example
+            yield example

@@ -88,5 +88,4 @@ class OpenGSPIterDataPipe(IterDataPipe):
 
         logger.info("Opened GSP data")
 
-        while True:
-            yield data_array
+        yield data_array

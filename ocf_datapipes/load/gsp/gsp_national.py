@@ -47,5 +47,4 @@ class OpenGSPNationalIterDataPipe(IterDataPipe):
         data_array = data_array.rename({"generation_mw": "gsp_pv_power_mw"})
         data_array = data_array.rename({"installedcapacity_mwp": "capacity_megawatt_power"})
 
-        while True:
-            yield data_array
+        yield data_array

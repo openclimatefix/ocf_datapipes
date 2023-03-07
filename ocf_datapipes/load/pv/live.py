@@ -103,8 +103,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
 
         logger.info(f"Found {len(data_xr.pv_system_row_number)} PV systems")
 
-        while True:
-            yield data_xr
+        yield data_xr
 
 
 def get_metadata_from_database(providers: List[str] = None) -> pd.DataFrame:
