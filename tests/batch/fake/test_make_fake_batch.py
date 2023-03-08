@@ -5,7 +5,6 @@ from ocf_datapipes.config.model import Configuration
 
 
 def test_make_fake_batch():
-
     configuration = Configuration()
     configuration.input_data = configuration.input_data.set_all_to_defaults()
 
@@ -13,7 +12,6 @@ def test_make_fake_batch():
 
 
 def test_make_fake_batch_only_pv():
-
     configuration = Configuration()
     input_data = configuration.input_data.set_all_to_defaults()
     configuration.input_data.pv = input_data.pv
@@ -22,7 +20,6 @@ def test_make_fake_batch_only_pv():
 
 
 def test_make_fake_batch_only_pv_nwp():
-
     configuration = Configuration()
     input_data = configuration.input_data.set_all_to_defaults()
     configuration.input_data.pv = input_data.pv
@@ -32,7 +29,6 @@ def test_make_fake_batch_only_pv_nwp():
 
 
 def test_make_fake_batch_only_pv_nwp_gsp():
-
     configuration = Configuration()
     input_data = configuration.input_data.set_all_to_defaults()
     configuration.input_data.pv = input_data.pv
@@ -43,7 +39,6 @@ def test_make_fake_batch_only_pv_nwp_gsp():
 
 
 def test_make_fake_batch_only_nwp_gsp():
-
     configuration = Configuration()
     input_data = configuration.input_data.set_all_to_defaults()
     configuration.input_data.nwp = input_data.nwp
@@ -53,7 +48,6 @@ def test_make_fake_batch_only_nwp_gsp():
 
 
 def test_fake_data_pipeline():
-
     configuration = Configuration()
     input_data = configuration.input_data.set_all_to_defaults()
     configuration.input_data.nwp = input_data.nwp

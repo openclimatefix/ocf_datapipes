@@ -7,7 +7,6 @@ from ocf_datapipes.select import SelectTimePeriods
 
 
 def test_select_time_slice_gsp(gsp_datapipe):
-
     start = pd.to_datetime(datetime(2020, 4, 1, 12))
     end = pd.to_datetime(datetime(2022, 4, 1, 16))
 

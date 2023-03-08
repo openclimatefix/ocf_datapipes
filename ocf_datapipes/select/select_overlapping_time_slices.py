@@ -35,11 +35,8 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
         self.time_periods_id = {}
 
     def __iter__(self) -> pd.DataFrame:
-
         if self.location_datapipe is None:
-
             for set_of_pd_datas in self.source_datapipe.zip_ocf(*self.secondary_datapipes):
-
                 time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
 
                 logger.debug(f"Found {len(time_periods)} time periods")

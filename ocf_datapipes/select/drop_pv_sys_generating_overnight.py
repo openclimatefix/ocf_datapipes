@@ -27,11 +27,9 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
 
     def __iter__(self) -> xr.DataArray():
-
         logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
 
         for xr_dataset in self.source_datapipe:
-
             # Getting the list of the pv system id
             pv_sys_id_list = xr_dataset.coords["pv_system_id"].values
 

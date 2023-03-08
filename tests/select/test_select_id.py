@@ -4,7 +4,6 @@ from ocf_datapipes.load import OpenConfiguration, OpenNWPID, OpenPVFromNetCDF
 
 
 def test_select_id(configuration_with_pv_parquet, nwp_data_with_id_filename):
-
     # load configuration
     config_datapipe = OpenConfiguration(configuration_with_pv_parquet)
     configuration: Configuration = next(iter(config_datapipe))

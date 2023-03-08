@@ -24,7 +24,6 @@ class ChangeFloat32IterDataPipe(IterDataPipe):
 
     def __iter__(self):
         for np_batch in self.source_datapipe:
-
             logger.debug("Changing arrays to float32s")
 
             for key in np_batch.keys():

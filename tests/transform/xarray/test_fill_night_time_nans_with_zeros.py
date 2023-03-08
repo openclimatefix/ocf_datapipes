@@ -4,7 +4,6 @@ from ocf_datapipes.transform.xarray import PVFillNightNans
 
 
 def test_pv_power_remove_data(passiv_datapipe):
-
     data_before = next(iter(passiv_datapipe))
 
     passiv_datapipe = PVFillNightNans(passiv_datapipe)

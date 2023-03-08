@@ -45,7 +45,6 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
         for xr_data, t0 in self.source_datapipe.zip_ocf(self.t0_datapipe):
-
             logger.debug("convert_to_nwp_target_time ")
 
             t0_datetime_utc = pd.Timestamp(t0)
