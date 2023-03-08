@@ -146,8 +146,8 @@ def pseudo_irradiance_datapipe(
             pv_hrv_image_loc_datapipe,
             roi_height_pixels=size,
             roi_width_pixels=size,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
+            x_dim_name="x_osgb",
+            y_dim_name="y_osgb",
         )
     # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
@@ -227,4 +227,4 @@ def pseudo_irradiance_datapipe(
 
     pv_datapipe = pv_datapipe.map(_get_numpy_from_xarray)
     pv_meta = pv_meta.map(_get_numpy_from_xarray)
-    return stacked_xarray_inputs.zip_ocf(pv_datapipe, pv_meta)  # Makes (Inputs, Label) tuples
+    return stacked_xarray_inputs.zip_ocf(pv_meta, pv_datapipe)  # Makes (Inputs, Label) tuples

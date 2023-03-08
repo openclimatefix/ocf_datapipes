@@ -67,6 +67,8 @@ class CreateSunImageIterDataPipe(IterDataPipe):
                 lats, lons = transform_to_latlon(
                     xx=image_xr[self.x_dim].values, yy=image_xr[self.y_dim].values
                 )
+                print(lats.shape)
+
             else:
                 transform_to_latlon = osgb_to_lat_lon
                 lats, lons = transform_to_latlon(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
@@ -91,8 +93,8 @@ class CreateSunImageIterDataPipe(IterDataPipe):
                         # requires C code to be manually compiled:
                         # https://midcdmz.nrel.gov/spa/
                     )
-                    sun_image[:, 0][y_index][x_index] = solpos["azimuth"]
-                    sun_image[:, 1][y_index][x_index] = solpos["elevation"]
+                    sun_image[:, 0,y_index,x_index] = solpos["azimuth"]
+                    sun_image[:, 1,y_index,x_index] = solpos["elevation"]
 
             # Normalize.
             if self.normalize:
@@ -101,7 +103,7 @@ class CreateSunImageIterDataPipe(IterDataPipe):
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
-            sun_image = _create_data_array_from_image(sun_image, image_xr)
+            sun_image = _create_data_array_from_image(sun_image, image_xr, is_geostationary="geostationary" in self.x_dim, time_dim=self.time_dim)
             yield sun_image
 
 

@@ -13,8 +13,8 @@ from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_an
 
 logger = logging.getLogger(__name__)
 
-MAX_TILT = 180.0
-MAX_ORIENTATION = 180.0
+MAX_TILT = 90.0
+MAX_ORIENTATION = 360.0
 
 
 @functional_datapipe("create_pv_metadata_image")
