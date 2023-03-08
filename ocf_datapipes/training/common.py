@@ -44,14 +44,15 @@ def open_and_return_datapipes(
     # Load configuration
     config_datapipe = OpenConfiguration(configuration_filename)
     configuration: Configuration = next(iter(config_datapipe))
-
+    
+    conf_in = configuration.input_data
     # Filter modalities to those with filepaths
-    use_nwp &= (configuration.input_data.nwp.nwp_zarr_path != "")
-    use_pv &= (configuration.input_data.pv.pv_files_groups[0].pv_filename != "")
-    use_sat &= (configuration.input_data.satellite.satellite_zarr_path != "") 
-    use_hrv &= (configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "")
-    use_topo &= (configuration.input_data.topographic.topographic_filename != "")
-    use_gsp &= (configuration.input_data.gsp.gsp_zarr_path != "")
+    use_nwp = use_nwp and (conf_in.nwp.nwp_zarr_path != "")
+    use_pv = use_pv and (conf_in.pv.pv_files_groups[0].pv_filename != "")
+    use_sat = use_sat and (conf_in.satellite.satellite_zarr_path != "") 
+    use_hrv =  use_hrv and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
+    use_topo = use_topo and (conf_in.topographic.topographic_filename != "")
+    use_gsp = use_gsp and (conf_in.gsp.gsp_zarr_path != "")
     
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
@@ -65,10 +66,10 @@ def open_and_return_datapipes(
     if use_gsp:
         logger.debug("Opening GSP Data")
         gsp_datapipe = OpenGSP(
-            gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
+            gsp_pv_power_zarr_path=conf_in.gsp.gsp_zarr_path
         ).add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+            history_duration=timedelta(minutes=conf_in.gsp.history_minutes),
         )
 
         used_datapipes["gsp"] = gsp_datapipe
@@ -77,11 +78,11 @@ def open_and_return_datapipes(
     if use_nwp:
         logger.debug("Opening NWP Data")
         nwp_datapipe = (
-            OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
-            .select_channels(configuration.input_data.nwp.nwp_channels)
+            OpenNWP(conf_in.nwp.nwp_zarr_path)
+            .select_channels(conf_in.nwp.nwp_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(hours=1),
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+                history_duration=timedelta(minutes=conf_in.nwp.history_minutes),
             )
         )
 
@@ -90,12 +91,12 @@ def open_and_return_datapipes(
     if use_sat:
         logger.debug("Opening Satellite Data")
         sat_datapipe = (
-            OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
-            .select_channels(configuration.input_data.satellite.satellite_channels)
+            OpenSatellite(conf_in.satellite.satellite_zarr_path)
+            .select_channels(conf_in.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(
-                    minutes=configuration.input_data.satellite.history_minutes
+                    minutes=conf_in.satellite.history_minutes
                 ),
             )
         )
@@ -105,11 +106,11 @@ def open_and_return_datapipes(
     if use_hrv:
         logger.debug("Opening HRV Satellite Data")
         sat_hrv_datapipe = OpenSatellite(
-            configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
+            conf_in.hrvsatellite.hrvsatellite_zarr_path
         ).add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(
-                minutes=configuration.input_data.hrvsatellite.history_minutes
+                minutes=conf_in.hrvsatellite.history_minutes
             ),
         )
 
@@ -118,17 +119,17 @@ def open_and_return_datapipes(
     if use_pv:
         logger.debug("Opening PV")
         pv_datapipe = OpenPVFromNetCDF(
-            pv=configuration.input_data.pv
+            pv=conf_in.pv
         ).add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+            history_duration=timedelta(minutes=conf_in.pv.history_minutes),
         )
 
         used_datapipes["pv"] = pv_datapipe
 
     if use_topo:
         logger.debug("Opening Topographic Data")
-        topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename)
+        topo_datapipe = OpenTopography(conf_in.topographic.topographic_filename)
 
         used_datapipes["topo"] = topo_datapipe
 

@@ -24,7 +24,7 @@ logger = logging.getLogger("pvnet_datapipe")
 logger.setLevel(logging.DEBUG)
 
 
-def normalize_gsp(x):  # So it can be pickled
+def normalize_gsp(x):
     """
     Normalize the GSP data
 
@@ -37,12 +37,14 @@ def normalize_gsp(x):  # So it can be pickled
     return x / x.capacity_megawatt_power
 
 
+def gsp_remove_nans(da_gsp):
+    return da_gsp.fillna(0.0)
+
+
 def pvnet_datapipe(
     configuration: str,
     start_time,
-    end_time,
-    add_sun=True,
-    
+    end_time,    
 ) -> IterDataPipe:
     """
     Make data pipe with GSP, NWP and Satellite
@@ -73,82 +75,93 @@ def pvnet_datapipe(
         use_nwp=  True,
         use_topo= False,
     )
-    # These now only return one-time-yielding iters
     
-    print(f"\n\n\n{used_datapipes.keys()}\n\n\n")
     
     used_datapipes["gsp"] = used_datapipes["gsp"].remove_northern_gsp()
     
     # Filter to time range
-    used_datapipes["gsp"] = used_datapipes["gsp"].select_train_test_time(start_time, end_time)
+    if (start_time is not None) or (end_time is not None):
+        used_datapipes["gsp"] = used_datapipes["gsp"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
-    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="gsp")
+    used_datapipes = get_and_return_overlapping_time_periods_and_t0(
+        used_datapipes, 
+        key_for_t0="gsp"
+    )
 
     # And now get time slices
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes, split_future=False)
 
-    # Now do the extra processing
-    gsp_datapipe, location_pipe = used_datapipes["gsp"].fork(2)
+    
+    gsp_datapipe, gsp_datapipe_copy = used_datapipes["gsp"].fork(2)
+    location_pipe = gsp_datapipe_copy.location_picker()
+    
+    location_pipe, location_pipe_copy = location_pipe.fork(2)
+    gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
+        location_datapipe=location_pipe_copy,
+        roi_height_meters=1,
+        roi_width_meters=1,
+        y_dim_name="y_osgb",
+        x_dim_name="x_osgb",
+        dim_name="gsp_id",
+        datapipe_name="GSP",
+    )
     
     gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
+    # TODO:
+    # - If we fill before normalisation we get NaNs. I think some GSP capacities are NaN
+    # - Maybe it is better if the model itself handles NaNs? Progagating them through could allow us
+    #   to predict on them, but ignore the predictions in the loss function, rather than pushing
+    #   the model to predict 0 for these samples.
+    gsp_datapipe = gsp_datapipe.map(gsp_remove_nans)
     numpy_modalities = [gsp_datapipe.convert_gsp_to_numpy_batch()]
     
-    location_pipe = location_pipe.location_picker()
-    
-    
     if "nwp" in used_datapipes.keys():
-        logger.debug("Take NWP time slices")
-        nwp_image_loc_datapipe, location_pipe = location_pipe.fork(2)
-        nwp_datapipe = used_datapipes["nwp"].normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
-        # context_size is the largest it would need
+        nwp_datapipe = used_datapipes["nwp"]
+        location_pipe, location_pipe_copy = location_pipe.fork(2)
         nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
-            nwp_image_loc_datapipe,
+            location_pipe_copy,
             roi_height_pixels=conf_nwp.nwp_image_size_pixels_height,
             roi_width_pixels=conf_nwp.nwp_image_size_pixels_width,
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
             datapipe_name="NWP",
         )
-        
+        nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
         numpy_modalities.append(nwp_datapipe.convert_nwp_to_numpy_batch())
         
     if "sat" in used_datapipes.keys():
-        logger.debug("Take Satellite time slices")
-        sat_image_loc_datapipe, location_pipe = location_pipe.fork(2)
-        sat_datapipe = used_datapipes["sat"].normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_datapipe = used_datapipes["sat"]
+        location_pipe, location_pipe_copy = location_pipe.fork(2)
         sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
-            sat_image_loc_datapipe,
+            location_pipe_copy,
             roi_height_pixels=conf_sat.satellite_image_size_pixels_height,
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
             datapipe_name="Satellite",
         )
+        sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
         
     if "hrv" in used_datapipes.keys():
-        logger.debug("Take HRV Satellite time slices")
-        hrv_image_loc_datapipe, location_pipe = location_pipe.fork(2)
-        hrv_datapipe = used_datapipes["hrv"].normalize(mean=RSS_MEAN, std=RSS_STD)
+        hrv_datapipe = used_datapipes["hrv"]
+        location_pipe, location_pipe_copy = location_pipe.fork(2)
         hrv_datapipe = hrv_datapipe.select_spatial_slice_pixels(
-            hrv_image_loc_datapipe,
+            location_pipe_copy,
             roi_height_pixels=conf_hrv.hrvsatellite_image_size_pixels_height,
             roi_width_pixels=conf_hrv.hrvsatellite_image_size_pixels_width,
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
             datapipe_name="HRVSatellite",
         )
+        hrv_datapipe = hrv_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(hrv_datapipe.convert_satellite_to_numpy_batch(is_hrv=True))
     
     logger.debug("Combine all the data sources")
     combined_datapipe = (
         MergeNumpyModalities(numpy_modalities)
-        # .encode_space_time()
-        #.add_sun_position(modality_name="gsp")
+            .add_sun_position(modality_name="gsp")
     )
-    
-    if add_sun:
-        combined_datapipe = combined_datapipe.add_sun_position(modality_name="gsp")
 
     return combined_datapipe

@@ -183,6 +183,18 @@ def stack_np_examples_into_batch(np_examples: Sequence[NumpyBatch]) -> NumpyBatc
     return np_batch
 
 
+def warn_of_nan_in_batch(batch: NumpyBatch) -> None:
+    """
+    Checks the elements of a batch to warn for any NaN values.
+    """
+    for key in batch.keys():
+        if np.any(pd.isna(batch[key])):
+            logger.warning(f"NaNs found in batch under key - {key}")
+        if np.any(np.isin(batch[key], [np.inf, -np.inf])):
+            logger.warning(f"Infinities found in batch under key - {key}")
+    return batch
+
+
 def select_time_periods(
     xr_data: Union[xr.DataArray, xr.Dataset], time_periods: pd.DataFrame, dim_name: str = "time_utc"
 ) -> Union[xr.DataArray, xr.Dataset]:
