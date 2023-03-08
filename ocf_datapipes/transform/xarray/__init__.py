@@ -16,10 +16,12 @@ from .add_t0idx_and_sample_period_duration import (
     AddT0IdxAndSamplePeriodDurationIterDataPipe as AddT0IdxAndSamplePeriodDuration,
 )
 from .convert_satellite_to_int import ConvertSatelliteToInt8IterDataPipe as ConvertSatelliteToInt8
+from .convert_to_numpy_stack import StackXarrayIterDataPipe as StackXarray
 from .convert_to_nwp_target_times import (
     ConvertToNWPTargetTimeIterDataPipe as ConvertToNWPTargetTime,
 )
 from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage
+from .create_time_image import CreateTimeImageIterDataPipe as CreateTimeImage
 from .downsample import DownsampleIterDataPipe as Downsample
 from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,

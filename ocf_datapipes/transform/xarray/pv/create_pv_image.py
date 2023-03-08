@@ -54,10 +54,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
-            if (
-                self.max_num_pv_systems > 0
-                and len(pv_systems_xr.pv_system_id.values) >= self.max_num_pv_systems
-            ):
+            if 0 < self.max_num_pv_systems <= len(pv_systems_xr.pv_system_id.values):
                 subset_of_pv_system_ids = self.rng.choice(
                     pv_systems_xr.pv_system_id,
                     size=self.max_num_pv_systems,
