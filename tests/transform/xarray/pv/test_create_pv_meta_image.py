@@ -15,6 +15,7 @@ def test_create_pv_meta_image_normalized(passiv_datapipe, sat_datapipe):
     assert np.max(data) > 0
     assert np.isclose(np.min(data), 0.0)
 
+
 def test_create_pv_meta_image_pvoutput(pvoutput_datapipe, sat_datapipe):
     pv_image_datapipe = CreatePVMetadataImage(pvoutput_datapipe, sat_datapipe)
     data = next(iter(pv_image_datapipe))

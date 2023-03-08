@@ -30,7 +30,7 @@ def put_pv_data_into_an_xr_dataarray(
     longitude: Optional[pd.Series] = None,
     latitude: Optional[pd.Series] = None,
     tilt: Optional[pd.Series] = None,
-    orientation: Optional[pd.Series] = None
+    orientation: Optional[pd.Series] = None,
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
 

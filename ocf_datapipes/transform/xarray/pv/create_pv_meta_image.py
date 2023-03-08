@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 MAX_TILT = 180.0
 MAX_ORIENTATION = 180.0
 
+
 @functional_datapipe("create_pv_metadata_image")
 class CreatePVMetadataImageIterDataPipe(IterDataPipe):
     """Create PV Metadata image from individual sites"""
@@ -28,7 +29,7 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
         max_num_pv_systems: int = -1,
         always_return_first: bool = False,
         normalize: bool = False,
-        seed: int =None,
+        seed: int = None,
     ):
         """
         Creates a 2D data cube of PV Metadata output image
@@ -112,7 +113,7 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                 pv_image[:, y_idx, x_idx] = np.array(pv_system["tilt"], pv_system["orientation"])
 
             if self.normalize:
-                pv_image[0,:,:] = pv_image[0,:,:] / MAX_TILT
+                pv_image[0, :, :] = pv_image[0, :, :] / MAX_TILT
                 pv_image[1, :, :] = pv_image[1, :, :] / MAX_ORIENTATION
             pv_image = np.nan_to_num(pv_image)
 

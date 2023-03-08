@@ -121,8 +121,8 @@ def load_everything_into_ram(
         pv_system_row_number=pv_system_row_number,
         latitude=pv_metadata.latitude,
         longitude=pv_metadata.longitude,
-        tilt=pv_metadata.tilt if hasattr(pv_metadata, 'tilt') else None,
-        orientation=pv_metadata.orientation if hasattr(pv_metadata, 'orientation') else None
+        tilt=pv_metadata.tilt if hasattr(pv_metadata, "tilt") else None,
+        orientation=pv_metadata.orientation if hasattr(pv_metadata, "orientation") else None,
     )
 
     # Sanity checks:

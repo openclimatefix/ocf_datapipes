@@ -26,7 +26,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         image_dim: str = "geostationary",
         max_num_pv_systems: int = -1,
         always_return_first: bool = False,
-        seed: int =None,
+        seed: int = None,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
