@@ -121,6 +121,8 @@ def load_everything_into_ram(
         pv_system_row_number=pv_system_row_number,
         latitude=pv_metadata.latitude,
         longitude=pv_metadata.longitude,
+        tilt=pv_metadata.tilt if hasattr(pv_metadata, 'tilt') else None,
+        orientation=pv_metadata.orientation if hasattr(pv_metadata, 'orientation') else None
     )
 
     # Sanity checks:
@@ -286,6 +288,11 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
     pv_metadata["x_osgb"], pv_metadata["y_osgb"] = lat_lon_to_osgb(
         latitude=pv_metadata["latitude"], longitude=pv_metadata["longitude"]
     )
+
+    # Rename PVOutput.org tilt name to be simpler
+    # There is a second degree tilt, but this should be fine for now
+    if "array_tilt_degrees" in pv_metadata.columns:
+        pv_metadata["tilt"] = pv_metadata["array_tilt_degrees"]
 
     return pv_metadata
 

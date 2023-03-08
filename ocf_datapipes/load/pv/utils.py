@@ -29,6 +29,8 @@ def put_pv_data_into_an_xr_dataarray(
     pv_system_row_number: pd.Series,
     longitude: Optional[pd.Series] = None,
     latitude: Optional[pd.Series] = None,
+    tilt: Optional[pd.Series] = None,
+    orientation: Optional[pd.Series] = None
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
 
@@ -43,6 +45,8 @@ def put_pv_data_into_an_xr_dataarray(
             Used to create the PV system ID embedding.
         longitude: longitude of the locations
         latitude: latitude of the locations
+        tilt: Tilt of the panels
+        orientation: Orientation of the panels
     """
     # Sanity check!
     pv_system_ids = pv_power_watts.columns
@@ -81,6 +85,14 @@ def put_pv_data_into_an_xr_dataarray(
     if longitude is not None:
         data_array = data_array.assign_coords(
             longitude=("pv_system_id", longitude),
+        )
+    if tilt is not None:
+        data_array = data_array.assign_coords(
+            tilt=("pv_system_id", tilt),
+        )
+    if orientation is not None:
+        data_array = data_array.assign_coords(
+            orientation=("pv_system_id", orientation),
         )
 
     assert len(pv_system_row_number) > 0
