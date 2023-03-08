@@ -27,6 +27,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         max_num_pv_systems: int = -1,
         always_return_first: bool = False,
         seed: int = None,
+        take_last_pv_value_per_pixel: bool = False
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -42,6 +43,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             always_return_first: Always return the first image data cube, to save computation
                 Only use for if making the image at the beginning of the stack
             seed: Random seed to use if using max_num_pv_systems
+            take_last_pv_value_per_pixel: Take the last PV value as the value for the pixel
+                If false, sums up the PV generation if there are multiple PVs per pixel.
         """
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
@@ -51,6 +54,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         self.max_num_pv_systems = max_num_pv_systems
         self.rng = np.random.default_rng(seed=seed)
         self.always_return_first = always_return_first
+        self.take_last_pv_value_per_pixel = take_last_pv_value_per_pixel
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
@@ -107,7 +111,10 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
                     y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
                 # Now go by the timestep to create cube of PV data
-                pv_image[:, y_idx, x_idx] += pv_system.values
+                if self.take_last_pv_value_per_pixel:
+                    pv_image[:, y_idx, x_idx] = pv_system.values
+                else:
+                    pv_image[:, y_idx, x_idx] += pv_system.values
 
             if self.normalize:
                 if np.nanmax(pv_image) > 0:
