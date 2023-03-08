@@ -146,19 +146,29 @@ def pseudo_irradiance_datapipe(
             pv_hrv_image_loc_datapipe,
             roi_height_pixels=size,
             roi_width_pixels=size,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
+            x_dim_name="x_osgb",
+            y_dim_name="y_osgb",
         )
-
+    # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
-        sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe)
+        sat_hrv_datapipe, sat_gsp_datapipe, sat_meta_datapipe = sat_hrv_datapipe.fork(3)
+        pv_history, pv_meta = pv_history.fork(2)
+        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, seed=1337)
+        pv_meta = pv_meta.create_pv_metadata_image(image_datapipe=sat_meta_datapipe, seed=1337)
     elif "sat" in used_datapipes.keys():
-        sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe)
+        sat_datapipe, sat_gsp_datapipe, sat_meta_datapipe = sat_datapipe.fork(3)
+        pv_history, pv_meta = pv_history.fork(2)
+        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, seed=1337)
+        pv_meta = pv_meta.create_pv_metadata_image(image_datapipe=sat_meta_datapipe, seed=1337)
     elif "nwp" in used_datapipes.keys():
-        nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=nwp_gsp_datapipe, image_dim="osgb")
+        nwp_datapipe, nwp_gsp_datapipe, nwp_meta_datapipe = nwp_datapipe.fork(3)
+        pv_history, pv_meta = pv_history.fork(2)
+        pv_history = pv_history.create_pv_image(
+            image_datapipe=nwp_gsp_datapipe, image_dim="osgb", seed=1337
+        )
+        pv_meta = pv_meta.create_pv_metadata_image(
+            image_datapipe=nwp_meta_datapipe, image_dim="osgb", seed=1337
+        )
 
     # Need to have future in image as well
     if "hrv" in used_datapipes.keys():
@@ -220,4 +230,5 @@ def pseudo_irradiance_datapipe(
     stacked_xarray_inputs = StackXarray(modalities)
 
     pv_datapipe = pv_datapipe.map(_get_numpy_from_xarray)
-    return stacked_xarray_inputs.zip_ocf(pv_datapipe)  # Makes (Inputs, Label) tuples
+    pv_meta = pv_meta.map(_get_numpy_from_xarray)
+    return stacked_xarray_inputs.zip_ocf(pv_meta, pv_datapipe)  # Makes (Inputs, Label) tuples

@@ -1,4 +1,4 @@
-"""Convert point PV sites to image output"""
+"""Convert point PV site metadata to image output"""
 import logging
 from typing import Union
 
@@ -13,48 +13,47 @@ from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_an
 
 logger = logging.getLogger(__name__)
 
+MAX_TILT = 90.0
+MAX_ORIENTATION = 360.0
 
-@functional_datapipe("create_pv_image")
-class CreatePVImageIterDataPipe(IterDataPipe):
-    """Create PV image from individual sites"""
+
+@functional_datapipe("create_pv_metadata_image")
+class CreatePVMetadataImageIterDataPipe(IterDataPipe):
+    """Create PV Metadata image from individual sites"""
 
     def __init__(
         self,
         source_datapipe: IterDataPipe,
         image_datapipe: IterDataPipe,
-        normalize: bool = False,
         image_dim: str = "geostationary",
         max_num_pv_systems: int = -1,
         always_return_first: bool = False,
+        normalize: bool = False,
         seed: int = None,
-        take_last_pv_value_per_pixel: bool = False,
     ):
         """
-        Creates a 3D data cube of PV output image x number of timesteps
+        Creates a 2D data cube of PV Metadata output image
 
-        TODO Include PV System IDs or something, currently just takes the outputs
+        The metadata is orientation + tilt
 
         Args:
             source_datapipe: Source datapipe of PV data
             image_datapipe: Datapipe emitting images to get the shape from, with coordinates
-            normalize: Whether to normalize based off the image max, or leave raw data
             image_dim: Dimension name for the x and y dimensions
             max_num_pv_systems: Max number of PV systems to use
+            normalize: Whether to normalize tilt and orientation to between 0 and 1
             always_return_first: Always return the first image data cube, to save computation
                 Only use for if making the image at the beginning of the stack
             seed: Random seed to use if using max_num_pv_systems
-            take_last_pv_value_per_pixel: Take the last PV value as the value for the pixel
-                If false, sums up the PV generation if there are multiple PVs per pixel.
         """
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
-        self.normalize = normalize
         self.x_dim = "x_" + image_dim
         self.y_dim = "y_" + image_dim
         self.max_num_pv_systems = max_num_pv_systems
         self.rng = np.random.default_rng(seed=seed)
         self.always_return_first = always_return_first
-        self.take_last_pv_value_per_pixel = take_last_pv_value_per_pixel
+        self.normalize = normalize
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
@@ -73,7 +72,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
             pv_image = np.zeros(
                 (
-                    len(pv_systems_xr["time_utc"]),
+                    2,
                     len(image_xr[self.y_dim]),
                     len(image_xr[self.x_dim]),
                 ),
@@ -111,14 +110,11 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
                     y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
                 # Now go by the timestep to create cube of PV data
-                if self.take_last_pv_value_per_pixel:
-                    pv_image[:, y_idx, x_idx] = pv_system.values
-                else:
-                    pv_image[:, y_idx, x_idx] += pv_system.values
+                pv_image[:, y_idx, x_idx] = np.array(pv_system["tilt"], pv_system["orientation"])
 
             if self.normalize:
-                if np.nanmax(pv_image) > 0:
-                    pv_image /= np.nanmax(pv_image)
+                pv_image[0, :, :] = pv_image[0, :, :] / MAX_TILT
+                pv_image[1, :, :] = pv_image[1, :, :] / MAX_ORIENTATION
             pv_image = np.nan_to_num(pv_image)
 
             # Should return Xarray as in Xarray transforms
@@ -138,11 +134,11 @@ def _create_data_array_from_image(
     data_array = xr.DataArray(
         data=pv_image,
         coords=(
-            ("time_utc", pv_systems_xr.time_utc.values),
+            ("time_utc", ["tilt", "orientation"]),
             ("y_geostationary", image_xr.y_geostationary.values),
             ("x_geostationary", image_xr.x_geostationary.values),
         ),
-        name="pv_image",
+        name="pv_meta_image",
     ).astype(np.float32)
     data_array.attrs = image_xr.attrs
     return data_array
