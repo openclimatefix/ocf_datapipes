@@ -163,8 +163,12 @@ def pseudo_irradiance_datapipe(
     elif "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe, nwp_meta_datapipe = nwp_datapipe.fork(3)
         pv_history, pv_meta = pv_history.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=nwp_gsp_datapipe, image_dim="osgb", seed=1337)
-        pv_meta = pv_meta.create_pv_metadata_image(image_datapipe=nwp_meta_datapipe, image_dim="osgb", seed=1337)
+        pv_history = pv_history.create_pv_image(
+            image_datapipe=nwp_gsp_datapipe, image_dim="osgb", seed=1337
+        )
+        pv_meta = pv_meta.create_pv_metadata_image(
+            image_datapipe=nwp_meta_datapipe, image_dim="osgb", seed=1337
+        )
 
     # Need to have future in image as well
     if "hrv" in used_datapipes.keys():

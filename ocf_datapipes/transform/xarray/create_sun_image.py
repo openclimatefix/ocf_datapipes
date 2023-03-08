@@ -93,8 +93,8 @@ class CreateSunImageIterDataPipe(IterDataPipe):
                         # requires C code to be manually compiled:
                         # https://midcdmz.nrel.gov/spa/
                     )
-                    sun_image[:, 0,y_index,x_index] = solpos["azimuth"]
-                    sun_image[:, 1,y_index,x_index] = solpos["elevation"]
+                    sun_image[:, 0, y_index, x_index] = solpos["azimuth"]
+                    sun_image[:, 1, y_index, x_index] = solpos["elevation"]
 
             # Normalize.
             if self.normalize:
@@ -103,7 +103,12 @@ class CreateSunImageIterDataPipe(IterDataPipe):
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
-            sun_image = _create_data_array_from_image(sun_image, image_xr, is_geostationary="geostationary" in self.x_dim, time_dim=self.time_dim)
+            sun_image = _create_data_array_from_image(
+                sun_image,
+                image_xr,
+                is_geostationary="geostationary" in self.x_dim,
+                time_dim=self.time_dim,
+            )
             yield sun_image
 
 

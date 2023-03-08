@@ -27,7 +27,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         max_num_pv_systems: int = -1,
         always_return_first: bool = False,
         seed: int = None,
-        take_last_pv_value_per_pixel: bool = False
+        take_last_pv_value_per_pixel: bool = False,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps

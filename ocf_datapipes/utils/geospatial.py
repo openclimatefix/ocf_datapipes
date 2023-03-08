@@ -88,6 +88,7 @@ def load_geostationary_area_definition_and_transform_osgb(xr_data):
     # Only load these if using geostationary projection
     import pyproj
     import pyresample
+
     try:
         area_definition_yaml = xr_data.attrs["area"]
     except KeyError:
