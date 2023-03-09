@@ -26,6 +26,9 @@ class OpenNWPIterDataPipe(IterDataPipe):
         """
         self.zarr_path = zarr_path
 
+    def __len__(self):
+        return 1
+
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Opens the NWP data"""
         _log.info("Opening NWP data: %s", self.zarr_path)

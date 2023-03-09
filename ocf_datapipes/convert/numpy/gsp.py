@@ -25,6 +25,9 @@ class ConvertGSPToNumpyIterDataPipe(IterDataPipe):
         super().__init__()
         self.source_datapipe = source_datapipe
         self.return_id = return_id
+        
+    def __len__(self):
+        return len(self.source_datapipe)
 
     def __iter__(self) -> np.ndarray:
         """Convert from Xarray to Numpy array"""

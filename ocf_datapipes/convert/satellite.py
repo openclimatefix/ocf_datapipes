@@ -23,6 +23,9 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
         super().__init__()
         self.source_datapipe = source_datapipe
         self.is_hrv = is_hrv
+        
+    def __len__(self):
+        return len(self.source_datapipe)
 
     def __iter__(self) -> NumpyBatch:
         """Convert each example to a NumpyBatch object"""

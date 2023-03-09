@@ -47,6 +47,9 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         self.y_dim_name = y_dim_name
         self.x_dim_name = x_dim_name
         self.datapipe_name = datapipe_name
+        
+    def __len__(self):
+        return len(self.location_datapipe)
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
@@ -138,6 +141,9 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         self.x_dim_name = x_dim_name
         self.datapipe_name = datapipe_name
 
+    def __len__(self):
+        return len(self.location_datapipe)
+        
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
 

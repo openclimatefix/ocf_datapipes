@@ -39,6 +39,9 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             "nwp_target_time",
             "satellite",
         ], f"Cant add sun position on {self.modality_name}"
+        
+    def __len__(self):
+        return len(self.source_datapipe)
 
     def __iter__(self):
         for np_batch in self.source_datapipe:

@@ -121,6 +121,9 @@ class OpenSatelliteIterDataPipe(IterDataPipe):
         """
         self.zarr_path = zarr_path
         super().__init__()
+        
+    def __len__(self):
+        return 1
 
     def __iter__(self) -> xr.DataArray:
         """Open the Zarr file"""

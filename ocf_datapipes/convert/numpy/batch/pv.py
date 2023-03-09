@@ -25,6 +25,9 @@ class ConvertPVToNumpyBatchIterDataPipe(IterDataPipe):
         super().__init__()
         self.source_datapipe = source_datapipe
 
+    def __len__(self):
+        return len(self.source_datapipe)
+        
     def __iter__(self) -> NumpyBatch:
         """Iterate and convert PV Xarray to NumpyBatch"""
         for xr_data in self.source_datapipe:
