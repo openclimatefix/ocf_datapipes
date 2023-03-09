@@ -13,19 +13,16 @@ from ocf_datapipes.utils.utils import profile
 
 logger = logging.getLogger(__name__)
 
-@functional_datapipe("select_time_slice_with_dropout")
-class SelectTimeSliceDropoutIterDataPipe(IterDataPipe):
+@functional_datapipe("select_dropout_time")
+class SelectDropoutTimeIterDataPipe(IterDataPipe):
     """Selects time slice"""
 
     def __init__(
         self,
         source_datapipe: IterDataPipe,
-        t0_datapipe: IterDataPipe,
-        history_duration: timedelta,
-        forecast_duration: timedelta,
-        sample_period_duration: timedelta,
+        dropout_time_start: timedelta,
+        dropout_time_end: timedelta,
         dropout_frac: Optional[float] = 0,
-        dropout_duration_bounds: Optional[list[timedelta, timedelta]] = [None, None],
         data_pipename: str = None,
         
     ):
@@ -33,67 +30,87 @@ class SelectTimeSliceDropoutIterDataPipe(IterDataPipe):
         Selects time slice
 
         Args:
-            source_datapipe: Datapipe of Xarray objects
-            t0_datapipe: Datapipe of t0 times
-            history_duration: History time used
-            forecast_duration: Forecast time used
-            sample_period_duration: Sample period of xarray data
+            source_datapipe: Datapipe of t0 times
+            dropout_time_start: Minimum timedelta (negative) w.r.t. t0 when dropout could begin
+            dropout_time_end: Minimum timedelta (negative) w.r.t. t0 when dropout could begin
             dropout_frac: Fraction of samples subject to dropout
-            dropout_duration_bounds: Times with respect to t0 when data is dropped out. Must be 
-                negative.
             data_pipename: the name of the data pipe. This is useful when profiling
         """
         self.source_datapipe = source_datapipe
-        self.t0_datapipe = t0_datapipe
-        self.history_duration = np.timedelta64(history_duration)
-        self.forecast_duration = np.timedelta64(forecast_duration)
-        self.sample_period_duration = sample_period_duration
-        self.dropout_duration_bounds = dropout_duration_bounds
+        self.dropout_time_start = dropout_time_start
+        self.dropout_time_end = dropout_time_end
         self.dropout_frac = dropout_frac
         self.data_pipename = data_pipename
-        assert dropout_frac>=0
-        if dropout_frac>0:
-            assert None not in dropout_duration_bounds
-            assert dropout_duration_bounds[0] < timedelta(0), "dropout times must be negative wrt t0"
-            assert dropout_duration_bounds[1] < timedelta(0), "dropout times must be negative wrt t0"
-            assert dropout_duration_bounds[0] < dropout_duration_bounds[1]
-
-
-            
+        assert dropout_frac >= 0
+        assert dropout_time_start < dropout_time_end
         
+    def __len__(self):
+        return len(self.source_datapipe)
 
-    def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        xr_data = next(iter(self.source_datapipe))
-        for t0 in self.t0_datapipe:
+    def __iter__(self):
+        
+        for t0 in self.source_datapipe:
             
             with profile(f"select_time_slice_with_dropout {self.data_pipename}"):
 
                 t0_datetime_utc = pd.Timestamp(t0)
-                start_dt = t0_datetime_utc - self.history_duration
-                end_dt = t0_datetime_utc + self.forecast_duration
-
-                start_dt = start_dt.ceil(self.sample_period_duration)
-                end_dt = end_dt.ceil(self.sample_period_duration)
                 
-                # change to debug
-                xr_sel = xr_data.sel(
-                    time_utc=slice(
-                        start_dt,
-                        end_dt,
-                    )
-                )
-                
-                if (self.dropout_frac>0) and (np.random.uniform() < self.dropout_frac):
+                if np.random.uniform() < self.dropout_frac:
                     dt = np.random.uniform()
                     dt = (
-                        dt * self.dropout_duration_bounds[0] +
-                        (1-dt)*self.dropout_duration_bounds[0]
+                        dt * self.dropout_time_start +
+                        (1-dt)*self.dropout_time_end
                     )
                     dropout_time = t0_datetime_utc + dt
+                    
+                else:
+                    dropout_time = None
+            
+            yield dropout_time
+                    
+            
+
+@functional_datapipe("apply_dropout_time")
+class ApplyDropoutTimeIterDataPipe(IterDataPipe):
+    
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        dropout_time_datapipe: IterDataPipe,
+        sample_period_duration: timedelta,
+        data_pipename: str = None,
+        
+    ):
+        """
+
+        Args:
+            source_datapipe: Datapipe of Xarray objects
+            dropout_time_datapipe: Datapipe of dropout times
+            sample_period_duration: Sample period of xarray data
+
+            data_pipename: the name of the data pipe. This is useful when profiling
+        """
+        self.source_datapipe = source_datapipe
+        self.dropout_time_datapipe = dropout_time_datapipe
+        self.sample_period_duration = sample_period_duration
+        self.data_pipename = data_pipename
+        
+    def __len__(self):
+        return len(self.source_datapipe)
+
+    def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
+        
+        for xr_data, dropout_time in self.source_datapipe.zip_ocf(self.dropout_time_datapipe):
+            
+            with profile(f"dropout {self.data_pipename}"):
+
+                if dropout_time is None:
+                    xr_sel =  xr_data
+                
+                else:
                     dropout_time = dropout_time.ceil(self.sample_period_duration)
                     
                     # This replaces the times after the dropout with NaNs
-                    xr_sel = xr_sel.where(xr_sel.time_utc<=dropout_time)
-
+                    xr_sel = xr_data.where(xr_sel.time_utc<=dropout_time)
 
             yield xr_sel

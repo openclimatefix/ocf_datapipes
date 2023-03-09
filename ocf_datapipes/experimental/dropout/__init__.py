@@ -1,1 +1,2 @@
-from .satellite import SelectTimeSliceDropoutIterDataPipe as SatelliteDropout
+from .satellite import SelectDropoutTimeIterDataPipe as SelectDropoutTime
+from .satellite import ApplyDropoutTimeIterDataPipe as ApplyDropoutTime

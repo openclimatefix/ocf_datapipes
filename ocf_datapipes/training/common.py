@@ -466,15 +466,31 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
             
 
     if "sat" in datapipes_dict:
-        this_t0_datapipe = get_t0_datapipe("sat")
         
-        datapipes_dict["sat"] = datapipes_dict["sat"].select_time_slice_with_dropout(
+        # Take time slices of sat data
+        this_t0_datapipe = get_t0_datapipe(None)
+        
+        datapipes_dict["sat"] = datapipes_dict["sat"].select_time_slice(
             t0_datapipe=this_t0_datapipe,
             sample_period_duration=minutes(5),
             history_duration=minutes(conf_in.satellite.history_minutes),
             forecast_duration=0,
-            dropout_frac=0.5,
-            dropout_duration_bounds=[minutes(-10), minutes(-5)]
+        )
+        
+        # Generate randomly sampled dropout times
+        dropout_time_datapipe = (
+            get_t0_datapipe("sat")
+                .select_dropout_time(
+                    dropout_time_start=minutes(-10),
+                    dropout_time_end=minutes(-5),
+                    dropout_frac=0.5,
+                )
+        )
+        
+        # Apply the dropout
+        datapipes_dict["sat"] = datapipes_dict["sat"].apply_dropout_time(
+            dropout_time_datapipe=dropout_time_datapipe,
+            sample_period_duration=minutes(5),        
         )
 
     if "hrv" in datapipes_dict:
