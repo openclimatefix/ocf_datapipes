@@ -11,6 +11,7 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -20,16 +21,16 @@ class CreatePVImageIterDataPipe(IterDataPipe):
     """Create PV image from individual sites"""
 
     def __init__(
-        self,
-        source_datapipe: IterDataPipe,
-        image_datapipe: IterDataPipe,
-        normalize: bool = False,
-        image_dim: str = "geostationary",
-        max_num_pv_systems: int = -1,
-        always_return_first: bool = False,
-        seed: int = None,
-        take_last_pv_value_per_pixel: bool = False,
-        normalize_by_pvlib: bool = False,
+            self,
+            source_datapipe: IterDataPipe,
+            image_datapipe: IterDataPipe,
+            normalize: bool = False,
+            image_dim: str = "geostationary",
+            max_num_pv_systems: int = -1,
+            always_return_first: bool = False,
+            seed: int = None,
+            take_n_pv_values_per_pixel: int = -1,
+            normalize_by_pvlib: bool = False,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -45,15 +46,16 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             always_return_first: Always return the first image data cube, to save computation
                 Only use for if making the image at the beginning of the stack
             seed: Random seed to use if using max_num_pv_systems
-            take_last_pv_value_per_pixel: Take the last PV value as the value for the pixel
-                If false, sums up the PV generation if there are multiple PVs per pixel.
+            take_n_pv_values_per_pixel: Take N PV values as the value for the pixel
+                If -1, averages the PV generation if there are multiple PVs per pixel.
             normalize_by_pvlib: Normalize by pvlib's poa_global based off
                 tilt/orientation/capacity/lat/lon of the system
 
         """
-        assert normalize != normalize_by_pvlib, ValueError(
-            "Cannot normalize by both max, and pvlib"
-        )
+        if normalize_by_pvlib is not  False or normalize is not False:
+            assert normalize != normalize_by_pvlib, ValueError(
+                "Cannot normalize by both max, and pvlib"
+            )
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
         self.normalize = normalize
@@ -62,7 +64,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         self.max_num_pv_systems = max_num_pv_systems
         self.rng = np.random.default_rng(seed=seed)
         self.always_return_first = always_return_first
-        self.take_last_pv_value_per_pixel = take_last_pv_value_per_pixel
+        self.take_n_pv_values_per_pixel = take_n_pv_values_per_pixel
         self.normalize_by_pvlib = normalize_by_pvlib
 
     def __iter__(self) -> xr.DataArray:
@@ -88,8 +90,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 ),
                 dtype=np.float32,
             )
+            pv_position_dict = defaultdict(list)
             for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
-                # TODO Need to figure out if multiple systems in same pixel before choosing which ones to use
                 try:
                     # went for isel incase there is a duplicated pv_system_id
                     pv_system = pv_systems_xr.isel(pv_system_id=i)
@@ -98,28 +100,6 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                         f"Could not select {pv_system_id} " f"from {pv_systems_xr.pv_system_id}"
                     )
                     raise e
-                if self.normalize_by_pvlib:
-                    # TODO Add elevation
-                    pvlib_loc = pvlib.location.Location(
-                        latitude=pv_system.latitude, longitude=pv_system.longitude
-                    )
-                    clear_sky = pvlib_loc.get_clearsky(pv_system.time_utc.values)
-                    solar_position = pvlib_loc.get_solarposition(pv_system.time_utc.values)
-                    total_irradiance = pvlib.irradiance.get_total_irradiance(
-                        pv_system.tilt.values,
-                        pv_system.orientation.values,
-                        solar_zenith=solar_position["zenith"],
-                        solar_azimuth=solar_position["azimuth"],
-                        dni=clear_sky["dni"],
-                        dhi=clear_sky["dhi"],
-                        ghi=clear_sky["ghi"],
-                    )
-                    # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
-                    fraction_clear_sky = total_irradiance["poa_global"] / (
-                        clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
-                    )
-                    pv_system["data"] /= pv_system.capacity_kw
-                    pv_system["data"] *= fraction_clear_sky
                 if "geostationary" in self.x_dim:
                     pv_x, pv_y = _osgb_to_geostationary(
                         xx=pv_system["x_osgb"].values, yy=pv_system["y_osgb"].values
@@ -137,16 +117,30 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
                     # y_geostationary is in descending order:
                     y_idx = len(image_xr[self.y_dim]) - (
-                        np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
+                            np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
                     )
                 else:
                     x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
                     y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
-                # Now go by the timestep to create cube of PV data
-                if self.take_last_pv_value_per_pixel:
-                    pv_image[:, y_idx, x_idx] = pv_system.values
-                else:
-                    pv_image[:, y_idx, x_idx] += pv_system.values
+
+                # Add location to same one, so know if multiple overlap
+                pv_position_dict[(y_idx, x_idx)].append(pv_system)
+            for location, system_list in pv_position_dict.items():
+                y_idx, x_idx = location[0], location[1]
+                if 0 < self.take_n_pv_values_per_pixel < len(system_list):
+                    system_numbers = self.rng.choice(
+                        list(range(len(system_list))),
+                        size=self.take_n_pv_values_per_pixel,
+                        replace=False,
+                    )
+                    system_list = [system_list[idx] for idx in system_numbers]
+                avg_generation = np.zeros_like(system_list[0].values)
+                for pv_system in system_list:
+                    if self.normalize_by_pvlib:
+                        pv_system = _normalize_by_pvlib(pv_system)
+                    avg_generation += pv_system.values
+                avg_generation /= len(system_list)
+                pv_image[:, y_idx, x_idx] = avg_generation
 
             if self.normalize:
                 if np.nanmax(pv_image) > 0:
@@ -163,9 +157,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
 
 
 def _create_data_array_from_image(
-    pv_image: np.ndarray,
-    pv_systems_xr: Union[xr.Dataset, xr.DataArray],
-    image_xr: Union[xr.Dataset, xr.DataArray],
+        pv_image: np.ndarray,
+        pv_systems_xr: Union[xr.Dataset, xr.DataArray],
+        image_xr: Union[xr.Dataset, xr.DataArray],
 ):
     data_array = xr.DataArray(
         data=pv_image,
@@ -181,10 +175,10 @@ def _create_data_array_from_image(
 
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
-    xr_data: xr.DataArray,
-    center_osgb: Location,
-    x_dim_name="x_geostationary",
-    y_dim_name="y_geostationary",
+        xr_data: xr.DataArray,
+        center_osgb: Location,
+        x_dim_name="x_geostationary",
+        y_dim_name="y_geostationary",
 ) -> Location:
     """
     Return x and y index location of pixel at center of region of interest.
@@ -208,6 +202,40 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
     # y_geostationary is in descending order:
     y_index_at_center = len(xr_data[y_dim_name]) - (
-        np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
+            np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
     )
     return Location(x=x_index_at_center, y=y_index_at_center)
+
+
+def _normalize_by_pvlib(pv_system):
+    """
+    Normalize the output by pv_libs poa_global
+
+    Args:
+        pv_system: PV System in Xarray DataArray
+
+    Returns:
+        PV System in xarray DataArray, but normalized values
+    """
+    # TODO Add elevation
+    pvlib_loc = pvlib.location.Location(
+        latitude=pv_system.latitude, longitude=pv_system.longitude
+    )
+    clear_sky = pvlib_loc.get_clearsky(pv_system.time_utc.values)
+    solar_position = pvlib_loc.get_solarposition(pv_system.time_utc.values)
+    total_irradiance = pvlib.irradiance.get_total_irradiance(
+        pv_system.tilt.values,
+        pv_system.orientation.values,
+        solar_zenith=solar_position["zenith"],
+        solar_azimuth=solar_position["azimuth"],
+        dni=clear_sky["dni"],
+        dhi=clear_sky["dhi"],
+        ghi=clear_sky["ghi"],
+    )
+    # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
+    fraction_clear_sky = total_irradiance["poa_global"] / (
+            clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
+    )
+    pv_system["data"] /= pv_system.capacity_kw
+    pv_system["data"] *= fraction_clear_sky
+    return pv_system
