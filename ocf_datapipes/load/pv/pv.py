@@ -295,8 +295,18 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
         pv_metadata["tilt"] = pv_metadata["array_tilt_degrees"]
 
     # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by default
-    mapping = {'S': 180., 'SE': 135., 'SW': 225., 'E': 90., 'W': 270., 'N': 0., 'NE': 45., 'NW': 315., 'EW': np.nan}
-    pv_metadata = pv_metadata.replace({'orientation': mapping})
+    mapping = {
+        "S": 180.0,
+        "SE": 135.0,
+        "SW": 225.0,
+        "E": 90.0,
+        "W": 270.0,
+        "N": 0.0,
+        "NE": 45.0,
+        "NW": 315.0,
+        "EW": np.nan,
+    }
+    pv_metadata = pv_metadata.replace({"orientation": mapping})
     return pv_metadata
 
 

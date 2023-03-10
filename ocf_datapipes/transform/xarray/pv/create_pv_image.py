@@ -4,9 +4,9 @@ from collections import defaultdict
 from typing import Union
 
 import numpy as np
+import pandas as pd
 import pvlib
 import xarray as xr
-import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -219,7 +219,9 @@ def _normalize_by_pvlib(pv_system):
         PV System in xarray DataArray, but normalized values
     """
     # TODO Add elevation
-    pvlib_loc = pvlib.location.Location(latitude=pv_system.latitude.values, longitude=pv_system.longitude.values)
+    pvlib_loc = pvlib.location.Location(
+        latitude=pv_system.latitude.values, longitude=pv_system.longitude.values
+    )
     times = pd.DatetimeIndex(pv_system.time_utc.values)
     solar_position = pvlib_loc.get_solarposition(times=times)
     clear_sky = pvlib_loc.get_clearsky(times)
