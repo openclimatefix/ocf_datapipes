@@ -4,6 +4,7 @@ from typing import Union
 
 import numpy as np
 import xarray as xr
+import pvlib
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -28,6 +29,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         always_return_first: bool = False,
         seed: int = None,
         take_last_pv_value_per_pixel: bool = False,
+        normalize_by_pvlib: bool = False
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -45,7 +47,11 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             seed: Random seed to use if using max_num_pv_systems
             take_last_pv_value_per_pixel: Take the last PV value as the value for the pixel
                 If false, sums up the PV generation if there are multiple PVs per pixel.
+            normalize_by_pvlib: Normalize by pvlib's poa_global based off
+                tilt/orientation/capacity/lat/lon of the system
+
         """
+        assert normalize != normalize_by_pvlib, ValueError("Cannot normalize by both max, and pvlib")
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
         self.normalize = normalize
@@ -55,6 +61,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         self.rng = np.random.default_rng(seed=seed)
         self.always_return_first = always_return_first
         self.take_last_pv_value_per_pixel = take_last_pv_value_per_pixel
+        self.normalize_by_pvlib = normalize_by_pvlib
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
@@ -80,6 +87,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 dtype=np.float32,
             )
             for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
+                # TODO Need to figure out if multiple systems in same pixel before choosing which ones to use
                 try:
                     # went for isel incase there is a duplicated pv_system_id
                     pv_system = pv_systems_xr.isel(pv_system_id=i)
@@ -88,6 +96,22 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                         f"Could not select {pv_system_id} " f"from {pv_systems_xr.pv_system_id}"
                     )
                     raise e
+                if self.normalize_by_pvlib:
+                    # TODO Add elevation
+                    pvlib_loc = pvlib.location.Location(latitude=pv_system.latitude, longitude=pv_system.longitude)
+                    clear_sky = pvlib_loc.get_clearsky(pv_system.time_utc.values)
+                    solar_position = pvlib_loc.get_solarposition(pv_system.time_utc.values)
+                    total_irradiance = pvlib.irradiance.get_total_irradiance(pv_system.tilt.values,
+                                                                             pv_system.orientation.values,
+                                                                             solar_zenith=solar_position['zenith'],
+                                                                             solar_azimuth=solar_position['azimuth'],
+                                                                             dni=clear_sky['dni'],
+                                                                             dhi=clear_sky['dhi'],
+                                                                             ghi=clear_sky['ghi'])
+                    # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
+                    fraction_clear_sky = total_irradiance['poa_global'] / (clear_sky['dni']+clear_sky['dhi']+clear_sky['ghi'])
+                    pv_system["data"] /= pv_system.capacity_kw
+                    pv_system["data"] *= fraction_clear_sky
                 if "geostationary" in self.x_dim:
                     pv_x, pv_y = _osgb_to_geostationary(
                         xx=pv_system["x_osgb"].values, yy=pv_system["y_osgb"].values
