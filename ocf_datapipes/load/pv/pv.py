@@ -27,8 +27,8 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     """Datapipe to load NetCDF"""
 
     def __init__(
-            self,
-            pv: PV,
+        self,
+        pv: PV,
     ):
         """
         Datapipe to load PV from NetCDF
@@ -59,7 +59,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
                 start_dateime=self.start_dateime,
                 end_datetime=self.end_datetime,
                 time_resolution_minutes=self.pv.time_resolution_minutes,
-                inferred_metadata_filename=self.inferred_metadata_filenames[i]
+                inferred_metadata_filename=self.inferred_metadata_filenames[i],
             )
             pv_datas_xr.append(one_data)
 
@@ -89,12 +89,12 @@ def join_pv(data_arrays: List[xr.DataArray]) -> xr.DataArray:
 
 
 def load_everything_into_ram(
-        pv_power_filename,
-        pv_metadata_filename,
-        start_dateime: Optional[datetime] = None,
-        end_datetime: Optional[datetime] = None,
-        time_resolution_minutes: Optional[int] = 5,
-        inferred_metadata_filename: Optional[Union[str, Path]] = None
+    pv_power_filename,
+    pv_metadata_filename,
+    start_dateime: Optional[datetime] = None,
+    end_datetime: Optional[datetime] = None,
+    time_resolution_minutes: Optional[int] = 5,
+    inferred_metadata_filename: Optional[Union[str, Path]] = None,
 ) -> xr.DataArray:
     """Open AND load PV data into RAM."""
 
@@ -139,10 +139,10 @@ def load_everything_into_ram(
 
 
 def _load_pv_power_watts_and_capacity_watt_power(
-        filename: Union[str, Path],
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        time_resolution_minutes: Optional[int] = 5,
+    filename: Union[str, Path],
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    time_resolution_minutes: Optional[int] = 5,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """Return pv_power_watts, pv_capacity_watt_power, pv_system_row_number.
 
@@ -232,7 +232,7 @@ def _load_pv_power_watts_and_capacity_watt_power(
     PV_CAPACITY_THRESHOLD_W = 100
     pv_systems_to_drop = pv_capacity_watt_power.index[
         pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W
-        ]
+    ]
     pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
     _log.info(
         f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
