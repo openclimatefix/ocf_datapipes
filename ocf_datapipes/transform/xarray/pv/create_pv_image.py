@@ -3,8 +3,8 @@ import logging
 from typing import Union
 
 import numpy as np
-import xarray as xr
 import pvlib
+import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -29,7 +29,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         always_return_first: bool = False,
         seed: int = None,
         take_last_pv_value_per_pixel: bool = False,
-        normalize_by_pvlib: bool = False
+        normalize_by_pvlib: bool = False,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -51,7 +51,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 tilt/orientation/capacity/lat/lon of the system
 
         """
-        assert normalize != normalize_by_pvlib, ValueError("Cannot normalize by both max, and pvlib")
+        assert normalize != normalize_by_pvlib, ValueError(
+            "Cannot normalize by both max, and pvlib"
+        )
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
         self.normalize = normalize
@@ -98,18 +100,24 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     raise e
                 if self.normalize_by_pvlib:
                     # TODO Add elevation
-                    pvlib_loc = pvlib.location.Location(latitude=pv_system.latitude, longitude=pv_system.longitude)
+                    pvlib_loc = pvlib.location.Location(
+                        latitude=pv_system.latitude, longitude=pv_system.longitude
+                    )
                     clear_sky = pvlib_loc.get_clearsky(pv_system.time_utc.values)
                     solar_position = pvlib_loc.get_solarposition(pv_system.time_utc.values)
-                    total_irradiance = pvlib.irradiance.get_total_irradiance(pv_system.tilt.values,
-                                                                             pv_system.orientation.values,
-                                                                             solar_zenith=solar_position['zenith'],
-                                                                             solar_azimuth=solar_position['azimuth'],
-                                                                             dni=clear_sky['dni'],
-                                                                             dhi=clear_sky['dhi'],
-                                                                             ghi=clear_sky['ghi'])
+                    total_irradiance = pvlib.irradiance.get_total_irradiance(
+                        pv_system.tilt.values,
+                        pv_system.orientation.values,
+                        solar_zenith=solar_position["zenith"],
+                        solar_azimuth=solar_position["azimuth"],
+                        dni=clear_sky["dni"],
+                        dhi=clear_sky["dhi"],
+                        ghi=clear_sky["ghi"],
+                    )
                     # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
-                    fraction_clear_sky = total_irradiance['poa_global'] / (clear_sky['dni']+clear_sky['dhi']+clear_sky['ghi'])
+                    fraction_clear_sky = total_irradiance["poa_global"] / (
+                        clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
+                    )
                     pv_system["data"] /= pv_system.capacity_kw
                     pv_system["data"] *= fraction_clear_sky
                 if "geostationary" in self.x_dim:
