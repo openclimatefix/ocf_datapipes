@@ -27,8 +27,8 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     """Datapipe to load NetCDF"""
 
     def __init__(
-        self,
-        pv: PV,
+            self,
+            pv: PV,
     ):
         """
         Datapipe to load PV from NetCDF
@@ -44,6 +44,9 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.pv_metadata_filenames = [
             pv_files_group.pv_metadata_filename for pv_files_group in pv.pv_files_groups
         ]
+        self.inferred_metadata_filenames = [
+            pv_files_group.inferred_metadata_filename for pv_files_group in pv.pv_files_groups
+        ]
         self.start_dateime = pv.start_datetime
         self.end_datetime = pv.end_datetime
 
@@ -56,6 +59,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
                 start_dateime=self.start_dateime,
                 end_datetime=self.end_datetime,
                 time_resolution_minutes=self.pv.time_resolution_minutes,
+                inferred_metadata_filename=self.inferred_metadata_filenames[i]
             )
             pv_datas_xr.append(one_data)
 
@@ -85,16 +89,17 @@ def join_pv(data_arrays: List[xr.DataArray]) -> xr.DataArray:
 
 
 def load_everything_into_ram(
-    pv_power_filename,
-    pv_metadata_filename,
-    start_dateime: Optional[datetime] = None,
-    end_datetime: Optional[datetime] = None,
-    time_resolution_minutes: Optional[int] = 5,
+        pv_power_filename,
+        pv_metadata_filename,
+        start_dateime: Optional[datetime] = None,
+        end_datetime: Optional[datetime] = None,
+        time_resolution_minutes: Optional[int] = 5,
+        inferred_metadata_filename: Optional[Union[str, Path]] = None
 ) -> xr.DataArray:
     """Open AND load PV data into RAM."""
 
     # load metadata
-    pv_metadata = _load_pv_metadata(pv_metadata_filename)
+    pv_metadata = _load_pv_metadata(pv_metadata_filename, inferred_metadata_filename)
 
     # Load pd.DataFrame of power and pd.Series of capacities:
     (
@@ -134,10 +139,10 @@ def load_everything_into_ram(
 
 
 def _load_pv_power_watts_and_capacity_watt_power(
-    filename: Union[str, Path],
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    time_resolution_minutes: Optional[int] = 5,
+        filename: Union[str, Path],
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        time_resolution_minutes: Optional[int] = 5,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """Return pv_power_watts, pv_capacity_watt_power, pv_system_row_number.
 
@@ -227,7 +232,7 @@ def _load_pv_power_watts_and_capacity_watt_power(
     PV_CAPACITY_THRESHOLD_W = 100
     pv_systems_to_drop = pv_capacity_watt_power.index[
         pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W
-    ]
+        ]
     pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
     _log.info(
         f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
@@ -258,7 +263,7 @@ def _load_pv_power_watts_and_capacity_watt_power(
 
 
 # Adapted from nowcasting_dataset.data_sources.pv.pv_data_source
-def _load_pv_metadata(filename: str) -> pd.DataFrame:
+def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) -> pd.DataFrame:
     """Return pd.DataFrame of PV metadata.
 
     Shape of the returned pd.DataFrame for Passiv PV data:
@@ -274,6 +279,10 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
         index_col = "system_id"
 
     pv_metadata = pd.read_csv(filename, index_col=index_col)
+
+    # Load inferred metadata if passiv
+    if "passiv" in str(filename) and inferred_filename is not None:
+        pv_metadata = _load_inferred_metadata(filename, pv_metadata)
 
     if "Unnamed: 0" in pv_metadata.columns:
         pv_metadata.drop(columns="Unnamed: 0", inplace=True)
@@ -307,6 +316,15 @@ def _load_pv_metadata(filename: str) -> pd.DataFrame:
         "EW": np.nan,
     }
     pv_metadata = pv_metadata.replace({"orientation": mapping})
+
+    return pv_metadata
+
+
+def _load_inferred_metadata(filename: str, pv_metadata: pd.DataFrame) -> pd.DataFrame:
+    inferred_metadata = pd.read_csv(filename, index_col="ss_id")
+    inferred_metadata = inferred_metadata.rename({"capacity": "kwp"})
+    # Replace columns with new data if in the PV metadata already
+    pv_metadata.update(inferred_metadata)
     return pv_metadata
 
 
