@@ -2,7 +2,6 @@
 import logging
 from collections import defaultdict
 from typing import Union
-import numbers
 
 import numpy as np
 import pandas as pd
@@ -23,16 +22,16 @@ class CreatePVImageIterDataPipe(IterDataPipe):
     """Create PV image from individual sites"""
 
     def __init__(
-            self,
-            source_datapipe: IterDataPipe,
-            image_datapipe: IterDataPipe,
-            normalize: bool = False,
-            image_dim: str = "geostationary",
-            max_num_pv_systems: int = -1,
-            always_return_first: bool = False,
-            seed: int = None,
-            take_n_pv_values_per_pixel: int = -1,
-            normalize_by_pvlib: bool = False,
+        self,
+        source_datapipe: IterDataPipe,
+        image_datapipe: IterDataPipe,
+        normalize: bool = False,
+        image_dim: str = "geostationary",
+        max_num_pv_systems: int = -1,
+        always_return_first: bool = False,
+        seed: int = None,
+        take_n_pv_values_per_pixel: int = -1,
+        normalize_by_pvlib: bool = False,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -119,7 +118,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
                     # y_geostationary is in descending order:
                     y_idx = len(image_xr[self.y_dim]) - (
-                            np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
+                        np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
                     )
                 else:
                     x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
@@ -128,7 +127,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 # Add location to same one, so know if multiple overlap
                 # Filter if normalizing by pvlib, only include ones that have tilt and orientation as numbers
                 if self.normalize_by_pvlib:
-                    if not np.isfinite(pv_system.orientation.values) and not np.isfinite(pv_system.tilt.values):
+                    if not np.isfinite(pv_system.orientation.values) and not np.isfinite(
+                        pv_system.tilt.values
+                    ):
                         continue
                 pv_position_dict[(y_idx, x_idx)].append(pv_system)
             for location, system_list in pv_position_dict.items():
@@ -163,9 +164,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
 
 
 def _create_data_array_from_image(
-        pv_image: np.ndarray,
-        pv_systems_xr: Union[xr.Dataset, xr.DataArray],
-        image_xr: Union[xr.Dataset, xr.DataArray],
+    pv_image: np.ndarray,
+    pv_systems_xr: Union[xr.Dataset, xr.DataArray],
+    image_xr: Union[xr.Dataset, xr.DataArray],
 ):
     data_array = xr.DataArray(
         data=pv_image,
@@ -181,10 +182,10 @@ def _create_data_array_from_image(
 
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
-        xr_data: xr.DataArray,
-        center_osgb: Location,
-        x_dim_name="x_geostationary",
-        y_dim_name="y_geostationary",
+    xr_data: xr.DataArray,
+    center_osgb: Location,
+    x_dim_name="x_geostationary",
+    y_dim_name="y_geostationary",
 ) -> Location:
     """
     Return x and y index location of pixel at center of region of interest.
@@ -208,7 +209,7 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
     # y_geostationary is in descending order:
     y_index_at_center = len(xr_data[y_dim_name]) - (
-            np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
+        np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
     )
     return Location(x=x_index_at_center, y=y_index_at_center)
 
@@ -241,7 +242,7 @@ def _normalize_by_pvlib(pv_system):
     )
     # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
     fraction_clear_sky = total_irradiance["poa_global"] / (
-            clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
+        clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
     pv_system /= pv_system.capacity_watt_power
     pv_system *= fraction_clear_sky
