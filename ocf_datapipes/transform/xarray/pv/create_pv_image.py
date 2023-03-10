@@ -138,7 +138,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 for pv_system in system_list:
                     if self.normalize_by_pvlib:
                         pv_system = _normalize_by_pvlib(pv_system)
-                    avg_generation += pv_system.values
+                    avg_generation += np.nan_to_num(pv_system.values)
                 avg_generation /= len(system_list)
                 pv_image[:, y_idx, x_idx] = avg_generation
 
