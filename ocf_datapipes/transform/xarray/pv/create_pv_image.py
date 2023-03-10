@@ -125,7 +125,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
 
                 # Add location to same one, so know if multiple overlap
-                # Filter if normalizing by pvlib, only include ones that have tilt and orientation as numbers
+                # Filter if normalizing by pvlib,
+                # only include ones that have tilt and orientation as numbers
                 if self.normalize_by_pvlib:
                     if not np.isfinite(pv_system.orientation.values) and not np.isfinite(
                         pv_system.tilt.values
