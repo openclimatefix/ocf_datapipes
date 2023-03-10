@@ -57,44 +57,45 @@ def pvnet_datapipe(
     Returns: datapipe
     """
 
-    # load configuration
+    # Load configuration
     configuration_filename = configuration
     with fsspec.open(configuration, mode="r") as stream:
         configuration = parse_config(data=stream)
     configuration = Configuration(**configuration)
         
+    # Unpack for convenience
     conf_sat = configuration.input_data.satellite
     conf_hrv = configuration.input_data.hrvsatellite
     conf_nwp = configuration.input_data.nwp
 
-    # load datasets
+    # Load datasets
     datapipes_dict = open_and_return_datapipes(
         configuration_filename=configuration_filename,
         use_gsp=  True,
         use_pv=   False,
         use_sat=  True,
-        use_hrv=  False,
+        use_hrv=  True,
         use_nwp=  True,
         use_topo= False,
     )
     
-    
+    # We sample time and space of other data using GSP time and space coordinates, so filter GSP
+    # data first amd this is carried through
     datapipes_dict["gsp"] = datapipes_dict["gsp"].remove_northern_gsp()
-    
-    # Filter to time range
     if (start_time is not None) or (end_time is not None):
         datapipes_dict["gsp"] = datapipes_dict["gsp"].select_train_test_time(start_time, end_time)
 
-    # Now get overlapping time periods
+    # Get overlapping time periods
     location_pipe, t0_datapipe = create_t0_and_loc_datapipes(
         datapipes_dict, 
         key_for_t0="gsp",
         shuffle=True,
     )
-        
-    # And now get time slices
+    
+    # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe, split_future=False)
     
+    # Spatially slice, normalize, and convert data to numpy arrays
     numpy_modalities = []
     
     if "nwp" in datapipes_dict:
@@ -139,7 +140,7 @@ def pvnet_datapipe(
         hrv_datapipe = hrv_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(hrv_datapipe.convert_satellite_to_numpy_batch(is_hrv=True))
     
-    
+    # GSP always assumed to be in data
     gsp_datapipe = datapipes_dict["gsp"]
     gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
         location_datapipe=location_pipe,
@@ -150,7 +151,6 @@ def pvnet_datapipe(
         dim_name="gsp_id",
         datapipe_name="GSP",
     )
-    
     gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
     # TODO:
     # - If we fill before normalisation we get NaNs. I think some GSP capacities are NaN

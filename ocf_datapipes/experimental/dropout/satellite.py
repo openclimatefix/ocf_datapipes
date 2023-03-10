@@ -51,7 +51,7 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
         
         for t0 in self.source_datapipe:
             
-            with profile(f"select_time_slice_with_dropout {self.data_pipename}"):
+            with profile(f"select_dropout_time {self.data_pipename}"):
 
                 t0_datetime_utc = pd.Timestamp(t0)
                 
@@ -102,7 +102,7 @@ class ApplyDropoutTimeIterDataPipe(IterDataPipe):
         
         for xr_data, dropout_time in self.source_datapipe.zip_ocf(self.dropout_time_datapipe):
             
-            with profile(f"dropout {self.data_pipename}"):
+            with profile(f"apply_dropout_time {self.data_pipename}"):
 
                 if dropout_time is None:
                     xr_sel =  xr_data
@@ -111,6 +111,6 @@ class ApplyDropoutTimeIterDataPipe(IterDataPipe):
                     dropout_time = dropout_time.ceil(self.sample_period_duration)
                     
                     # This replaces the times after the dropout with NaNs
-                    xr_sel = xr_data.where(xr_sel.time_utc<=dropout_time)
+                    xr_sel = xr_data.where(xr_data.time_utc<=dropout_time)
 
             yield xr_sel

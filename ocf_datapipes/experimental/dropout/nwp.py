@@ -1,8 +1,9 @@
 """Convert NWP data to the target time"""
 import logging
 from datetime import timedelta
-from typing import Union
+from typing import Union, Optional
 
+import numpy as np
 import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -13,8 +14,8 @@ from ocf_datapipes.utils.utils import profile
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("convert_to_nwp_target_time")
-class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
+@functional_datapipe("convert_to_nwp_target_time_with_dropout")
+class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
     """Converts NWP Xarray to use the target time"""
 
     def __init__(
@@ -24,10 +25,12 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         sample_period_duration: timedelta,
         history_duration: timedelta,
         forecast_duration: timedelta,
+        dropout_time_start: timedelta,
+        dropout_time_end: timedelta,
+        dropout_frac: Optional[float] = 0,
     ):
         """
         Convert NWP Xarray dataset to use target time as indexer
-
         Args:
             source_datapipe: Datapipe emitting a Xarray Dataset
                 with step and init_time_utc indexers
@@ -42,11 +45,13 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         self.sample_period_duration = sample_period_duration
         self.history_duration = history_duration
         self.forecast_duration = forecast_duration
-        self.t0_idx = int(self.history_duration / self.sample_period_duration)
-        
+        self.dropout_time_start = dropout_time_start
+        self.dropout_time_end = dropout_time_end
+        self.dropout_frac = dropout_frac
+
     def __len__(self):
         return len(self.t0_datapipe)
-
+        
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
         
@@ -54,29 +59,37 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         
         for t0 in self.t0_datapipe:
 
-            with profile("convert_to_nwp_target_time"):
+            with profile("convert_to_nwp_target_time_with_dropout"):
 
-                logger.debug("convert_to_nwp_target_time ")
-
-                t0_datetime_utc = pd.Timestamp(t0)
-                start_dt = t0_datetime_utc - self.history_duration
-                end_dt = t0_datetime_utc + self.forecast_duration
+                t0 = pd.Timestamp(t0)
+                start_dt = t0 - self.history_duration
+                end_dt = t0 + self.forecast_duration
+                
                 target_times = pd.date_range(
                     start_dt.ceil(self.sample_period_duration),
                     end_dt.ceil(self.sample_period_duration),
                     freq=self.sample_period_duration,
                 )
-                # Get the most recent NWP initialisation time for each target_time_hourly.
-                init_times = xr_data.sel(
-                    init_time_utc=target_times, method="pad"
+                
+                # Apply NWP dropout
+                if np.random.uniform() < self.dropout_frac:
+                    dt = np.random.uniform()
+                    dt = (
+                        dt * self.dropout_time_start +
+                        (1-dt)*self.dropout_time_end
+                    )
+                    t0 = t0 + dt
+                
+                # Forecasts made before t0 (t<=t0) 
+                xr_available = xr_data.sel(
+                        init_time_utc=slice(None, t0)
+                )
+
+                init_times = xr_available.sel(
+                    init_time_utc=target_times, 
+                    method="ffill", # forward fill from init times to target times
                 ).init_time_utc.values
-                # Find the NWP init time for just the 'future' portion of the example.
-                init_time_t0 = init_times[self.t0_idx]
-
-                # For the 'future' portion of the example, replace all the NWP
-                # init times with the NWP init time most recent to t0.
-                init_times[self.t0_idx :] = init_time_t0
-
+                
                 steps = target_times - init_times
 
                 # We want one timestep for each target_time_hourly (obviously!) If we simply do
@@ -87,6 +100,6 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
                 coords = {"target_time_utc": target_times}
                 init_time_indexer = xr.DataArray(init_times, coords=coords)
                 step_indexer = xr.DataArray(steps, coords=coords)
-                xr_sel = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
+                xr_sel = xr_available.sel(step=step_indexer, init_time_utc=init_time_indexer)
             
             yield xr_sel

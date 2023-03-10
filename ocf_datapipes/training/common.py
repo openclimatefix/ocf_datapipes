@@ -423,7 +423,7 @@ def minutes(minutes):
 
 def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, split_future=True):
     """
-    Modies a dictionary of datapipes to yield samples at given times t0
+    Modies a dictionary of datapipes in-place to yield samples at given times t0
 
     Args:
         datapipes_dict: Dictionary of used datapipes and t0 ones
@@ -441,10 +441,24 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
     # track keys left to avoid copting to_datapipe too many times
     keys_left = {k for k in datapipes_dict.keys() if k not in ["config", "topo"]}
     
+    sat_and_hrv_dropout_kwargs = dict(                    
+        dropout_time_start=minutes(-30),
+        dropout_time_end=minutes(-20),
+        dropout_frac=0.5,
+    )
     
     def get_t0_datapipe(key):
-        """"Internal helper function track t0_datapipe duplication"""
+        """"Internal helper function to track `t0_datapipe` duplication.
+        
+        Tracks the keys in keys_left to make sure there are no unused forks left at end.
+        
+        Args:
+            key: key to remove from `keys_left`. If `key` is None then an extra copy is made without
+            affecting `keys_left`.
+        """
         nonlocal t0_datapipe
+        if len(keys_left)==0:
+            raise Error
         if key is not None:
             keys_left.remove(key)
         if len(keys_left)>0:
@@ -456,12 +470,15 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
     
     if "nwp" in datapipes_dict:
         this_t0_datapipe = get_t0_datapipe("nwp")
-
-        datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time(
+        
+        datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
             t0_datapipe=this_t0_datapipe,
             sample_period_duration=minutes(60),
             history_duration=minutes(conf_in.nwp.history_minutes),
             forecast_duration=minutes(conf_in.nwp.forecast_minutes),
+            dropout_time_start=minutes(-60),
+            dropout_time_end=minutes(-60),
+            dropout_frac=0.5,
         )
             
 
@@ -474,33 +491,57 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
             t0_datapipe=this_t0_datapipe,
             sample_period_duration=minutes(5),
             history_duration=minutes(conf_in.satellite.history_minutes),
-            forecast_duration=0,
+            forecast_duration=minutes(-15),
         )
         
         # Generate randomly sampled dropout times
         dropout_time_datapipe = (
             get_t0_datapipe("sat")
                 .select_dropout_time(
-                    dropout_time_start=minutes(-10),
-                    dropout_time_end=minutes(-5),
-                    dropout_frac=0.5,
+                    **sat_and_hrv_dropout_kwargs
                 )
         )
+        
+        if "hrv" in datapipes_dict:
+            # Make dropout time copy for hrv if included in data
+            dropout_time_datapipe, dropout_time_datapipe_copy = dropout_time_datapipe.fork(
+                2, 
+                buffer_size=5
+            )
         
         # Apply the dropout
         datapipes_dict["sat"] = datapipes_dict["sat"].apply_dropout_time(
             dropout_time_datapipe=dropout_time_datapipe,
-            sample_period_duration=minutes(5),        
+            sample_period_duration=minutes(5),
         )
 
     if "hrv" in datapipes_dict:
+        
+        if "sat" in datapipes_dict:
+            # share dropout times with sat if included in data
+            dropout_time_datapipe = dropout_time_datapipe_copy
+        else:
+            # Generate randomly sampled dropout times
+            dropout_time_datapipe = (
+                get_t0_datapipe(None)
+                    .select_dropout_time(
+                        **sat_and_hrv_dropout_kwargs
+                    )
+            )
+        
         this_t0_datapipe = get_t0_datapipe("hrv")
         
         datapipes_dict["hrv"] = datapipes_dict["hrv"].select_time_slice(
             t0_datapipe=this_t0_datapipe,
             sample_period_duration=minutes(5),
             history_duration=minutes(conf_in.hrvsatellite.history_minutes),
-            forecast_duration=0,
+            forecast_duration=minutes(-15),
+        )
+        
+        # Apply the dropout
+        datapipes_dict["hrv"] = datapipes_dict["hrv"].apply_dropout_time(
+            dropout_time_datapipe=dropout_time_datapipe,
+            sample_period_duration=minutes(5),       
         )
             
     if "pv" in datapipes_dict:
