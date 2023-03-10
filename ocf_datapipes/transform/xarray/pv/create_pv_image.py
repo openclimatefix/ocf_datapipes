@@ -1,5 +1,6 @@
 """Convert point PV sites to image output"""
 import logging
+from collections import defaultdict
 from typing import Union
 
 import numpy as np
@@ -11,7 +12,6 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +21,16 @@ class CreatePVImageIterDataPipe(IterDataPipe):
     """Create PV image from individual sites"""
 
     def __init__(
-            self,
-            source_datapipe: IterDataPipe,
-            image_datapipe: IterDataPipe,
-            normalize: bool = False,
-            image_dim: str = "geostationary",
-            max_num_pv_systems: int = -1,
-            always_return_first: bool = False,
-            seed: int = None,
-            take_n_pv_values_per_pixel: int = -1,
-            normalize_by_pvlib: bool = False,
+        self,
+        source_datapipe: IterDataPipe,
+        image_datapipe: IterDataPipe,
+        normalize: bool = False,
+        image_dim: str = "geostationary",
+        max_num_pv_systems: int = -1,
+        always_return_first: bool = False,
+        seed: int = None,
+        take_n_pv_values_per_pixel: int = -1,
+        normalize_by_pvlib: bool = False,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -52,7 +52,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 tilt/orientation/capacity/lat/lon of the system
 
         """
-        if normalize_by_pvlib is not  False or normalize is not False:
+        if normalize_by_pvlib is not False or normalize is not False:
             assert normalize != normalize_by_pvlib, ValueError(
                 "Cannot normalize by both max, and pvlib"
             )
@@ -117,7 +117,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
                     # y_geostationary is in descending order:
                     y_idx = len(image_xr[self.y_dim]) - (
-                            np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
+                        np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
                     )
                 else:
                     x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
@@ -157,9 +157,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
 
 
 def _create_data_array_from_image(
-        pv_image: np.ndarray,
-        pv_systems_xr: Union[xr.Dataset, xr.DataArray],
-        image_xr: Union[xr.Dataset, xr.DataArray],
+    pv_image: np.ndarray,
+    pv_systems_xr: Union[xr.Dataset, xr.DataArray],
+    image_xr: Union[xr.Dataset, xr.DataArray],
 ):
     data_array = xr.DataArray(
         data=pv_image,
@@ -175,10 +175,10 @@ def _create_data_array_from_image(
 
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
-        xr_data: xr.DataArray,
-        center_osgb: Location,
-        x_dim_name="x_geostationary",
-        y_dim_name="y_geostationary",
+    xr_data: xr.DataArray,
+    center_osgb: Location,
+    x_dim_name="x_geostationary",
+    y_dim_name="y_geostationary",
 ) -> Location:
     """
     Return x and y index location of pixel at center of region of interest.
@@ -202,7 +202,7 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
     # y_geostationary is in descending order:
     y_index_at_center = len(xr_data[y_dim_name]) - (
-            np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
+        np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
     )
     return Location(x=x_index_at_center, y=y_index_at_center)
 
@@ -218,9 +218,7 @@ def _normalize_by_pvlib(pv_system):
         PV System in xarray DataArray, but normalized values
     """
     # TODO Add elevation
-    pvlib_loc = pvlib.location.Location(
-        latitude=pv_system.latitude, longitude=pv_system.longitude
-    )
+    pvlib_loc = pvlib.location.Location(latitude=pv_system.latitude, longitude=pv_system.longitude)
     clear_sky = pvlib_loc.get_clearsky(pv_system.time_utc.values)
     solar_position = pvlib_loc.get_solarposition(pv_system.time_utc.values)
     total_irradiance = pvlib.irradiance.get_total_irradiance(
@@ -234,7 +232,7 @@ def _normalize_by_pvlib(pv_system):
     )
     # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
     fraction_clear_sky = total_irradiance["poa_global"] / (
-            clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
+        clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
     pv_system["data"] /= pv_system.capacity_kw
     pv_system["data"] *= fraction_clear_sky
