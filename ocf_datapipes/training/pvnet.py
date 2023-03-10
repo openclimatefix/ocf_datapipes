@@ -6,7 +6,7 @@ from typing import Union
 import fsspec
 from pyaml_env import parse_config
 
-import xarray
+import xarray as xr
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.convert import ConvertPVToNumpy
@@ -21,7 +21,7 @@ from ocf_datapipes.training.common import (
 
 from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
 
-xarray.set_options(keep_attrs=True)
+xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_datapipe")
 logger.setLevel(logging.DEBUG)
 
@@ -39,8 +39,20 @@ def normalize_gsp(x):
     return x / x.capacity_megawatt_power
 
 
-def gsp_remove_nans(da_gsp):
-    return da_gsp.fillna(0.0)
+def pvnet_concat_gsp(gsp_dataarrays):
+    """This function is used to combine the split history and future gsp dataarrays.
+    These are split inside the `slice_datapipes_by_time()` function below.
+    
+    Splitting them inside that function allows us to apply dropout to the 
+    history GSP whilst leaving the future GSP without NaNs. 
+    
+    We recombine the history and future with this function to allow us to use the 
+    `MergeNumpyModalities()` datapipe without redefining the BatchKeys.
+    
+    The `pvnet` model was also written to use a GSP array which has historical and future
+    and to split it out. These maintains that assumption.
+    """
+    return xr.concat(gsp_dataarrays, dim="time_utc")
 
 
 def pvnet_datapipe(
@@ -93,7 +105,7 @@ def pvnet_datapipe(
     )
     
     # Slice all of the datasets by time - this is an in-place operation
-    slice_datapipes_by_time(datapipes_dict, t0_datapipe, split_future=False)
+    slice_datapipes_by_time(datapipes_dict, t0_datapipe)
     
     # Spatially slice, normalize, and convert data to numpy arrays
     numpy_modalities = []
@@ -141,6 +153,18 @@ def pvnet_datapipe(
         numpy_modalities.append(hrv_datapipe.convert_satellite_to_numpy_batch(is_hrv=True))
     
     # GSP always assumed to be in data
+    location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
+    gsp_future_datapipe = datapipes_dict["gsp_future"]
+    gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
+        location_datapipe=location_pipe_copy,
+        roi_height_meters=1,
+        roi_width_meters=1,
+        y_dim_name="y_osgb",
+        x_dim_name="x_osgb",
+        dim_name="gsp_id",
+        datapipe_name="GSP_future",
+    )    
+    
     gsp_datapipe = datapipes_dict["gsp"]
     gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
         location_datapipe=location_pipe,
@@ -151,15 +175,12 @@ def pvnet_datapipe(
         dim_name="gsp_id",
         datapipe_name="GSP",
     )
-    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
-    # TODO:
-    # - If we fill before normalisation we get NaNs. I think some GSP capacities are NaN
-    # - Maybe it is better if the model itself handles NaNs? Progagating them through could allow us
-    #   to predict on them, but ignore the predictions in the loss function, rather than pushing
-    #   the model to predict 0 for these samples.
-    gsp_datapipe = gsp_datapipe.map(gsp_remove_nans)
-    numpy_modalities.append(gsp_datapipe.convert_gsp_to_numpy_batch())
     
+    # Recombine GSP arrays - see function doc for further explanation
+    gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(pvnet_concat_gsp)
+    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
+    
+    numpy_modalities.append(gsp_datapipe.convert_gsp_to_numpy_batch())
     
     logger.debug("Combine all the data sources")
     combined_datapipe = (

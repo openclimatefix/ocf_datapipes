@@ -404,14 +404,14 @@ def create_t0_and_loc_datapipes(
         logger.debug("Skipping getting joint time periods")
         overlapping_datapipe = time_period_datapipes[0]
         
-    # select time periods
+    # Select time periods
     key_datapipe = key_datapipe.select_time_periods(time_periods=overlapping_datapipe)
         
     t0_loc_datapipe = key_datapipe.select_loc_and_t0(return_all=True)
     
     if shuffle:
         # Shuffle the time and gsp-indexes completely
-        t0_loc_datapipe.shuffle(buffer_size=len(t0_loc_datapipe))
+        t0_loc_datapipe = t0_loc_datapipe.shuffle(buffer_size=len(t0_loc_datapipe))
         
     location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)
     
@@ -421,7 +421,8 @@ def create_t0_and_loc_datapipes(
 def minutes(minutes):
     return timedelta(minutes=minutes)
 
-def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, split_future=True):
+
+def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe):
     """
     Modies a dictionary of datapipes in-place to yield samples at given times t0
 
@@ -438,14 +439,19 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
     configuration = datapipes_dict["config"]
     conf_in = configuration.input_data
     
-    # track keys left to avoid copting to_datapipe too many times
+    # Track keys left to avoid copting to_datapipe too many times
     keys_left = {k for k in datapipes_dict.keys() if k not in ["config", "topo"]}
     
-    sat_and_hrv_dropout_kwargs = dict(                    
-        dropout_time_start=minutes(-30),
-        dropout_time_end=minutes(-20),
+    # 
+    sat_and_hrv_dropout_kwargs = dict( 
+        # Sat data may include nans in the open interval (t0-20mins, t0-45mins)
+        dropout_time_start=minutes(-45), 
+        dropout_time_end=minutes(-20), 
+        sample_period_duration=minutes(5),
         dropout_frac=0.5,
     )
+    # Satellite data never more recent than t0-15mins
+    sat_delay = minutes(-15)
     
     def get_t0_datapipe(key):
         """"Internal helper function to track `t0_datapipe` duplication.
@@ -469,29 +475,28 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
     
     
     if "nwp" in datapipes_dict:
-        this_t0_datapipe = get_t0_datapipe("nwp")
         
         datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
-            t0_datapipe=this_t0_datapipe,
+            t0_datapipe=get_t0_datapipe("nwp"),
             sample_period_duration=minutes(60),
             history_duration=minutes(conf_in.nwp.history_minutes),
             forecast_duration=minutes(conf_in.nwp.forecast_minutes),
-            dropout_time_start=minutes(-60),
+            # Inclusive dropout bounds means forecast will be at least 2 hours by using 
+            # start/stop=-60mins
+            dropout_time_start=minutes(-60), 
             dropout_time_end=minutes(-60),
-            dropout_frac=0.5,
+            dropout_frac=1.0,
         )
             
 
     if "sat" in datapipes_dict:
         
-        # Take time slices of sat data
-        this_t0_datapipe = get_t0_datapipe(None)
-        
+        # Take time slices of sat data        
         datapipes_dict["sat"] = datapipes_dict["sat"].select_time_slice(
-            t0_datapipe=this_t0_datapipe,
+            t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(5),
             history_duration=minutes(conf_in.satellite.history_minutes),
-            forecast_duration=minutes(-15),
+            forecast_duration=sat_delay,
         )
         
         # Generate randomly sampled dropout times
@@ -518,7 +523,7 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
     if "hrv" in datapipes_dict:
         
         if "sat" in datapipes_dict:
-            # share dropout times with sat if included in data
+            # Share dropout times with sat if included in data
             dropout_time_datapipe = dropout_time_datapipe_copy
         else:
             # Generate randomly sampled dropout times
@@ -528,14 +533,12 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
                         **sat_and_hrv_dropout_kwargs
                     )
             )
-        
-        this_t0_datapipe = get_t0_datapipe("hrv")
-        
+                
         datapipes_dict["hrv"] = datapipes_dict["hrv"].select_time_slice(
-            t0_datapipe=this_t0_datapipe,
+            t0_datapipe=get_t0_datapipe("hrv"),
             sample_period_duration=minutes(5),
             history_duration=minutes(conf_in.hrvsatellite.history_minutes),
-            forecast_duration=minutes(-15),
+            forecast_duration=sat_delay,
         )
         
         # Apply the dropout
@@ -545,48 +548,57 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe, spl
         )
             
     if "pv" in datapipes_dict:
-        
-        if split_future:
-            this_t0_datapipe = get_t0_datapipe(None)
-            datapipes_dict["pv"], dp = datapipes_dict["pv"].fork(buffer_size=5)
-            
-            datapipes_dict["pv_future"] = dp.select_time_slice(
-                t0_datapipe=this_t0_datapipe,
-                sample_period_duration=minutes(5),
-                history_duration=minutes(0),
-                forecast_duration=conf_in.pv.forecast_minutes,
-            )
-            
-        this_t0_datapipe = get_t0_datapipe("pv")
 
+        datapipes_dict["pv"], dp = datapipes_dict["pv"].fork(buffer_size=5)
+
+        datapipes_dict["pv_future"] = dp.select_time_slice(
+            t0_datapipe=get_t0_datapipe(None),
+            sample_period_duration=minutes(5),
+            history_duration=minutes(0),
+            forecast_duration=minutes(conf_in.pv.forecast_minutes),
+        )
+            
         datapipes_dict["pv"] = datapipes_dict["pv"].select_time_slice(
-            t0_datapipe=this_t0_datapipe,
+            t0_datapipe=get_t0_datapipe("pv"),
             sample_period_duration=minutes(5),
             history_duration=minutes(conf_in.pv.history_minutes),
-            forecast_duration=minutes(0 if split_future else conf_in.pv.forecast_minutes),
+            forecast_duration=minutes(-5),
         )
 
             
     if "gsp" in datapipes_dict:
         
-        if split_future:
-            this_t0_datapipe = get_t0_datapipe(None)
-            datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
-            
-            datapipes_dict["gsp_future"] = dp.select_time_slice(
-                t0_datapipe=this_t0_datapipe,
-                sample_period_duration=minutes(30),
-                history_duration=minutes(0),
-                forecast_duration=conf_in.gsp.forecast_minutes,
-            )
-            
-        this_t0_datapipe = get_t0_datapipe("gsp")
+        datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
 
+        datapipes_dict["gsp_future"] = dp.select_time_slice(
+            t0_datapipe=get_t0_datapipe(None),
+            sample_period_duration=minutes(30),
+            history_duration=minutes(0),
+            forecast_duration=minutes(conf_in.gsp.forecast_minutes),
+        )
+        
         datapipes_dict["gsp"] = datapipes_dict["gsp"].select_time_slice(
-            t0_datapipe=this_t0_datapipe,
-            sample_period_duration=minutes(5),
+            t0_datapipe=get_t0_datapipe(None),
+            sample_period_duration=minutes(30),
             history_duration=minutes(conf_in.gsp.history_minutes),
-            forecast_duration=minutes(0 if split_future else conf_in.gsp.forecast_minutes),
+            forecast_duration=minutes(-30),
+        )
+        
+        # Dropout on the GSP, but not the future GSP
+        dropout_time_datapipe = (
+            get_t0_datapipe("gsp")
+                .select_dropout_time(
+                    # Inclusive dropout bounds means GSP data at t0-30mins may be NaN
+                    dropout_time_start=minutes(-30),
+                    dropout_time_end=minutes(-30),
+                    sample_period_duration=minutes(30),
+                    dropout_frac=0.1,
+                )
+        )
+        
+        datapipes_dict["gsp"] = datapipes_dict["gsp"].apply_dropout_time(
+            dropout_time_datapipe=dropout_time_datapipe,
+            sample_period_duration=minutes(30),
         )
 
     assert len(keys_left)==0

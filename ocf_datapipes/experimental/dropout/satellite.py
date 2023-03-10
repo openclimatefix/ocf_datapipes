@@ -22,6 +22,7 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         dropout_time_start: timedelta,
         dropout_time_end: timedelta,
+        sample_period_duration: timedelta,
         dropout_frac: Optional[float] = 0,
         data_pipename: str = None,
         
@@ -31,23 +32,35 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of t0 times
-            dropout_time_start: Minimum timedelta (negative) w.r.t. t0 when dropout could begin
-            dropout_time_end: Minimum timedelta (negative) w.r.t. t0 when dropout could begin
+            dropout_time_start: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could 
+                begin
+            dropout_time_end: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could 
+                begin
             dropout_frac: Fraction of samples subject to dropout
             data_pipename: the name of the data pipe. This is useful when profiling
         """
         self.source_datapipe = source_datapipe
         self.dropout_time_start = dropout_time_start
         self.dropout_time_end = dropout_time_end
+        self.sample_period_duration = sample_period_duration
         self.dropout_frac = dropout_frac
         self.data_pipename = data_pipename
         assert dropout_frac >= 0
-        assert dropout_time_start < dropout_time_end
+        assert dropout_time_start <= dropout_time_end
+        assert dropout_time_start%sample_period_duration==timedelta(minutes=0)
+        assert dropout_time_end%sample_period_duration==timedelta(minutes=0)
+
         
     def __len__(self):
         return len(self.source_datapipe)
 
     def __iter__(self):
+        
+        timedeltas = np.arange(
+            self.dropout_time_start, 
+            self.dropout_time_end+self.sample_period_duration, 
+            self.sample_period_duration,
+        )
         
         for t0 in self.source_datapipe:
             
@@ -56,11 +69,7 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
                 t0_datetime_utc = pd.Timestamp(t0)
                 
                 if np.random.uniform() < self.dropout_frac:
-                    dt = np.random.uniform()
-                    dt = (
-                        dt * self.dropout_time_start +
-                        (1-dt)*self.dropout_time_end
-                    )
+                    dt = np.random.choice(timedeltas)
                     dropout_time = t0_datetime_utc + dt
                     
                 else:
@@ -111,6 +120,6 @@ class ApplyDropoutTimeIterDataPipe(IterDataPipe):
                     dropout_time = dropout_time.ceil(self.sample_period_duration)
                     
                     # This replaces the times after the dropout with NaNs
-                    xr_sel = xr_data.where(xr_data.time_utc<=dropout_time)
+                    xr_sel = xr_data.where(xr_data.time_utc<dropout_time)
 
             yield xr_sel

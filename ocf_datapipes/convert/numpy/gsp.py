@@ -36,10 +36,10 @@ class ConvertGSPToNumpyIterDataPipe(IterDataPipe):
 
             with profile("convert_gsp_to_numpy"):
 
-                returned_values = [xr_data.values]
                 if self.return_id:
                     pv_system_ids = xr_data["gsp_id"].values
-                    returned_values.append(pv_system_ids)
-                    yield returned_values
+                    result = xr_data.values, pv_system_ids
                 else:
-                    yield returned_values[0]
+                    result = xr_data.values
+
+            yield result

@@ -39,6 +39,11 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
             sample_period_duration: How long the sampling period is
             history_duration: How long the history time should cover
             forecast_duration: How long the forecast time should cover
+            dropout_time_start: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could 
+                begin
+            dropout_time_end: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could 
+                begin
+            dropout_frac: Fraction of samples subject to dropout
         """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
@@ -48,6 +53,10 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
         self.dropout_time_start = dropout_time_start
         self.dropout_time_end = dropout_time_end
         self.dropout_frac = dropout_frac
+        assert dropout_frac >= 0
+        assert dropout_time_start <= dropout_time_end
+        assert dropout_time_start%sample_period_duration==timedelta(minutes=0)
+        assert dropout_time_end%sample_period_duration==timedelta(minutes=0)
 
     def __len__(self):
         return len(self.t0_datapipe)
@@ -56,6 +65,12 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
         """Iterate through both datapipes and convert Xarray dataset"""
         
         xr_data = next(iter(self.source_datapipe))
+        
+        timedeltas = np.arange(
+            self.dropout_time_start, 
+            self.dropout_time_end+self.sample_period_duration, 
+            self.sample_period_duration,
+        )
         
         for t0 in self.t0_datapipe:
 
@@ -73,14 +88,10 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
                 
                 # Apply NWP dropout
                 if np.random.uniform() < self.dropout_frac:
-                    dt = np.random.uniform()
-                    dt = (
-                        dt * self.dropout_time_start +
-                        (1-dt)*self.dropout_time_end
-                    )
-                    t0 = t0 + dt
+                    dt = np.random.choice(timedeltas)
+                    t0 = t0 + dt - timedelta(seconds=1)
                 
-                # Forecasts made before t0 (t<=t0) 
+                # Forecasts made before t0 (t<t0) 
                 xr_available = xr_data.sel(
                         init_time_utc=slice(None, t0)
                 )

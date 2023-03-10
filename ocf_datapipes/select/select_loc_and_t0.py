@@ -41,20 +41,25 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         self.x_dim_name = x_dim_name
         self.y_dim_name = y_dim_name
         self.time_dim_name = time_dim_name
-        # Doing this in the init allows us to have length property
-        self.xr_dataset = next(iter(source_datapipe))
           
     def __len__(self):
-        length = len(self.xr_dataset[self.time_dim_name])*len(self.xr_dataset[self.x_dim_name])
         if self.return_all:
+            # Cannot lazily find length
+            self._load_source()
+            length = len(self.xr_dataset[self.time_dim_name])*len(self.xr_dataset[self.x_dim_name])
             return length
         else:
-            return np.inf if length>0 else 0
+            return np.inf
+        
+    def _load_source(self):
+        if not hasattr(self, "xr_dataset"):
+            self.xr_dataset = next(iter(self.source_datapipe))
             
     def __iter__(self) -> tuple[Location, pd.Timestamp]:
         
+        self._load_source()
         xr_dataset = self.xr_dataset
-
+        
         if self.return_all:
 
             logger.debug("Going to return all locations")
