@@ -225,8 +225,6 @@ def _normalize_by_pvlib(pv_system):
     times = pd.DatetimeIndex(pv_system.time_utc.values)
     solar_position = pvlib_loc.get_solarposition(times=times)
     clear_sky = pvlib_loc.get_clearsky(times)
-    print(pv_system.tilt.values)
-    print(pv_system.orientation.values)
     total_irradiance = pvlib.irradiance.get_total_irradiance(
         pv_system.tilt.values,
         pv_system.orientation.values,
