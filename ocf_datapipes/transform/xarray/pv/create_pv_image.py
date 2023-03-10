@@ -6,6 +6,7 @@ from typing import Union
 import numpy as np
 import pvlib
 import xarray as xr
+import pandas as pd
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -218,9 +219,12 @@ def _normalize_by_pvlib(pv_system):
         PV System in xarray DataArray, but normalized values
     """
     # TODO Add elevation
-    pvlib_loc = pvlib.location.Location(latitude=pv_system.latitude, longitude=pv_system.longitude)
-    clear_sky = pvlib_loc.get_clearsky(pv_system.time_utc.values)
-    solar_position = pvlib_loc.get_solarposition(pv_system.time_utc.values)
+    pvlib_loc = pvlib.location.Location(latitude=pv_system.latitude.values, longitude=pv_system.longitude.values)
+    times = pd.DatetimeIndex(pv_system.time_utc.values)
+    solar_position = pvlib_loc.get_solarposition(times=times)
+    clear_sky = pvlib_loc.get_clearsky(times)
+    print(pv_system.tilt.values)
+    print(pv_system.orientation.values)
     total_irradiance = pvlib.irradiance.get_total_irradiance(
         pv_system.tilt.values,
         pv_system.orientation.values,
@@ -234,6 +238,6 @@ def _normalize_by_pvlib(pv_system):
     fraction_clear_sky = total_irradiance["poa_global"] / (
         clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
-    pv_system["data"] /= pv_system.capacity_kw
-    pv_system["data"] *= fraction_clear_sky
+    pv_system /= pv_system.capacity_watt_power
+    pv_system *= fraction_clear_sky
     return pv_system
