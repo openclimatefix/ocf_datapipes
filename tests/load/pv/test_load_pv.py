@@ -19,6 +19,23 @@ def test_open_passiv_from_nc():
     assert len(data.pv_system_id) == 2
 
 
+def test_open_passiv_and_inferred_metadata_from_nc():
+    pv = PV()
+    pv_file = PVFiles(
+        pv_filename="tests/data/pv/passiv/test.nc",
+        pv_metadata_filename="tests/data/pv/passiv/UK_PV_metadata.csv",
+        inferred_metadata_filename="tests/data/pv/passiv/meta_inferred.csv",
+        label="solar_sheffield_passiv",
+    )
+
+    pv.pv_files_groups = [pv_file]
+
+    pv_datapipe = OpenPVFromNetCDF(pv=pv)
+    data = next(iter(pv_datapipe))
+    assert data is not None
+    assert len(data.pv_system_id) == 2
+
+
 def test_open_pvoutput_from_nc():
     pv = PV()
     pv_file = PVFiles(
