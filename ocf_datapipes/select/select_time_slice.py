@@ -1,7 +1,7 @@
 """Selects time slice"""
 import logging
 from datetime import timedelta
-from typing import Union
+from typing import Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -23,28 +23,46 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         t0_datapipe: IterDataPipe,
-        history_duration: timedelta,
-        forecast_duration: timedelta,
         sample_period_duration: timedelta,
+        history_duration: Optional[timedelta] = None,
+        forecast_duration: Optional[timedelta] = None,
+        interval_start: Optional[timedelta] = None,
+        interval_end: Optional[timedelta] = None,
+        
         data_pipename: str = None,
     ):
         """
-        Selects time slice
+        Selects time slice. Either `history_duration` and `history_duration` or `interval_start` and
+        `interval_end` must be supplied.
 
         Args:
             source_datapipe: Datapipe of Xarray objects
             t0_datapipe: Datapipe of t0 times
-            history_duration: History time used
-            forecast_duration: Forecast time used
             sample_period_duration: Sample period of xarray data
+            history_duration (optional): History time used
+            forecast_duration (optional): Forecast time used
+            interval_start (optional): timedelta with respect to t0 where the open interval begins
+            interval_end (optional): timedelta with respect to t0 where the open interval ends
             data_pipename: the name of the data pipe. This is useful when profiling
         """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
-        self.history_duration = np.timedelta64(history_duration)
-        self.forecast_duration = np.timedelta64(forecast_duration)
+        
+        used_duration = (history_duration is not None and forecast_duration is not None) 
+        used_intervals = (interval_start is not None and interval_end is not None) 
+        assert used_duration ^ used_intervals, "Either durations, or intervals must be supplied"
+        
+        if used_duration:
+            self.interval_start = - np.timedelta64(history_duration)
+            self.interval_end = np.timedelta64(forecast_duration)
+        elif used_intervals:
+            self.interval_start = np.timedelta64(interval_start)
+            self.interval_end = np.timedelta64(interval_end)
+        
         self.sample_period_duration = sample_period_duration
         self.data_pipename = data_pipename
+        
+
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         xr_data = next(iter(self.source_datapipe))
@@ -53,8 +71,8 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             with profile(f"select_time_slice {self.data_pipename}"):
 
                 t0_datetime_utc = pd.Timestamp(t0)
-                start_dt = t0_datetime_utc - self.history_duration
-                end_dt = t0_datetime_utc + self.forecast_duration
+                start_dt = t0_datetime_utc + self.interval_start
+                end_dt = t0_datetime_utc + self.interval_end
 
                 start_dt = start_dt.ceil(self.sample_period_duration)
                 end_dt = end_dt.ceil(self.sample_period_duration)
