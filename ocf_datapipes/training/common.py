@@ -444,9 +444,9 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe):
     
     # 
     sat_and_hrv_dropout_kwargs = dict( 
-        # Sat data may include nans in the open interval (t0-20mins, t0-45mins)
+        # Sat data may include nans in the open interval (t0-15mins, t0-45mins)
         dropout_time_start=minutes(-45), 
-        dropout_time_end=minutes(-20), 
+        dropout_time_end=minutes(-15), 
         sample_period_duration=minutes(5),
         dropout_frac=0.5,
     )
@@ -495,8 +495,8 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe):
         datapipes_dict["sat"] = datapipes_dict["sat"].select_time_slice(
             t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(5),
-            history_duration=minutes(conf_in.satellite.history_minutes),
-            forecast_duration=sat_delay,
+            interval_start=-minutes(conf_in.satellite.history_minutes),
+            interval_end=sat_delay,
         )
         
         # Generate randomly sampled dropout times
@@ -537,8 +537,8 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe):
         datapipes_dict["hrv"] = datapipes_dict["hrv"].select_time_slice(
             t0_datapipe=get_t0_datapipe("hrv"),
             sample_period_duration=minutes(5),
-            history_duration=minutes(conf_in.hrvsatellite.history_minutes),
-            forecast_duration=sat_delay,
+            interval_start=-minutes(conf_in.hrvsatellite.history_minutes),
+            interval_end=sat_delay,
         )
         
         # Apply the dropout
@@ -554,15 +554,15 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe):
         datapipes_dict["pv_future"] = dp.select_time_slice(
             t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(5),
-            history_duration=minutes(0),
-            forecast_duration=minutes(conf_in.pv.forecast_minutes),
+            interval_start=minutes(5),
+            interval_end=minutes(conf_in.pv.forecast_minutes),
         )
             
         datapipes_dict["pv"] = datapipes_dict["pv"].select_time_slice(
             t0_datapipe=get_t0_datapipe("pv"),
             sample_period_duration=minutes(5),
-            history_duration=minutes(conf_in.pv.history_minutes),
-            forecast_duration=minutes(-5),
+            interval_start=-minutes(conf_in.pv.history_minutes),
+            interval_end=minutes(0),
         )
 
             
@@ -573,24 +573,24 @@ def slice_datapipes_by_time(datapipes_dict: dict, t0_datapipe: IterDataPipe):
         datapipes_dict["gsp_future"] = dp.select_time_slice(
             t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(30),
-            history_duration=minutes(0),
-            forecast_duration=minutes(conf_in.gsp.forecast_minutes),
+            interval_start=minutes(30),
+            interval_end=minutes(conf_in.gsp.forecast_minutes),
         )
         
         datapipes_dict["gsp"] = datapipes_dict["gsp"].select_time_slice(
             t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(30),
-            history_duration=minutes(conf_in.gsp.history_minutes),
-            forecast_duration=minutes(-30),
+            interval_start=-minutes(conf_in.gsp.history_minutes),
+            interval_end=minutes(0),
         )
         
         # Dropout on the GSP, but not the future GSP
         dropout_time_datapipe = (
             get_t0_datapipe("gsp")
                 .select_dropout_time(
-                    # Inclusive dropout bounds means GSP data at t0-30mins may be NaN
-                    dropout_time_start=minutes(-30),
-                    dropout_time_end=minutes(-30),
+                    # Inclusive dropout bounds means GSP data at t0 may be NaN
+                    dropout_time_start=minutes(0),
+                    dropout_time_end=minutes(0),
                     sample_period_duration=minutes(30),
                     dropout_frac=0.1,
                 )

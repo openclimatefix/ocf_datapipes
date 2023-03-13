@@ -7,6 +7,7 @@ import fsspec
 from pyaml_env import parse_config
 
 import xarray as xr
+import numpy as np
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.convert import ConvertPVToNumpy
@@ -55,6 +56,13 @@ def pvnet_concat_gsp(gsp_dataarrays):
     return xr.concat(gsp_dataarrays, dim="time_utc")
 
 
+def fill_nans_in_arrays(batch):
+    for k, v in batch.items():
+        if isinstance(v, np.ndarray):
+            np.nan_to_num(v, copy=False, nan=0.0)
+    return batch
+ 
+
 def pvnet_datapipe(
     configuration: str,
     start_time,
@@ -86,7 +94,7 @@ def pvnet_datapipe(
         use_gsp=  True,
         use_pv=   False,
         use_sat=  True,
-        use_hrv=  True,
+        use_hrv=  False,
         use_nwp=  True,
         use_topo= False,
     )
@@ -135,7 +143,7 @@ def pvnet_datapipe(
             y_dim_name="y_geostationary",
             datapipe_name="Satellite",
         )
-        sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
+        #sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
         
     if "hrv" in datapipes_dict:
@@ -186,6 +194,6 @@ def pvnet_datapipe(
     combined_datapipe = (
         MergeNumpyModalities(numpy_modalities)
             .add_sun_position(modality_name="gsp")
-    )
+    ).map(fill_nans_in_arrays)
     
     return combined_datapipe
