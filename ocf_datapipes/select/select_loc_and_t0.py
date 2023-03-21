@@ -21,6 +21,7 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         return_all: bool = False,
+        shuffle: bool = False,
         x_dim_name: Optional[str] = "x_osgb",
         y_dim_name: Optional[str] = "y_osgb",
         time_dim_name: Optional[str] = "time_utc"
@@ -31,6 +32,8 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe emitting Xarray Dataset
             return_all: Whether to return all t0-location pairs,
                 if True, also returns them in structured order
+            shuffle: If `return_all` sets whether the pairs are
+                shuffled before being returned.
             x_dim_name: x dimension name, defaulted to 'x_osgb'
             y_dim_name: y dimension name, defaulted to 'y_osgb'
             time_dim_name: time dimension name, defaulted to 'time_utc'
@@ -38,6 +41,7 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         super().__init__()
         self.source_datapipe = source_datapipe
         self.return_all = return_all
+        self.shuffle = shuffle
         self.x_dim_name = x_dim_name
         self.y_dim_name = y_dim_name
         self.time_dim_name = time_dim_name
@@ -47,9 +51,7 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         if self._len is None:
             if self.return_all:
                 # Cannot lazily find length
-                self.source_datapipe, len_datapipe = self.source_datapipe.fork(2, buffer_size=5)
-                ds = next(iter(len_datapipe))
-                self._len = len(ds[self.time_dim_name])*len(ds[self.x_dim_name])
+                return None
             else:
                 self._len = np.inf
         return self._len
@@ -61,28 +63,36 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         if self.return_all:
 
             logger.debug("Going to return all locations")
+            t_index, x_index = np.meshgrid(
+                        np.arange(len(xr_dataset[self.time_dim_name])), 
+                        np.arange(len(xr_dataset[self.x_dim_name]))
+            )
+
+            index_pairs = np.stack((t_index.ravel(), x_index.ravel())).T
+
+            if self.shuffle:
+                index_pairs = np.random.permutation(index_pairs)
 
             # Iterate through all locations in dataset
-            for t0 in xr_dataset[self.time_dim_name].values:
-                
-                for location_idx in range(len(xr_dataset[self.x_dim_name])):
-                    
-                        location = Location(
-                            x=xr_dataset[self.x_dim_name][location_idx].values,
-                            y=xr_dataset[self.y_dim_name][location_idx].values,
-                        )
-                        # for pv
-                        if "pv_system_id" in xr_dataset.coords.keys():
-                            location.id = int(xr_dataset["pv_system_id"][location_idx].values)
+            for t_index, loc_index in index_pairs:
+                t0 = xr_dataset[self.time_dim_name][t_index].values
+                location = Location(
+                    x=xr_dataset[self.x_dim_name][loc_index].values,
+                    y=xr_dataset[self.y_dim_name][loc_index].values,
+                )
 
-                        # for gsp
-                        if "gsp_id" in xr_dataset.coords.keys():
-                            location.id = int(xr_dataset["gsp_id"][location_idx].values)
-                            
-                        yield location, t0
-                    
+                # for pv
+                if "pv_system_id" in xr_dataset.coords.keys():
+                    location.id = int(xr_dataset["pv_system_id"][loc_index].values)
+
+                # for gsp
+                if "gsp_id" in xr_dataset.coords.keys():
+                    location.id = int(xr_dataset["gsp_id"][loc_index].values)
+
+                yield location, t0
+
             else:
-                
+
                 while True:
                     location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))
 

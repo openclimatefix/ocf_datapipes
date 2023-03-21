@@ -1,8 +1,10 @@
 """Common functionality for datapipes"""
 import logging
 from datetime import timedelta
-
+from typing import Union
 from torchdata.datapipes.iter import IterDataPipe
+
+import numpy as np
 
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
@@ -14,8 +16,10 @@ from ocf_datapipes.load import (
     OpenTopography,
 )
 
+import fsspec
+from pyaml_env import parse_config
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def open_and_return_datapipes(
@@ -42,8 +46,9 @@ def open_and_return_datapipes(
         List of datapipes corresponding to the datapipes to open
     """
     # Load configuration
-    config_datapipe = OpenConfiguration(configuration_filename)
-    configuration: Configuration = next(iter(config_datapipe))
+    with fsspec.open(configuration_filename, mode="r") as stream:
+        configuration = parse_config(data=stream)
+    configuration = Configuration(**configuration)
     
     conf_in = configuration.input_data
     # Filter modalities to those with filepaths
@@ -326,7 +331,7 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict, split_future=T
 def create_t0_and_loc_datapipes(
     datapipes_dict: dict, 
     key_for_t0: str ="gsp", 
-    shuffle: bool = False
+    shuffle: bool = True
 ):
     """
 
@@ -403,16 +408,17 @@ def create_t0_and_loc_datapipes(
     else:
         logger.debug("Skipping getting joint time periods")
         overlapping_datapipe = time_period_datapipes[0]
-        
-    # Select time periods
-    key_datapipe = key_datapipe.select_time_periods(time_periods=overlapping_datapipe)
-        
-    t0_loc_datapipe = key_datapipe.select_loc_and_t0(return_all=True)
     
-    if shuffle:
-        # Shuffle the time and gsp-indexes completely
-        t0_loc_datapipe = t0_loc_datapipe.shuffle(buffer_size=len(t0_loc_datapipe))
-        
+    # Select time periods and set length
+    key_datapipe = key_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+    
+    key_datapipe, length_datapipe = key_datapipe.fork(2, buffer_size=5)
+    length = np.product(next(iter(key_datapipe)).shape)
+    
+    t0_loc_datapipe = key_datapipe.select_loc_and_t0(return_all=True, shuffle=shuffle)
+    
+    t0_loc_datapipe = t0_loc_datapipe.set_length(length)
+    
     location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)
     
     return location_pipe, t0_datapipe
