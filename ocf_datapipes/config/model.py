@@ -305,9 +305,9 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
 class Satellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model"""
 
-    satellite_zarr_path: str = Field(
+    satellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
         "gs://solar-pv-nowcasting-data/satellite/EUMETSAT/SEVIRI_RSS/OSGB36/all_zarr_int16_single_timestep.zarr",  # noqa: E501
-        description="The path which holds the satellite zarr.",
+        description="The path or list of paths which hold the satellite zarr.",
     )
     satellite_channels: tuple = Field(
         SAT_VARIABLE_NAMES[1:], description="the satellite channels that are used"
@@ -350,9 +350,9 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
 class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model for HRV data"""
 
-    hrvsatellite_zarr_path: str = Field(
+    hrvsatellite_zarr_path:  Union[str, tuple[str], list[str]] = Field(
         "gs://solar-pv-nowcasting-data/satellite/EUMETSAT/SEVIRI_RSS/OSGB36/all_zarr_int16_single_timestep.zarr",  # noqa: E501
-        description="The path which holds the satellite zarr.",
+        description="The path or list of paths which hold the satellite zarr.",
     )
 
     hrvsatellite_channels: tuple = Field(
