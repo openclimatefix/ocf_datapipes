@@ -13,7 +13,7 @@ from torchdata.datapipes.iter import IterDataPipe
 _log = logging.getLogger(__name__)
 
 
-def open_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
+def open_sat_data(zarr_path: Union[Path, str, list[Union[str, Path]]]) -> xr.DataArray:
     """Lazily opens the Zarr store.
 
     Args:
@@ -27,7 +27,7 @@ def open_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
     dask.config.set({"array.slicing.split_large_chunks": False})
 
     # Open the data
-    if "*" in str(zarr_path):  # Multi-file dataset
+    if type(zarr_path) in [list, tuple] or "*" in str(zarr_path):  # Multi-file dataset
         dataset = (
             xr.open_mfdataset(
                 zarr_path,
