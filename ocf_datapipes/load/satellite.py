@@ -27,7 +27,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Union[str, Path]]]) -> xr.Dat
     dask.config.set({"array.slicing.split_large_chunks": False})
 
     # Open the data
-    if type(zarr_path) == list or "*" in str(zarr_path):  # Multi-file dataset
+    if type(zarr_path) is list or "*" in str(zarr_path):  # Multi-file dataset
         dataset = (
             xr.open_mfdataset(
                 zarr_path,
