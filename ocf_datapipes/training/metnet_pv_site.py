@@ -53,6 +53,7 @@ def metnet_site_datapipe(
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
     center_size_meters: int = 64_000,
     context_size_meters: int = 512_000,
+    batch_size: int = 1,
 ) -> IterDataPipe:
     """
     Make GSP national data pipe
@@ -73,6 +74,7 @@ def metnet_site_datapipe(
         pv_in_image: Add PV history as channels in MetNet image
         center_size_meters: Center size for MeNet cutouts, in meters
         context_size_meters: Context area size in meters
+        batch_size: Batch size for the datapipe
 
     Returns: datapipe
     """
@@ -190,6 +192,7 @@ def metnet_site_datapipe(
     if not pv_in_image:
         pv_history = pv_history.map(_remove_nans)
         pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
-        return metnet_datapipe.zip_ocf(pv_history, pv_datapipe)  # Makes (Inputs, Label) tuples
+        return metnet_datapipe.batch(batch_size).zip_ocf(pv_history.batch(batch_size),
+                                                         pv_datapipe.batch(batch_size))
     else:
-        return metnet_datapipe.zip_ocf(pv_datapipe)
+        return metnet_datapipe.batch(batch_size).zip_ocf(pv_datapipe.batch(batch_size))
