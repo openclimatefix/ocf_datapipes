@@ -192,7 +192,8 @@ def metnet_site_datapipe(
     if not pv_in_image:
         pv_history = pv_history.map(_remove_nans)
         pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
-        return metnet_datapipe.batch(batch_size).zip_ocf(pv_history.batch(batch_size),
-                                                         pv_datapipe.batch(batch_size))
+        return metnet_datapipe.batch(batch_size).zip_ocf(
+            pv_history.batch(batch_size), pv_datapipe.batch(batch_size)
+        )
     else:
         return metnet_datapipe.batch(batch_size).zip_ocf(pv_datapipe.batch(batch_size))
