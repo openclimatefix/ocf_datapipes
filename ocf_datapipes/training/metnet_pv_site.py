@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Union
 
 import xarray
-from torch.utils.data.datapipes.iter.sharding import SHARDING_PRIORITIES
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.convert import ConvertPVToNumpy
@@ -120,7 +119,7 @@ def metnet_site_datapipe(
             dim_name=None,
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
-        ).sharding_round_robin_dispatch(SHARDING_PRIORITIES.MULTIPROCESSING)
+        )
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
@@ -134,7 +133,7 @@ def metnet_site_datapipe(
             dim_name=None,
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
-        ).sharding_round_robin_dispatch(SHARDING_PRIORITIES.MULTIPROCESSING)
+        )
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
@@ -147,13 +146,12 @@ def metnet_site_datapipe(
             dim_name=None,
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
-        ).sharding_round_robin_dispatch(SHARDING_PRIORITIES.MULTIPROCESSING)
+        )
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = (
             used_datapipes["topo"]
             .map(_remove_nans)
-            .sharding_round_robin_dispatch(SHARDING_PRIORITIES.MULTIPROCESSING)
         )
 
     # Now combine in the MetNet format
