@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Union
 
 import xarray
-from torchdata.datapipes.iter import IterDataPipe
 from torch.utils.data.datapipes.iter.sharding import SHARDING_PRIORITIES
+from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.convert import ConvertPVToNumpy
 from ocf_datapipes.select import LocationPicker
@@ -150,7 +150,11 @@ def metnet_site_datapipe(
         ).sharding_round_robin_dispatch(SHARDING_PRIORITIES.MULTIPROCESSING)
 
     if "topo" in used_datapipes.keys():
-        topo_datapipe = used_datapipes["topo"].map(_remove_nans).sharding_round_robin_dispatch(SHARDING_PRIORITIES.MULTIPROCESSING)
+        topo_datapipe = (
+            used_datapipes["topo"]
+            .map(_remove_nans)
+            .sharding_round_robin_dispatch(SHARDING_PRIORITIES.MULTIPROCESSING)
+        )
 
     # Now combine in the MetNet format
     modalities = []
