@@ -125,8 +125,8 @@ def metnet_site_datapipe(
             y_dim_name="y_osgb",
         )
         # Multithread the data
-        nwp_datapipe = ThreadPoolMapper(nwp_datapipe,
-            _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        nwp_datapipe = ThreadPoolMapper(
+            nwp_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
 
     if "sat" in used_datapipes.keys():
@@ -142,8 +142,8 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
-        sat_datapipe = ThreadPoolMapper(sat_datapipe,
-            _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        sat_datapipe = ThreadPoolMapper(
+            sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
 
     if "hrv" in used_datapipes.keys():
@@ -158,8 +158,8 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
-        sat_hrv_datapipe = ThreadPoolMapper(sat_hrv_datapipe,
-            _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        sat_hrv_datapipe = ThreadPoolMapper(
+            sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
 
     if "topo" in used_datapipes.keys():
