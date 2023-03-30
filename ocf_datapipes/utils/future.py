@@ -11,7 +11,6 @@ from typing import Callable, Iterator, Optional, Sized, TypeVar
 from torch.utils.data.datapipes.utils.common import _check_unpickable_fn, validate_input_col
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-
 T_co = TypeVar("T_co", covariant=True)
 
 
