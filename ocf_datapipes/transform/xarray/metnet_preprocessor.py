@@ -1,4 +1,5 @@
 """Preprocessing for MetNet-type inputs"""
+import itertools
 from typing import List
 
 import numpy as np
@@ -13,9 +14,8 @@ from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_to_latlon,
     osgb_to_lat_lon,
 )
-from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
 from ocf_datapipes.utils.parallel import run_with_threadpool
-import itertools
+from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
@@ -28,17 +28,17 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
     """Preprocess set of Xarray datasets similar to MetNet-1"""
 
     def __init__(
-            self,
-            source_datapipes: List[IterDataPipe],
-            location_datapipe: IterDataPipe,
-            context_width: int,
-            context_height: int,
-            center_width: int,
-            center_height: int,
-            output_height_pixels: int,
-            output_width_pixels: int,
-            add_sun_features: bool = False,
-            only_sun: bool = False,
+        self,
+        source_datapipes: List[IterDataPipe],
+        location_datapipe: IterDataPipe,
+        context_width: int,
+        context_height: int,
+        center_width: int,
+        center_height: int,
+        output_height_pixels: int,
+        output_width_pixels: int,
+        add_sun_features: bool = False,
+        only_sun: bool = False,
     ):
         """
 
@@ -91,13 +91,24 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             # TODO Use the Lat/Long coordinates of the center array for the lat/lon stuff
             # Do the resampling and cropping in parallel
             xr_datas = run_with_threadpool(
-                zip(_bicycle(xr_datas),
+                zip(
+                    _bicycle(xr_datas),
                     itertools.repeat(location),
                     itertools.chain.from_iterable(
-                        zip(itertools.repeat(self.center_width), itertools.repeat(self.context_width))),
+                        zip(
+                            itertools.repeat(self.center_width),
+                            itertools.repeat(self.context_width),
+                        )
+                    ),
                     itertools.chain.from_iterable(
-                        zip(itertools.repeat(self.center_height), itertools.repeat(self.context_height))),
-                    itertools.repeat(self.output_height_pixels), itertools.repeat(self.output_width_pixels)),
+                        zip(
+                            itertools.repeat(self.center_height),
+                            itertools.repeat(self.context_height),
+                        )
+                    ),
+                    itertools.repeat(self.output_height_pixels),
+                    itertools.repeat(self.output_width_pixels),
+                ),
                 _crop_and_resample_wrapper,
                 max_workers=8,
                 scheduled_tasks=int(len(xr_datas) * 2),  # One for center, one for context
@@ -108,9 +119,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             contexts = xr_datas[1::2]
             # Now do the first one for the sun and other features
             xr_center = centers[0]
-            _extra_time_dim = (
-                "target_time_utc" if "target_time_utc" in xr_data.dims else "time_utc"
-            )
+            _extra_time_dim = "target_time_utc" if "target_time_utc" in xr_data.dims else "time_utc"
             # Add in time features for each timestep
             time_image = _create_time_image(
                 xr_center,
@@ -188,8 +197,14 @@ def _bicycle(xr_datas):
         yield xr_data
 
 
-def _crop_and_resample(xr_data: xr.Dataset, location, context_width, context_height, output_height_pixels,
-                       output_width_pixels):
+def _crop_and_resample(
+    xr_data: xr.Dataset,
+    location,
+    context_width,
+    context_height,
+    output_height_pixels,
+    output_width_pixels,
+):
     xr_context: xr.Dataset = _get_spatial_crop(
         xr_data,
         location=location,
@@ -197,9 +212,7 @@ def _crop_and_resample(xr_data: xr.Dataset, location, context_width, context_hei
         roi_height_meters=context_height,
     )
     # Resamples to the same number of pixels for both center and contexts
-    xr_context = _resample_to_pixel_size(
-        xr_context, output_height_pixels, output_width_pixels
-    )
+    xr_context = _resample_to_pixel_size(xr_context, output_height_pixels, output_width_pixels)
     return xr_context
 
 
@@ -219,7 +232,7 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
         right, top = _osgb_to_geostationary(xx=right, yy=top)
         x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
         y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
-                bottom <= xr_data.y_geostationary
+            bottom <= xr_data.y_geostationary
         )
         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
     elif "x" in xr_data.coords:
