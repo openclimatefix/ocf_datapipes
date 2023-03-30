@@ -6,7 +6,7 @@ from typing import Union
 
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
-from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
+
 from ocf_datapipes.convert import ConvertPVToNumpy
 from ocf_datapipes.select import LocationPicker
 from ocf_datapipes.training.common import (

@@ -4,21 +4,16 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import asyncio
-import inspect
-import random
-import warnings
 from collections import deque
 from concurrent import futures
+from typing import Callable, Iterator, Optional, Sized, TypeVar
 
-from typing import Callable, Hashable, Iterator, List, Optional, Set, Sized, TypeVar, Union
-
-import torch
 from torch.utils.data.datapipes.utils.common import _check_unpickable_fn, validate_input_col
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 T_co = TypeVar("T_co", covariant=True)
+
 
 def _no_op_fn(*args):
     """
@@ -28,6 +23,7 @@ def _no_op_fn(*args):
         return args[0]
     return args
 
+
 @functional_datapipe("ocf_threadpool_map")
 class ThreadPoolMapperIterDataPipe(IterDataPipe[T_co]):
     r"""
@@ -35,6 +31,7 @@ class ThreadPoolMapperIterDataPipe(IterDataPipe[T_co]):
     using ``ThreadPoolExecutor`` (functional name: ``threadpool_map``).
     The function can be any regular Python function or partial object. Lambda
     function is not recommended as it is not supported by pickle.
+
     Args:
         source_datapipe: Source IterDataPipe
         fn: Function being applied over each item
@@ -63,6 +60,8 @@ class ThreadPoolMapperIterDataPipe(IterDataPipe[T_co]):
         as ``next`` is called ``scheduled_tasks`` many times on ``source_datapipe`` before yielding.
         We encourage you to try out different values of ``max_workers`` and ``scheduled_tasks``
         in search for optimal values for your use-case.
+
+
     Example:
     .. testsetup::
         from torchdata.datapipes.iter import IterableWrapper
@@ -169,7 +168,9 @@ class ThreadPoolMapperIterDataPipe(IterDataPipe[T_co]):
         return tuple(data) if t_flag else data
 
     def __iter__(self) -> Iterator[T_co]:
-        with futures.ThreadPoolExecutor(max_workers=self.max_workers, **self.threadpool_kwargs) as executor:
+        with futures.ThreadPoolExecutor(
+            max_workers=self.max_workers, **self.threadpool_kwargs
+        ) as executor:
             futures_deque: deque = deque()
             has_next = True
             itr = iter(self.datapipe)
