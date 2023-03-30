@@ -39,6 +39,9 @@ def _remove_nans(x):
     return x.fillna(0.0)
 
 
+def _load_xarray_values(x):
+    return x.load()
+
 def metnet_site_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
@@ -120,6 +123,8 @@ def metnet_site_datapipe(
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
         )
+        # Multithread the data
+        nwp_datapipe = nwp_datapipe.threadpool_map(_load_xarray_values, num_workers=8)
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
@@ -134,6 +139,7 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
+        sat_datapipe = sat_datapipe.threadpool_map(_load_xarray_values, num_workers=8)
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
@@ -147,6 +153,7 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
+        sat_hrv_datapipe = sat_hrv_datapipe.threadpool_map(_load_xarray_values, num_workers=8)
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = (
