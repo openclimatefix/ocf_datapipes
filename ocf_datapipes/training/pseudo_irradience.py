@@ -165,6 +165,9 @@ def pseudo_irradiance_datapipe(
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
         )
+        topo_datapipe = ThreadPoolMapper(
+            topo_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
     # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe, sat_meta_datapipe = sat_hrv_datapipe.fork(3)
