@@ -119,7 +119,9 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             contexts = xr_datas[1::2]
             # Now do the first one for the sun and other features
             xr_center = centers[0]
-            _extra_time_dim = "target_time_utc" if "target_time_utc" in xr_center.dims else "time_utc"
+            _extra_time_dim = (
+                "target_time_utc" if "target_time_utc" in xr_center.dims else "time_utc"
+            )
             # Add in time features for each timestep
             time_image = _create_time_image(
                 xr_center,
