@@ -15,6 +15,7 @@ from ocf_datapipes.training.common import (
 )
 from ocf_datapipes.transform.xarray import StackXarray
 from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("pseudo_irradiance_datapipe")
@@ -42,6 +43,10 @@ def _get_numpy_from_xarray(x):
     return x.to_numpy()
 
 
+def _load_xarray_values(x):
+    return x.load()
+
+
 def pseudo_irradiance_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
@@ -54,6 +59,7 @@ def pseudo_irradiance_datapipe(
     size: int = 256,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
+    batch_size: int = 1,
 ) -> IterDataPipe:
     """
     Make Pseudo-Irradience Datapipe
@@ -72,6 +78,7 @@ def pseudo_irradiance_datapipe(
         end_time: End time to select from
         use_future: Whether to use future frames as well (for labelling)
         size: Size, in pixels, of the output image
+        batch_size: Batch size for the datapipe
 
     Returns: datapipe
     """
@@ -114,6 +121,9 @@ def pseudo_irradiance_datapipe(
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
         )
+        nwp_datapipe = ThreadPoolMapper(
+            nwp_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
@@ -127,6 +137,9 @@ def pseudo_irradiance_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
+        sat_datapipe = ThreadPoolMapper(
+            sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
@@ -139,6 +152,9 @@ def pseudo_irradiance_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
+        sat_hrv_datapipe = ThreadPoolMapper(
+            sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
@@ -148,6 +164,9 @@ def pseudo_irradiance_datapipe(
             roi_width_pixels=size,
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
+        )
+        topo_datapipe = ThreadPoolMapper(
+            topo_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
     # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
@@ -231,4 +250,6 @@ def pseudo_irradiance_datapipe(
 
     pv_datapipe = pv_datapipe.map(_get_numpy_from_xarray)
     pv_meta = pv_meta.map(_get_numpy_from_xarray)
-    return stacked_xarray_inputs.zip_ocf(pv_meta, pv_datapipe)  # Makes (Inputs, Label) tuples
+    return stacked_xarray_inputs.batch(batch_size).zip_ocf(
+        pv_meta.batch(batch_size), pv_datapipe.batch(batch_size)
+    )  # Makes (Inputs, Label) tuples
