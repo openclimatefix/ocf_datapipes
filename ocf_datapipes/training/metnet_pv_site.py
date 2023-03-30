@@ -6,7 +6,7 @@ from typing import Union
 
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
-from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
+
 from ocf_datapipes.convert import ConvertPVToNumpy
 from ocf_datapipes.select import LocationPicker
 from ocf_datapipes.training.common import (
@@ -16,6 +16,7 @@ from ocf_datapipes.training.common import (
 )
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
