@@ -115,7 +115,8 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
             )
             xr_datas = list(xr_datas)
             # Output is then list of center, context, center, context, etc.
-            # So we need to split the list into two lists of the same length, one with centers, one with contexts
+            # So we need to split the list into two lists of the same length,
+            # one with centers, one with contexts
             centers = xr_datas[::2]
             contexts = xr_datas[1::2]
             # Now do the first one for the sun and other features
