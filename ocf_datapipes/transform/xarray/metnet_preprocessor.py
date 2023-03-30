@@ -113,6 +113,7 @@ class PreProcessMetNetIterDataPipe(IterDataPipe):
                 max_workers=8,
                 scheduled_tasks=int(len(xr_datas) * 2),  # One for center, one for context
             )
+            xr_datas = list(xr_datas)
             # Output is then list of center, context, center, context, etc.
             # So we need to split the list into two lists of the same length, one with centers, one with contexts
             centers = xr_datas[::2]
