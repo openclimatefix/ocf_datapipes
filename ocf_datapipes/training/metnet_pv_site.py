@@ -42,6 +42,7 @@ def _remove_nans(x):
 def _load_xarray_values(x):
     return x.load()
 
+
 def metnet_site_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
@@ -156,10 +157,7 @@ def metnet_site_datapipe(
         sat_hrv_datapipe = sat_hrv_datapipe.threadpool_map(_load_xarray_values, num_workers=8)
 
     if "topo" in used_datapipes.keys():
-        topo_datapipe = (
-            used_datapipes["topo"]
-            .map(_remove_nans)
-        )
+        topo_datapipe = used_datapipes["topo"].map(_remove_nans)
 
     # Now combine in the MetNet format
     modalities = []
