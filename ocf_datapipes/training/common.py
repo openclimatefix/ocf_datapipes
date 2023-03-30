@@ -164,10 +164,10 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
         if "topo" in key:
             continue
         if key_for_t0 in key:
-            forked_datapipes = datapipe.fork(3, buffer_size=5)
+            forked_datapipes = datapipe.fork(3, buffer_size=100)
             t0_datapipe = forked_datapipes[2]
         else:
-            forked_datapipes = datapipe.fork(2, buffer_size=5)
+            forked_datapipes = datapipe.fork(2, buffer_size=100)
         datapipes_to_return[key] = forked_datapipes[0]
         if "nwp" == key:
             time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
@@ -225,7 +225,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
 
     num_t0_datapipes = len(datapipes_to_return.keys())  # One for each input
     t0_datapipes = t0_datapipe.select_t0_time(return_all_times=False).fork(
-        num_t0_datapipes, buffer_size=5
+        num_t0_datapipes, buffer_size=100
     )
 
     for i, key in enumerate(list(datapipes_to_return.keys())):

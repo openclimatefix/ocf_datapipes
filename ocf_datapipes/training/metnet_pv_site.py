@@ -16,6 +16,7 @@ from ocf_datapipes.training.common import (
 )
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -37,6 +38,10 @@ def normalize_pv(x):  # So it can be pickled
 
 def _remove_nans(x):
     return x.fillna(0.0)
+
+
+def _load_xarray_values(x):
+    return x.load()
 
 
 def metnet_site_datapipe(
@@ -120,6 +125,10 @@ def metnet_site_datapipe(
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
         )
+        # Multithread the data
+        nwp_datapipe = ThreadPoolMapper(
+            nwp_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
@@ -134,6 +143,9 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
+        sat_datapipe = ThreadPoolMapper(
+            sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
@@ -147,12 +159,12 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
+        sat_hrv_datapipe = ThreadPoolMapper(
+            sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "topo" in used_datapipes.keys():
-        topo_datapipe = (
-            used_datapipes["topo"]
-            .map(_remove_nans)
-        )
+        topo_datapipe = used_datapipes["topo"].map(_remove_nans)
 
     # Now combine in the MetNet format
     modalities = []
