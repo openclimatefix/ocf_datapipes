@@ -42,8 +42,10 @@ def _remove_nans(x):
 def _get_numpy_from_xarray(x):
     return x.to_numpy()
 
+
 def _load_xarray_values(x):
     return x.load()
+
 
 def pseudo_irradiance_datapipe(
     configuration_filename: Union[Path, str],
@@ -245,4 +247,6 @@ def pseudo_irradiance_datapipe(
 
     pv_datapipe = pv_datapipe.map(_get_numpy_from_xarray)
     pv_meta = pv_meta.map(_get_numpy_from_xarray)
-    return stacked_xarray_inputs.batch(batch_size).zip_ocf(pv_meta.batch(batch_size), pv_datapipe.batch(batch_size))  # Makes (Inputs, Label) tuples
+    return stacked_xarray_inputs.batch(batch_size).zip_ocf(
+        pv_meta.batch(batch_size), pv_datapipe.batch(batch_size)
+    )  # Makes (Inputs, Label) tuples
