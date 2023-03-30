@@ -125,7 +125,7 @@ def metnet_site_datapipe(
             y_dim_name="y_osgb",
         )
         # Multithread the data
-        nwp_datapipe = nwp_datapipe.threadpool_map(
+        nwp_datapipe = ThreadPoolMapper(nwp_datapipe,
             _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
 
@@ -142,7 +142,7 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
-        sat_datapipe = sat_datapipe.threadpool_map(
+        sat_datapipe = ThreadPoolMapper(sat_datapipe,
             _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
 
@@ -158,7 +158,7 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
-        sat_hrv_datapipe = sat_hrv_datapipe.threadpool_map(
+        sat_hrv_datapipe = ThreadPoolMapper(sat_hrv_datapipe,
             _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
 
