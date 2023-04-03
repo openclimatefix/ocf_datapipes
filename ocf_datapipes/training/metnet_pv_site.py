@@ -43,10 +43,12 @@ def _remove_nans(x):
 def _load_xarray_values(x):
     return x.load()
 
+
 def _filepath_fn(xr_data):
     # Get filepath from metadata, including time, and location and return it
     file_name = f"{xr_data.time.values[0]}_{xr_data.pv_system_id.values[0]}_{xr_data.x_osgb.values[0]}_{xr_data.y_osgb.values[0]}.npy"
     return file_name
+
 
 def metnet_site_datapipe(
     configuration_filename: Union[Path, str],
