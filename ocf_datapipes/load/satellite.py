@@ -49,6 +49,11 @@ def open_sat_data(zarr_path: Union[Path, str, list[Union[str, Path]]]) -> xr.Dat
 
     # TODO add 15 mins data satellite option
 
+    # Remove data coordinate dimensions if they exist
+    if "x_geostationary_coordinates" in dataset:
+        del dataset["x_geostationary_coordinates"]
+        del dataset["y_geostationary_coordinates"]
+
     # Rename
     # These renamings will no longer be necessary when the Zarr uses the 'correct' names,
     # see https://github.com/openclimatefix/Satip/issues/66
