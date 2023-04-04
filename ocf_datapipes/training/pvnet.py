@@ -23,6 +23,7 @@ from ocf_datapipes.utils.consts import BatchKey, NEW_NWP_MEAN, NEW_NWP_STD, RSS_
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_datapipe")
 
+
 def normalize_gsp(x):
     """
     Normalize the GSP data

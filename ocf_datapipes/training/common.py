@@ -1,8 +1,10 @@
 """Common functionality for datapipes"""
 import logging
 from datetime import timedelta
-
+from typing import Union
 from torchdata.datapipes.iter import IterDataPipe
+
+import numpy as np
 
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
@@ -13,6 +15,9 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
+
+import fsspec
+from pyaml_env import parse_config
 
 logger = logging.getLogger(__name__)
 
@@ -309,8 +314,6 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
         datapipes_to_return["topo"] = used_datapipes["topo"]
     datapipes_to_return["config"] = configuration
     return datapipes_to_return
-
-########################################
 
 
 def create_t0_and_loc_datapipes(
