@@ -21,7 +21,7 @@ class MergeNumpyModalitiesIterDataPipe(IterDataPipe):
         self.source_datapipes = source_datapipes
     
     def __len__(self):
-        return return min([len(dp) for dp in self.datapipes])
+        return min([len(dp) for dp in self.source_datapipes])
     
     def __iter__(self) -> NumpyBatch:
         """Merge multiple modalities together in NumpyBatch"""
