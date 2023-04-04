@@ -1,13 +1,12 @@
 """Create the training/validation datapipe for training the PVNet Model"""
-import datetime
 import logging
-from pathlib import Path
 from typing import Union
 import fsspec
 from pyaml_env import parse_config
 
 import xarray as xr
 import numpy as np
+import pandas as pd
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.convert import ConvertPVToNumpy
@@ -19,13 +18,10 @@ from ocf_datapipes.training.common import (
     slice_datapipes_by_time,
 )
 
-
-from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.consts import BatchKey, NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_datapipe")
-logger.setLevel(logging.DEBUG)
-
 
 def normalize_gsp(x):
     """
@@ -61,12 +57,14 @@ def fill_nans_in_arrays(batch):
         if isinstance(v, np.ndarray):
             np.nan_to_num(v, copy=False, nan=0.0)
     return batch
- 
+
 
 def pvnet_datapipe(
     configuration: str,
     start_time,
-    end_time,    
+    end_time,
+    block_sat: bool = False,
+    block_nwp: bool = False,
 ) -> IterDataPipe:
     """
     Make data pipe with GSP, NWP and Satellite
@@ -76,7 +74,7 @@ def pvnet_datapipe(
 
     Returns: datapipe
     """
-
+    logger.info("constructing pipeline")
     # Load configuration
     configuration_filename = configuration
     with fsspec.open(configuration, mode="r") as stream:
@@ -93,9 +91,9 @@ def pvnet_datapipe(
         configuration_filename=configuration_filename,
         use_gsp=  True,
         use_pv=   False,
-        use_sat=  True,
+        use_sat=  not block_sat,
         use_hrv=  False,
-        use_nwp=  True,
+        use_nwp=  not block_nwp,
         use_topo= False,
     )
     
@@ -120,6 +118,7 @@ def pvnet_datapipe(
     
     if "nwp" in datapipes_dict:
         nwp_datapipe = datapipes_dict["nwp"]
+        
         location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
             location_pipe_copy,
@@ -129,11 +128,12 @@ def pvnet_datapipe(
             y_dim_name="y_osgb",
             datapipe_name="NWP",
         )
-        nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
+        nwp_datapipe = nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
         numpy_modalities.append(nwp_datapipe.convert_nwp_to_numpy_batch())
         
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
+        
         location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
             location_pipe_copy,
@@ -143,11 +143,12 @@ def pvnet_datapipe(
             y_dim_name="y_geostationary",
             datapipe_name="Satellite",
         )
-        #sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
         
     if "hrv" in datapipes_dict:
         hrv_datapipe = datapipes_dict["hrv"]
+        
         location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         hrv_datapipe = hrv_datapipe.select_spatial_slice_pixels(
             location_pipe_copy,
@@ -194,6 +195,72 @@ def pvnet_datapipe(
     combined_datapipe = (
         MergeNumpyModalities(numpy_modalities)
             .add_sun_position(modality_name="gsp")
-    ).map(fill_nans_in_arrays)
+    )
+    
+    if block_sat and conf_sat!="":
+        sat_block_func = add_zero_satellite_data(configuration)
+        combined_datapipe = combined_datapipe.map(sat_block_func)
+        
+    if block_nwp and conf_nwp!="":
+        nwp_block_func = add_zero_nwp_data(configuration)
+        combined_datapipe = combined_datapipe.map(nwp_block_func)
+    
+    combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
     
     return combined_datapipe
+
+
+
+
+class add_zero_satellite_data:
+    
+    def __init__(self, configuration, is_hrv=False):
+        self.configuration = configuration
+        self.is_hrv = is_hrv
+        
+    def __call__(self, numpy_batch):
+        """
+        Add zerod out Satellite data ready for ML model.
+        """
+
+        variable = "hrvsatellite" if self.is_hrv else "satellite"
+
+        satellite_config = getattr(self.configuration.input_data, variable)
+
+        n_channels = len(getattr(satellite_config, f"{variable}_channels"))
+        height = getattr(satellite_config, f"{variable}_image_size_pixels_height")
+        width = getattr(satellite_config, f"{variable}_image_size_pixels_width")
+
+        sequence_len = satellite_config.history_minutes//5 + 1 - 3
+
+        numpy_batch[getattr(BatchKey, f"{variable}_actual")] = np.zeros(
+            (sequence_len, n_channels, height, width)
+        )
+
+        return numpy_batch
+    
+
+
+class add_zero_nwp_data:
+    
+    def __init__(self, configuration):
+        self.configuration = configuration
+        
+    def __call__(self, numpy_batch):
+        """
+        Add zerod out NWP data ready for ML model.
+        """
+
+        config = self.configuration.input_data.nwp
+
+        n_channels = len(config.nwp_channels)
+        height = config.nwp_image_size_pixels_height
+        width = config.nwp_image_size_pixels_width
+        
+        sequence_len = config.history_minutes//60 + config.forecast_minutes//60 + 1
+
+        numpy_batch[BatchKey.nwp] = np.zeros(
+            (sequence_len, n_channels, height, width)
+        )
+
+        return numpy_batch
