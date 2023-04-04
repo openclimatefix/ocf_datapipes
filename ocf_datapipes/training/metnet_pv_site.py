@@ -3,6 +3,7 @@ import datetime
 import logging
 from pathlib import Path
 from typing import Union
+import numpy as np
 
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
@@ -46,7 +47,7 @@ def _load_xarray_values(x):
 
 def _filepath_fn(xr_data):
     # Get filepath from metadata, including time, and location and return it
-    file_name = f"{xr_data.time.values[0]}_{xr_data.pv_system_id.values[0]}_{xr_data.x_osgb.values[0]}_{xr_data.y_osgb.values[0]}.npy"
+    file_name = f"{np.random.randint(10000000)}.npy"
     return file_name
 
 
@@ -119,8 +120,6 @@ def metnet_site_datapipe(
     pv_loc_datapipe = LocationPicker(pv_loc_datapipe)
     pv_loc_datapipe, pv_id_datapipe = pv_loc_datapipe.fork(2)
     pv_history = pv_history.select_id(pv_id_datapipe, data_source_name="pv")
-    if cache_to_disk:
-        pv_history.on_disk_cache(filepath_fn=_filepath_fn)
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
@@ -221,9 +220,9 @@ def metnet_site_datapipe(
         pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
         combined_datapipe = metnet_datapipe.batch(batch_size).zip_ocf(
             pv_history.batch(batch_size), pv_datapipe.batch(batch_size)
-        )
+        ).on_disk_cache(filepath_fn=_filepath_fn)
     else:
-        combined_datapipe = metnet_datapipe.batch(batch_size).zip_ocf(pv_datapipe.batch(batch_size))
+        combined_datapipe = metnet_datapipe.batch(batch_size).zip_ocf(pv_datapipe.batch(batch_size)).on_disk_cache(filepath_fn=_filepath_fn)
 
     if cache_to_disk:
         combined_datapipe = combined_datapipe.end_caching()
