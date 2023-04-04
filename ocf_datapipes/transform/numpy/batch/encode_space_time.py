@@ -84,7 +84,7 @@ def compute_fourier_features(
             because half a sine and half are cosine.
         min_freq: If min_freq=2 and array is in the range [0, 1] then the lowest freq "wave" will
             go from -1 to +1 across the dimension.
-        max_freq:
+        max_freq: Maximum frequency for the fourier features
 
     Returns:
         fourier_features: An np.ndarray of the same dtype as `array`,
@@ -163,6 +163,7 @@ def _rescale_coords_for_single_dim_to_approx_0_to_1(
         length: The approximate length of the dimension across an example. For example,
             if the dimension is x_osgb then the length will be the distance in meters
             from the left to the right side of the example. Must be positive.
+        coords_for_dim_from_all_modalities: Coordinate batch for scaling the features correctly
 
     Returns:
         Dictionary where the keys are "<BatchKey.name>_rescaled", and the values

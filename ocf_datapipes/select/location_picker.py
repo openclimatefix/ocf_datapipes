@@ -41,11 +41,9 @@ class LocationPickerIterDataPipe(IterDataPipe):
     def __iter__(self) -> Location:
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
-
             logger.debug("Getting locations")
 
             if self.return_all_locations:
-
                 logger.debug("Going to return all locations")
 
                 # Iterate through all locations in dataset

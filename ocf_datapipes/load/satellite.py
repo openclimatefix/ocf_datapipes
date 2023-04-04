@@ -13,6 +13,7 @@ import subprocess
 
 _log = logging.getLogger(__name__)
 
+
 def _get_single_sat_data(zarr_path):
     if "gs://" in str(zarr_path) and "*" in str(zarr_path):  
         # Need to generate list of files if using GCP bucket storage

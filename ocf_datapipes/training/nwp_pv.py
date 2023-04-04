@@ -34,6 +34,7 @@ def nwp_pv_datapipe(
 
     Args:
         configuration_filename: Name of the configuration
+        tag: Tag for train or test
 
     Returns:
         DataPipe ready to be put in a Dataloader for production

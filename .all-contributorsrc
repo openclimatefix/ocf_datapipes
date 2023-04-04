@@ -1,0 +1,43 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "jacobbieker",
+      "name": "Jacob Bieker",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7170359?v=4",
+      "profile": "https://www.jacobbieker.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "vrym2",
+      "name": "Raj",
+      "avatar_url": "https://avatars.githubusercontent.com/u/93340339?v=4",
+      "profile": "https://github.com/vrym2",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "dfulu",
+      "name": "James Fulton",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41546094?v=4",
+      "profile": "https://github.com/dfulu",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "ocf_datapipes",
+  "projectOwner": "openclimatefix"
+}

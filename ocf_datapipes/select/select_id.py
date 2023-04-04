@@ -33,7 +33,6 @@ class SelectIDIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
-
             logger.debug(f"Selecting Data on id {location.id} for {self.data_source_name}")
 
             if self.data_source_name == "nwp":

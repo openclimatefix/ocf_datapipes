@@ -16,6 +16,7 @@ from ocf_datapipes.training.common import (
 )
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -39,6 +40,10 @@ def _remove_nans(x):
     return x.fillna(0.0)
 
 
+def _load_xarray_values(x):
+    return x.load()
+
+
 def metnet_site_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
@@ -53,6 +58,7 @@ def metnet_site_datapipe(
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
     center_size_meters: int = 64_000,
     context_size_meters: int = 512_000,
+    batch_size: int = 1,
 ) -> IterDataPipe:
     """
     Make GSP national data pipe
@@ -73,6 +79,7 @@ def metnet_site_datapipe(
         pv_in_image: Add PV history as channels in MetNet image
         center_size_meters: Center size for MeNet cutouts, in meters
         context_size_meters: Context area size in meters
+        batch_size: Batch size for the datapipe
 
     Returns: datapipe
     """
@@ -118,6 +125,10 @@ def metnet_site_datapipe(
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
         )
+        # Multithread the data
+        nwp_datapipe = ThreadPoolMapper(
+            nwp_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
@@ -132,6 +143,9 @@ def metnet_site_datapipe(
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
         )
+        sat_datapipe = ThreadPoolMapper(
+            sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+        )
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
@@ -144,6 +158,9 @@ def metnet_site_datapipe(
             dim_name=None,
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
+        )
+        sat_hrv_datapipe = ThreadPoolMapper(
+            sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
         )
 
     if "topo" in used_datapipes.keys():
@@ -190,6 +207,8 @@ def metnet_site_datapipe(
     if not pv_in_image:
         pv_history = pv_history.map(_remove_nans)
         pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
-        return metnet_datapipe.zip_ocf(pv_history, pv_datapipe)  # Makes (Inputs, Label) tuples
+        return metnet_datapipe.batch(batch_size).zip_ocf(
+            pv_history.batch(batch_size), pv_datapipe.batch(batch_size)
+        )
     else:
-        return metnet_datapipe.zip_ocf(pv_datapipe)
+        return metnet_datapipe.batch(batch_size).zip_ocf(pv_datapipe.batch(batch_size))

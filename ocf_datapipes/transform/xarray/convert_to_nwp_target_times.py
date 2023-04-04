@@ -56,8 +56,6 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
 
             with profile("convert_to_nwp_target_time"):
 
-                logger.debug("convert_to_nwp_target_time ")
-
                 t0_datetime_utc = pd.Timestamp(t0)
                 start_dt = t0_datetime_utc - self.history_duration
                 end_dt = t0_datetime_utc + self.forecast_duration

@@ -6,7 +6,6 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def test_convert_satellite_to_numpy_batch(sat_datapipe):
-
     sat_datapipe = AddT0IdxAndSamplePeriodDuration(
         sat_datapipe,
         sample_period_duration=timedelta(minutes=5),

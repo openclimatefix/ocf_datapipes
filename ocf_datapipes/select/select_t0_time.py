@@ -41,9 +41,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
     def __iter__(self) -> pd.Timestamp:
         """Get the latest timestamp and return it"""
         for xr_data in self.source_datapipe:
-
             if self.return_all_times and (self.number_locations_datapipe is not None):
-
                 number_of_locations = next(self.number_locations_datapipe)
 
                 logger.info(
@@ -52,13 +50,11 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
                 )
 
                 for t0 in xr_data[self.dim_name].values:
-
                     for _ in range(0, number_of_locations):
                         logger.debug(f"t0 will be {t0}")
                         yield t0
 
             else:
-
                 logger.debug(f"Selecting t0 from {len(xr_data[self.dim_name])} datetimes")
 
                 if len(xr_data[self.dim_name].values) == 0:

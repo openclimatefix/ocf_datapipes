@@ -67,7 +67,6 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         self.history_duration = pd.Timedelta(self.history_minutes, unit="minutes")
 
     def __iter__(self):
-
         pv_metadata = get_metadata_from_database(providers=self.providers)
         pv_power = get_pv_power_from_database(
             providers=self.providers,
@@ -126,7 +125,6 @@ def get_metadata_from_database(providers: List[str] = None) -> pd.DataFrame:
 
     pv_system_all_df = []
     for provider in providers:
-
         logger.debug(f"Get PV systems from database for {provider}")
 
         with db_connection.get_session() as session:
@@ -228,7 +226,6 @@ def get_pv_power_from_database(
         logger.debug(f"Found {len(pv_yields_df)} pv yields")
 
     if len(pv_yields_df) == 0:
-
         data = create_empty_pv_data(end_utc=now, providers=providers, start_utc=start_utc)
 
         return data
