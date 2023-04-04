@@ -3,8 +3,8 @@ import datetime
 import logging
 from pathlib import Path
 from typing import Union
-import numpy as np
 
+import numpy as np
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -218,11 +218,17 @@ def metnet_site_datapipe(
     if not pv_in_image:
         pv_history = pv_history.map(_remove_nans)
         pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
-        combined_datapipe = metnet_datapipe.batch(batch_size).zip_ocf(
-            pv_history.batch(batch_size), pv_datapipe.batch(batch_size)
-        ).on_disk_cache(filepath_fn=_filepath_fn)
+        combined_datapipe = (
+            metnet_datapipe.batch(batch_size)
+            .zip_ocf(pv_history.batch(batch_size), pv_datapipe.batch(batch_size))
+            .on_disk_cache(filepath_fn=_filepath_fn)
+        )
     else:
-        combined_datapipe = metnet_datapipe.batch(batch_size).zip_ocf(pv_datapipe.batch(batch_size)).on_disk_cache(filepath_fn=_filepath_fn)
+        combined_datapipe = (
+            metnet_datapipe.batch(batch_size)
+            .zip_ocf(pv_datapipe.batch(batch_size))
+            .on_disk_cache(filepath_fn=_filepath_fn)
+        )
 
     if cache_to_disk:
         combined_datapipe = combined_datapipe.end_caching()
