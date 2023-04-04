@@ -3,7 +3,7 @@ import contextlib
 import logging
 import time
 from pathlib import Path
-from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
+from typing import Iterator, Optional, Sequence, Tuple, Union
 
 import fsspec.asyn
 import numpy as np
@@ -263,7 +263,7 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
             )
         super().__init__()
         self.datapipes = datapipes  # type: ignore[assignment]
-        
+
     def __len__(self) -> int:
         return min([len(dp) for dp in self.datapipes])
 

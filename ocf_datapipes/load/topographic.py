@@ -22,7 +22,7 @@ class OpenTopographyIterDataPipe(IterDataPipe):
 
     def __len__(self):
         return 1
-        
+
     def __iter__(self):
         """Load topo data and return it"""
         topo = rioxarray.open_rasterio(

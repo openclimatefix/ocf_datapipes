@@ -1,7 +1,7 @@
 """Selects time slice"""
 import logging
 from datetime import timedelta
-from typing import Union, Optional
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,6 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.utils import profile
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,6 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         forecast_duration: Optional[timedelta] = None,
         interval_start: Optional[timedelta] = None,
         interval_end: Optional[timedelta] = None,
-        
         data_pipename: str = None,
     ):
         """
@@ -47,29 +45,25 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
-        
-        used_duration = (history_duration is not None and forecast_duration is not None) 
-        used_intervals = (interval_start is not None and interval_end is not None) 
+
+        used_duration = history_duration is not None and forecast_duration is not None
+        used_intervals = interval_start is not None and interval_end is not None
         assert used_duration ^ used_intervals, "Either durations, or intervals must be supplied"
-        
+
         if used_duration:
-            self.interval_start = - np.timedelta64(history_duration)
+            self.interval_start = -np.timedelta64(history_duration)
             self.interval_end = np.timedelta64(forecast_duration)
         elif used_intervals:
             self.interval_start = np.timedelta64(interval_start)
             self.interval_end = np.timedelta64(interval_end)
-        
+
         self.sample_period_duration = sample_period_duration
         self.data_pipename = data_pipename
-        
-
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         xr_data = next(iter(self.source_datapipe))
         for t0 in self.t0_datapipe:
-
             with profile(f"select_time_slice {self.data_pipename}"):
-
                 t0_datetime_utc = pd.Timestamp(t0)
                 start_dt = t0_datetime_utc + self.interval_start
                 end_dt = t0_datetime_utc + self.interval_end

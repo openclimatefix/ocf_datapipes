@@ -11,11 +11,11 @@ from ocf_datapipes.utils.consts import BatchKey
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 from ocf_datapipes.utils.utils import profile
 
-
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
 AZIMUTH_MEAN = 177.7
 AZIMUTH_STD = 41.7
+
 
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
@@ -39,15 +39,13 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             "nwp_target_time",
             "satellite",
         ], f"Cant add sun position on {self.modality_name}"
-        
+
     def __len__(self):
         return len(self.source_datapipe)
 
     def __iter__(self):
         for np_batch in self.source_datapipe:
-
             with profile(f"add sun position to {self.modality_name}"):
-
                 # TODO Make work with Lat/Lons instead
                 if self.modality_name == "hrvsatellite":
                     y_osgb = np_batch[BatchKey.hrvsatellite_y_osgb]  # example, y, x
@@ -87,8 +85,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 azimuth = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
                 elevation = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
                 must_be_finite = True
-                
-                if len(time_utc.shape)>1:
+
+                if len(time_utc.shape) > 1:
                     for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
                         if not np.isfinite([lat, lon]).all():
                             assert (

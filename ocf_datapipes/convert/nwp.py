@@ -20,18 +20,16 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
         """
         super().__init__()
         self.source_datapipe = source_datapipe
-        
+
     def __len__(self):
         return len(self.source_datapipe)
-    
+
     def __iter__(self) -> NumpyBatch:
         """Convert from Xarray to NumpyBatch"""
         for xr_data in self.source_datapipe:
-
             with profile("convert_nwp_to_numpy_batch"):
-                
                 xr_data = xr_data.compute()
-                
+
                 example: NumpyBatch = {
                     BatchKey.nwp: xr_data.values,
                     BatchKey.nwp_t0_idx: xr_data.attrs["t0_idx"],

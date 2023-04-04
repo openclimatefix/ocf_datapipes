@@ -59,7 +59,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
 
                 if len(xr_data[self.dim_name].values) == 0:
                     raise Exception("There are no values to get t0 from")
-                    
+
                 while True:
                     t0 = np.random.choice(xr_data[self.dim_name].values)
                     logger.debug(f"t0 will be {t0}")

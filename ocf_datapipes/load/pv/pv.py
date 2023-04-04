@@ -52,9 +52,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.end_datetime = pv.end_datetime
 
     def __iter__(self):
-        
         with profile("Loading PV data"):
-        
             pv_datas_xr = []
             for i in range(len(self.pv_power_filenames)):
                 one_data: xr.DataArray = load_everything_into_ram(

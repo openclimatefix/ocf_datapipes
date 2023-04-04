@@ -1,24 +1,20 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
-from typing import Union
-import fsspec
-from pyaml_env import parse_config
 
-import xarray as xr
+import fsspec
 import numpy as np
-import pandas as pd
+import xarray as xr
+from pyaml_env import parse_config
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.convert import ConvertPVToNumpy
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.training.common import (
-    open_and_return_datapipes,
     create_t0_and_loc_datapipes,
+    open_and_return_datapipes,
     slice_datapipes_by_time,
 )
-
-from ocf_datapipes.utils.consts import BatchKey, NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD, BatchKey
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_datapipe")
@@ -40,13 +36,13 @@ def normalize_gsp(x):
 def pvnet_concat_gsp(gsp_dataarrays):
     """This function is used to combine the split history and future gsp dataarrays.
     These are split inside the `slice_datapipes_by_time()` function below.
-    
-    Splitting them inside that function allows us to apply dropout to the 
-    history GSP whilst leaving the future GSP without NaNs. 
-    
-    We recombine the history and future with this function to allow us to use the 
+
+    Splitting them inside that function allows us to apply dropout to the
+    history GSP whilst leaving the future GSP without NaNs.
+
+    We recombine the history and future with this function to allow us to use the
     `MergeNumpyModalities()` datapipe without redefining the BatchKeys.
-    
+
     The `pvnet` model was also written to use a GSP array which has historical and future
     and to split it out. These maintains that assumption.
     """
@@ -81,7 +77,7 @@ def pvnet_datapipe(
     with fsspec.open(configuration, mode="r") as stream:
         configuration = parse_config(data=stream)
     configuration = Configuration(**configuration)
-        
+
     # Unpack for convenience
     conf_sat = configuration.input_data.satellite
     conf_hrv = configuration.input_data.hrvsatellite
@@ -90,14 +86,14 @@ def pvnet_datapipe(
     # Load datasets
     datapipes_dict = open_and_return_datapipes(
         configuration_filename=configuration_filename,
-        use_gsp=  True,
-        use_pv=   False,
-        use_sat=  not block_sat,
-        use_hrv=  False,
-        use_nwp=  not block_nwp,
-        use_topo= False,
+        use_gsp=True,
+        use_pv=False,
+        use_sat=not block_sat,
+        use_hrv=False,
+        use_nwp=not block_nwp,
+        use_topo=False,
     )
-    
+
     # We sample time and space of other data using GSP time and space coordinates, so filter GSP
     # data first amd this is carried through
     datapipes_dict["gsp"] = datapipes_dict["gsp"].remove_northern_gsp()
@@ -106,20 +102,20 @@ def pvnet_datapipe(
 
     # Get overlapping time periods
     location_pipe, t0_datapipe = create_t0_and_loc_datapipes(
-        datapipes_dict, 
+        datapipes_dict,
         key_for_t0="gsp",
         shuffle=True,
     )
-    
+
     # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe)
-    
+
     # Spatially slice, normalize, and convert data to numpy arrays
     numpy_modalities = []
-    
+
     if "nwp" in datapipes_dict:
         nwp_datapipe = datapipes_dict["nwp"]
-        
+
         location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
             location_pipe_copy,
@@ -131,10 +127,10 @@ def pvnet_datapipe(
         )
         nwp_datapipe = nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
         numpy_modalities.append(nwp_datapipe.convert_nwp_to_numpy_batch())
-        
+
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
-        
+
         location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
             location_pipe_copy,
@@ -146,10 +142,10 @@ def pvnet_datapipe(
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
-        
+
     if "hrv" in datapipes_dict:
         hrv_datapipe = datapipes_dict["hrv"]
-        
+
         location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         hrv_datapipe = hrv_datapipe.select_spatial_slice_pixels(
             location_pipe_copy,
@@ -161,7 +157,7 @@ def pvnet_datapipe(
         )
         hrv_datapipe = hrv_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(hrv_datapipe.convert_satellite_to_numpy_batch(is_hrv=True))
-    
+
     # GSP always assumed to be in data
     location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
     gsp_future_datapipe = datapipes_dict["gsp_future"]
@@ -173,8 +169,8 @@ def pvnet_datapipe(
         x_dim_name="x_osgb",
         dim_name="gsp_id",
         datapipe_name="GSP_future",
-    )    
-    
+    )
+
     gsp_datapipe = datapipes_dict["gsp"]
     gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
         location_datapipe=location_pipe,
@@ -185,40 +181,34 @@ def pvnet_datapipe(
         dim_name="gsp_id",
         datapipe_name="GSP",
     )
-    
+
     # Recombine GSP arrays - see function doc for further explanation
     gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(pvnet_concat_gsp)
     gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
-    
+
     numpy_modalities.append(gsp_datapipe.convert_gsp_to_numpy_batch())
-    
+
     logger.debug("Combine all the data sources")
-    combined_datapipe = (
-        MergeNumpyModalities(numpy_modalities)
-            .add_sun_position(modality_name="gsp")
-    )
-    
-    if block_sat and conf_sat!="":
+    combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(modality_name="gsp")
+
+    if block_sat and conf_sat != "":
         sat_block_func = add_zero_satellite_data(configuration)
         combined_datapipe = combined_datapipe.map(sat_block_func)
-        
-    if block_nwp and conf_nwp!="":
+
+    if block_nwp and conf_nwp != "":
         nwp_block_func = add_zero_nwp_data(configuration)
         combined_datapipe = combined_datapipe.map(nwp_block_func)
-    
+
     combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
-    
+
     return combined_datapipe
 
 
-
-
 class add_zero_satellite_data:
-    
     def __init__(self, configuration, is_hrv=False):
         self.configuration = configuration
         self.is_hrv = is_hrv
-        
+
     def __call__(self, numpy_batch):
         """
         Add zerod out Satellite data ready for ML model.
@@ -232,21 +222,19 @@ class add_zero_satellite_data:
         height = getattr(satellite_config, f"{variable}_image_size_pixels_height")
         width = getattr(satellite_config, f"{variable}_image_size_pixels_width")
 
-        sequence_len = satellite_config.history_minutes//5 + 1 - 3
+        sequence_len = satellite_config.history_minutes // 5 + 1 - 3
 
         numpy_batch[getattr(BatchKey, f"{variable}_actual")] = np.zeros(
             (sequence_len, n_channels, height, width)
         )
 
         return numpy_batch
-    
 
 
 class add_zero_nwp_data:
-    
     def __init__(self, configuration):
         self.configuration = configuration
-        
+
     def __call__(self, numpy_batch):
         """
         Add zerod out NWP data ready for ML model.
@@ -257,11 +245,9 @@ class add_zero_nwp_data:
         n_channels = len(config.nwp_channels)
         height = config.nwp_image_size_pixels_height
         width = config.nwp_image_size_pixels_width
-        
-        sequence_len = config.history_minutes//60 + config.forecast_minutes//60 + 1
 
-        numpy_batch[BatchKey.nwp] = np.zeros(
-            (sequence_len, n_channels, height, width)
-        )
+        sequence_len = config.history_minutes // 60 + config.forecast_minutes // 60 + 1
+
+        numpy_batch[BatchKey.nwp] = np.zeros((sequence_len, n_channels, height, width))
 
         return numpy_batch

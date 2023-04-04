@@ -19,10 +19,10 @@ class MergeNumpyModalitiesIterDataPipe(IterDataPipe):
             source_datapipes: Set of datapipes to merge emitting NumpyBatch objects
         """
         self.source_datapipes = source_datapipes
-    
+
     def __len__(self):
         return min([len(dp) for dp in self.source_datapipes])
-    
+
     def __iter__(self) -> NumpyBatch:
         """Merge multiple modalities together in NumpyBatch"""
         for np_batches in Zipper(*self.source_datapipes):

@@ -47,15 +47,13 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         self.y_dim_name = y_dim_name
         self.x_dim_name = x_dim_name
         self.datapipe_name = datapipe_name
-        
+
     def __len__(self):
         return len(self.location_datapipe)
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
-
             with profile(f"select_spatial_slice_pixels {self.datapipe_name}"):
-
                 if "geostationary" in self.x_dim_name:
                     center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
                         xr_data=xr_data,
@@ -143,12 +141,10 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
 
     def __len__(self):
         return len(self.location_datapipe)
-        
+
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
-
             with profile(f"select_spatial_slice_meters {self.datapipe_name}"):
-
                 # Compute the index for left and right:
                 logger.debug("Getting Spatial Slice Meters")
 

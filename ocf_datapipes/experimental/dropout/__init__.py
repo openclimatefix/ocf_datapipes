@@ -1,3 +1,3 @@
-from .satellite import SelectDropoutTimeIterDataPipe as SelectDropoutTime
-from .satellite import ApplyDropoutTimeIterDataPipe as ApplyDropoutTime
 from .nwp import ConvertToNWPTargetTimeWithDropoutIterDataPipe as ConvertToNWPTargetTimeWithDropout
+from .satellite import ApplyDropoutTimeIterDataPipe as ApplyDropoutTime
+from .satellite import SelectDropoutTimeIterDataPipe as SelectDropoutTime

@@ -25,7 +25,7 @@ class ConvertGSPToNumpyIterDataPipe(IterDataPipe):
         super().__init__()
         self.source_datapipe = source_datapipe
         self.return_id = return_id
-        
+
     def __len__(self):
         return len(self.source_datapipe)
 
@@ -33,9 +33,7 @@ class ConvertGSPToNumpyIterDataPipe(IterDataPipe):
         """Convert from Xarray to Numpy array"""
         logger.debug("Converting GSP to numpy")
         for xr_data in self.source_datapipe:
-
             with profile("convert_gsp_to_numpy"):
-
                 if self.return_id:
                     pv_system_ids = xr_data["gsp_id"].values
                     result = xr_data.values, pv_system_ids

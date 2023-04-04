@@ -1,7 +1,7 @@
 """Selects time slice"""
 import logging
 from datetime import timedelta
-from typing import Union, Optional
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,7 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils.utils import profile
 
 logger = logging.getLogger(__name__)
+
 
 @functional_datapipe("select_dropout_time")
 class SelectDropoutTimeIterDataPipe(IterDataPipe):
@@ -25,16 +26,15 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
         sample_period_duration: timedelta,
         dropout_frac: Optional[float] = 0,
         data_pipename: str = None,
-        
     ):
         """
         Selects time slice
 
         Args:
             source_datapipe: Datapipe of t0 times
-            dropout_time_start: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could 
+            dropout_time_start: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could
                 begin
-            dropout_time_end: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could 
+            dropout_time_end: Minimum timedelta (negative, inclusive) w.r.t. t0 when dropout could
                 begin
             dropout_frac: Fraction of samples subject to dropout
             data_pipename: the name of the data pipe. This is useful when profiling
@@ -47,48 +47,41 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
         self.data_pipename = data_pipename
         assert dropout_frac >= 0
         assert dropout_time_start <= dropout_time_end
-        assert dropout_time_start%sample_period_duration==timedelta(minutes=0)
-        assert dropout_time_end%sample_period_duration==timedelta(minutes=0)
+        assert dropout_time_start % sample_period_duration == timedelta(minutes=0)
+        assert dropout_time_end % sample_period_duration == timedelta(minutes=0)
 
-        
     def __len__(self):
         return len(self.source_datapipe)
 
     def __iter__(self):
-        
         timedeltas = np.arange(
-            self.dropout_time_start, 
-            self.dropout_time_end+self.sample_period_duration, 
+            self.dropout_time_start,
+            self.dropout_time_end + self.sample_period_duration,
             self.sample_period_duration,
         )
-        
-        for t0 in self.source_datapipe:
-            
-            with profile(f"select_dropout_time {self.data_pipename}"):
 
+        for t0 in self.source_datapipe:
+            with profile(f"select_dropout_time {self.data_pipename}"):
                 t0_datetime_utc = pd.Timestamp(t0)
-                
+
                 if np.random.uniform() < self.dropout_frac:
                     dt = np.random.choice(timedeltas)
                     dropout_time = t0_datetime_utc + dt
-                    
+
                 else:
                     dropout_time = None
-            
+
             yield dropout_time
-                    
-            
+
 
 @functional_datapipe("apply_dropout_time")
 class ApplyDropoutTimeIterDataPipe(IterDataPipe):
-    
     def __init__(
         self,
         source_datapipe: IterDataPipe,
         dropout_time_datapipe: IterDataPipe,
         sample_period_duration: timedelta,
         data_pipename: str = None,
-        
     ):
         """
 
@@ -103,23 +96,20 @@ class ApplyDropoutTimeIterDataPipe(IterDataPipe):
         self.dropout_time_datapipe = dropout_time_datapipe
         self.sample_period_duration = sample_period_duration
         self.data_pipename = data_pipename
-        
+
     def __len__(self):
         return len(self.source_datapipe)
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        
         for xr_data, dropout_time in self.source_datapipe.zip_ocf(self.dropout_time_datapipe):
-            
             with profile(f"apply_dropout_time {self.data_pipename}"):
-
                 if dropout_time is None:
-                    xr_sel =  xr_data
-                
+                    xr_sel = xr_data
+
                 else:
                     dropout_time = dropout_time.ceil(self.sample_period_duration)
-                    
+
                     # This replaces the times after the dropout with NaNs
-                    xr_sel = xr_data.where(xr_data.time_utc<dropout_time)
+                    xr_sel = xr_data.where(xr_data.time_utc < dropout_time)
 
             yield xr_sel

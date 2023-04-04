@@ -1,11 +1,10 @@
 """Convert Satellite to NumpyBatch"""
+import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float, profile
-
-import numpy as np
 
 
 @functional_datapipe("convert_satellite_to_numpy_batch")
@@ -23,7 +22,7 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
         super().__init__()
         self.source_datapipe = source_datapipe
         self.is_hrv = is_hrv
-        
+
     def __len__(self):
         return len(self.source_datapipe)
 
@@ -31,11 +30,9 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
         """Convert each example to a NumpyBatch object"""
 
         for xr_data in self.source_datapipe:
-            
             with profile(f"convert_satellite_to_numpy_batch(is_hrv={self.is_hrv})"):
-                
                 xr_data = xr_data.compute()
-                
+
                 if self.is_hrv:
                     example: NumpyBatch = {
                         BatchKey.hrvsatellite_actual: xr_data.values,

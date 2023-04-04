@@ -44,7 +44,7 @@ class NormalizeIterDataPipe(IterDataPipe):
         self.max_value = max_value
         self.calculate_mean_std_from_example = calculate_mean_std_from_example
         self.normalize_fn = normalize_fn
-        
+
     def __len__(self):
         return len(self.source_datapipe)
 

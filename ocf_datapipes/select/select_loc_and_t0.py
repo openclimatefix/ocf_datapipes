@@ -12,11 +12,8 @@ from ocf_datapipes.utils.consts import Location
 logger = logging.getLogger(__name__)
 
 
-
-
 @functional_datapipe("select_loc_and_t0")
 class LocationT0PickerIterDataPipe(IterDataPipe):
-
     def __init__(
         self,
         source_datapipe: IterDataPipe,
@@ -24,7 +21,7 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         shuffle: bool = False,
         x_dim_name: Optional[str] = "x_osgb",
         y_dim_name: Optional[str] = "y_osgb",
-        time_dim_name: Optional[str] = "time_utc"
+        time_dim_name: Optional[str] = "time_utc",
     ):
         """
 
@@ -46,7 +43,7 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         self.y_dim_name = y_dim_name
         self.time_dim_name = time_dim_name
         self._len = None
-          
+
     def __len__(self):
         if self._len is None:
             if self.return_all:
@@ -55,17 +52,15 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
             else:
                 self._len = np.inf
         return self._len
-            
-    def __iter__(self) -> tuple[Location, pd.Timestamp]:
-        
-        xr_dataset = next(iter(self.source_datapipe))
-        
-        if self.return_all:
 
+    def __iter__(self) -> tuple[Location, pd.Timestamp]:
+        xr_dataset = next(iter(self.source_datapipe))
+
+        if self.return_all:
             logger.debug("Going to return all locations")
             t_index, x_index = np.meshgrid(
-                        np.arange(len(xr_dataset[self.time_dim_name])), 
-                        np.arange(len(xr_dataset[self.x_dim_name]))
+                np.arange(len(xr_dataset[self.time_dim_name])),
+                np.arange(len(xr_dataset[self.x_dim_name])),
             )
 
             index_pairs = np.stack((t_index.ravel(), x_index.ravel())).T
@@ -92,7 +87,6 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
                 yield location, t0
 
             else:
-
                 while True:
                     location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))
 
@@ -109,6 +103,4 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
 
                     t0 = np.random.choice(xr_dataset[self.time_dim_name].values)
 
-
                     yield location, t0
-

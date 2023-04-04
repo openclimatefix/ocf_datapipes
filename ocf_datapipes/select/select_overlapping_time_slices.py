@@ -39,9 +39,7 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
     def __iter__(self) -> pd.DataFrame:
         if self.location_datapipe is None:
             for set_of_pd_datas in self.source_datapipe.zip_ocf(*self.secondary_datapipes):
-
                 with profile("Get over-lapping datetimes"):
-
                     time_periods = intersection_of_multiple_dataframes_of_periods(
                         list(set_of_pd_datas)
                     )
@@ -58,7 +56,6 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
                 set_of_pd_datas = set_of_pd_datas[:-1]
 
                 with profile(f"Get over-lapping datetimes, using location {location.id}"):
-
                     id = int(location.id)
 
                     if id in self.time_periods_id.keys():
