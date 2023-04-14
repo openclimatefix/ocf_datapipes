@@ -157,7 +157,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                         replace=False,
                     )
                     system_list = [system_list[idx] for idx in system_numbers]
-                pv_image = self._create_pv_image(system_list, pv_image, x_idx, y_idx)
+                pv_image = self._create_generation_image(system_list, pv_image, x_idx, y_idx)
                 if self.make_meta_image:
                     meta_image = self._create_meta_image(system_list, meta_image, x_idx, y_idx)
 

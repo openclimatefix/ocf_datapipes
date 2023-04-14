@@ -36,6 +36,5 @@ from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.assign_daynight_status import AssignDayNightStatusIterDataPipe as AssignDayNightStatus
 from .pv.create_pv_history_image import CreatePVHistoryImageIterDataPipe as CreatePVHistoryImage
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
-from .pv.create_pv_meta_image import CreatePVMetadataImageIterDataPipe as CreatePVMetadataImage
 from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography

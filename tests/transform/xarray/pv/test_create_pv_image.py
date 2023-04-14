@@ -53,3 +53,13 @@ def test_create_pv_image_normalized_pvlib_pvoutput(pvoutput_datapipe, sat_datapi
     data = next(iter(pv_image_datapipe))
     assert np.max(data) > np.min(data)
     assert np.isclose(np.min(data), 0.0)
+
+
+def test_create_pv_and_meta_image_normalized_pvlib_pvoutput(pvoutput_datapipe, sat_datapipe):
+    pv_image_datapipe = CreatePVImage(pvoutput_datapipe, sat_datapipe, normalize_by_pvlib=True, make_meta_image=True)
+    data, meta_image = next(iter(pv_image_datapipe))
+    assert np.max(data) > np.min(data)
+    assert np.isclose(np.min(data), 0.0)
+    assert np.max(meta_image) > np.min(meta_image)
+    assert np.isclose(np.min(meta_image), 0.0)
+    assert np.max(meta_image) > 0.0
