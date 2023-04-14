@@ -173,13 +173,26 @@ def pseudo_irradiance_datapipe(
     # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        pv_history, pv_meta = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, make_meta_image=True, normalize_by_pvlib=normalize_by_pvlib).unzip(sequence_length=2)
+        pv_history, pv_meta = pv_history.create_pv_image(
+            image_datapipe=sat_gsp_datapipe,
+            make_meta_image=True,
+            normalize_by_pvlib=normalize_by_pvlib,
+        ).unzip(sequence_length=2)
     elif "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, make_meta_image=True, normalize_by_pvlib=normalize_by_pvlib).unzip(sequence_length=2)
+        pv_history = pv_history.create_pv_image(
+            image_datapipe=sat_gsp_datapipe,
+            make_meta_image=True,
+            normalize_by_pvlib=normalize_by_pvlib,
+        ).unzip(sequence_length=2)
     elif "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
-        pv_history, pv_meta = pv_history.create_pv_image(image_datapipe=nwp_gsp_datapipe, image_dim="osgb", make_meta_image=True, normalize_by_pvlib=normalize_by_pvlib).unzip(sequence_length=2)
+        pv_history, pv_meta = pv_history.create_pv_image(
+            image_datapipe=nwp_gsp_datapipe,
+            image_dim="osgb",
+            make_meta_image=True,
+            normalize_by_pvlib=normalize_by_pvlib,
+        ).unzip(sequence_length=2)
 
     # Need to have future in image as well
     if "hrv" in used_datapipes.keys():
