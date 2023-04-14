@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 MAX_TILT = 90.0
 MAX_ORIENTATION = 360.0
 
+
 @functional_datapipe("create_pv_image")
 class CreatePVImageIterDataPipe(IterDataPipe):
     """Create PV image from individual sites"""
@@ -182,10 +183,9 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     yield return_object
             yield return_object
 
-
     def _create_meta_image(self, system_list, meta_image, x_idx, y_idx):
-        avg_tilt = 0.
-        avg_orientation = 0.
+        avg_tilt = 0.0
+        avg_orientation = 0.0
         for pv_system in system_list:
             avg_tilt += np.nan_to_num(pv_system["tilt"].values)
             avg_orientation += np.nan_to_num(pv_system["orientation"].values)
@@ -204,6 +204,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         generation_image[:, y_idx, x_idx] = avg_generation
         return generation_image
 
+
 def _create_data_array_from_image(
     pv_image: np.ndarray,
     pv_systems_xr: Union[xr.Dataset, xr.DataArray],
@@ -220,6 +221,7 @@ def _create_data_array_from_image(
     ).astype(np.float32)
     data_array.attrs = image_xr.attrs
     return data_array
+
 
 def _create_metadata_array_from_image(
     pv_image: np.ndarray,
