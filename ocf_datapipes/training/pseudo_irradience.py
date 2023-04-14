@@ -60,6 +60,7 @@ def pseudo_irradiance_datapipe(
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
     batch_size: int = 1,
+    normalize_by_pvlib: bool = False,
 ) -> IterDataPipe:
     """
     Make Pseudo-Irradience Datapipe
@@ -171,24 +172,14 @@ def pseudo_irradiance_datapipe(
         )
     # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
-        sat_hrv_datapipe, sat_gsp_datapipe, sat_meta_datapipe = sat_hrv_datapipe.fork(3)
-        pv_history, pv_meta = pv_history.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, seed=1337)
-        pv_meta = pv_meta.create_pv_metadata_image(image_datapipe=sat_meta_datapipe, seed=1337)
+        sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
+        pv_history, pv_meta = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, make_meta_image=True, normalize_by_pvlib=normalize_by_pvlib).unzip(sequence_length=2)
     elif "sat" in used_datapipes.keys():
-        sat_datapipe, sat_gsp_datapipe, sat_meta_datapipe = sat_datapipe.fork(3)
-        pv_history, pv_meta = pv_history.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, seed=1337)
-        pv_meta = pv_meta.create_pv_metadata_image(image_datapipe=sat_meta_datapipe, seed=1337)
+        sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
+        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, make_meta_image=True, normalize_by_pvlib=normalize_by_pvlib).unzip(sequence_length=2)
     elif "nwp" in used_datapipes.keys():
-        nwp_datapipe, nwp_gsp_datapipe, nwp_meta_datapipe = nwp_datapipe.fork(3)
-        pv_history, pv_meta = pv_history.fork(2)
-        pv_history = pv_history.create_pv_image(
-            image_datapipe=nwp_gsp_datapipe, image_dim="osgb", seed=1337
-        )
-        pv_meta = pv_meta.create_pv_metadata_image(
-            image_datapipe=nwp_meta_datapipe, image_dim="osgb", seed=1337
-        )
+        nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
+        pv_history, pv_meta = pv_history.create_pv_image(image_datapipe=nwp_gsp_datapipe, image_dim="osgb", make_meta_image=True, normalize_by_pvlib=normalize_by_pvlib).unzip(sequence_length=2)
 
     # Need to have future in image as well
     if "hrv" in used_datapipes.keys():
