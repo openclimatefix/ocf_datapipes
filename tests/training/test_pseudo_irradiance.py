@@ -157,7 +157,7 @@ def test_irradiance_datapipe():
     assert not np.isnan(batch[1]).any()
     assert np.isfinite(batch[2]).all()
 
-
+@pytest.mark.skip("Too many resources for GH Actions")
 def test_irradiance_datapipe_public_data():
     filename = os.path.join(
         os.path.dirname(ocf_datapipes.__file__), "../tests/config/test_public_data.yaml"
