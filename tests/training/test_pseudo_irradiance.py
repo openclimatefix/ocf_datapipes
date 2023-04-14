@@ -155,6 +155,7 @@ def test_irradiance_datapipe():
     x = np.nan_to_num(batch[0])
     assert np.isfinite(x).all()
     assert not np.isnan(batch[1]).any()
+    assert torch.max(batch[1]) > 0.0
     assert np.isfinite(batch[2]).all()
 
 
