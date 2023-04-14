@@ -109,6 +109,8 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                 else:
                     x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
                     y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
+                if x_idx == len(image_xr[self.x_dim]) or y_idx == len(image_xr[self.y_dim]):
+                    continue
                 # Now go by the timestep to create cube of PV data
                 pv_image[:, y_idx, x_idx] = np.array(pv_system["tilt"], pv_system["orientation"])
 

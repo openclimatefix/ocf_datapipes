@@ -158,6 +158,7 @@ def pseudo_irradiance_datapipe(
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
+        pv_loc_datapipe, pv_hrv_image_loc_datapipe = pv_loc_datapipe.fork(2)
         topo_datapipe = topo_datapipe.select_spatial_slice_pixels(
             pv_hrv_image_loc_datapipe,
             roi_height_pixels=size,
