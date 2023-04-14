@@ -29,3 +29,4 @@ dependencies:
       - bottleneck
       - ocf_blosc2
       - pvlive-api
+      - gcsfs
