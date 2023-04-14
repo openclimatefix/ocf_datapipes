@@ -16,6 +16,8 @@ from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_an
 
 logger = logging.getLogger(__name__)
 
+MAX_TILT = 90.0
+MAX_ORIENTATION = 360.0
 
 @functional_datapipe("create_pv_image")
 class CreatePVImageIterDataPipe(IterDataPipe):
@@ -32,6 +34,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         seed: int = None,
         take_n_pv_values_per_pixel: int = -1,
         normalize_by_pvlib: bool = False,
+        make_meta_image: bool = False,
     ):
         """
         Creates a 3D data cube of PV output image x number of timesteps
@@ -67,6 +70,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         self.always_return_first = always_return_first
         self.take_n_pv_values_per_pixel = take_n_pv_values_per_pixel
         self.normalize_by_pvlib = normalize_by_pvlib
+        self.make_meta_image = make_meta_image
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
@@ -91,6 +95,16 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 ),
                 dtype=np.float32,
             )
+            if self.make_meta_image:
+                # Create empty image to use for the PV Systems, assumes image has x and y coordinates
+                meta_image = np.zeros(
+                    (
+                        2,
+                        len(image_xr[self.y_dim]),
+                        len(image_xr[self.x_dim]),
+                    ),
+                    dtype=np.float32,
+                )
             pv_position_dict = defaultdict(list)
             for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
                 try:
@@ -143,27 +157,52 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                         replace=False,
                     )
                     system_list = [system_list[idx] for idx in system_numbers]
-                avg_generation = np.zeros_like(system_list[0].values)
-                for pv_system in system_list:
-                    if self.normalize_by_pvlib:
-                        pv_system = _normalize_by_pvlib(pv_system)
-                    avg_generation += np.nan_to_num(pv_system.values)
-                avg_generation /= len(system_list)
-                pv_image[:, y_idx, x_idx] = avg_generation
+                pv_image = self._create_pv_image(system_list, pv_image, x_idx, y_idx)
+                if self.make_meta_image:
+                    meta_image = self._create_meta_image(system_list, meta_image, x_idx, y_idx)
 
             if self.normalize:
                 if np.nanmax(pv_image) > 0:
                     pv_image /= np.nanmax(pv_image)
-            pv_image = np.nan_to_num(pv_image)
+                if self.make_meta_image:
+                    meta_image[0, :, :] = meta_image[0, :, :] / MAX_TILT
+                    meta_image[1, :, :] = meta_image[1, :, :] / MAX_ORIENTATION
 
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
+            pv_image = np.nan_to_num(pv_image)
             pv_image = _create_data_array_from_image(pv_image, pv_systems_xr, image_xr)
+            return_object = pv_image
+            if self.make_meta_image:
+                meta_image = np.nan_to_num(meta_image)
+                meta_image = _create_metadata_array_from_image(meta_image, pv_systems_xr, image_xr)
+                return_object = (pv_image, meta_image)
             if self.always_return_first:
                 while True:
-                    yield pv_image
-            yield pv_image
+                    yield return_object
+            yield return_object
 
+
+    def _create_meta_image(self, system_list, meta_image, x_idx, y_idx):
+        avg_tilt = 0.
+        avg_orientation = 0.
+        for pv_system in system_list:
+            avg_tilt += np.nan_to_num(pv_system["tilt"].values)
+            avg_orientation += np.nan_to_num(pv_system["orientation"].values)
+        avg_tilt /= len(system_list)
+        avg_orientation /= len(system_list)
+        meta_image[:, y_idx, x_idx] = np.array(avg_tilt, avg_orientation)
+        return meta_image
+
+    def _create_generation_image(self, system_list, generation_image, x_idx, y_idx):
+        avg_generation = np.zeros_like(system_list[0].values)
+        for pv_system in system_list:
+            if self.normalize_by_pvlib:
+                pv_system = _normalize_by_pvlib(pv_system)
+            avg_generation += np.nan_to_num(pv_system.values)
+        avg_generation /= len(system_list)
+        generation_image[:, y_idx, x_idx] = avg_generation
+        return generation_image
 
 def _create_data_array_from_image(
     pv_image: np.ndarray,
@@ -178,6 +217,23 @@ def _create_data_array_from_image(
             ("x_geostationary", image_xr.x_geostationary.values),
         ),
         name="pv_image",
+    ).astype(np.float32)
+    data_array.attrs = image_xr.attrs
+    return data_array
+
+def _create_metadata_array_from_image(
+    pv_image: np.ndarray,
+    pv_systems_xr: Union[xr.Dataset, xr.DataArray],
+    image_xr: Union[xr.Dataset, xr.DataArray],
+):
+    data_array = xr.DataArray(
+        data=pv_image,
+        coords=(
+            ("time_utc", ["tilt", "orientation"]),
+            ("y_geostationary", image_xr.y_geostationary.values),
+            ("x_geostationary", image_xr.x_geostationary.values),
+        ),
+        name="pv_meta_image",
     ).astype(np.float32)
     data_array.attrs = image_xr.attrs
     return data_array
