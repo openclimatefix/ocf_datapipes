@@ -60,7 +60,7 @@ def pseudo_irradiance_datapipe(
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
     batch_size: int = 1,
-    normalize_by_pvlib: bool = False,
+    normalize_by_pvlib: bool = True,
 ) -> IterDataPipe:
     """
     Make Pseudo-Irradience Datapipe
