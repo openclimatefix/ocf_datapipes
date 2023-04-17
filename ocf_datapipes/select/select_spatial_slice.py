@@ -229,11 +229,14 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     center_geostationary = Location(
         x=center_geostationary_tuple[0], y=center_geostationary_tuple[1]
     )
+    print(center_geostationary)
 
     # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:
     x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
+    print(x_index_at_center)
     # y_geostationary is in descending order:
     y_index_at_center = len(xr_data[y_dim_name]) - (
         np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
     )
+    print(y_index_at_center)
     return Location(x=x_index_at_center, y=y_index_at_center)
