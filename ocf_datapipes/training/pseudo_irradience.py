@@ -177,6 +177,8 @@ def pseudo_irradiance_datapipe(
             image_datapipe=sat_gsp_datapipe,
             make_meta_image=True,
             normalize_by_pvlib=normalize_by_pvlib,
+            normalize=not normalize_by_pvlib,
+            take_n_pv_values_per_pixel=-1,
         ).unzip(sequence_length=2)
     elif "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
@@ -184,6 +186,8 @@ def pseudo_irradiance_datapipe(
             image_datapipe=sat_gsp_datapipe,
             make_meta_image=True,
             normalize_by_pvlib=normalize_by_pvlib,
+            normalize=not normalize_by_pvlib,
+            take_n_pv_values_per_pixel=-1,
         ).unzip(sequence_length=2)
     elif "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
@@ -192,19 +196,21 @@ def pseudo_irradiance_datapipe(
             image_dim="osgb",
             make_meta_image=True,
             normalize_by_pvlib=normalize_by_pvlib,
+            normalize=not normalize_by_pvlib,
+            take_n_pv_values_per_pixel=-1,
         ).unzip(sequence_length=2)
 
     # Need to have future in image as well
     if "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_future_datapipe = sat_hrv_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=sat_future_datapipe)
+        pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=sat_future_datapipe,normalize_by_pvlib=normalize_by_pvlib,normalize=not normalize_by_pvlib,)
     elif "sat" in used_datapipes.keys():
         sat_datapipe, sat_future_datapipe = sat_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=sat_future_datapipe)
+        pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=sat_future_datapipe,normalize_by_pvlib=normalize_by_pvlib,normalize=not normalize_by_pvlib,)
     elif "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_future_datapipe = nwp_datapipe.fork(2)
         pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe=nwp_future_datapipe, image_dim="osgb"
+            image_datapipe=nwp_future_datapipe, image_dim="osgb",normalize_by_pvlib=normalize_by_pvlib,normalize=not normalize_by_pvlib,
         )
 
     if use_sun:
