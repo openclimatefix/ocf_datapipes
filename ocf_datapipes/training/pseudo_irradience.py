@@ -203,14 +203,25 @@ def pseudo_irradiance_datapipe(
     # Need to have future in image as well
     if "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_future_datapipe = sat_hrv_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=sat_future_datapipe,normalize_by_pvlib=normalize_by_pvlib,normalize=not normalize_by_pvlib,)
+        pv_datapipe = pv_datapipe.create_pv_image(
+            image_datapipe=sat_future_datapipe,
+            normalize_by_pvlib=normalize_by_pvlib,
+            normalize=not normalize_by_pvlib,
+        )
     elif "sat" in used_datapipes.keys():
         sat_datapipe, sat_future_datapipe = sat_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(image_datapipe=sat_future_datapipe,normalize_by_pvlib=normalize_by_pvlib,normalize=not normalize_by_pvlib,)
+        pv_datapipe = pv_datapipe.create_pv_image(
+            image_datapipe=sat_future_datapipe,
+            normalize_by_pvlib=normalize_by_pvlib,
+            normalize=not normalize_by_pvlib,
+        )
     elif "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_future_datapipe = nwp_datapipe.fork(2)
         pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe=nwp_future_datapipe, image_dim="osgb",normalize_by_pvlib=normalize_by_pvlib,normalize=not normalize_by_pvlib,
+            image_datapipe=nwp_future_datapipe,
+            image_dim="osgb",
+            normalize_by_pvlib=normalize_by_pvlib,
+            normalize=not normalize_by_pvlib,
         )
 
     if use_sun:
