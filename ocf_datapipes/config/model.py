@@ -184,7 +184,7 @@ class StartEndDatetimeMixin(Base):
     """Mixin class to add start and end date"""
 
     start_datetime: datetime = Field(
-        datetime(2020, 1, 1),
+        datetime(2008, 1, 1),
         description="Load date from data sources from this date. "
         "If None, this will get overwritten by InputData.start_date. ",
     )
