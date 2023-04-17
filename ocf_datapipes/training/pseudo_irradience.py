@@ -180,7 +180,7 @@ def pseudo_irradiance_datapipe(
         ).unzip(sequence_length=2)
     elif "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        pv_history = pv_history.create_pv_image(
+        pv_history, pv_meta = pv_history.create_pv_image(
             image_datapipe=sat_gsp_datapipe,
             make_meta_image=True,
             normalize_by_pvlib=normalize_by_pvlib,
