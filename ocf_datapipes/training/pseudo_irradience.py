@@ -108,7 +108,7 @@ def pseudo_irradiance_datapipe(
     pv_datapipe = used_datapipes["pv_future"].normalize(normalize_fn=normalize_pv)
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
-    pv_loc_datapipe, pv_id_datapipe = LocationPicker(pv_loc_datapipe).fork(2)
+    pv_loc_datapipe = LocationPicker(pv_loc_datapipe)
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
