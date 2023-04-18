@@ -189,7 +189,7 @@ class StartEndDatetimeMixin(Base):
         "If None, this will get overwritten by InputData.start_date. ",
     )
     end_datetime: datetime = Field(
-        datetime(2021, 9, 1),
+        datetime(2023, 12, 31),
         description="Load date from data sources up to this date. "
         "If None, this will get overwritten by InputData.start_date. ",
     )
