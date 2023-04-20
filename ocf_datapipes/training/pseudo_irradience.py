@@ -155,13 +155,6 @@ def pseudo_irradiance_datapipe(
         logger.debug("Take NWP time slices")
         nwp_datapipe = used_datapipes["nwp"].normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
         pv_loc_datapipe, pv_nwp_image_loc_datapipe = pv_loc_datapipe.fork(2)
-        nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
-            pv_nwp_image_loc_datapipe,
-            roi_height_pixels=size,
-            roi_width_pixels=size,
-            x_dim_name="x_osgb",
-            y_dim_name="y_osgb",
-        )
         if use_meters:
             nwp_datapipe = nwp_datapipe.select_spatial_slice_meters(
                 pv_nwp_image_loc_datapipe,

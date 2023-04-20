@@ -121,24 +121,25 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                         xx=pv_system["x_osgb"].values, yy=pv_system["y_osgb"].values
                     )
                 else:
-                    pv_x = pv_system["x_osgb"]
-                    pv_y = pv_system["y_osgb"]
+                    pv_x = pv_system["x_osgb"].values
+                    pv_y = pv_system["y_osgb"].values
                 # Quick check as search sorted doesn't give an error if it is not in the range
                 if pv_x < image_xr[self.x_dim][0].values or pv_x > image_xr[self.x_dim][-1].values:
                     continue
                 # Y Coordinates are in reverse for satellite data
                 if pv_y > image_xr[self.y_dim][0].values or pv_y < image_xr[self.y_dim][-1].values:
                     continue
-                if "geostationary" in self.x_dim:
-                    x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
-                    # y_geostationary is in descending order:
-                    y_idx = len(image_xr[self.y_dim]) - (
-                        np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
-                    )
+                if image_xr[self.y_dim][0] > image_xr[self.y_dim][-1]:
+                    y_idx = np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y)
+                    y_idx = len(image_xr[self.y_dim]) - y_idx
                 else:
-                    x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
-                    y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
-                if x_idx == len(image_xr[self.x_dim]) or y_idx == len(image_xr[self.y_dim]):
+                    y_idx = np.searchsorted(image_xr[self.y_dim].values, pv_y)
+                if image_xr[self.x_dim][0] > image_xr[self.x_dim][-1]:
+                    x_idx = np.searchsorted(image_xr[self.x_dim].values[::-1], pv_x)
+                    x_idx = len(image_xr[self.x_dim]) - x_idx
+                else:
+                    x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x)
+                if x_idx == len(image_xr[self.x_dim].values) or y_idx == len(image_xr[self.y_dim].values):
                     continue
                 # Add location to same one, so know if multiple overlap
                 # Filter if normalizing by pvlib,
@@ -172,11 +173,11 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             # Should return Xarray as in Xarray transforms
             # Same coordinates as the image xarray, so can take that
             pv_image = np.nan_to_num(pv_image)
-            pv_image = _create_data_array_from_image(pv_image, pv_systems_xr, image_xr)
+            pv_image = _create_data_array_from_image(pv_image, pv_systems_xr, image_xr, x_dim=self.x_dim, y_dim=self.y_dim)
             return_object = pv_image
             if self.make_meta_image:
                 meta_image = np.nan_to_num(meta_image)
-                meta_image = _create_metadata_array_from_image(meta_image, pv_systems_xr, image_xr)
+                meta_image = _create_metadata_array_from_image(meta_image, pv_systems_xr, image_xr, x_dim=self.x_dim, y_dim=self.y_dim)
                 return_object = (pv_image, meta_image)
             if self.always_return_first:
                 while True:
@@ -209,13 +210,15 @@ def _create_data_array_from_image(
     pv_image: np.ndarray,
     pv_systems_xr: Union[xr.Dataset, xr.DataArray],
     image_xr: Union[xr.Dataset, xr.DataArray],
+        x_dim: str = "x_geostationary",
+        y_dim: str = "y_geostationary",
 ):
     data_array = xr.DataArray(
         data=pv_image,
         coords=(
             ("time_utc", pv_systems_xr.time_utc.values),
-            ("y_geostationary", image_xr.y_geostationary.values),
-            ("x_geostationary", image_xr.x_geostationary.values),
+            (y_dim, image_xr[y_dim].values),
+            (x_dim, image_xr[x_dim].values),
         ),
         name="pv_image",
     ).astype(np.float32)
@@ -227,13 +230,15 @@ def _create_metadata_array_from_image(
     pv_image: np.ndarray,
     pv_systems_xr: Union[xr.Dataset, xr.DataArray],
     image_xr: Union[xr.Dataset, xr.DataArray],
+        x_dim: str = "x_geostationary",
+        y_dim: str = "y_geostationary",
 ):
     data_array = xr.DataArray(
         data=pv_image,
         coords=(
             ("time_utc", ["tilt", "orientation"]),
-            ("y_geostationary", image_xr.y_geostationary.values),
-            ("x_geostationary", image_xr.x_geostationary.values),
+            (y_dim, image_xr[y_dim].values),
+            (x_dim, image_xr[x_dim].values),
         ),
         name="pv_meta_image",
     ).astype(np.float32)
