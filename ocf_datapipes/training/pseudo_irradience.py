@@ -1,9 +1,11 @@
 """Create the training/validation datapipe for training the national MetNet/-2 Model"""
 import datetime
 import logging
+from functools import partial
 from pathlib import Path
 from typing import Union
 
+import numpy as np
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -14,10 +16,8 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
 )
 from ocf_datapipes.transform.xarray import StackXarray
-from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
-import numpy as np
-from functools import partial
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("pseudo_irradiance_datapipe")
@@ -180,7 +180,7 @@ def pseudo_irradiance_datapipe(
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
         # take sat time slices
-        sat_datapipe = used_datapipes["sat"]#.normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_datapipe = used_datapipes["sat"]  # .normalize(mean=RSS_MEAN, std=RSS_STD)
         pv_loc_datapipe, pv_sat_image_loc_datapipe = pv_loc_datapipe.fork(2)
         if use_meters:
             sat_datapipe = sat_datapipe.select_spatial_slice_meters(
@@ -208,7 +208,7 @@ def pseudo_irradiance_datapipe(
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
-        sat_hrv_datapipe = used_datapipes["hrv"]#.normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_hrv_datapipe = used_datapipes["hrv"]  # .normalize(mean=RSS_MEAN, std=RSS_STD)
         pv_loc_datapipe, pv_hrv_image_loc_datapipe = pv_loc_datapipe.fork(2)
         if use_meters:
             sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_meters(
