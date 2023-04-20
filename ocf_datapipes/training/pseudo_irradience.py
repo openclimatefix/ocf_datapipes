@@ -140,6 +140,16 @@ def pseudo_irradiance_datapipe(
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
     pv_loc_datapipe = LocationPicker(pv_loc_datapipe)
+    # Select systems here
+    if use_meters:
+        pv_loc_datapipe, pv_loc_datapipe1, pv_loc_datapipe2 = pv_loc_datapipe.fork(3)
+        pv_datapipe = pv_datapipe.select_spatial_slice_meters(
+            pv_loc_datapipe1, roi_height_meters=size_meters, roi_width_meters=size_meters
+        )
+        pv_history = pv_history.select_spatial_slice_meters(
+            pv_loc_datapipe2, roi_height_meters=size_meters, roi_width_meters=size_meters
+        )
+
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
