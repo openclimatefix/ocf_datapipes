@@ -148,7 +148,16 @@ Same as above with 16x16
 def test_irradiance_datapipe():
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
     gsp_datapipe = pseudo_irradiance_datapipe(
-        filename, use_nwp=True, use_sat=True, use_hrv=True, use_sun=True, use_future=False, size=16, batch_size=3, use_meters=True, size_meters=128000
+        filename,
+        use_nwp=True,
+        use_sat=True,
+        use_hrv=True,
+        use_sun=True,
+        use_future=False,
+        size=16,
+        batch_size=3,
+        use_meters=True,
+        size_meters=128000,
     )
     batch = next(iter(gsp_datapipe))
     batch = (torch.Tensor(batch[0]), torch.Tensor(batch[1]), torch.Tensor(batch[2]))
