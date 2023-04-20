@@ -16,6 +16,8 @@ from ocf_datapipes.training.common import (
 from ocf_datapipes.transform.xarray import StackXarray
 from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
+import numpy as np
+from functools import partial
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("pseudo_irradiance_datapipe")
@@ -47,6 +49,31 @@ def _load_xarray_values(x):
     return x.load()
 
 
+def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
+    if "x_geostationary" in xr_data.dims:
+        x_coords = xr_data["x_geostationary"].values
+        y_coords = xr_data["y_geostationary"].values
+    elif "x_osgb" in xr_data.dims:
+        x_coords = xr_data["x_osgb"].values
+        y_coords = xr_data["y_osgb"].values
+    else:
+        x_coords = xr_data["x"].values
+        y_coords = xr_data["y"].values
+    # Resample down to the number of pixels wanted
+    x_coords = np.linspace(x_coords[0], x_coords[-1], num=width_pixels)
+    y_coords = np.linspace(y_coords[0], y_coords[-1], num=height_pixels)
+    if "x_geostationary" in xr_data.dims:
+        xr_data = xr_data.interp(
+            x_geostationary=x_coords, y_geostationary=y_coords, method="linear"
+        )
+    elif "x_osgb" in xr_data.dims:
+        xr_data = xr_data.interp(x_osgb=x_coords, y_osgb=y_coords, method="linear")
+    else:
+        xr_data = xr_data.interp(x=x_coords, y=y_coords, method="linear")
+    # Extract just the data now
+    return xr_data.load()
+
+
 def pseudo_irradiance_datapipe(
     configuration_filename: Union[Path, str],
     use_sun: bool = True,
@@ -57,6 +84,8 @@ def pseudo_irradiance_datapipe(
     use_topo: bool = True,
     use_future: bool = False,
     size: int = 256,
+    size_meters: int = 256_000,
+    use_meters: bool = False,
     start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
     batch_size: int = 1,
@@ -84,6 +113,8 @@ def pseudo_irradiance_datapipe(
     Returns: datapipe
     """
 
+    # Use partial to define the _resample_to_pixel_size function using size
+    resample_to_pixel_size = partial(_resample_to_pixel_size, height_pixels=size, width_pixels=size)
     # load datasets
     used_datapipes = open_and_return_datapipes(
         configuration_filename=configuration_filename,
@@ -122,54 +153,113 @@ def pseudo_irradiance_datapipe(
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
         )
-        nwp_datapipe = ThreadPoolMapper(
-            nwp_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
-        )
+        if use_meters:
+            nwp_datapipe = nwp_datapipe.select_spatial_slice_meters(
+                pv_nwp_image_loc_datapipe,
+                roi_height_meters=size_meters,
+                roi_width_meters=size_meters,
+                dim_name=None,
+                x_dim_name="x_osgb",
+                y_dim_name="y_osgb",
+            )
+            nwp_datapipe = ThreadPoolMapper(
+                nwp_datapipe, resample_to_pixel_size, max_workers=8, scheduled_tasks=batch_size
+            )
+        else:
+            nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
+                pv_nwp_image_loc_datapipe,
+                roi_height_pixels=size,
+                roi_width_pixels=size,
+                x_dim_name="x_osgb",
+                y_dim_name="y_osgb",
+            )
+            nwp_datapipe = ThreadPoolMapper(
+                nwp_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+            )
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
         # take sat time slices
-        sat_datapipe = used_datapipes["sat"].normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_datapipe = used_datapipes["sat"]#.normalize(mean=RSS_MEAN, std=RSS_STD)
         pv_loc_datapipe, pv_sat_image_loc_datapipe = pv_loc_datapipe.fork(2)
-        sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
-            pv_sat_image_loc_datapipe,
-            roi_height_pixels=size,
-            roi_width_pixels=size,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
-        )
-        sat_datapipe = ThreadPoolMapper(
-            sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
-        )
+        if use_meters:
+            sat_datapipe = sat_datapipe.select_spatial_slice_meters(
+                pv_sat_image_loc_datapipe,
+                roi_height_meters=size_meters,
+                roi_width_meters=size_meters,
+                dim_name=None,
+                x_dim_name="x_geostationary",
+                y_dim_name="y_geostationary",
+            )
+            sat_datapipe = ThreadPoolMapper(
+                sat_datapipe, resample_to_pixel_size, max_workers=8, scheduled_tasks=batch_size
+            )
+        else:
+            sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
+                pv_sat_image_loc_datapipe,
+                roi_height_pixels=size,
+                roi_width_pixels=size,
+                x_dim_name="x_geostationary",
+                y_dim_name="y_geostationary",
+            )
+            sat_datapipe = ThreadPoolMapper(
+                sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+            )
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
-        sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_hrv_datapipe = used_datapipes["hrv"]#.normalize(mean=RSS_MEAN, std=RSS_STD)
         pv_loc_datapipe, pv_hrv_image_loc_datapipe = pv_loc_datapipe.fork(2)
-        sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_pixels(
-            pv_hrv_image_loc_datapipe,
-            roi_height_pixels=size,
-            roi_width_pixels=size,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
-        )
-        sat_hrv_datapipe = ThreadPoolMapper(
-            sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
-        )
+        if use_meters:
+            sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_meters(
+                pv_hrv_image_loc_datapipe,
+                roi_height_meters=size_meters,
+                roi_width_meters=size_meters,
+                dim_name=None,
+                x_dim_name="x_geostationary",
+                y_dim_name="y_geostationary",
+            )
+            sat_hrv_datapipe = ThreadPoolMapper(
+                sat_hrv_datapipe, resample_to_pixel_size, max_workers=8, scheduled_tasks=batch_size
+            )
+        else:
+            sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_pixels(
+                pv_hrv_image_loc_datapipe,
+                roi_height_pixels=size,
+                roi_width_pixels=size,
+                x_dim_name="x_geostationary",
+                y_dim_name="y_geostationary",
+            )
+            sat_hrv_datapipe = ThreadPoolMapper(
+                sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+            )
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
         pv_loc_datapipe, pv_hrv_image_loc_datapipe = pv_loc_datapipe.fork(2)
-        topo_datapipe = topo_datapipe.select_spatial_slice_pixels(
-            pv_hrv_image_loc_datapipe,
-            roi_height_pixels=size,
-            roi_width_pixels=size,
-            x_dim_name="x_osgb",
-            y_dim_name="y_osgb",
-        )
-        topo_datapipe = ThreadPoolMapper(
-            topo_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
-        )
+        if use_meters:
+            topo_datapipe = topo_datapipe.select_spatial_slice_meters(
+                pv_hrv_image_loc_datapipe,
+                roi_height_meters=size_meters,
+                roi_width_meters=size_meters,
+                dim_name=None,
+                x_dim_name="x_osgb",
+                y_dim_name="y_osgb",
+            )
+            topo_datapipe = ThreadPoolMapper(
+                topo_datapipe, resample_to_pixel_size, max_workers=8, scheduled_tasks=batch_size
+            )
+        else:
+            topo_datapipe = topo_datapipe.select_spatial_slice_pixels(
+                pv_hrv_image_loc_datapipe,
+                roi_height_pixels=size,
+                roi_width_pixels=size,
+                x_dim_name="x_osgb",
+                y_dim_name="y_osgb",
+            )
+            topo_datapipe = ThreadPoolMapper(
+                topo_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
+            )
     # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
