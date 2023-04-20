@@ -150,7 +150,6 @@ def pseudo_irradiance_datapipe(
             pv_loc_datapipe2, roi_height_meters=size_meters, roi_width_meters=size_meters
         )
 
-
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
         logger.debug("Take NWP time slices")
