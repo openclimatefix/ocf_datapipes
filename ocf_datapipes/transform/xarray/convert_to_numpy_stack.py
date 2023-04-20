@@ -35,7 +35,7 @@ class StackXarrayIterDataPipe(IterDataPipe):
                 if len(xr_data.shape) == 2:  # Need to add channel dimension
                     xr_data = np.expand_dims(xr_data, axis=0)
                 if len(xr_data.shape) == 3:  # Need to add channel dimension
-                    xr_data = np.expand_dims(xr_data, axis=1)
+                    xr_data = np.expand_dims(xr_data, axis=0)
                 stack.append(xr_data)
             # Pad out time dimension to be the same, using the largest one
             # All should have 4 dimensions at this point
