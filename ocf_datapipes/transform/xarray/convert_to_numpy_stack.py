@@ -35,13 +35,17 @@ class StackXarrayIterDataPipe(IterDataPipe):
                 else:
                     channel_idx = -1
                 if channel_idx != -1 and channel_idx > 0:
-                    xr_data = xr_data.transpose("channel", *xr_data.dims[:channel_idx], *xr_data.dims[channel_idx+1:])
+                    xr_data = xr_data.transpose(
+                        "channel", *xr_data.dims[:channel_idx], *xr_data.dims[channel_idx + 1 :]
+                    )
                     channel_idx = 0
                 # Resamples to the same number of pixels for both center and contexts
                 xr_data = xr_data.to_numpy()
                 if len(xr_data.shape) == 3:  # Need to add channel dimension
                     xr_data = np.expand_dims(xr_data, axis=0)
-                if len(xr_data.shape) == 2:  # Need to add channel dimension, and should repeat in time later
+                if (
+                    len(xr_data.shape) == 2
+                ):  # Need to add channel dimension, and should repeat in time later
                     xr_data = np.expand_dims(xr_data, axis=0)
                 stack.append(xr_data)
             # Do the repeat of the time dimension
