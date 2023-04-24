@@ -61,7 +61,11 @@ class NormalizeIterDataPipe(IterDataPipe):
                 # For Topo data for example
                 xr_data -= xr_data.mean().item()
                 xr_data /= xr_data.std().item()
-            elif self.normalize_fn is None and self.calculate_mean_std_from_example is False and self.max_value is None:
+            elif (
+                self.normalize_fn is None
+                and self.calculate_mean_std_from_example is False
+                and self.max_value is None
+            ):
                 xr_data = xr_data - xr_data.min().item()
                 xr_data = xr_data / xr_data.max().item()
             else:
