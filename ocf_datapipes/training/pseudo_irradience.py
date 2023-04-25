@@ -16,7 +16,7 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
 )
 from ocf_datapipes.transform.xarray import StackXarray
-from ocf_datapipes.utils.consts import NEW_NWP_MIN, NEW_NWP_MAX
+from ocf_datapipes.utils.consts import NEW_NWP_MAX, NEW_NWP_MIN
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
@@ -79,21 +79,21 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
 
 
 def pseudo_irradiance_datapipe(
-        configuration_filename: Union[Path, str],
-        use_sun: bool = True,
-        use_nwp: bool = True,
-        use_sat: bool = True,
-        use_hrv: bool = True,
-        use_pv: bool = True,
-        use_topo: bool = True,
-        use_future: bool = False,
-        size: int = 256,
-        size_meters: int = 256_000,
-        use_meters: bool = False,
-        start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
-        end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
-        batch_size: int = 1,
-        normalize_by_pvlib: bool = True,
+    configuration_filename: Union[Path, str],
+    use_sun: bool = True,
+    use_nwp: bool = True,
+    use_sat: bool = True,
+    use_hrv: bool = True,
+    use_pv: bool = True,
+    use_topo: bool = True,
+    use_future: bool = False,
+    size: int = 256,
+    size_meters: int = 256_000,
+    use_meters: bool = False,
+    start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
+    end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
+    batch_size: int = 1,
+    normalize_by_pvlib: bool = True,
 ) -> IterDataPipe:
     """
     Make Pseudo-Irradience Datapipe
