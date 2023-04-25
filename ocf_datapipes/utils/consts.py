@@ -471,6 +471,9 @@ NWP_STD = _to_data_array(NWP_STD)
 NEW_NWP_MEAN = _to_data_array(NEW_NWP_MEAN)
 NEW_NWP_STD = _to_data_array(NEW_NWP_STD)
 
+NEW_NWP_MIN = _to_data_array(NEW_NWP_MIN)
+NEW_NWP_MAX = _to_data_array(NEW_NWP_MAX)
+
 SAT_MEAN = {
     "HRV": 236.13257536395903,
     "IR_016": 291.61620182554185,
