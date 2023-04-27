@@ -57,25 +57,25 @@ def get_gsp_id_to_shape(
     # Load mapping from GSP ID to Sheffield Solar region ID:
     gsp_id_to_region_id = pd.read_csv(
         gsp_id_to_region_id_filename,
-        usecols=["gsp_id", "region_id"],
-        dtype={"gsp_id": np.int64, "region_id": np.int64},
+        usecols=["gsp_id", "gsp_name"],
+        dtype={"gsp_id": np.int64, "gsp_name": str},
     )
 
     # Load Sheffield Solar region shapes (which are already in OSGB36 CRS).
     ss_regions = gpd.read_file(sheffield_solar_region_path)
+    
+    # Some GSPs are represented by multiple shapes. To find the correct centroid,
+    # we need to find the spatial union of those regions, and then find the centroid
+    # of those spatial unions. `dissolve(by="gsp_name")` groups by "gsp_name" and gets
+    # the spatial union.
+    ss_regions = ss_regions.dissolve(by="GSPs")
 
     # Merge, so we have a mapping from GSP ID to SS region shape:
     gsp_id_to_shape = (
-        ss_regions.merge(gsp_id_to_region_id, left_on="RegionID", right_on="region_id")
+        ss_regions.merge(gsp_id_to_region_id, left_on="GSPs", right_on="gsp_name")
         .set_index("gsp_id")[["geometry"]]
         .sort_index()
     )
-
-    # Some GSPs are represented by multiple shapes. To find the correct centroid,
-    # we need to find the spatial union of those regions, and then find the centroid
-    # of those spatial unions. `dissolve(by="gsp_id")` groups by "gsp_id" and gets
-    # the spatial union.
-    gsp_id_to_shape = gsp_id_to_shape.dissolve(by="gsp_id")
 
     gsp_0 = (
         gpd.GeoDataFrame(
