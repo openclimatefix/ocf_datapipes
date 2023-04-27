@@ -63,7 +63,7 @@ def get_gsp_id_to_shape(
 
     # Load Sheffield Solar region shapes (which are already in OSGB36 CRS).
     ss_regions = gpd.read_file(sheffield_solar_region_path)
-    
+
     # Some GSPs are represented by multiple shapes. To find the correct centroid,
     # we need to find the spatial union of those regions, and then find the centroid
     # of those spatial unions. `dissolve(by="GSPs")` groups by "GSPs" and gets
