@@ -4,6 +4,8 @@ import logging
 from functools import partial
 from pathlib import Path
 from typing import Union
+import pandas as pd
+import pvlib
 
 import numpy as np
 import xarray
@@ -77,6 +79,59 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     # Extract just the data now
     return xr_data.load()
 
+def _normalize_by_pvlib(pv_system):
+    """
+    Normalize the output by pv_libs poa_global
+
+    Args:
+        pv_system: PV System in Xarray DataArray
+
+    Returns:
+        PV System in xarray DataArray, but normalized values
+    """
+    # TODO Add elevation
+    pvlib_loc = pvlib.location.Location(
+        latitude=pv_system.latitude.values, longitude=pv_system.longitude.values
+    )
+    times = pd.DatetimeIndex(pv_system.time_utc.values)
+    solar_position = pvlib_loc.get_solarposition(times=times)
+    clear_sky = pvlib_loc.get_clearsky(times)
+    total_irradiance = pvlib.irradiance.get_total_irradiance(
+        pv_system.tilt.values,
+        pv_system.orientation.values,
+        solar_zenith=solar_position["zenith"],
+        solar_azimuth=solar_position["azimuth"],
+        dni=clear_sky["dni"],
+        dhi=clear_sky["dhi"],
+        ghi=clear_sky["ghi"],
+    )
+    # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
+    fraction_clear_sky = total_irradiance["poa_global"] / (
+            clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
+    )
+    pv_system /= pv_system.capacity_watt_power
+    pv_system *= fraction_clear_sky
+    return pv_system
+
+def _get_meta(xr_data):
+    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(
+            xr_data.tilt.values
+    ):
+        xr_data['orientation'] = 180.
+        xr_data['tilt'] = 90.
+    tilt = xr_data["tilt"].values
+    orientation = xr_data["orientation"].values
+    return np.concatenate([tilt, orientation])
+
+def _get_values(xr_data):
+    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(
+            xr_data.tilt.values
+    ):
+        xr_data['orientation'] = 180.
+        xr_data['tilt'] = 90.
+    xr_data = _normalize_by_pvlib(xr_data)
+    return xr_data.values
+
 
 def pseudo_irradiance_datapipe(
     configuration_filename: Union[Path, str],
@@ -94,6 +149,7 @@ def pseudo_irradiance_datapipe(
     end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
     batch_size: int = 1,
     normalize_by_pvlib: bool = True,
+    one_d: bool = False,
 ) -> IterDataPipe:
     """
     Make Pseudo-Irradience Datapipe
@@ -113,6 +169,8 @@ def pseudo_irradiance_datapipe(
         use_future: Whether to use future frames as well (for labelling)
         size: Size, in pixels, of the output image
         batch_size: Batch size for the datapipe
+        one_d: Whether to return a 1D array or not, i.e. a single PV site in the center as
+            opposed to a 2D array of PV sites
 
     Returns: datapipe
     """
@@ -153,6 +211,11 @@ def pseudo_irradiance_datapipe(
         pv_history = pv_history.select_spatial_slice_meters(
             pv_loc_datapipe2, roi_height_meters=size_meters, roi_width_meters=size_meters
         )
+
+    if one_d:
+        pv_loc_datapipe, pv_one_d_datapipe, pv_one_d_datapipe2 = pv_loc_datapipe.fork(3)
+        pv_datapipe = pv_datapipe.select_id(pv_one_d_datapipe, data_source_name="pv")
+        pv_history = pv_history.select_id(pv_one_d_datapipe2, data_source_name="pv")
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
@@ -267,58 +330,65 @@ def pseudo_irradiance_datapipe(
                 topo_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
             )
     # Setting seed in these to keep them the same for creating image and metadata
-    if "hrv" in used_datapipes.keys():
-        sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        pv_history, pv_meta = pv_history.create_pv_image(
-            image_datapipe=sat_gsp_datapipe,
-            make_meta_image=True,
-            normalize_by_pvlib=normalize_by_pvlib,
-            normalize=not normalize_by_pvlib,
-            take_n_pv_values_per_pixel=-1,
-        ).unzip(sequence_length=2)
-    elif "sat" in used_datapipes.keys():
-        sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        pv_history, pv_meta = pv_history.create_pv_image(
-            image_datapipe=sat_gsp_datapipe,
-            make_meta_image=True,
-            normalize_by_pvlib=normalize_by_pvlib,
-            normalize=not normalize_by_pvlib,
-            take_n_pv_values_per_pixel=-1,
-        ).unzip(sequence_length=2)
-    elif "nwp" in used_datapipes.keys():
-        nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
-        pv_history, pv_meta = pv_history.create_pv_image(
-            image_datapipe=nwp_gsp_datapipe,
-            image_dim="osgb",
-            make_meta_image=True,
-            normalize_by_pvlib=normalize_by_pvlib,
-            normalize=not normalize_by_pvlib,
-            take_n_pv_values_per_pixel=-1,
-        ).unzip(sequence_length=2)
+    if one_d:
+        pv_datapipe, pv_meta = pv_datapipe.fork(2)
+        pv_meta = pv_meta.map(_get_meta)
+        pv_datapipe = pv_datapipe.map(_get_values)
+    else:
+        if "hrv" in used_datapipes.keys():
+            sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
+            pv_history, pv_meta = pv_history.create_pv_image(
+                image_datapipe=sat_gsp_datapipe,
+                make_meta_image=True,
+                normalize_by_pvlib=normalize_by_pvlib,
+                normalize=not normalize_by_pvlib,
+                take_n_pv_values_per_pixel=-1,
+            ).unzip(sequence_length=2)
+        elif "sat" in used_datapipes.keys():
+            sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
+            pv_history, pv_meta = pv_history.create_pv_image(
+                image_datapipe=sat_gsp_datapipe,
+                make_meta_image=True,
+                normalize_by_pvlib=normalize_by_pvlib,
+                normalize=not normalize_by_pvlib,
+                take_n_pv_values_per_pixel=-1,
+            ).unzip(sequence_length=2)
+        elif "nwp" in used_datapipes.keys():
+            nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
+            pv_history, pv_meta = pv_history.create_pv_image(
+                image_datapipe=nwp_gsp_datapipe,
+                image_dim="osgb",
+                make_meta_image=True,
+                normalize_by_pvlib=normalize_by_pvlib,
+                normalize=not normalize_by_pvlib,
+                take_n_pv_values_per_pixel=-1,
+            ).unzip(sequence_length=2)
 
-    # Need to have future in image as well
-    if "hrv" in used_datapipes.keys():
-        sat_hrv_datapipe, sat_future_datapipe = sat_hrv_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe=sat_future_datapipe,
-            normalize_by_pvlib=normalize_by_pvlib,
-            normalize=not normalize_by_pvlib,
-        )
-    elif "sat" in used_datapipes.keys():
-        sat_datapipe, sat_future_datapipe = sat_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe=sat_future_datapipe,
-            normalize_by_pvlib=normalize_by_pvlib,
-            normalize=not normalize_by_pvlib,
-        )
-    elif "nwp" in used_datapipes.keys():
-        nwp_datapipe, nwp_future_datapipe = nwp_datapipe.fork(2)
-        pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe=nwp_future_datapipe,
-            image_dim="osgb",
-            normalize_by_pvlib=normalize_by_pvlib,
-            normalize=not normalize_by_pvlib,
-        )
+        # Need to have future in image as well
+        if "hrv" in used_datapipes.keys():
+            sat_hrv_datapipe, sat_future_datapipe = sat_hrv_datapipe.fork(2)
+            pv_datapipe = pv_datapipe.create_pv_image(
+                image_datapipe=sat_future_datapipe,
+                normalize_by_pvlib=normalize_by_pvlib,
+                normalize=not normalize_by_pvlib,
+            )
+        elif "sat" in used_datapipes.keys():
+            sat_datapipe, sat_future_datapipe = sat_datapipe.fork(2)
+            pv_datapipe = pv_datapipe.create_pv_image(
+                image_datapipe=sat_future_datapipe,
+                normalize_by_pvlib=normalize_by_pvlib,
+                normalize=not normalize_by_pvlib,
+            )
+        elif "nwp" in used_datapipes.keys():
+            nwp_datapipe, nwp_future_datapipe = nwp_datapipe.fork(2)
+            pv_datapipe = pv_datapipe.create_pv_image(
+                image_datapipe=nwp_future_datapipe,
+                image_dim="osgb",
+                normalize_by_pvlib=normalize_by_pvlib,
+                normalize=not normalize_by_pvlib,
+            )
+        pv_datapipe = pv_datapipe.map(_get_numpy_from_xarray)
+        pv_meta = pv_meta.map(_get_numpy_from_xarray)
 
     if use_sun:
         if "nwp" in used_datapipes.keys():
@@ -350,7 +420,8 @@ def pseudo_irradiance_datapipe(
         time_image_datapipe = None
 
     modalities = []
-    modalities.append(pv_history)
+    if not one_d:
+        modalities.append(pv_history)
     if "nwp" in used_datapipes.keys():
         modalities.append(nwp_datapipe)
     if "hrv" in used_datapipes.keys():
@@ -366,8 +437,6 @@ def pseudo_irradiance_datapipe(
 
     stacked_xarray_inputs = StackXarray(modalities)
 
-    pv_datapipe = pv_datapipe.map(_get_numpy_from_xarray)
-    pv_meta = pv_meta.map(_get_numpy_from_xarray)
     return stacked_xarray_inputs.batch(batch_size).zip_ocf(
         pv_meta.batch(batch_size), pv_datapipe.batch(batch_size)
     )  # Makes (Inputs, Label) tuples
