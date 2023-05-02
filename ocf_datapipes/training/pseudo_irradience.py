@@ -4,10 +4,10 @@ import logging
 from functools import partial
 from pathlib import Path
 from typing import Union
-import pandas as pd
-import pvlib
 
 import numpy as np
+import pandas as pd
+import pvlib
 import xarray
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -79,6 +79,7 @@ def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
     # Extract just the data now
     return xr_data.load()
 
+
 def _normalize_by_pvlib(pv_system):
     """
     Normalize the output by pv_libs poa_global
@@ -107,28 +108,26 @@ def _normalize_by_pvlib(pv_system):
     )
     # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
     fraction_clear_sky = total_irradiance["poa_global"] / (
-            clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
+        clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
     pv_system /= pv_system.capacity_watt_power
     pv_system *= fraction_clear_sky
     return pv_system
 
+
 def _get_meta(xr_data):
-    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(
-            xr_data.tilt.values
-    ):
-        xr_data['orientation'] = 180.
-        xr_data['tilt'] = 90.
+    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(xr_data.tilt.values):
+        xr_data["orientation"] = 180.0
+        xr_data["tilt"] = 90.0
     tilt = xr_data["tilt"].values
     orientation = xr_data["orientation"].values
     return np.concatenate([tilt, orientation])
 
+
 def _get_values(xr_data):
-    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(
-            xr_data.tilt.values
-    ):
-        xr_data['orientation'] = 180.
-        xr_data['tilt'] = 90.
+    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(xr_data.tilt.values):
+        xr_data["orientation"] = 180.0
+        xr_data["tilt"] = 90.0
     xr_data = _normalize_by_pvlib(xr_data)
     return xr_data.values
 
