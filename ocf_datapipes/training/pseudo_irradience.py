@@ -126,9 +126,11 @@ def _get_values(xr_data):
     xr_data = _normalize_by_pvlib(xr_data)
     return xr_data.values
 
+
 def _filter_tilt_orientation(xr_data):
     xr_data = xr_data.where(np.isfinite(xr_data.orientation) & np.isfinite(xr_data.tilt), drop=True)
     return xr_data
+
 
 def pseudo_irradiance_datapipe(
     configuration_filename: Union[Path, str],
@@ -194,8 +196,12 @@ def pseudo_irradiance_datapipe(
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
 
     # Now do the extra processing
-    pv_history = used_datapipes["pv"].map(_filter_tilt_orientation) # .normalize(normalize_fn=normalize_pv)
-    pv_datapipe = used_datapipes["pv_future"].map(_filter_tilt_orientation)  # .normalize(normalize_fn=normalize_pv)
+    pv_history = used_datapipes["pv"].map(
+        _filter_tilt_orientation
+    )  # .normalize(normalize_fn=normalize_pv)
+    pv_datapipe = used_datapipes["pv_future"].map(
+        _filter_tilt_orientation
+    )  # .normalize(normalize_fn=normalize_pv)
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
     pv_loc_datapipe = LocationPicker(pv_loc_datapipe)
