@@ -152,12 +152,13 @@ def test_irradiance_datapipe():
         use_nwp=True,
         use_sat=True,
         use_hrv=True,
-        use_sun=True,
+        use_sun=False,
         use_future=False,
         size=16,
         batch_size=3,
-        use_meters=True,
+        use_meters=False,
         size_meters=128000,
+        one_d=True
     )
     batch = next(iter(gsp_datapipe))
     batch = (torch.Tensor(batch[0]), torch.Tensor(batch[1]), torch.Tensor(batch[2]))

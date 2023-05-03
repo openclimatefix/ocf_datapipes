@@ -116,21 +116,19 @@ def _normalize_by_pvlib(pv_system):
 
 
 def _get_meta(xr_data):
-    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(xr_data.tilt.values):
-        xr_data["orientation"] = 180.0
-        xr_data["tilt"] = 90.0
     tilt = xr_data["tilt"].values
     orientation = xr_data["orientation"].values
-    return np.concatenate([tilt, orientation])
+    combined = np.array([tilt, orientation])
+    return combined
 
 
 def _get_values(xr_data):
-    if not np.isfinite(xr_data.orientation.values) and not np.isfinite(xr_data.tilt.values):
-        xr_data["orientation"] = 180.0
-        xr_data["tilt"] = 90.0
     xr_data = _normalize_by_pvlib(xr_data)
     return xr_data.values
 
+def _filter_tilt_orientation(xr_data):
+    xr_data = xr_data.where(np.isfinite(xr_data.orientation) & np.isfinite(xr_data.tilt), drop=True)
+    return xr_data
 
 def pseudo_irradiance_datapipe(
     configuration_filename: Union[Path, str],
@@ -196,8 +194,8 @@ def pseudo_irradiance_datapipe(
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
 
     # Now do the extra processing
-    pv_history = used_datapipes["pv"]  # .normalize(normalize_fn=normalize_pv)
-    pv_datapipe = used_datapipes["pv_future"]  # .normalize(normalize_fn=normalize_pv)
+    pv_history = used_datapipes["pv"].map(_filter_tilt_orientation) # .normalize(normalize_fn=normalize_pv)
+    pv_datapipe = used_datapipes["pv_future"].map(_filter_tilt_orientation)  # .normalize(normalize_fn=normalize_pv)
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
     pv_loc_datapipe = LocationPicker(pv_loc_datapipe)
