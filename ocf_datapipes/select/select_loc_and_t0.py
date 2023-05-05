@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @functional_datapipe("select_loc_and_t0")
 class LocationT0PickerIterDataPipe(IterDataPipe):
     """Datapipe to yield location-time pairs from the input data source.
-    
+
     Args:
         source_datapipe: Datapipe emitting Xarray Dataset
         return_all: Whether to return all t0-location pairs,
@@ -34,7 +34,7 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         shuffle: bool = False,
         x_dim_name: Optional[str] = "x_osgb",
         y_dim_name: Optional[str] = "y_osgb",
-        time_dim_name: Optional[str] = "time_utc"
+        time_dim_name: Optional[str] = "time_utc",
     ):
         super().__init__()
         self.source_datapipe = source_datapipe
@@ -44,12 +44,10 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         self.y_dim_name = y_dim_name
         self.time_dim_name = time_dim_name
 
-    
     def _yield_all_iter(self, xr_dataset):
-            
         t_index, x_index = np.meshgrid(
-                    np.arange(len(xr_dataset[self.time_dim_name])), 
-                    np.arange(len(xr_dataset[self.x_dim_name]))
+            np.arange(len(xr_dataset[self.time_dim_name])),
+            np.arange(len(xr_dataset[self.x_dim_name])),
         )
 
         index_pairs = np.stack((t_index.ravel(), x_index.ravel())).T
@@ -74,9 +72,8 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
                 location.id = int(xr_dataset["gsp_id"][loc_index].values)
 
             yield location, t0
-            
+
     def _yield_random_iter(self, xr_dataset):
-        
         while True:
             location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))
 
@@ -94,11 +91,10 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
             t0 = np.random.choice(xr_dataset[self.time_dim_name].values)
 
             yield location, t0
-        
+
     def __iter__(self) -> tuple[Location, pd.Timestamp]:
-        
         xr_dataset = next(iter(self.source_datapipe))
-        
+
         if self.return_all:
             return self._yield_all_iter(xr_dataset)
         else:
