@@ -44,24 +44,16 @@ def open_and_return_datapipes(
     # load configuration
     config_datapipe = OpenConfiguration(configuration_filename)
     configuration: Configuration = next(iter(config_datapipe))
-
+        
     # Check which modalities to use
-    if use_nwp:
-        use_nwp = True if configuration.input_data.nwp.nwp_zarr_path != "" else False
-    if use_pv:
-        use_pv = True if configuration.input_data.pv.pv_files_groups[0].pv_filename != "" else False
-    if use_sat:
-        use_sat = True if configuration.input_data.satellite.satellite_zarr_path != "" else False
-    if use_hrv:
-        use_hrv = (
-            True if configuration.input_data.hrvsatellite.hrvsatellite_zarr_path != "" else False
-        )
-    if use_topo:
-        use_topo = (
-            True if configuration.input_data.topographic.topographic_filename != "" else False
-        )
-    if use_gsp:
-        use_gsp = True if configuration.input_data.gsp.gsp_zarr_path != "" else False
+    conf_in = configuration.input_data
+    use_nwp = use_nwp and (conf_in.nwp.nwp_zarr_path != "")
+    use_pv = use_pv and (conf_in.pv.pv_files_groups[0].pv_filename != "")
+    use_sat = use_sat and (conf_in.satellite.satellite_zarr_path != "") 
+    use_hrv =  use_hrv and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
+    use_topo = use_topo and (conf_in.topographic.topographic_filename != "")
+    use_gsp = use_gsp and (conf_in.gsp.gsp_zarr_path != "")
+    
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
         f" HRV: {use_hrv} PV: {use_pv} Topo: {use_topo}"
