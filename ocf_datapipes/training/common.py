@@ -44,16 +44,16 @@ def open_and_return_datapipes(
     # load configuration
     config_datapipe = OpenConfiguration(configuration_filename)
     configuration: Configuration = next(iter(config_datapipe))
-        
+
     # Check which modalities to use
     conf_in = configuration.input_data
     use_nwp = use_nwp and (conf_in.nwp.nwp_zarr_path != "")
     use_pv = use_pv and (conf_in.pv.pv_files_groups[0].pv_filename != "")
-    use_sat = use_sat and (conf_in.satellite.satellite_zarr_path != "") 
-    use_hrv =  use_hrv and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
+    use_sat = use_sat and (conf_in.satellite.satellite_zarr_path != "")
+    use_hrv = use_hrv and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
     use_topo = use_topo and (conf_in.topographic.topographic_filename != "")
     use_gsp = use_gsp and (conf_in.gsp.gsp_zarr_path != "")
-    
+
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
         f" HRV: {use_hrv} PV: {use_pv} Topo: {use_topo}"
@@ -313,7 +313,7 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
 
 
 def create_t0_and_loc_datapipes(
-    datapipes_dict: dict, 
+    datapipes_dict: dict,
     configuration: Configuration,
     key_for_t0: str = "gsp",
     shuffle: bool = True,
@@ -324,7 +324,7 @@ def create_t0_and_loc_datapipes(
     replacement.
 
     Args:
-        datapipes_dict: Dictionary of datapipes of input sources for which we want to select 
+        datapipes_dict: Dictionary of datapipes of input sources for which we want to select
             appropriate location and times.
         configuration: Configuration object for inputs.
         key_for_t0: Key to use for the t0 datapipe. Must be "gsp" or "pv".
@@ -333,65 +333,65 @@ def create_t0_and_loc_datapipes(
 
     Returns:
         location datapipe, t0 datapipe
-    
+
     """
     assert key_for_t0 in datapipes_dict
-    assert key_for_t0 in ['gsp', 'pv']
-        
+    assert key_for_t0 in ["gsp", "pv"]
+
     contiguous_time_datapipes = []  # Used to store contiguous time periods from each data source
-    
+
     datapipes_dict[key_for_t0], key_datapipe = datapipes_dict[key_for_t0].fork(2, buffer_size=5)
-    
+
     for key in datapipes_dict.keys():
         if key in ["topo"]:
             continue
 
         elif key == "nwp":
-            sample_frequency = 180 # Init times are 3 hours apart
+            sample_frequency = 180  # Init times are 3 hours apart
             history_duration = configuration.input_data.nwp.history_minutes
             forecast_duration = configuration.input_data.nwp.forecast_minutes
-            time_dim="init_time_utc"
+            time_dim = "init_time_utc"
 
-        elif key ==  "sat":            
+        elif key == "sat":
             sample_frequency = 5
             history_duration = configuration.input_data.satellite.history_minutes
             forecast_duration = 0
-            time_dim="time_utc"
+            time_dim = "time_utc"
 
         elif key == "hrv":
             sample_frequency = 5
             history_duration = configuration.input_data.hrvsatellite.history_minutes
             forecast_duration = 0
-            time_dim="time_utc"
+            time_dim = "time_utc"
 
         elif key == "pv":
             sample_frequency = 5
             history_duration = configuration.input_data.pv.history_minutes
             forecast_duration = configuration.input_data.pv.forecast_minutes
-            time_dim="time_utc"
-            
+            time_dim = "time_utc"
+
         elif key == "gsp":
             sample_frequency = 30
             history_duration = configuration.input_data.gsp.history_minutes
             forecast_duration = configuration.input_data.gsp.forecast_minutes
-            time_dim="time_utc"
-        
+            time_dim = "time_utc"
+
         else:
             raise ValueError(f"Unexpected key: {key}")
-            
+
         datapipes_dict[key], datapipe_copy = datapipes_dict[key].fork(2, buffer_size=5)
-            
+
         time_periods = datapipe_copy.get_contiguous_time_periods(
-            sample_period_duration=timedelta(minutes=sample_frequency),  
+            sample_period_duration=timedelta(minutes=sample_frequency),
             history_duration=timedelta(minutes=history_duration),
             forecast_duration=timedelta(minutes=forecast_duration),
             time_dim=time_dim,
         )
-        
+
         contiguous_time_datapipes.append(time_periods)
 
     # Find joint overlapping contiguous time periods
-    if len(contiguous_time_datapipes)>1:
+    if len(contiguous_time_datapipes) > 1:
         logger.debug("Getting joint time periods")
         overlapping_datapipe = contiguous_time_datapipes[0].select_overlapping_time_slice(
             secondary_datapipes=contiguous_time_datapipes[1:],
@@ -399,12 +399,12 @@ def create_t0_and_loc_datapipes(
     else:
         logger.debug("Skipping getting joint time periods")
         overlapping_datapipe = contiguous_time_datapipes[0]
-    
+
     # Select time periods and set length
     key_datapipe = key_datapipe.select_time_periods(time_periods=overlapping_datapipe)
-    
+
     t0_loc_datapipe = key_datapipe.select_loc_and_t0(return_all=True, shuffle=shuffle)
-        
+
     location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)
-    
+
     return location_pipe, t0_datapipe
