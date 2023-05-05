@@ -14,6 +14,7 @@ from .select_channels import SelectChannelsIterDataPipe as SelectChannels
 from .select_id import SelectIDIterDataPipe as SelectID
 from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Time
 from .select_live_time_slice import SelectLiveTimeSliceIterDataPipe as SelectLiveTimeSlice
+from .select_loc_and_t0 import LocationT0PickerIterDataPipe as LocationT0Picker
 from .select_overlapping_time_slices import (
     SelectOverlappingTimeSliceIterDataPipe as SelectOverlappingTimeSlice,
 )
@@ -23,7 +24,6 @@ from .select_t0_time import SelectT0TimeIterDataPipe as SelectT0Time
 from .select_time_periods import SelectTimePeriodsIterDataPipe as SelectTimePeriods
 from .select_time_slice import SelectTimeSliceIterDataPipe as SelectTimeSlice
 from .select_train_test import SelectTrainTestTimePeriodsIterDataPipe as SelectTrainTestTimePeriod
-from .select_loc_and_t0 import LocationT0PickerIterDataPipe as LocationT0Picker
 from .trim_dates_with_insufficent_data import (
     TrimDatesWithInsufficentDataIterDataPipe as TrimDatesWithInsufficentData,
 )
