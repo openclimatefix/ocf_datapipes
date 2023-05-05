@@ -310,3 +310,101 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
         datapipes_to_return["topo"] = used_datapipes["topo"]
     datapipes_to_return["config"] = configuration
     return datapipes_to_return
+
+
+def create_t0_and_loc_datapipes(
+    datapipes_dict: dict, 
+    configuration: Configuration,
+    key_for_t0: str = "gsp",
+    shuffle: bool = True,
+):
+    """
+    Takes datapipes and returns datapipes of appropriate locations and times for which samples can
+    be constructed from the the input datapipe sources. The (location, t0) pairs are sampled without
+    replacement.
+
+    Args:
+        datapipes_dict: Dictionary of datapipes of input sources for which we want to select 
+            appropriate location and times.
+        configuration: Configuration object for inputs.
+        key_for_t0: Key to use for the t0 datapipe. Must be "gsp" or "pv".
+        shuffle: Whether to use the internal shuffle function when yielding location times. Else
+            location times will be heavily ordered.
+
+    Returns:
+        location datapipe, t0 datapipe
+    
+    """
+    assert key_for_t0 in datapipes_dict
+    assert key_for_t0 in ['gsp', 'pv']
+        
+    contiguous_time_datapipes = []  # Used to store contiguous time periods from each data source
+    
+    datapipes_dict[key_for_t0], key_datapipe = datapipes_dict[key_for_t0].fork(2, buffer_size=5)
+    
+    for key in datapipes_dict.keys():
+        if key in ["topo"]:
+            continue
+
+        elif key == "nwp":
+            sample_frequency = 180 # Init times are 3 hours apart
+            history_duration = configuration.input_data.nwp.history_minutes
+            forecast_duration = configuration.input_data.nwp.forecast_minutes
+            time_dim="init_time_utc"
+
+        elif key ==  "sat":            
+            sample_frequency = 5
+            history_duration = configuration.input_data.satellite.history_minutes
+            forecast_duration = 0
+            time_dim="time_utc"
+
+        elif key == "hrv":
+            sample_frequency = 5
+            history_duration = configuration.input_data.hrvsatellite.history_minutes
+            forecast_duration = 0
+            time_dim="time_utc"
+
+        elif key == "pv":
+            sample_frequency = 5
+            history_duration = configuration.input_data.pv.history_minutes
+            forecast_duration = configuration.input_data.pv.forecast_minutes
+            time_dim="time_utc"
+            
+        elif key == "gsp":
+            sample_frequency = 30
+            history_duration = configuration.input_data.gsp.history_minutes
+            forecast_duration = configuration.input_data.gsp.forecast_minutes
+            time_dim="time_utc"
+        
+        else:
+            raise ValueError(f"Unexpected key: {key}")
+            
+        datapipes_dict[key], datapipe_copy = datapipes_dict[key].fork(2, buffer_size=5)
+            
+        time_periods = datapipe_copy.get_contiguous_time_periods(
+            sample_period_duration=timedelta(minutes=sample_frequency),  
+            history_duration=timedelta(minutes=history_duration),
+            forecast_duration=timedelta(minutes=forecast_duration),
+            time_dim=time_dim,
+        )
+        
+        contiguous_time_datapipes.append(time_periods)
+
+    # Find joint overlapping contiguous time periods
+    if len(contiguous_time_datapipes)>1:
+        logger.debug("Getting joint time periods")
+        overlapping_datapipe = contiguous_time_datapipes[0].select_overlapping_time_slice(
+            secondary_datapipes=contiguous_time_datapipes[1:],
+        )
+    else:
+        logger.debug("Skipping getting joint time periods")
+        overlapping_datapipe = contiguous_time_datapipes[0]
+    
+    # Select time periods and set length
+    key_datapipe = key_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+    
+    t0_loc_datapipe = key_datapipe.select_loc_and_t0(return_all=True, shuffle=shuffle)
+        
+    location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)
+    
+    return location_pipe, t0_datapipe
