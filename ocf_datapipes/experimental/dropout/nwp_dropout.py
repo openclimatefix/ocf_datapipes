@@ -1,4 +1,4 @@
-"""Convert NWP data to the target time"""
+"""Convert NWP data to the target time with dropout"""
 import logging
 from datetime import timedelta
 from typing import Union, Optional, List
