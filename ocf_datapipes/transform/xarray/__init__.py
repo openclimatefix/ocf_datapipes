@@ -39,3 +39,9 @@ from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .pv.create_pv_meta_image import CreatePVMetadataImageIterDataPipe as CreatePVMetadataImage
 from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+
+from .standard_dropout import SelectDropoutTimeIterDataPipe as SelectDropoutTime
+from .standard_dropout import ApplyDropoutTimeIterDataPipe as ApplyDropoutTime
+from .nwp_dropout import (
+    ConvertToNWPTargetTimeWithDropoutIterDataPipe as ConvertToNWPTargetTimeWithDropout
+)

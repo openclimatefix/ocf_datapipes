@@ -3,7 +3,7 @@ from torchdata.datapipes.iter import IterableWrapper
 import pandas as pd
 import numpy as np
 
-from ocf_datapipes.experimental.dropout import SelectDropoutTime, ApplyDropoutTime
+from ocf_datapipes.transform.xarray import SelectDropoutTime, ApplyDropoutTime
 
 
 
