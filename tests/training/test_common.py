@@ -1,12 +1,20 @@
 import pytest
 from torchdata.dataloader2 import DataLoader2
 from torchdata.datapipes.iter import IterDataPipe, Zipper
+from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.utils.consts import Location
 
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
+    create_t0_and_loc_datapipes,
 )
+
+import fsspec
+from pyaml_env import parse_config
+
+import pandas as pd
 
 
 def test_open_and_return_datapipes():
@@ -90,3 +98,25 @@ def test_add_selected_time_slices_from_datapipes_fork_iterations():
         _ = batch
         if i + 1 % 50000 == 0:
             break
+
+
+def test_create_t0_and_loc_datapipes():
+    datapipes_dict = open_and_return_datapipes("tests/config/test.yaml")
+
+    configuration = datapipes_dict.pop("config")
+
+    del datapipes_dict["pv"]
+
+    location_pipe, t0_datapipe = create_t0_and_loc_datapipes(
+        datapipes_dict,
+        configuration,
+        key_for_t0="gsp",
+        shuffle=True,
+    )
+
+    assert isinstance(location_pipe, IterDataPipe)
+    assert isinstance(t0_datapipe, IterDataPipe)
+
+    loc0, t0 = next(iter(location_pipe.zip(t0_datapipe)))
+    assert isinstance(loc0, Location)
+    assert isinstance(t0, np.datetime64)
