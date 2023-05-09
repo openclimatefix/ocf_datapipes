@@ -25,7 +25,7 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         y_dim_name: Optional[str] = "y_osgb",
         time_dim_name: Optional[str] = "time_utc",
     ):
-        """   
+        """
         Datapipe to yield location-time pairs from the input data source.
 
         Args:

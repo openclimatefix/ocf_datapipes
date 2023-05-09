@@ -23,7 +23,7 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of t0 times
-            dropout_timedeltas: List of timedeltas. We randonly select the delay for each time from 
+            dropout_timedeltas: List of timedeltas. We randonly select the delay for each time from
                 this list. These should be negative timedeltas w.r.t time t0.
             dropout_frac: Fraction of samples subject to dropout
         """

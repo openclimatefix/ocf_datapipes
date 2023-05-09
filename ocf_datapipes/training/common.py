@@ -320,7 +320,7 @@ def create_t0_and_loc_datapipes(
 ):
     """
     Takes source datapipes and returns datapipes of appropriate sample pairs of locations and times.
-    
+
     The (location, t0) pairs are sampled without replacement.
 
     Args:
