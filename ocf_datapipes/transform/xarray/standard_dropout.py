@@ -11,14 +11,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 @functional_datapipe("select_dropout_time")
 class SelectDropoutTimeIterDataPipe(IterDataPipe):
-    """Generates dropout times. The times are absolute values, not timedeltas.
-
-    Args:
-        source_datapipe: Datapipe of t0 times
-        dropout_timedeltas: List of timedeltas. We randonly select the delay for each time from this
-            list. These should be negative timedeltas w.r.t time t0.
-        dropout_frac: Fraction of samples subject to dropout
-    """
+    """Generates dropout times. The times are absolute values, not timedeltas."""
 
     def __init__(
         self,
@@ -26,6 +19,14 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
         dropout_timedeltas: List[timedelta],
         dropout_frac: Optional[float] = 0,
     ):
+        """Generates dropout times. The times are absolute values, not timedeltas.
+
+        Args:
+            source_datapipe: Datapipe of t0 times
+            dropout_timedeltas: List of timedeltas. We randonly select the delay for each time from 
+                this list. These should be negative timedeltas w.r.t time t0.
+            dropout_frac: Fraction of samples subject to dropout
+        """
         self.source_datapipe = source_datapipe
         self.dropout_timedeltas = dropout_timedeltas
         self.dropout_frac = dropout_frac
@@ -51,18 +52,19 @@ class SelectDropoutTimeIterDataPipe(IterDataPipe):
 
 @functional_datapipe("apply_dropout_time")
 class ApplyDropoutTimeIterDataPipe(IterDataPipe):
-    """Masks an xarray object to replace values that come after the dropout time with NaN.
-
-    Args:
-        source_datapipe: Datapipe of Xarray objects
-        dropout_time_datapipe: Datapipe of dropout times
-    """
+    """Masks an xarray object to replace values that come after the dropout time with NaN."""
 
     def __init__(
         self,
         source_datapipe: IterDataPipe,
         dropout_time_datapipe: IterDataPipe,
     ):
+        """Masks an xarray object to replace values that come after the dropout time with NaN.
+
+        Args:
+            source_datapipe: Datapipe of Xarray objects
+            dropout_time_datapipe: Datapipe of dropout times
+        """
         self.source_datapipe = source_datapipe
         self.dropout_time_datapipe = dropout_time_datapipe
 

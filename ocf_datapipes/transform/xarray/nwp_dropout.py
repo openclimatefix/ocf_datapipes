@@ -14,19 +14,7 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("convert_to_nwp_target_time_with_dropout")
 class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
-    """Convert NWP Xarray dataset to use target time as indexer
-
-    Args:
-        source_datapipe: Datapipe emitting a Xarray Dataset with step and init_time_utc indexers.
-        t0_datapipe: Datapipe emitting t0 times for indexing off of choosing the closest previous
-            init_time_utc.
-        sample_period_duration: How long the sampling period is.
-        history_duration: How long the history time should cover.
-        forecast_duration: How long the forecast time should cover.
-        dropout_timedeltas: List of timedeltas. We randonly select the delay for each NWP forecast
-            from this list. These should be negative timedeltas w.r.t time t0.
-        dropout_frac: Fraction of samples subject to dropout
-    """
+    """Convert NWP Xarray dataset to use target time as indexer"""
 
     def __init__(
         self,
@@ -38,6 +26,20 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
         dropout_timedeltas: List[timedelta],
         dropout_frac: Optional[float] = 1,
     ):
+        """Convert NWP Xarray dataset to use target time as indexer
+
+        Args:
+            source_datapipe: Datapipe emitting an Xarray Dataset with step and init_time_utc 
+                indexers.
+            t0_datapipe: Datapipe emitting t0 times for indexing off of choosing the closest
+                previous init_time_utc.
+            sample_period_duration: How long the sampling period is.
+            history_duration: How long the history time should cover.
+            forecast_duration: How long the forecast time should cover.
+            dropout_timedeltas: List of timedeltas. We randonly select the delay for each NWP 
+                forecast from this list. These should be negative timedeltas w.r.t time t0.
+            dropout_frac: Fraction of samples subject to dropout
+        """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
         self.sample_period_duration = sample_period_duration
