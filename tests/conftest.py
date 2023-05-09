@@ -77,8 +77,8 @@ def passiv_datapipe():
     )
 
     pv = PV(
-        start_datetime=datetime(2018, 1, 1, tzinfo=timezone.utc),
-        end_datetime=datetime(2023, 1, 1, tzinfo=timezone.utc),
+        start_datetime=datetime(2018, 1, 1),
+        end_datetime=datetime(2023, 1, 1),
     )
     pv_file = PVFiles(
         pv_filename=str(filename),
@@ -110,8 +110,8 @@ def pvoutput_datapipe():
     )
 
     pv = PV(
-        start_datetime=datetime(2018, 1, 1, tzinfo=timezone.utc),
-        end_datetime=datetime(2023, 1, 1, tzinfo=timezone.utc),
+        start_datetime=datetime(2018, 1, 1),
+        end_datetime=datetime(2023, 1, 1),
     )
     pv_file = PVFiles(
         pv_filename=str(filename),
@@ -213,7 +213,7 @@ def pv_yields_and_systems(db_session):
     for hour in range(4, 10):
         for minute in range(0, 60, 5):
             pv_yield_1 = PVYield(
-                datetime_utc=datetime(2022, 1, 1, hour, minute, tzinfo=timezone.utc),
+                datetime_utc=datetime(2022, 1, 1, hour, minute),
                 solar_generation_kw=hour + minute / 100,
             ).to_orm()
             pv_yield_1.pv_system = pv_system_sql_1
@@ -229,7 +229,7 @@ def pv_yields_and_systems(db_session):
     # pv system with gaps every 5 mins
     for minutes in [0, 10, 20, 30]:
         pv_yield_4 = PVYield(
-            datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes),
+            datetime_utc=datetime(2022, 1, 1, 4) + timedelta(minutes=minutes),
             solar_generation_kw=4,
         ).to_orm()
         pv_yield_4.pv_system = pv_system_sql_2
@@ -237,7 +237,7 @@ def pv_yields_and_systems(db_session):
 
     # add a system with only on pv yield
     pv_yield_5 = PVYield(
-        datetime_utc=datetime(2022, 1, 1, 4, tzinfo=timezone.utc) + timedelta(minutes=minutes),
+        datetime_utc=datetime(2022, 1, 1, 4) + timedelta(minutes=minutes),
         solar_generation_kw=4,
     ).to_orm()
     pv_yield_5.pv_system = pv_system_sql_3
@@ -271,7 +271,7 @@ def gsp_yields(db_session):
         for hour in range(0, 8):
             for minute in range(0, 60, 30):
                 gsp_yield_1 = GSPYield(
-                    datetime_utc=datetime(2022, 1, 1, hour, minute, tzinfo=timezone.utc),
+                    datetime_utc=datetime(2022, 1, 1, hour, minute),
                     solar_generation_kw=hour + minute,
                 )
                 gsp_yield_1_sql = gsp_yield_1.to_orm()
@@ -298,7 +298,7 @@ def pv_parquet_file():
     - generation_wh
     """
 
-    date = datetime(2022, 9, 1, tzinfo=timezone.utc)
+    date = datetime(2022, 9, 1)
     ids = range(0, 10)
     days = 7
 
