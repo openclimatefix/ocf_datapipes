@@ -33,8 +33,6 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
                 }
 
                 for batch_key, dataset_key in (
-                    (BatchKey.hrvsatellite_y_osgb, "y_osgb"),
-                    (BatchKey.hrvsatellite_x_osgb, "x_osgb"),
                     (BatchKey.hrvsatellite_y_geostationary, "y_geostationary"),
                     (BatchKey.hrvsatellite_x_geostationary, "x_geostationary"),
                 ):
@@ -48,8 +46,6 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
                 }
 
                 for batch_key, dataset_key in (
-                    (BatchKey.satellite_y_osgb, "y_osgb"),
-                    (BatchKey.satellite_x_osgb, "x_osgb"),
                     (BatchKey.satellite_y_geostationary, "y_geostationary"),
                     (BatchKey.satellite_x_geostationary, "x_geostationary"),
                 ):
