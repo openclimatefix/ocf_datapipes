@@ -349,7 +349,6 @@ def slice_datapipes_by_time(
         # Apply the dropout
         datapipes_dict["sat"] = datapipes_dict["sat"].apply_dropout_time(
             dropout_time_datapipe=sat_dropout_time_datapipe,
-            sample_period_duration=minutes(5),
         )
 
     if "hrv" in datapipes_dict:
@@ -374,7 +373,6 @@ def slice_datapipes_by_time(
         # Apply the dropout
         datapipes_dict["hrv"] = datapipes_dict["hrv"].apply_dropout_time(
             dropout_time_datapipe=hrv_dropout_time_datapipe,
-            sample_period_duration=minutes(5),       
         )
             
     if "pv" in datapipes_dict:
@@ -426,7 +424,6 @@ def slice_datapipes_by_time(
         
         datapipes_dict["gsp"] = datapipes_dict["gsp"].apply_dropout_time(
             dropout_time_datapipe=gsp_dropout_time_datapipe,
-            sample_period_duration=minutes(30),
         )
 
     get_t0_datapipe.close()
@@ -481,7 +478,6 @@ def construct_sliced_data_pipeline(
             roi_width_pixels=conf_nwp.nwp_image_size_pixels_width,
             x_dim_name="x_osgb",
             y_dim_name="y_osgb",
-            datapipe_name="NWP",
         )
         nwp_datapipe = nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
         numpy_modalities.append(nwp_datapipe.convert_nwp_to_numpy_batch())
@@ -496,7 +492,6 @@ def construct_sliced_data_pipeline(
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
             x_dim_name="x_geostationary",
             y_dim_name="y_geostationary",
-            datapipe_name="Satellite",
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
@@ -512,7 +507,6 @@ def construct_sliced_data_pipeline(
         y_dim_name="y_osgb",
         x_dim_name="x_osgb",
         dim_name="gsp_id",
-        datapipe_name="GSP_future",
     )    
     
     gsp_datapipe = datapipes_dict["gsp"]
@@ -523,7 +517,6 @@ def construct_sliced_data_pipeline(
         y_dim_name="y_osgb",
         x_dim_name="x_osgb",
         dim_name="gsp_id",
-        datapipe_name="GSP",
     )
     
     # Recombine GSP arrays - see function doc for further explanation
