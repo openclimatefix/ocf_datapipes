@@ -24,8 +24,8 @@ class SelectLiveT0TimeIterDataPipe(IterDataPipe):
         for xr_data in self.source_datapipe:
             # Get most recent time in data
             # Select the history that goes back that far
-            latest_time_idx = pd.DatetimeIndex(xr_data[self.dim_name].values).get_loc(
-                pd.Timestamp.utcnow(), method="pad"
-            )
+            latest_time_idx = pd.DatetimeIndex(xr_data[self.dim_name].values).get_indexer(
+                [pd.Timestamp.now(tz=None)], method="pad"
+            )[0]
             latest_time = xr_data[self.dim_name].values[latest_time_idx]
             yield latest_time

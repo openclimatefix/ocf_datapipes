@@ -15,6 +15,7 @@ import fsspec
 from pyaml_env import parse_config
 
 import pandas as pd
+import numpy as np
 
 
 def test_open_and_return_datapipes():
