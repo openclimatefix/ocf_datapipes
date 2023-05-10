@@ -14,18 +14,7 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("select_loc_and_t0")
 class LocationT0PickerIterDataPipe(IterDataPipe):
-    """Datapipe to yield location-time pairs from the input data source.
-
-    Args:
-        source_datapipe: Datapipe emitting Xarray Dataset
-        return_all: Whether to return all t0-location pairs,
-            if True, also returns them in structured order
-        shuffle: If `return_all` sets whether the pairs are
-            shuffled before being returned.
-        x_dim_name: x dimension name, defaulted to 'x_osgb'
-        y_dim_name: y dimension name, defaulted to 'y_osgb'
-        time_dim_name: time dimension name, defaulted to 'time_utc'
-    """
+    """Datapipe to yield location-time pairs from the input data source."""
 
     def __init__(
         self,
@@ -36,6 +25,19 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         y_dim_name: Optional[str] = "y_osgb",
         time_dim_name: Optional[str] = "time_utc",
     ):
+        """
+        Datapipe to yield location-time pairs from the input data source.
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray Dataset
+            return_all: Whether to return all t0-location pairs,
+                if True, also returns them in structured order
+            shuffle: If `return_all` sets whether the pairs are
+                shuffled before being returned.
+            x_dim_name: x dimension name, defaulted to 'x_osgb'
+            y_dim_name: y dimension name, defaulted to 'y_osgb'
+            time_dim_name: time dimension name, defaulted to 'time_utc'
+        """
         super().__init__()
         self.source_datapipe = source_datapipe
         self.return_all = return_all

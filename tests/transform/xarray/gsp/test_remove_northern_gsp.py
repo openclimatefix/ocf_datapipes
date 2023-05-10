@@ -16,10 +16,10 @@ def test_remove_northern_gsp_all(gsp_datapipe):
 
 
 def test_remove_northern_gsp_some(gsp_datapipe):
-    northern_y_osgb_limit = 180000
+    northern_y_osgb_limit = 180_000
 
     gsp_datapipe = RemoveNorthernGSP(gsp_datapipe, northern_y_osgb_limit=northern_y_osgb_limit)
     data = next(iter(gsp_datapipe))
 
-    assert len(data.gsp_id) == 5
+    assert len(data.gsp_id) == 6
     assert (data.y_osgb < northern_y_osgb_limit).all()

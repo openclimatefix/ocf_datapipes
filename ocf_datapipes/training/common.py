@@ -319,9 +319,9 @@ def create_t0_and_loc_datapipes(
     shuffle: bool = True,
 ):
     """
-    Takes datapipes and returns datapipes of appropriate locations and times for which samples can
-    be constructed from the the input datapipe sources. The (location, t0) pairs are sampled without
-    replacement.
+    Takes source datapipes and returns datapipes of appropriate sample pairs of locations and times.
+
+    The (location, t0) pairs are sampled without replacement.
 
     Args:
         datapipes_dict: Dictionary of datapipes of input sources for which we want to select
