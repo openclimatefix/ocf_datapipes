@@ -13,40 +13,91 @@ from torchdata.datapipes.iter import IterDataPipe
 _log = logging.getLogger(__name__)
 
 
-def open_sat_data(zarr_path: Union[Path, str, list[Union[str, Path]]]) -> xr.DataArray:
+def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
+    """Helper function to open a zarr from either local or GCP path.
+    
+    The local or GCP path may contain wildcard matching (*)
+    
+    Args:
+        zarr_path: Path to zarr file
+    """
+    
+    # These kwargs are used if zarr path contains "*"
+    openmf_kwargs = dict(                
+            engine="zarr", 
+            concat_dim="time", 
+            combine="nested", 
+            chunks='auto',
+            join="override",
+    )
+    
+    # Need to generate list of files if using GCP bucket storage
+    if "gs://" in str(zarr_path) and "*" in str(zarr_path):
+        result_string = subprocess.run(
+                f"gsutil ls -d {zarr_path}".split(" "), 
+                stdout=subprocess.PIPE
+            ).stdout.decode('utf-8')
+        files = result_string.splitlines()
+        
+        dataset = xr.open_mfdataset(files, **openmf_kwargs)
+        
+    elif "*" in str(zarr_path):  # Multi-file dataset
+        dataset = xr.open_mfdataset(zarr_path, **openmf_kwargs)            
+    else:
+        dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
+    dataset = (
+        dataset.drop_duplicates("time")
+        .sortby("time")
+    )
+    
+    return dataset
+
+
+def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.DataArray:
     """Lazily opens the Zarr store.
 
     Args:
-      zarr_path: Cloud URL or local path pattern.  If GCP URL, must start with 'gs://'
+      zarr_path: Cloud URL or local path pattern, or list of these. If GCS URL, it must start with 
+          'gs://'.
+          
+    Example:
+        With wild cards and GCS path:
+        ```
+        zarr_paths = [
+            "gs://bucket/2020_nonhrv_split_*.zarr",
+            "gs://bucket/2019_nonhrv_split_*.zarr",
+        ]
+        ds = open_sat_data(zarr_paths)
+        ```
+        Without wild cards and with local path:
+        ```
+        zarr_paths = [
+            "/data/2020_nonhrv.zarr",
+            "/data/2019_nonhrv.zarr",
+        ]
+        ds = open_sat_data(zarr_paths)
+        ```
     """
-    _log.debug("Opening satellite data: %s", zarr_path)
+    _log.info("Opening satellite data: %s", zarr_path)
 
     # Silence the warning about large chunks.
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
     # from 8 seconds to 50 seconds!
     dask.config.set({"array.slicing.split_large_chunks": False})
-
-    # Open the data
-    if type(zarr_path) in [list, tuple] or "*" in str(zarr_path):  # Multi-file dataset
+    
+    if isinstance(zarr_path, (list, tuple)):
         dataset = (
-            xr.open_mfdataset(
-                zarr_path,
-                engine="zarr",
-                concat_dim="time",
-                combine="nested",
-                chunks={},
+            xr.combine_nested(
+                [_get_single_sat_data(path) for path in zarr_path],
+                concat_dim = "time",
+                combine_attrs="override",
                 join="override",
             )
-            .drop_duplicates("time")
-            .sortby("time")
         )
     else:
         dataset = (
-            xr.open_dataset(zarr_path, engine="zarr", chunks={})
-            .drop_duplicates("time")
-            .sortby("time")
+            _get_single_sat_data(zarr_path)
         )
-
     # TODO add 15 mins data satellite option
 
     # Remove data coordinate dimensions if they exist
@@ -114,6 +165,8 @@ def open_sat_data(zarr_path: Union[Path, str, list[Union[str, Path]]]) -> xr.Dat
     # These slight offsets will break downstream code, which expects satellite data to be at
     # exactly 5 minutes past the hour.
     assert (datetime_index == datetime_index.round("5T")).all()
+
+    _log.info("Opened satellite data")
 
     return data_array
 
