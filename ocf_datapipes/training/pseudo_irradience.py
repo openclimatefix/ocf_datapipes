@@ -110,8 +110,12 @@ def _normalize_by_pvlib(pv_system):
     fraction_clear_sky = total_irradiance["poa_global"] / (
         clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
+    print(fraction_clear_sky)
     pv_system /= pv_system.capacity_watt_power
+    print(pv_system)
     pv_system *= fraction_clear_sky
+    print(pv_system)
+    print("---------------------------------------------------")
     return pv_system
 
 
@@ -123,7 +127,7 @@ def _get_meta(xr_data):
 
 
 def _get_values(xr_data):
-    xr_data = _normalize_by_pvlib(xr_data)
+    xr_data = normalize_pv(xr_data)
     return xr_data.values
 
 
