@@ -15,7 +15,10 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
 )
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD, NEW_NWP_MIN, NEW_NWP_MAX
+from ocf_datapipes.utils.consts import (
+    NEW_NWP_MAX,
+    NEW_NWP_MIN,
+)
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
@@ -43,8 +46,11 @@ def _remove_nans(x):
 def _load_xarray_values(x):
     return x.load()
 
+
 def _normalize_nwp(x):
     return (x - NEW_NWP_MIN) / NEW_NWP_MAX
+
+
 def _drop_pv_ids_in_list(x):
     ids_to_sel = [
         10426,
@@ -257,7 +263,7 @@ def metnet_site_datapipe(
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
         # take sat time slices
-        sat_datapipe = used_datapipes["sat"]#.normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_datapipe = used_datapipes["sat"]  # .normalize(mean=RSS_MEAN, std=RSS_STD)
         pv_loc_datapipe, pv_sat_image_loc_datapipe = pv_loc_datapipe.fork(2)
         sat_datapipe = sat_datapipe.select_spatial_slice_meters(
             pv_sat_image_loc_datapipe,
@@ -273,7 +279,7 @@ def metnet_site_datapipe(
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
-        sat_hrv_datapipe = used_datapipes["hrv"]#.normalize(mean=RSS_MEAN, std=RSS_STD)
+        sat_hrv_datapipe = used_datapipes["hrv"]  # .normalize(mean=RSS_MEAN, std=RSS_STD)
         pv_loc_datapipe, pv_hrv_image_loc_datapipe = pv_loc_datapipe.fork(2)
         sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_meters(
             pv_hrv_image_loc_datapipe,
