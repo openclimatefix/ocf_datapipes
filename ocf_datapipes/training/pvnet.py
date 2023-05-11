@@ -244,6 +244,7 @@ def construct_loctime_pipelines(
         configuration=config,
         key_for_t0="gsp",
         shuffle=True,
+        nwp_max_t0_offset=minutes(90),
     )
     
     return location_pipe, t0_datapipe
