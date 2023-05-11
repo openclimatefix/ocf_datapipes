@@ -7,9 +7,9 @@ from ocf_datapipes.production.power_perceiver import power_perceiver_production_
 from ocf_datapipes.utils.consts import BatchKey
 import pytest
 
-
-@freeze_time("2022-01-01 08:00")
+# First breaking issue for this was the removal of OSGB coords in the input data
 @pytest.mark.skip(reason="This pipeline is no longer maintained")
+@freeze_time("2022-01-01 08:00")
 def test_pp_production_datapipe(pv_yields_and_systems, gsp_yields):
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
