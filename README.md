@@ -83,7 +83,7 @@ class <PipeletName>IterDataPipe(IterDataPipe):
     config_datapipe = OpenConfiguration(configuration)
 
 # 2. create respective data pipes for pv, nwp and satellite
-    
+
     pv_datapipe, pv_location_datapipe = (OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans().fork(2))
 
     nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
@@ -91,11 +91,11 @@ class <PipeletName>IterDataPipe(IterDataPipe):
     satellite_datapipe = OpenSatellite(zarr_path=configuration.input_data.satellite.satellite_zarr_path)
 
 # 3. pick all or random location data based on pv data pipeline
-    
+
     location_datapipes = pv_location_datapipe.location_picker().fork(4, buffer_size=BUFFER_SIZE)
 
 # 4. for the above picked locations get their respective spatial space slices from all the data pipes
-    
+
     pv_datapipe, pv_time_periods_datapipe, pv_t0_datapipe = pv_datapipe.select_spatial_slice_meters(...)
 
     nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(...)
@@ -103,7 +103,7 @@ class <PipeletName>IterDataPipe(IterDataPipe):
     satellite_datapipe, satellite_time_periods_datapipe = satellite_datapipe.select_spatial_slice_pixels(...)
 
 # 5. get contiguous time period data for the above picked locations
-    
+
     pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(...)
 
     nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(...)
