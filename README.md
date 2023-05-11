@@ -71,6 +71,64 @@ class <PipeletName>IterDataPipe(IterDataPipe):
         pass
 ```
 
+### Below is a little more detailed example on how to create and join multiple datapipes.
+
+```python
+
+## The below code snippets have been picked from ocf_datapipes\training\pv_satellite_nwp.py file
+
+
+# 1. read the configuration model for the dataset, detailing what kind of data is the dataset holding, e.g., pv, pv+satellite, pv+satellite+nwp, etc
+
+    config_datapipe = OpenConfiguration(configuration)
+
+# 2. create respective data pipes for pv, nwp and satellite
+    
+    pv_datapipe, pv_location_datapipe = (OpenPVFromNetCDF(pv=configuration.input_data.pv).pv_fill_night_nans().fork(2))
+
+    nwp_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+
+    satellite_datapipe = OpenSatellite(zarr_path=configuration.input_data.satellite.satellite_zarr_path)
+
+# 3. pick all or random location data based on pv data pipeline
+    
+    location_datapipes = pv_location_datapipe.location_picker().fork(4, buffer_size=BUFFER_SIZE)
+
+# 4. for the above picked locations get their respective spatial space slices from all the data pipes
+    
+    pv_datapipe, pv_time_periods_datapipe, pv_t0_datapipe = pv_datapipe.select_spatial_slice_meters(...)
+
+    nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(...)
+
+    satellite_datapipe, satellite_time_periods_datapipe = satellite_datapipe.select_spatial_slice_pixels(...)
+
+# 5. get contiguous time period data for the above picked locations
+    
+    pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(...)
+
+    nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(...)
+
+    satellite_time_periods_datapipe = satellite_time_periods_datapipe.get_contiguous_time_periods(...)
+
+# 6. since all the datapipes have different sampling period for their data, lets find the time that is common between all the data pipes
+
+    overlapping_datapipe = pv_time_periods_datapipe.select_overlapping_time_slice(secondary_datapipes=[nwp_time_periods_datapipe, satellite_time_periods_datapipe])
+
+# 7. take time slices for the above overlapping time from all the data pipes
+
+    pv_datapipe = pv_datapipe.select_time_slice(...)
+
+    nwp_datapipe = nwp_datapipe.convert_to_nwp_target_time(...)
+
+    satellite_datapipe = satellite_datapipe.select_time_slice(...)
+
+# 8. Finally join all the data pipes together
+
+    combined_datapipe = MergeNumpyModalities([nwp_datapipe, pv_datapipe, satellite_datapipe])
+
+
+```
+
 ### Experimental DataPipes
 
 For new datapipes being developed for new models or input modalities, to somewhat separate the more experimental and in
