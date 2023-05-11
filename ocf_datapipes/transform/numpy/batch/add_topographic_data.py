@@ -30,12 +30,15 @@ class AddTopographicDataIterDataPipe(IterDataPipe):
             if BatchKey.hrvsatellite_x_geostationary in np_batch:
                 # Recreate an xr.DataArray of the satellite data. This is required so we can
                 # use xr.combine_by_coords to align the topo data with the satellite data.
+
+                # n_examples i.e. batch size
+                n_examples, n_y = np_batch[BatchKey.hrvsatellite_y_geostationary].shape
+                n_x = np_batch[BatchKey.hrvsatellite_x_geostationary].shape[1]
+
                 hrvsatellite_data_array = xr.DataArray(
                     # We're not actually interested in the image. But xarray won't make an
-                    # empty DataArray without data in the right shape.
-                    # There's nothing special about the x_osgb data. It's just convenient because
-                    # it's the right shape!
-                    np_batch[BatchKey.hrvsatellite_x_osgb],
+                    # empty DataArray without data in the right shape. Plug with zeros.
+                    np.zeros((n_examples, n_y, n_x)),
                     dims=("example", "y", "x"),
                     coords={
                         "y_geostationary": (
