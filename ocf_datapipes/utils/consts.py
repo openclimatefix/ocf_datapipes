@@ -171,7 +171,7 @@ class Location(BaseModel):
         return v
 
     @validator("y")
-    def validate_x(cls, v):
+    def validate_y(cls, v):
         """Validate 'y'"""
         min_y: float
         max_y: float
