@@ -15,41 +15,37 @@ _log = logging.getLogger(__name__)
 
 def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
     """Helper function to open a zarr from either local or GCP path.
-    
+
     The local or GCP path may contain wildcard matching (*)
-    
+
     Args:
         zarr_path: Path to zarr file
     """
-    
+
     # These kwargs are used if zarr path contains "*"
-    openmf_kwargs = dict(                
-            engine="zarr", 
-            concat_dim="time", 
-            combine="nested", 
-            chunks='auto',
-            join="override",
+    openmf_kwargs = dict(
+        engine="zarr",
+        concat_dim="time",
+        combine="nested",
+        chunks="auto",
+        join="override",
     )
-    
+
     # Need to generate list of files if using GCP bucket storage
     if "gs://" in str(zarr_path) and "*" in str(zarr_path):
         result_string = subprocess.run(
-                f"gsutil ls -d {zarr_path}".split(" "), 
-                stdout=subprocess.PIPE
-            ).stdout.decode('utf-8')
+            f"gsutil ls -d {zarr_path}".split(" "), stdout=subprocess.PIPE
+        ).stdout.decode("utf-8")
         files = result_string.splitlines()
-        
+
         dataset = xr.open_mfdataset(files, **openmf_kwargs)
-        
+
     elif "*" in str(zarr_path):  # Multi-file dataset
-        dataset = xr.open_mfdataset(zarr_path, **openmf_kwargs)            
+        dataset = xr.open_mfdataset(zarr_path, **openmf_kwargs)
     else:
         dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
-    dataset = (
-        dataset.drop_duplicates("time")
-        .sortby("time")
-    )
-    
+    dataset = dataset.drop_duplicates("time").sortby("time")
+
     return dataset
 
 
@@ -57,9 +53,9 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
     """Lazily opens the Zarr store.
 
     Args:
-      zarr_path: Cloud URL or local path pattern, or list of these. If GCS URL, it must start with 
+      zarr_path: Cloud URL or local path pattern, or list of these. If GCS URL, it must start with
           'gs://'.
-          
+
     Example:
         With wild cards and GCS path:
         ```
@@ -84,20 +80,16 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
     # from 8 seconds to 50 seconds!
     dask.config.set({"array.slicing.split_large_chunks": False})
-    
+
     if isinstance(zarr_path, (list, tuple)):
-        dataset = (
-            xr.combine_nested(
-                [_get_single_sat_data(path) for path in zarr_path],
-                concat_dim = "time",
-                combine_attrs="override",
-                join="override",
-            )
+        dataset = xr.combine_nested(
+            [_get_single_sat_data(path) for path in zarr_path],
+            concat_dim="time",
+            combine_attrs="override",
+            join="override",
         )
     else:
-        dataset = (
-            _get_single_sat_data(zarr_path)
-        )
+        dataset = _get_single_sat_data(zarr_path)
     # TODO add 15 mins data satellite option
 
     # Remove data coordinate dimensions if they exist
