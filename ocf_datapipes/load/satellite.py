@@ -1,8 +1,8 @@
 """Satellite loader"""
 import logging
+import subprocess
 from pathlib import Path
 from typing import Union
-import subprocess
 
 import dask
 import pandas as pd
