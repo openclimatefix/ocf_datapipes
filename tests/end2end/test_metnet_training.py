@@ -50,6 +50,7 @@ from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, Bat
 
 import pytest
 
+
 # N.B First change which broke this test was changing the NWP data in the test directory to include
 # more forecast steps
 @pytest.mark.skip(reason="Not maintained for the moment")
