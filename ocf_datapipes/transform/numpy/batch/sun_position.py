@@ -10,11 +10,11 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils.consts import BatchKey
 from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 
-
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
 AZIMUTH_MEAN = 177.7
 AZIMUTH_STD = 41.7
+
 
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
@@ -38,11 +38,9 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             "nwp_target_time",
             "satellite",
         ], f"Cant add sun position on {self.modality_name}"
-    
 
     def __iter__(self):
         for np_batch in self.source_datapipe:
-
             # TODO Make work with Lat/Lons instead
             if self.modality_name == "hrvsatellite":
                 y_osgb = np_batch[BatchKey.hrvsatellite_y_osgb]  # example, y, x
@@ -82,16 +80,16 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             azimuth = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
             elevation = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
             must_be_finite = True
-            
+
             # time_utc could have shape (batch_size, n_times) or (n_times,)
-            if len(time_utc.shape)==1:
+            if len(time_utc.shape) == 1:
                 lat, lon = lats[0], lons[0]
                 if not np.isfinite([lat, lon]).all():
                     assert (
                         self.modality_name == "pv"
                     ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
                     must_be_finite = False
-                    
+
                 else:
                     dt = pd.to_datetime(time_utc, unit="s")
 
@@ -102,8 +100,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                     )
                     azimuth[:] = solpos["azimuth"].values
                     elevation[:] = solpos["elevation"].values
-            
-            elif len(time_utc.shape)==2:
+
+            elif len(time_utc.shape) == 2:
                 for example_idx, (lat, lon) in enumerate(zip(lats, lons)):
                     if not np.isfinite([lat, lon]).all():
                         assert (
@@ -111,7 +109,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                         ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
                         # This is PV data, for a location which has no PV systems.
                         must_be_finite = False
-                    
+
                     else:
                         dt = pd.to_datetime(time_utc[example_idx], unit="s")
 
@@ -128,13 +126,12 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                         )
                         azimuth[example_idx] = solpos["azimuth"]
                         elevation[example_idx] = solpos["elevation"]
-                    
+
             else:
                 raise NotImplementedError(
                     "Expected time_utc to have shape (batch_size, n_times) or (n_times,). "
                     f"Found shape {time_utc.shape}"
                 )
-
 
             # Normalize.
             azimuth = (azimuth - AZIMUTH_MEAN) / AZIMUTH_STD

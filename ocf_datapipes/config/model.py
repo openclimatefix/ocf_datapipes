@@ -354,7 +354,7 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
 class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model for HRV data"""
 
-    hrvsatellite_zarr_path:  Union[str, tuple[str], list[str]] = Field(
+    hrvsatellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
         "gs://solar-pv-nowcasting-data/satellite/EUMETSAT/SEVIRI_RSS/OSGB36/all_zarr_int16_single_timestep.zarr",  # noqa: E501
         description="The path or list of paths which hold the satellite zarr.",
     )

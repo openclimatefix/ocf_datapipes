@@ -331,8 +331,8 @@ def create_t0_and_loc_datapipes(
         key_for_t0: Key to use for the t0 datapipe. Must be "gsp" or "pv".
         shuffle: Whether to use the internal shuffle function when yielding location times. Else
             location times will be heavily ordered.
-        nwp_max_t0_offset: If using dropout on NWP, sometimes we have to go back to previous NWP 
-            init time. In order to accomodat for this possibility in selecting times, set 
+        nwp_max_t0_offset: If using dropout on NWP, sometimes we have to go back to previous NWP
+            init time. In order to accomodat for this possibility in selecting times, set
             `nwp_max_t0_offset` as the max NWP dropout delay you plan to use.
 
     Returns:
@@ -395,7 +395,7 @@ def create_t0_and_loc_datapipes(
             history_duration=timedelta(minutes=history_duration),
             forecast_duration=timedelta(minutes=forecast_duration),
             time_dim=time_dim,
-            max_t0_offset=max_t0_offset
+            max_t0_offset=max_t0_offset,
         )
 
         contiguous_time_datapipes.append(time_periods)
