@@ -147,7 +147,41 @@ class Location(BaseModel):
     x: float
     y: float
     id: Optional[int]
+    coordinate_system: Optional[str] = "osgb"   # ["osgb", "lat_lon"]
 
+    @validator("coordinate_system")
+    def validate_coordinate_system(cls, v):
+        """Validate 'coordinate_system'"""
+        allowed_coordinate_systen = ["osgb", "lat_lon"]
+        if v not in allowed_coordinate_systen:
+            raise ValueError(f"coordinate_system = {v} is not in {allowed_coordinate_systen}")
+        return v
+
+    @validator("x")
+    def validate_x(cls, v):
+        """Validate 'x'"""
+        min_x: float
+        max_x: float
+        if coordinate_system == "osgb":
+            min_x, max_x = -103976.3, 652897.98
+        if coordinate_system == "lat_lon":
+            min_x, max_x = -180, 180
+        if v < min_x or v > max_x:
+            raise ValueError(f"x = {v} must be within {[min_x, max_x]} for {coordinate_system} coordinate system")
+        return v
+
+    @validator("y")
+    def validate_x(cls, v):
+        """Validate 'y'"""
+        min_y: float
+        max_y: float
+        if coordinate_system == "osgb":
+            min_y, max_y = -16703.87, 1199851.44
+        if coordinate_system == "lat_lon":
+            min_y, max_y = -90, 90
+        if v < min_y or v > max_y:
+            raise ValueError(f"y = {v} must be within {[min_y, max_y]} for {coordinate_system} coordinate system")
+        return v
 
 class BatchKey(Enum):
     """The names of the different elements of each batch.
