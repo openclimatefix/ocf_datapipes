@@ -25,6 +25,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         forecast_duration: Optional[timedelta] = None,
         interval_start: Optional[timedelta] = None,
         interval_end: Optional[timedelta] = None,
+        fill_selection: Optional[bool] = False,
     ):
         """
         Selects time slice. Either `history_duration` and `history_duration` or `interval_start` and
@@ -38,9 +39,14 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             forecast_duration (optional): Forecast time used
             interval_start (optional): timedelta with respect to t0 where the open interval begins
             interval_end (optional): timedelta with respect to t0 where the open interval ends
+            fill_selection (optional): If True, and if the data yielded from `source_datapipe` does
+                not extend over the entire requested time period. The missing timestamps are filled
+                with NaN values in the returned xarray object. Else the default xarray slicing
+                behaviour is used.
         """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
+        self.fill_selection = fill_selection
 
         used_duration = history_duration is not None and forecast_duration is not None
         used_intervals = interval_start is not None and interval_end is not None
@@ -55,6 +61,18 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
 
         self.sample_period_duration = sample_period_duration
 
+    def _sel_fillnan(self, xr_data, start_dt, end_dt):
+        requested_times = pd.date_range(
+            start_dt,
+            end_dt,
+            freq=self.sample_period_duration,
+        )
+        # Missing time indexes are returned with all NaN values
+        return xr_data.reindex(time_utc=requested_times)
+
+    def _sel_default(self, xr_data, start_dt, end_dt):
+        return xr_data.sel(time_utc=slice(start_dt, end_dt))
+
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         xr_data = next(iter(self.source_datapipe))
 
@@ -66,9 +84,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             start_dt = start_dt.ceil(self.sample_period_duration)
             end_dt = end_dt.ceil(self.sample_period_duration)
 
-            yield xr_data.sel(
-                time_utc=slice(
-                    start_dt,
-                    end_dt,
-                )
-            )
+            if self.fill_selection:
+                yield self._sel_fillnan(xr_data, start_dt, end_dt)
+            else:
+                yield self._sel_default(xr_data, start_dt, end_dt)
