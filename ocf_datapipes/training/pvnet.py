@@ -260,10 +260,10 @@ def minutes(num_mins: int):
 
 
 def slice_datapipes_by_time(
-        datapipes_dict: Dict, 
-        t0_datapipe: IterDataPipe, 
-        configuration: Configuration,
-        production: bool = False,
+    datapipes_dict: Dict,
+    t0_datapipe: IterDataPipe,
+    configuration: Configuration,
+    production: bool = False,
 ) -> None:
     """
     Modifies a dictionary of datapipes in-place to yield samples for given times t0.
@@ -452,9 +452,9 @@ def construct_sliced_data_pipeline(
         block_sat,
         block_nwp,
     )
-    
+
     assert not (production and (block_sat or block_nwp))
-    
+
     configuration = datapipes_dict.pop("config")
 
     # Unpack for convenience

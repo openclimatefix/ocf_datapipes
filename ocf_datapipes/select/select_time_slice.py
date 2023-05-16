@@ -41,7 +41,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             interval_end (optional): timedelta with respect to t0 where the open interval ends
             fill_selection (optional): If True, and if the data yielded from `source_datapipe` does
                 not extend over the entire requested time period. The missing timestamps are filled
-                with NaN values in the returned xarray object. Else the default xarray slicing 
+                with NaN values in the returned xarray object. Else the default xarray slicing
                 behaviour is used.
         """
         self.source_datapipe = source_datapipe
@@ -60,16 +60,16 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             self.interval_end = np.timedelta64(interval_end)
 
         self.sample_period_duration = sample_period_duration
-        
+
     def _sel_fillnan(self, xr_data, start_dt, end_dt):
         requested_times = pd.date_range(
             start_dt,
             end_dt,
             freq=self.sample_period_duration,
         )
-        # Missing time indexes are returned with all NaN values
+        # Missing time indexes are returned with all NaN values
         return xr_data.reindex(time_utc=requested_times)
-                    
+
     def _sel_default(self, xr_data, start_dt, end_dt):
         return xr_data.sel(time_utc=slice(start_dt, end_dt))
 
