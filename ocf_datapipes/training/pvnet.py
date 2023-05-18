@@ -9,6 +9,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.load import OpenConfiguration, OpenGSPFromDatabase
 from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     open_and_return_datapipes,
@@ -36,6 +37,18 @@ def normalize_gsp(x):
         Normalized DataArray
     """
     return x / x.capacity_megawatt_power
+
+
+def production_sat_scale(x):
+    """Scale the production satellite data
+
+    Args:
+        x: Input DataArray
+
+    Returns:
+        Scaled DataArray
+    """
+    return x / 1024
 
 
 def pvnet_concat_gsp(gsp_dataarrays: List[xr.DataArray]):
@@ -191,17 +204,28 @@ def _get_datapipes_dict(
     config_filename: str,
     block_sat: bool,
     block_nwp: bool,
+    production=False,
 ):
     # Load datasets
     datapipes_dict = open_and_return_datapipes(
         configuration_filename=config_filename,
-        use_gsp=True,
+        use_gsp=(not production),
         use_pv=False,
         use_sat=not block_sat,  # Only loaded if we aren't replacing them with zeros
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
         use_topo=False,
     )
+    if production:
+        config_datapipe = OpenConfiguration(config_filename)
+        configuration: Configuration = next(iter(config_datapipe))
+
+        datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
+            sample_period_duration=timedelta(minutes=30),
+            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+        )
+
+        datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
 
     return datapipes_dict
 
@@ -447,13 +471,11 @@ def construct_sliced_data_pipeline(
         production: Whether constucting pipeline for production inference.
     """
 
-    datapipes_dict = _get_datapipes_dict(
-        config_filename,
-        block_sat,
-        block_nwp,
-    )
-
     assert not (production and (block_sat or block_nwp))
+
+    datapipes_dict = _get_datapipes_dict(
+        config_filename, block_sat, block_nwp, production=production
+    )
 
     configuration = datapipes_dict.pop("config")
 
