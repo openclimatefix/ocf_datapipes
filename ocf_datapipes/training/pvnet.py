@@ -9,12 +9,11 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.load import OpenConfiguration, OpenGSPFromDatabase
 from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     open_and_return_datapipes,
 )
-
-from ocf_datapipes.load import OpenGSPFromDatabase, OpenConfiguration
 from ocf_datapipes.utils.consts import (
     NEW_NWP_MEAN,
     NEW_NWP_STD,
@@ -38,6 +37,7 @@ def normalize_gsp(x):
         Normalized DataArray
     """
     return x / x.capacity_megawatt_power
+
 
 def production_sat_scale(x):
     """Scale the production satellite data
@@ -217,15 +217,14 @@ def _get_datapipes_dict(
         use_topo=False,
     )
     if production:
-        
         config_datapipe = OpenConfiguration(config_filename)
         configuration: Configuration = next(iter(config_datapipe))
-        
+
         datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         )
-        
+
         datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
 
     return datapipes_dict
@@ -471,16 +470,12 @@ def construct_sliced_data_pipeline(
         block_nwp: Whether to load zeroes for NWP data.
         production: Whether constucting pipeline for production inference.
     """
-    
-    assert not (production and (block_sat or block_nwp))
-    
-    datapipes_dict = _get_datapipes_dict(
-        config_filename,
-        block_sat,
-        block_nwp,
-        production=production
-    )
 
+    assert not (production and (block_sat or block_nwp))
+
+    datapipes_dict = _get_datapipes_dict(
+        config_filename, block_sat, block_nwp, production=production
+    )
 
     configuration = datapipes_dict.pop("config")
 
