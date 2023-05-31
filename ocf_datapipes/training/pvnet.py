@@ -9,6 +9,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.load import OpenConfiguration, OpenGSPFromDatabase
 from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     open_and_return_datapipes,
@@ -36,6 +37,18 @@ def normalize_gsp(x):
         Normalized DataArray
     """
     return x / x.capacity_megawatt_power
+
+
+def production_sat_scale(x):
+    """Scale the production satellite data
+
+    Args:
+        x: Input DataArray
+
+    Returns:
+        Scaled DataArray
+    """
+    return x / 1024
 
 
 def pvnet_concat_gsp(gsp_dataarrays: List[xr.DataArray]):
@@ -191,17 +204,28 @@ def _get_datapipes_dict(
     config_filename: str,
     block_sat: bool,
     block_nwp: bool,
+    production=False,
 ):
     # Load datasets
     datapipes_dict = open_and_return_datapipes(
         configuration_filename=config_filename,
-        use_gsp=True,
+        use_gsp=(not production),
         use_pv=False,
         use_sat=not block_sat,  # Only loaded if we aren't replacing them with zeros
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
         use_topo=False,
     )
+    if production:
+        config_datapipe = OpenConfiguration(config_filename)
+        configuration: Configuration = next(iter(config_datapipe))
+
+        datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
+            sample_period_duration=timedelta(minutes=30),
+            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+        )
+
+        datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
 
     return datapipes_dict
 
@@ -260,7 +284,10 @@ def minutes(num_mins: int):
 
 
 def slice_datapipes_by_time(
-    datapipes_dict: Dict, t0_datapipe: IterDataPipe, configuration: Configuration
+    datapipes_dict: Dict,
+    t0_datapipe: IterDataPipe,
+    configuration: Configuration,
+    production: bool = False,
 ) -> None:
     """
     Modifies a dictionary of datapipes in-place to yield samples for given times t0.
@@ -289,6 +316,9 @@ def slice_datapipes_by_time(
         datapipes_dict: Dictionary of used datapipes and t0 ones
         t0_datapipe: Datapipe which yields t0 times for sample
         configuration: Configuration object.
+        production: Whether constucting pipeline for production inference. No dropout is used if
+            True.
+
     """
 
     conf_in = configuration.input_data
@@ -301,7 +331,7 @@ def slice_datapipes_by_time(
         # In samples where dropout is applied, the first non-nan value could be 20 - 45 mins before
         # time t0.
         dropout_timedeltas=[minutes(m) for m in range(-45, -15, 5)],
-        dropout_frac=0.5,
+        dropout_frac=0 if production else 0.5,
     )
 
     # Satellite data never more recent than t0-15mins
@@ -315,7 +345,7 @@ def slice_datapipes_by_time(
             forecast_duration=minutes(conf_in.nwp.forecast_minutes),
             # The NWP forecast will always be at least 90 minutes stale
             dropout_timedeltas=[minutes(-90)],
-            dropout_frac=1.0,
+            dropout_frac=0 if production else 1.0,
         )
 
     if "sat" in datapipes_dict:
@@ -325,6 +355,7 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(5),
             interval_start=minutes(-conf_in.satellite.history_minutes),
             interval_end=sat_delay,
+            fill_selection=production,
         )
 
         # Generate randomly sampled dropout times
@@ -357,6 +388,7 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(5),
             interval_start=minutes(-conf_in.hrvsatellite.history_minutes),
             interval_end=sat_delay,
+            fill_selection=production,
         )
 
         # Apply the dropout
@@ -372,6 +404,7 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(5),
             interval_start=minutes(5),
             interval_end=minutes(conf_in.pv.forecast_minutes),
+            fill_selection=production,
         )
 
         datapipes_dict["pv"] = datapipes_dict["pv"].select_time_slice(
@@ -379,6 +412,7 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(5),
             interval_start=minutes(-conf_in.pv.history_minutes),
             interval_end=minutes(0),
+            fill_selection=production,
         )
 
     if "gsp" in datapipes_dict:
@@ -389,6 +423,7 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(30),
             interval_start=minutes(30),
             interval_end=minutes(conf_in.gsp.forecast_minutes),
+            fill_selection=production,
         )
 
         datapipes_dict["gsp"] = datapipes_dict["gsp"].select_time_slice(
@@ -396,13 +431,14 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(30),
             interval_start=-minutes(conf_in.gsp.history_minutes),
             interval_end=minutes(0),
+            fill_selection=production,
         )
 
         # Dropout on the GSP, but not the future GSP
         gsp_dropout_time_datapipe = get_t0_datapipe("gsp").select_dropout_time(
             # GSP data for time t0 may be missing. Only have value for t0-30mins
             dropout_timedeltas=[minutes(-30)],
-            dropout_frac=0.1,
+            dropout_frac=0 if production else 0.1,
         )
 
         datapipes_dict["gsp"] = datapipes_dict["gsp"].apply_dropout_time(
@@ -420,6 +456,7 @@ def construct_sliced_data_pipeline(
     t0_datapipe: IterDataPipe,
     block_sat: bool = False,
     block_nwp: bool = False,
+    production: bool = False,
 ) -> IterDataPipe:
     """Constructs data pipeline for the input data config file.
 
@@ -431,12 +468,13 @@ def construct_sliced_data_pipeline(
         t0_datapipe: Datapipe yielding times.
         block_sat: Whether to load zeroes for satellite data.
         block_nwp: Whether to load zeroes for NWP data.
+        production: Whether constucting pipeline for production inference.
     """
 
+    assert not (production and (block_sat or block_nwp))
+
     datapipes_dict = _get_datapipes_dict(
-        config_filename,
-        block_sat,
-        block_nwp,
+        config_filename, block_sat, block_nwp, production=production
     )
 
     configuration = datapipes_dict.pop("config")
@@ -446,7 +484,7 @@ def construct_sliced_data_pipeline(
     conf_nwp = configuration.input_data.nwp
 
     # Slice all of the datasets by time - this is an in-place operation
-    slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration)
+    slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
 
     # Spatially slice, normalize, and convert data to numpy arrays
     numpy_modalities = []
