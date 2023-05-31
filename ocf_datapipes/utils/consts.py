@@ -157,13 +157,13 @@ class Location(BaseModel):
             raise ValueError(f"coordinate_system = {v} is not in {allowed_coordinate_systen}")
         return v
 
-    @validator('x')
+    @validator("x")
     def validate_x(cls, v, values):
         """Validate 'x'"""
         min_x: float
         max_x: float
         if "coordinate_system" not in values:
-            raise ValueError(f"coordinate_system is incorrect")
+            raise ValueError("coordinate_system is incorrect")
         co = values["coordinate_system"]
         if co == "osgb":
             min_x, max_x = -103976.3, 652897.98
@@ -179,7 +179,7 @@ class Location(BaseModel):
         min_y: float
         max_y: float
         if "coordinate_system" not in values:
-            raise ValueError(f"coordinate_system is incorrect")
+            raise ValueError("coordinate_system is incorrect")
         co = values["coordinate_system"]
         if co == "osgb":
             min_y, max_y = -16703.87, 1199851.44
@@ -188,6 +188,7 @@ class Location(BaseModel):
         if v < min_y or v > max_y:
             raise ValueError(f"y = {v} must be within {[min_y, max_y]} for {co} coordinate system")
         return v
+
 
 class BatchKey(Enum):
     """The names of the different elements of each batch.
