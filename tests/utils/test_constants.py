@@ -2,11 +2,11 @@ from ocf_datapipes.utils.consts import Location
 import pytest
 
 def test_make_valid_location_object_with_default_coordinate_system():
-        x, y = -1000.5, 50000
-        location = Location(x=x, y=y)
-        assert location.x == x, "location.x value not set correctly"
-        assert location.y == y, "location.x value not set correctly"
-        assert location.coordinate_system == "osgb", "location.coordinate_system value not set correctly"
+    x, y = -1000.5, 50000
+    location = Location(x=x, y=y)
+    assert location.x == x, "location.x value not set correctly"
+    assert location.y == y, "location.x value not set correctly"
+    assert location.coordinate_system == "osgb", "location.coordinate_system value not set correctly"
 
 def test_make_valid_location_object_with_osgb_coordinate_system():
     x, y, coordinate_system = 1.2, 22.9, "osgb"
