@@ -81,9 +81,7 @@ def open_nwp(zarr_path) -> xr.DataArray:
                 concat_dim="init_time",
                 combine="nested",
                 chunks={},
-            )
-            .drop_duplicates("time")
-            .sortby("time")
+            ).sortby("init_time")
         )
     else:
         nwp = xr.open_dataset(
