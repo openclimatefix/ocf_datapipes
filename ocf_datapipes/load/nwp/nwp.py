@@ -78,7 +78,7 @@ def open_nwp(zarr_path) -> xr.DataArray:
             xr.open_mfdataset(
                 zarr_path,
                 engine="zarr",
-                concat_dim="time",
+                concat_dim="init_time",
                 combine="nested",
                 chunks={},
             )
