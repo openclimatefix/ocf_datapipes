@@ -72,13 +72,27 @@ def open_nwp(zarr_path) -> xr.DataArray:
     Returns:
         Xarray DataArray of the NWP data
     """
-    nwp = xr.open_dataset(
-        zarr_path,
-        engine="zarr",
-        consolidated=True,
-        mode="r",
-        chunks="auto",
-    )
+    # Open the data
+    if type(zarr_path) in [list, tuple] or "*" in str(zarr_path):  # Multi-file dataset
+        nwp = (
+            xr.open_mfdataset(
+                zarr_path,
+                engine="zarr",
+                concat_dim="time",
+                combine="nested",
+                chunks={},
+            )
+            .drop_duplicates("time")
+            .sortby("time")
+        )
+    else:
+        nwp = xr.open_dataset(
+            zarr_path,
+            engine="zarr",
+            consolidated=True,
+            mode="r",
+            chunks="auto",
+        )
     ukv: xr.DataArray = nwp["UKV"]
     del nwp
     ukv = ukv.transpose("init_time", "step", "variable", "y", "x")
