@@ -26,7 +26,7 @@ class SelectLiveTimeSliceIterDataPipe(IterDataPipe):
     ):
         """
         Select the history for the live time slice
-
+        
         Args:
             source_datapipe: Datapipe emitting Xarray object
             t0_datapipe: Datapipe emitting t0 timestamps
