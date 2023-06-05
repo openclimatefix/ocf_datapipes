@@ -46,6 +46,7 @@ def _get_numpy_from_xarray(x):
 def _load_xarray_values(x):
     return x.load()
 
+
 def _keep_pv_ids_in_list(x):
     ids_to_sel = [
         10426,
