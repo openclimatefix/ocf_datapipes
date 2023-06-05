@@ -170,7 +170,7 @@ class Location(BaseModel):
         if co == "lat_lon":
             min_x, max_x = -180, 180
         if co == "geostationary":
-            min_x, max_x = -np.inf, np.inf
+            min_x, max_x = -5568748.275756836, 5567248.074173927
         if v < min_x or v > max_x:
             raise ValueError(f"x = {v} must be within {[min_x, max_x]} for {co} coordinate system")
         return v
@@ -188,7 +188,7 @@ class Location(BaseModel):
         if co == "lat_lon":
             min_y, max_y = -90, 90
         if co == "geostationary":
-            min_y, max_y = -np.inf, np.inf
+            min_y, max_y = 1393687.2151494026, 5570748.323202133
         if v < min_y or v > max_y:
             raise ValueError(f"y = {v} must be within {[min_y, max_y]} for {co} coordinate system")
         return v
