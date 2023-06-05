@@ -144,7 +144,7 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 class Location(BaseModel):
     """Represent a spatial location."""
 
-    coordinate_system: Optional[str] = "osgb"  # ["osgb", "lat_lon"]
+    coordinate_system: Optional[str] = "osgb"  # ["osgb", "lat_lon", "geostationary"]
     x: float
     y: float
     id: Optional[int]
@@ -152,7 +152,7 @@ class Location(BaseModel):
     @validator("coordinate_system", pre=True, always=True)
     def validate_coordinate_system(cls, v):
         """Validate 'coordinate_system'"""
-        allowed_coordinate_systen = ["osgb", "lat_lon"]
+        allowed_coordinate_systen = ["osgb", "lat_lon", "geostationary"]
         if v not in allowed_coordinate_systen:
             raise ValueError(f"coordinate_system = {v} is not in {allowed_coordinate_systen}")
         return v
@@ -169,6 +169,8 @@ class Location(BaseModel):
             min_x, max_x = -103976.3, 652897.98
         if co == "lat_lon":
             min_x, max_x = -180, 180
+        if co == "geostationary":
+            min_x, max_x = -np.inf, np.inf
         if v < min_x or v > max_x:
             raise ValueError(f"x = {v} must be within {[min_x, max_x]} for {co} coordinate system")
         return v
@@ -185,6 +187,8 @@ class Location(BaseModel):
             min_y, max_y = -16703.87, 1199851.44
         if co == "lat_lon":
             min_y, max_y = -90, 90
+        if co == "geostationary":
+            min_y, max_y = -np.inf, np.inf
         if v < min_y or v > max_y:
             raise ValueError(f"y = {v} must be within {[min_y, max_y]} for {co} coordinate system")
         return v
