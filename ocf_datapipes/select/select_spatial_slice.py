@@ -227,7 +227,9 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
     center_geostationary_tuple = _osgb_to_geostationary(xx=center_osgb.x, yy=center_osgb.y)
     center_geostationary = Location(
-        x=center_geostationary_tuple[0], y=center_geostationary_tuple[1], coordinate_system="geostationary"
+        x=center_geostationary_tuple[0],
+        y=center_geostationary_tuple[1],
+        coordinate_system="geostationary",
     )
 
     # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:

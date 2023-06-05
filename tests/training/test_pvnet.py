@@ -43,7 +43,6 @@ def test_construct_sliced_data_pipeline(configuration_filename):
 
 @pytest.mark.skip("Failing at the moment")
 def test_construct_sliced_data_pipeline_outside_test(configuration_filename):
-
     # This is randomly chosen, but real, GSP location
     loc_pipe = IterableWrapper([Location(x=246699.328125, y=849771.9375, id=18)])
 
