@@ -28,7 +28,9 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         fill_selection: Optional[bool] = False,
     ):
         """
-        Selects time slice. Either `history_duration` and `history_duration` or `interval_start` and
+        Selects time slice.
+
+        Either `history_duration` and `history_duration` or `interval_start` and
         `interval_end` must be supplied.
 
         Args:
