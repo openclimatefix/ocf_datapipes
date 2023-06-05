@@ -260,7 +260,7 @@ def pv_yields_and_systems(db_session):
 def gsp_yields(db_session):
     """Make fake GSP data"""
 
-    gsps = list(range(0, 4)) + [317]
+    gsps = list(range(0, 4)) + [18, 317]
 
     gsp_yield_sqls = []
     for gsp_id in gsps:
