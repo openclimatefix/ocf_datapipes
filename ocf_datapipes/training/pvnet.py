@@ -69,7 +69,8 @@ def pvnet_concat_gsp(gsp_dataarrays: List[xr.DataArray]):
 
 
 def gsp_drop_national(x: Union[xr.DataArray, xr.Dataset]):
-    """
+    """Drop entries for national PV output
+    
     Args:
         x: Data source of gsp data
 
