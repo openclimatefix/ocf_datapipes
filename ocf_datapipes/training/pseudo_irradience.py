@@ -436,7 +436,7 @@ def pseudo_irradiance_datapipe(
     used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
-    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="pv")
+    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="pv", return_all_times=True if is_test else False)
 
     # And now get time slices
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
@@ -456,7 +456,7 @@ def pseudo_irradiance_datapipe(
         pv_datapipe = pv_datapipe.map(_drop_pv_ids_in_list)
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe, pv_meta_save = pv_datapipe.fork(3)
-    pv_loc_datapipe, pv_sav_loc = LocationPicker(pv_loc_datapipe).fork(2)
+    pv_loc_datapipe, pv_sav_loc = LocationPicker(pv_loc_datapipe, return_all_locations=True if is_test else False).fork(2)
     pv_sav_loc = pv_sav_loc.map(_get_id_from_location)
     pv_meta_save = pv_meta_save.map(_extract_test_info)
     # Select systems here
@@ -478,7 +478,7 @@ def pseudo_irradiance_datapipe(
         # take nwp time slices
         logger.debug("Take NWP time slices")
         nwp_datapipe = used_datapipes["nwp"].map(_normalize_nwp)
-        pv_loc_datapipe, pv_nwp_image_loc_datapipe = pv_loc_datapipe.fork(2)
+        pv_loc_datapipe, pv_nwp_image_loc_datapipe = pv_loc_datapipe.fork(2, buffer_size=5)
         if use_meters:
             nwp_datapipe = nwp_datapipe.select_spatial_slice_meters(
                 pv_nwp_image_loc_datapipe,
