@@ -20,7 +20,7 @@ def test_get_pv_power_from_database(gsp_yields, db_session):
     )
 
     assert len(gsp_power) == 3  # 1 hours at 30 mins + 1
-    assert len(gsp_power.columns) == 4
+    assert len(gsp_power.columns) == 5
     assert gsp_power.columns[0] == 1
     assert (
         pd.to_datetime(gsp_power.index[0]).isoformat()

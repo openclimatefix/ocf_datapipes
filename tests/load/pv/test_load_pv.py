@@ -70,8 +70,8 @@ def test_open_both_from_nc():
 
 def test_load_parquet_file(pv_parquet_file):
     pv = PV(
-        start_datetime=datetime(2018, 1, 1, tzinfo=timezone.utc),
-        end_datetime=datetime(2023, 1, 1, tzinfo=timezone.utc),
+        start_datetime=datetime(2018, 1, 1),
+        end_datetime=datetime(2023, 1, 1),
     )
     pv_file = PVFiles(
         pv_filename=pv_parquet_file,

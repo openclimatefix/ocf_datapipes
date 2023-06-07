@@ -14,6 +14,7 @@ from .select_channels import SelectChannelsIterDataPipe as SelectChannels
 from .select_id import SelectIDIterDataPipe as SelectID
 from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Time
 from .select_live_time_slice import SelectLiveTimeSliceIterDataPipe as SelectLiveTimeSlice
+from .select_loc_and_t0 import LocationT0PickerIterDataPipe as LocationT0Picker
 from .select_overlapping_time_slices import (
     SelectOverlappingTimeSliceIterDataPipe as SelectOverlappingTimeSlice,
 )

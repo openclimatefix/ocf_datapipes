@@ -33,8 +33,13 @@ from .gsp.ensure_n_gsp_per_example import (
 from .gsp.remove_northern_gsp import RemoveNorthernGSPIterDataPipe as RemoveNorthernGSP
 from .metnet_preprocessor import PreProcessMetNetIterDataPipe as PreProcessMetNet
 from .normalize import NormalizeIterDataPipe as Normalize
+from .nwp_dropout import (
+    ConvertToNWPTargetTimeWithDropoutIterDataPipe as ConvertToNWPTargetTimeWithDropout,
+)
 from .pv.assign_daynight_status import AssignDayNightStatusIterDataPipe as AssignDayNightStatus
 from .pv.create_pv_history_image import CreatePVHistoryImageIterDataPipe as CreatePVHistoryImage
 from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
 from .remove_nans import RemoveNansIterDataPipe as RemoveNans
 from .reproject_topographic_data import ReprojectTopographyIterDataPipe as ReprojectTopography
+from .standard_dropout import ApplyDropoutTimeIterDataPipe as ApplyDropoutTime
+from .standard_dropout import SelectDropoutTimeIterDataPipe as SelectDropoutTime
