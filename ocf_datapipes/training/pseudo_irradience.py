@@ -374,8 +374,10 @@ def _extract_test_info(x):
     # Concatenate the time and pv_id into a 1D numpy array
     return x.time_utc.values
 
+
 def _get_id_from_location(x):
     return x.id
+
 
 def pseudo_irradiance_datapipe(
     configuration_filename: Union[Path, str],
@@ -436,7 +438,9 @@ def pseudo_irradiance_datapipe(
     used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
-    used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="pv", return_all_times=True if is_test else False)
+    used_datapipes = get_and_return_overlapping_time_periods_and_t0(
+        used_datapipes, key_for_t0="pv", return_all_times=True if is_test else False
+    )
 
     # And now get time slices
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
@@ -456,7 +460,9 @@ def pseudo_irradiance_datapipe(
         pv_datapipe = pv_datapipe.map(_drop_pv_ids_in_list)
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe, pv_meta_save = pv_datapipe.fork(3)
-    pv_loc_datapipe, pv_sav_loc = LocationPicker(pv_loc_datapipe, return_all_locations=True if is_test else False).fork(2)
+    pv_loc_datapipe, pv_sav_loc = LocationPicker(
+        pv_loc_datapipe, return_all_locations=True if is_test else False
+    ).fork(2)
     pv_sav_loc = pv_sav_loc.map(_get_id_from_location)
     pv_meta_save = pv_meta_save.map(_extract_test_info)
     # Select systems here
@@ -695,6 +701,8 @@ def pseudo_irradiance_datapipe(
     stacked_xarray_inputs = StackXarray(modalities)
 
     return stacked_xarray_inputs.batch(batch_size).zip_ocf(
-        pv_meta.batch(batch_size), pv_datapipe.batch(batch_size),
-        pv_meta_save.batch(batch_size), pv_sav_loc.batch(batch_size)
+        pv_meta.batch(batch_size),
+        pv_datapipe.batch(batch_size),
+        pv_meta_save.batch(batch_size),
+        pv_sav_loc.batch(batch_size),
     )  # Makes (Inputs, Label) tuples

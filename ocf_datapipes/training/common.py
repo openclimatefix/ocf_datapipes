@@ -137,7 +137,9 @@ def open_and_return_datapipes(
     return used_datapipes
 
 
-def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for_t0: str = "gsp", return_all_times: bool = False):
+def get_and_return_overlapping_time_periods_and_t0(
+    used_datapipes: dict, key_for_t0: str = "gsp", return_all_times: bool = False
+):
     """
     Takes datapipes and obtains the overlapping time periods + t0 time datapipes
 

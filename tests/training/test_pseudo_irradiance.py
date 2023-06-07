@@ -161,7 +161,13 @@ def test_irradiance_datapipe():
         one_d=True,
     )
     batch = next(iter(gsp_datapipe))
-    batch = torch.Tensor(batch[0]), torch.Tensor(batch[1]), torch.Tensor(batch[2]), batch[3], batch[4]
+    batch = (
+        torch.Tensor(batch[0]),
+        torch.Tensor(batch[1]),
+        torch.Tensor(batch[2]),
+        batch[3],
+        batch[4],
+    )
     x = np.nan_to_num(batch[0])
     assert np.isfinite(x).all()
     assert not np.isnan(batch[1]).any()
