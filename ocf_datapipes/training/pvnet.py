@@ -1,7 +1,7 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import xarray as xr
@@ -9,12 +9,11 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.load import OpenGSPFromDatabase
 from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     open_and_return_datapipes,
 )
-
-from ocf_datapipes.load import OpenGSPFromDatabase, OpenConfiguration
 from ocf_datapipes.utils.consts import (
     NEW_NWP_MEAN,
     NEW_NWP_STD,
@@ -38,6 +37,7 @@ def normalize_gsp(x):
         Normalized DataArray
     """
     return x / x.capacity_megawatt_power
+
 
 def production_sat_scale(x):
     """Scale the production satellite data
@@ -66,6 +66,18 @@ def pvnet_concat_gsp(gsp_dataarrays: List[xr.DataArray]):
     and to split it out. These maintains that assumption.
     """
     return xr.concat(gsp_dataarrays, dim="time_utc")
+
+
+def gsp_drop_national(x: Union[xr.DataArray, xr.Dataset]):
+    """Drop entries for national PV output
+
+    Args:
+        x: Data source of gsp data
+
+    Returns:
+        Filtered data source
+    """
+    return x.where(x.gsp_id != 0, drop=True)
 
 
 def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
@@ -204,7 +216,7 @@ def _get_datapipes_dict(
     config_filename: str,
     block_sat: bool,
     block_nwp: bool,
-    production=False,
+    production: bool = False,
 ):
     # Load datasets
     datapipes_dict = open_and_return_datapipes(
@@ -217,15 +229,12 @@ def _get_datapipes_dict(
         use_topo=False,
     )
     if production:
-        
-        config_datapipe = OpenConfiguration(config_filename)
-        configuration: Configuration = next(iter(config_datapipe))
-        
+        configuration: Configuration = datapipes_dict["config"]
+
         datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         )
-        
         datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
 
     return datapipes_dict
@@ -259,7 +268,7 @@ def construct_loctime_pipelines(
 
     # We sample time and space of other data using GSP time and space coordinates, so filter GSP
     # data first amd this is carried through
-    datapipes_dict["gsp"] = datapipes_dict["gsp"].remove_northern_gsp()
+    datapipes_dict["gsp"] = datapipes_dict["gsp"].map(gsp_drop_national)
     if (start_time is not None) or (end_time is not None):
         datapipes_dict["gsp"] = datapipes_dict["gsp"].select_train_test_time(start_time, end_time)
 
@@ -470,16 +479,15 @@ def construct_sliced_data_pipeline(
         block_nwp: Whether to load zeroes for NWP data.
         production: Whether constucting pipeline for production inference.
     """
-    
+
     assert not (production and (block_sat or block_nwp))
-    
+
     datapipes_dict = _get_datapipes_dict(
         config_filename,
         block_sat,
         block_nwp,
-        production=production
+        production=production,
     )
-
 
     configuration = datapipes_dict.pop("config")
 
