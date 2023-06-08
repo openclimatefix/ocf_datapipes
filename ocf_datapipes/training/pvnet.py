@@ -339,12 +339,12 @@ def slice_datapipes_by_time(
 
     sat_and_hrv_dropout_kwargs = dict(
         # Satellite is either 30 minutes or 60 minutes delayed
-        dropout_timedeltas=[minutes(-60)],
-        dropout_frac=0 if production else 0.5,
+        dropout_timedeltas=[minutes(-60), minutes(-30)],
+        dropout_frac=0 if production else 1.0,
     )
 
     # Satellite data never more recent than t0-30mins
-    sat_delay = minutes(-15)
+    sat_delay = minutes(-30)
     
     if "nwp" in datapipes_dict:
         datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
