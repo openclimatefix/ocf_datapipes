@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torchdata.datapipes.iter import IterDataPipe, Zipper
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +76,9 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         return xr_data.sel(time_utc=slice(start_dt, end_dt))
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        xr_data = next(iter(self.source_datapipe))
+        #xr_data = next(iter(self.source_datapipe))
 
-        for t0 in self.t0_datapipe:
+        for xr_data, t0 in Zipper(self.source_datapipe, self.t0_datapipe):
             t0_datetime_utc = pd.Timestamp(t0)
             start_dt = t0_datetime_utc + self.interval_start
             end_dt = t0_datetime_utc + self.interval_end
