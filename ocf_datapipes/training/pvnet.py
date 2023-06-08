@@ -278,7 +278,7 @@ def construct_loctime_pipelines(
         configuration=config,
         key_for_t0="gsp",
         shuffle=True,
-        nwp_max_t0_offset=minutes(90),
+        nwp_max_t0_offset=minutes(180),
     )
 
     return location_pipe, t0_datapipe
@@ -338,14 +338,13 @@ def slice_datapipes_by_time(
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
 
     sat_and_hrv_dropout_kwargs = dict(
-        # In samples where dropout is applied, the first non-nan value could be 20 - 45 mins before
-        # time t0.
-        dropout_timedeltas=[minutes(m) for m in range(-45, -15, 5)],
-        dropout_frac=0 if production else 0.5,
+        # Satellite is either 30 minutes or 60 minutes delayed
+        dropout_timedeltas=[minutes(-60), minutes(-30)],
+        dropout_frac=0 if production else 1.0,
     )
 
-    # Satellite data never more recent than t0-15mins
-    sat_delay = minutes(-15)
+    # Satellite data never more recent than t0-30mins
+    sat_delay = minutes(-30)
 
     if "nwp" in datapipes_dict:
         datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
@@ -353,8 +352,8 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(60),
             history_duration=minutes(conf_in.nwp.history_minutes),
             forecast_duration=minutes(conf_in.nwp.forecast_minutes),
-            # The NWP forecast will always be at least 90 minutes stale
-            dropout_timedeltas=[minutes(-90)],
+            # The NWP forecast will always be at least 180 minutes stale
+            dropout_timedeltas=[minutes(-180)],
             dropout_frac=0 if production else 1.0,
         )
 
