@@ -344,7 +344,10 @@ def slice_datapipes_by_time(
     )
 
     # Satellite data never more recent than t0-30mins
-    sat_delay = minutes(-30)
+    if production:
+        sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
+    else:
+        sat_delay = minutes(-30)
 
     if "nwp" in datapipes_dict:
         datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
