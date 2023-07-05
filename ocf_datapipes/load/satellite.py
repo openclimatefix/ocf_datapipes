@@ -1,7 +1,7 @@
 """Satellite loader"""
 import logging
 import subprocess
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Union
 
@@ -184,7 +184,7 @@ def open_sat_data(
     return data_array
 
 
-def load_and_check_satellite_data(zarr_path)->[xr.Dataset, bool]:
+def load_and_check_satellite_data(zarr_path) -> [xr.Dataset, bool]:
     """
     Load the satellite data,
 
