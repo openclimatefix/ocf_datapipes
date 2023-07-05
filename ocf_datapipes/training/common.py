@@ -38,6 +38,7 @@ def open_and_return_datapipes(
         use_hrv: Whether to open HRV satellite data
         use_sat: Whether to open non-HRV satellite data
         use_gsp: Whether to use GSP data or not
+        production: bool if this is for production or not
 
     Returns:
         List of datapipes corresponding to the datapipes to open

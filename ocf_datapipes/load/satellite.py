@@ -61,7 +61,8 @@ def open_sat_data(
     Args:
       zarr_path: Cloud URL or local path pattern, or list of these. If GCS URL, it must start with
           'gs://'.
-      use_15_minute_data_if_needed: use_15_minute_data_if_needed: Option to use the 15 minute data if the 5 minute data is not available
+      use_15_minute_data_if_needed: use_15_minute_data_if_needed: Option to use the 15 minute data
+        if the 5 minute data is not available
         This is done by checking to see if the last timestamp is within an hour from now
 
     Example:
@@ -193,10 +194,11 @@ def load_and_check_satellite_data(zarr_path) -> [xr.Dataset, bool]:
     If 1. or 2. are true, then return True for use_15_minute_data
 
     Args:
-        use_15_minute_data:
-        zarr_path:
+        zarr_path: the zarr path to load
 
     Returns:
+        dataset (if loaded),
+        use_15_minute_data, indicating if the 15 minute data should be loaded
     """
     filesystem = fsspec.open(Pathy.fluid(zarr_path)).fs
     if filesystem.exists(zarr_path):
@@ -225,7 +227,8 @@ def check_last_timestamp(dataset: xr.Dataset, timedelta_hours: float = 1) -> boo
     now = datetime.utcnow()
     if latest_time < now - timedelta(hours=timedelta_hours):
         _log.info(
-            f"last datestamp is {latest_time}, which is more than {timedelta_hours} hour ago from {now} "
+            f"last datestamp is {latest_time}, which is more than "
+            f"{timedelta_hours} hour ago from {now} "
             f"Will try to load 15 minute data"
         )
         return True
@@ -243,7 +246,8 @@ class OpenSatelliteIterDataPipe(IterDataPipe):
 
         Args:
             zarr_path: path to the zarr file
-            use_15_minute_data_if_needed: Option to use the 15 minute data if the 5 minute data is not available
+            use_15_minute_data_if_needed: Option to use the 15 minute data if the
+                5 minute data is not available
         """
         self.zarr_path = zarr_path
         self.use_15_minute_data_if_needed = use_15_minute_data_if_needed
