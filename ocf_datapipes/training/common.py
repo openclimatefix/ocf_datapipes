@@ -25,6 +25,7 @@ def open_and_return_datapipes(
     use_sat: bool = True,
     use_hrv: bool = True,
     use_topo: bool = True,
+    production: bool = False,
 ) -> dict[str, IterDataPipe]:
     """
     Open data sources given a configuration and return the list of datapipes
@@ -37,6 +38,7 @@ def open_and_return_datapipes(
         use_hrv: Whether to open HRV satellite data
         use_sat: Whether to open non-HRV satellite data
         use_gsp: Whether to use GSP data or not
+        production: bool if this is for production or not
 
     Returns:
         List of datapipes corresponding to the datapipes to open
@@ -92,7 +94,10 @@ def open_and_return_datapipes(
     if use_sat:
         logger.debug("Opening Satellite Data")
         sat_datapipe = (
-            OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
+            OpenSatellite(
+                configuration.input_data.satellite.satellite_zarr_path,
+                use_15_minute_data_if_needed=production,
+            )
             .select_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
