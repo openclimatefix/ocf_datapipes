@@ -85,6 +85,7 @@ def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
 
     Operation is performed in-place on the batch.
     """
+    logger.info('Filling Nans with zeros')
     for k, v in batch.items():
         if isinstance(v, np.ndarray):
             np.nan_to_num(v, copy=False, nan=0.0)
@@ -469,6 +470,7 @@ def construct_sliced_data_pipeline(
     block_sat: bool = False,
     block_nwp: bool = False,
     production: bool = False,
+    check_satellite_no_zeros: bool = False,
 ) -> IterDataPipe:
     """Constructs data pipeline for the input data config file.
 
@@ -481,6 +483,7 @@ def construct_sliced_data_pipeline(
         block_sat: Whether to load zeroes for satellite data.
         block_nwp: Whether to load zeroes for NWP data.
         production: Whether constucting pipeline for production inference.
+        check_satellite_no_zeros: Whether to check that satellite data has no zeros.
     """
 
     assert not (production and (block_sat or block_nwp))
@@ -571,6 +574,11 @@ def construct_sliced_data_pipeline(
         nwp_block_func = AddZeroedNWPData(configuration)
         combined_datapipe = combined_datapipe.map(nwp_block_func)
 
+    logger.info("Filtering out samples with no data")
+    if check_satellite_no_zeros:
+        # in production we don't want any nans in the satellite data
+        combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+
     combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
     return combined_datapipe
@@ -619,3 +627,14 @@ def pvnet_datapipe(
     )
 
     return datapipe
+
+
+def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
+    """
+    Check if there are any Nans values in the satellite data.
+    """
+    if np.any(np.isnan(batch[BatchKey.satellite_actual])):
+        logger.error("Found nans values in satellite data")
+        raise ValueError("Found nans values in satellite data")
+
+    return batch
