@@ -10,6 +10,7 @@ from ocf_datapipes.training.pvnet import (
 from ocf_datapipes.utils.consts import Location
 import pytest
 
+
 def test_construct_loctime_pipelines(configuration_filename):
     start_time = datetime(1900, 1, 1)
     end_time = datetime(2050, 1, 1)
@@ -22,6 +23,7 @@ def test_construct_loctime_pipelines(configuration_filename):
 
     next(iter(loc_pipe))
     next(iter(t0_pipe))
+
 
 # TODO currently not stable tests
 def test_construct_sliced_data_pipeline(configuration_filename):
@@ -57,7 +59,6 @@ def test_construct_sliced_data_pipeline_satellite_with_zeros(configuration_filen
     )
     with pytest.raises(Exception):
         batch = next(iter(dp))
-
 
 
 def test_pvnet_datapipe(configuration_filename):

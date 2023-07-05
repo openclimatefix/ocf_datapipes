@@ -85,7 +85,7 @@ def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
 
     Operation is performed in-place on the batch.
     """
-    logger.info('Filling Nans with zeros')
+    logger.info("Filling Nans with zeros")
     for k, v in batch.items():
         if isinstance(v, np.ndarray):
             np.nan_to_num(v, copy=False, nan=0.0)
