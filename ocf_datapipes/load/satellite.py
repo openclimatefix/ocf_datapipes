@@ -1,17 +1,16 @@
 """Satellite loader"""
 import logging
-import fsspec
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from pathy import Pathy
 from typing import Union
 
-from datetime import datetime, timedelta, timezone
-
 import dask
+import fsspec
 import pandas as pd
 import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
+from pathy import Pathy
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -54,7 +53,9 @@ def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
     return dataset
 
 
-def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]], use_15_minute_data_if_needed: bool = False) -> xr.DataArray:
+def open_sat_data(
+    zarr_path: Union[Path, str, list[Path], list[str]], use_15_minute_data_if_needed: bool = False
+) -> xr.DataArray:
     """Lazily opens the Zarr store.
 
     Args:
@@ -106,9 +107,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]], use_15_min
             use_15_minute_data = check_last_timestamp(dataset, use_15_minute_data)
 
         else:
-            _log.info(
-                f"File does not exist {zarr_path}. Will try to load 15 minute data"
-            )
+            _log.info(f"File does not exist {zarr_path}. Will try to load 15 minute data")
             use_15_minute_data = True
 
     if use_15_minute_data_if_needed and use_15_minute_data:
@@ -192,7 +191,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]], use_15_min
     return data_array
 
 
-def check_last_timestamp(dataset: xr.Dataset, timedelta_hours:float= 1) -> bool:
+def check_last_timestamp(dataset: xr.Dataset, timedelta_hours: float = 1) -> bool:
     """
     Check the last timestamp of the dataset to see if it is more than 1 hour ago
 
@@ -231,7 +230,8 @@ class OpenSatelliteIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray:
         """Open the Zarr file"""
-        data: xr.DataArray = open_sat_data(zarr_path=self.zarr_path,
-                                           use_15_minute_data_if_needed=self.use_15_minute_data_if_needed)
+        data: xr.DataArray = open_sat_data(
+            zarr_path=self.zarr_path, use_15_minute_data_if_needed=self.use_15_minute_data_if_needed
+        )
         while True:
             yield data
