@@ -100,20 +100,13 @@ def open_sat_data(
             join="override",
         )
     else:
-        filesystem = fsspec.open(Pathy.fluid(zarr_path)).fs
-        if filesystem.exists(zarr_path):
-            dataset = _get_single_sat_data(zarr_path)
-
-            use_15_minute_data = check_last_timestamp(dataset, use_15_minute_data)
-
-        else:
-            _log.info(f"File does not exist {zarr_path}. Will try to load 15 minute data")
-            use_15_minute_data = True
+        # check the file exists
+        dataset, use_15_minute_data = load_and_check_satellite_data(zarr_path)
 
     if use_15_minute_data_if_needed and use_15_minute_data:
         zarr_path_15_minutes = str(zarr_path).replace(".zarr", "_15.zarr")
 
-        _log.debug(f"Now going to load {zarr_path_15_minutes} and resample")
+        _log.info(f"Now going to load {zarr_path_15_minutes} and resample")
         dataset = _get_single_sat_data(zarr_path_15_minutes)
 
         dataset = dataset.load()
@@ -191,6 +184,33 @@ def open_sat_data(
     return data_array
 
 
+def load_and_check_satellite_data(zarr_path)->[xr.Dataset, bool]:
+    """
+    Load the satellite data,
+
+    1. check if file path exists
+    2. check dataset has been updated in the last hour
+    If 1. or 2. are true, then return True for use_15_minute_data
+
+    Args:
+        use_15_minute_data:
+        zarr_path:
+
+    Returns:
+    """
+    filesystem = fsspec.open(Pathy.fluid(zarr_path)).fs
+    if filesystem.exists(zarr_path):
+        dataset = _get_single_sat_data(zarr_path)
+
+        use_15_minute_data = check_last_timestamp(dataset)
+
+    else:
+        _log.info(f"File does not exist {zarr_path}. Will try to load 15 minute data")
+        use_15_minute_data = True
+        dataset = None
+    return dataset, use_15_minute_data
+
+
 def check_last_timestamp(dataset: xr.Dataset, timedelta_hours: float = 1) -> bool:
     """
     Check the last timestamp of the dataset to see if it is more than 1 hour ago
@@ -202,9 +222,10 @@ def check_last_timestamp(dataset: xr.Dataset, timedelta_hours: float = 1) -> boo
     Returns: bool
     """
     latest_time = pd.to_datetime(dataset.time[-1].values)
-    if latest_time < datetime.now(tz=timezone.utc) - timedelta(hours=timedelta_hours):
+    now = datetime.utcnow()
+    if latest_time < now - timedelta(hours=timedelta_hours):
         _log.info(
-            f"last datestamp is {latest_time}, which is more than 1 hour ago. "
+            f"last datestamp is {latest_time}, which is more than {timedelta_hours} hour ago from {now} "
             f"Will try to load 15 minute data"
         )
         return True
