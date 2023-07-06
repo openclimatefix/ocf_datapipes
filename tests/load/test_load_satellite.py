@@ -60,7 +60,7 @@ def test_load_and_check_satellite_data_no_file():
 
 def test_load_and_check_satellite_old_data():
     dataset, use_15_minute_data = load_and_check_satellite_data(
-        zarr_path="tests/data/sat_data_zzzzz.zarr"
+        zarr_path="tests/data/sat_data.zarr"
     )
-    assert dataset is None
+    assert dataset is not None
     assert use_15_minute_data is True

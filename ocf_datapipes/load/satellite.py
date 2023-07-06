@@ -233,6 +233,10 @@ def check_last_timestamp(dataset: xr.Dataset, timedelta_hours: float = 1) -> boo
         )
         return True
     else:
+        _log.debug(
+            f"last datestamp is {latest_time}, which is less than {timedelta_hours} "
+            f"hour ago from {now}"
+        )
         return False
 
 
