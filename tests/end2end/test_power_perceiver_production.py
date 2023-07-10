@@ -63,12 +63,8 @@ def test_power_perceiver_production(
     pv_datapipe = Normalize(passiv_datapipe, normalize_fn=lambda x: x / x.capacity_watt_power)
     gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe).fork(2)
     gsp_datapipe = Normalize(
-<<<<<<< HEAD
         gsp_datapipe,
         normalize_fn=lambda x: x / x.installedcapacity_mwp
-=======
-        gsp_datapipe, normalize_fn=lambda x: x / x.installed_capacity_megawatt_power
->>>>>>> 5cadbabf265b679d64ad1dd0835d7d4992b18ad6
     )
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_datapipe = ConvertSatelliteToInt8(sat_hrv_datapipe)
