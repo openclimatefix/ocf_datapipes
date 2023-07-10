@@ -38,10 +38,7 @@ def put_gsp_data_into_an_xr_dataarray(
     data_array = data_array.assign_coords(
         x_osgb=("gsp_id", x_osgb),
         y_osgb=("gsp_id", y_osgb),
-        installedcapacity_mwp=(
-            ("time_utc", "gsp_id"),
-            installedcapacity_mwp
-        ),
+        installedcapacity_mwp=(("time_utc", "gsp_id"), installedcapacity_mwp),
         capacity_mwp=(
             ("time_utc", "gsp_id"),
             capacity_mwp,
