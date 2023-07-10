@@ -273,6 +273,8 @@ def gsp_yields(db_session):
                 gsp_yield_1 = GSPYield(
                     datetime_utc=datetime(2022, 1, 1, hour, minute),
                     solar_generation_kw=hour + minute,
+                    capacity_mwp=1,
+                    
                 )
                 gsp_yield_1_sql = gsp_yield_1.to_orm()
                 gsp_yield_1_sql.location = gsp_sql_1
@@ -361,9 +363,22 @@ def gsp_zarr_file():
         coords=coords,
         name="installedcapacity_mwp",
     )  # Fake data for testing!
+    
+    capacity_mwp = xr.DataArray(
+        abs(  # to make sure average is about 100
+            np.random.uniform(
+                0,
+                200,
+                size=(7 * 24, len(ids)),
+            )
+        ),
+        coords=coords,
+        name="capacity_mwp",
+    )  # Fake data for testing!
 
     generation_mw = generation_mw.to_dataset(name="generation_mw")
     generation_mw = generation_mw.merge(installedcapacity_mwp)
+    generation_mw = generation_mw.merge(capacity_mwp)
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = tmpdir + "/gsp.zarr"
         generation_mw.to_zarr(filename)

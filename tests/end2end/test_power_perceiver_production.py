@@ -62,7 +62,10 @@ def test_power_perceiver_production(
     # Normalize GSP and PV on whole dataset here
     pv_datapipe = Normalize(passiv_datapipe, normalize_fn=lambda x: x / x.capacity_watt_power)
     gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe).fork(2)
-    gsp_datapipe = Normalize(gsp_datapipe, normalize_fn=lambda x: x / x.capacity_megawatt_power)
+    gsp_datapipe = Normalize(
+        gsp_datapipe, 
+        normalize_fn=lambda x: x / x.installed_capacity_megawatt_power
+    )
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_datapipe = ConvertSatelliteToInt8(sat_hrv_datapipe)
     sat_datapipe = AddT0IdxAndSamplePeriodDuration(
@@ -237,7 +240,7 @@ def test_power_perceiver_production_functional(
     # Normalize GSP and PV on whole dataset here
 
     gsp_datapipe, gsp_loc_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
+        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.installed_capacity_megawatt_power)
         .drop_gsp()
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30), history_duration=timedelta(hours=2)

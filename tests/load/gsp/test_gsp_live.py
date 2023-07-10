@@ -12,10 +12,10 @@ from ocf_datapipes.load.gsp.database import (
 
 
 @freeze_time("2022-01-01 01:00")
-def test_get_pv_power_from_database(gsp_yields, db_session):
-    """Get pv power from database"""
+def test_get_gsp_power_from_database(gsp_yields, db_session):
+    """Get GSP power from database"""
 
-    gsp_power, gsp_capacity = get_gsp_power_from_database(
+    gsp_power, gsp_installed_capacity, gsp_effective_capacity = get_gsp_power_from_database(
         history_duration=timedelta(hours=1), interpolate_minutes=30, load_extra_minutes=0
     )
 
@@ -31,7 +31,7 @@ def test_get_pv_power_from_database(gsp_yields, db_session):
 
 
 @freeze_time("2022-01-01 03:00")
-def test_open_pv_datasource_from_database(gsp_yields):
+def test_open_gsp_datasource_from_database(gsp_yields):
     pv_dp = OpenGSPFromDatabaseIterDataPipe()
     data = next(iter(pv_dp))
     assert data is not None
