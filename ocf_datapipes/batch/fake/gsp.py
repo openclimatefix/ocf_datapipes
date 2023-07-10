@@ -40,7 +40,10 @@ def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) 
     batch = {}
     batch[BatchKey.gsp_time_utc] = time_utc  # Seconds since UNIX epoch (1970-01-01).
     batch[BatchKey.gsp] = np.random.random((batch_size, n_times, n_gsps))
-    batch[BatchKey.gsp_capacity_megawatt_power] = np.random.randint(
+    batch[BatchKey.gsp_installed_capacity_megawatt_power] = np.random.randint(
+        0, 1000, (batch_size, n_times, n_gsps)
+    )
+    batch[BatchKey.gsp_effective_capacity_megawatt_power] = np.random.randint(
         0, 1000, (batch_size, n_times, n_gsps)
     )
     batch[BatchKey.gsp_t0_idx] = get_n_time_steps_from_config(

@@ -43,9 +43,14 @@ class OpenGSPNationalIterDataPipe(IterDataPipe):
         gsp_pv_power_mw_ds = gsp_pv_power_mw_ds.sel(gsp_id=0)
 
         # rename some variables
-        data_array = gsp_pv_power_mw_ds.rename({"datetime_gmt": "time_utc"})
-        data_array = data_array.rename({"generation_mw": "gsp_pv_power_mw"})
-        data_array = data_array.rename({"installedcapacity_mwp": "capacity_megawatt_power"})
+        data_array = gsp_pv_power_mw_ds.rename(
+            {
+                "datetime_gmt": "time_utc",
+                "generation_mw": "gsp_pv_power_mw",
+                "installedcapacity_mwp": "installed_capacity_megawatt_power",
+                "capacity_mwp": "effective_capacity_megawatt_power",
+            }
+        )
 
         while True:
             yield data_array
