@@ -43,9 +43,7 @@ def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) 
     batch[BatchKey.gsp_installedcapacity_mwp] = np.random.randint(
         0, 1000, (batch_size, n_times, n_gsps)
     )
-    batch[BatchKey.gsp_capacity_mwp] = np.random.randint(
-        0, 1000, (batch_size, n_times, n_gsps)
-    )
+    batch[BatchKey.gsp_capacity_mwp] = np.random.randint(0, 1000, (batch_size, n_times, n_gsps))
     batch[BatchKey.gsp_t0_idx] = get_n_time_steps_from_config(
         input_data_configuration=gsp_config, include_forecast=False
     )

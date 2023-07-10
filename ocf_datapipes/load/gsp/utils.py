@@ -40,11 +40,11 @@ def put_gsp_data_into_an_xr_dataarray(
         y_osgb=("gsp_id", y_osgb),
 <<<<<<< HEAD
         installedcapacity_mwp=(
-            ("time_utc", "gsp_id"), 
+            ("time_utc", "gsp_id"),
             installedcapacity_mwp
         ),
         capacity_mwp=(
-            ("time_utc", "gsp_id"), 
+            ("time_utc", "gsp_id"),
             capacity_mwp
 =======
         installed_capacity_megawatt_power=(

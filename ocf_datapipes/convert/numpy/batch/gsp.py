@@ -35,9 +35,7 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
                 BatchKey.gsp_installedcapacity_mwp: xr_data.isel(time_utc=0)[
                     "installedcapacity_mwp"
                 ].values,
-                BatchKey.gsp_capacity_mwp: xr_data.isel(time_utc=0)[
-                    "capacity_mwp"
-                ].values,
+                BatchKey.gsp_capacity_mwp: xr_data.isel(time_utc=0)["capacity_mwp"].values,
                 BatchKey.gsp_time_utc: datetime64_to_float(xr_data["time_utc"].values),
             }
 

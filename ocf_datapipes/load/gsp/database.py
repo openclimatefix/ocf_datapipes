@@ -174,7 +174,7 @@ def get_gsp_power_from_database(
 
             gsp_yield_dict = gsp_yield.__dict__
 <<<<<<< HEAD
-            
+
             gsp_yield_dict["installedcapacity_mwp"] = location.installed_capacity_mw
 =======
 

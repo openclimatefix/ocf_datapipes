@@ -64,7 +64,7 @@ def test_power_perceiver_production(
     gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe).fork(2)
     gsp_datapipe = Normalize(
 <<<<<<< HEAD
-        gsp_datapipe, 
+        gsp_datapipe,
         normalize_fn=lambda x: x / x.installedcapacity_mwp
 =======
         gsp_datapipe, normalize_fn=lambda x: x / x.installed_capacity_megawatt_power
