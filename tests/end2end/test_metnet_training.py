@@ -67,7 +67,7 @@ def test_metnet_production(
     gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2)
     gsp_datapipe = Normalize(
         gsp_datapipe, 
-        normalize_fn=lambda x: x / x.installed_capacity_megawatt_power
+        normalize_fn=lambda x: x / x.installedcapacity_mwp
     )
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_hrv_datapipe = AddT0IdxAndSamplePeriodDuration(

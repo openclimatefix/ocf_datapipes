@@ -79,10 +79,10 @@ class OpenGSPIterDataPipe(IterDataPipe):
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
             x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
             y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
-            installed_capacity_megawatt_power=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(
+            installedcapacity_mwp=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(
                 np.float32
             ),
-            effective_capacity_megawatt_power=gsp_pv_power_mw_ds.capacity_mwp.data.astype(
+            capacity_mwp=gsp_pv_power_mw_ds.capacity_mwp.data.astype(
                 np.float32
             ),
         )

@@ -48,7 +48,7 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
 
     logger.debug("Add t0 idx and normalize")
     gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
-        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.installed_capacity_megawatt_power)
+        gsp_datapipe.normalize(normalize_fn=lambda x: x / x.installedcapacity_mwp)
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),

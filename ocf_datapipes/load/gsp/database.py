@@ -95,8 +95,8 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
             x_osgb=x_osgb,
             y_osgb=y_osgb,
-            installed_capacity_megawatt_power=gsp_installed_capacity.astype(np.float32),
-            effective_capacity_megawatt_power=gsp_effective_capacity.astype(np.float32),
+            installedcapacity_mwp=gsp_installed_capacity.astype(np.float32),
+            capacity_mwp=gsp_effective_capacity.astype(np.float32),
         )
 
         if not self.national_only:
@@ -172,7 +172,7 @@ def get_gsp_power_from_database(
 
             gsp_yield_dict = gsp_yield.__dict__
             
-            gsp_yield_dict["installed_capacity_mw"] = location.installed_capacity_mw
+            gsp_yield_dict["installedcapacity_mwp"] = location.installed_capacity_mw
             gsp_yield_dict["solar_generation_mw"] = gsp_yield_dict["solar_generation_kw"] / 1000
             gsp_yield_dict["gsp_id"] = location.gsp_id
             gsp_yields_dict.append(gsp_yield_dict)
@@ -193,7 +193,7 @@ def get_gsp_power_from_database(
 
     # pivot on
     gsp_yields_df = gsp_yields_df[
-        ["datetime_utc", "gsp_id", "solar_generation_mw", "installed_capacity_mw", "capacity_mwp"]
+        ["datetime_utc", "gsp_id", "solar_generation_mw", "installedcapacity_mwp", "capacity_mwp"]
     ]
     logger.debug(gsp_yields_df.columns)
     logger.debug(gsp_yields_df.index)
@@ -207,7 +207,7 @@ def get_gsp_power_from_database(
     )
 
     gsp_installed_capacity_df = gsp_yields_df.pivot(
-        index="datetime_utc", columns="gsp_id", values="installed_capacity_mw"
+        index="datetime_utc", columns="gsp_id", values="installedcapacity_mwp"
     )
     
     gsp_effective_capacity_df = gsp_yields_df.pivot(
