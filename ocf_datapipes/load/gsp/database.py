@@ -66,13 +66,15 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
         logger.debug("Getting GSP data")
 
-        gsp_pv_power_mw_df, gsp_installed_capacity, gsp_effective_capacity = (
-            get_gsp_power_from_database(
-                history_duration=self.history_duration,
-                interpolate_minutes=self.interpolate_minutes,
-                load_extra_minutes=self.load_extra_minutes,
-                gsp_ids=self.gsp_ids,
-            )
+        (
+            gsp_pv_power_mw_df,
+            gsp_installed_capacity,
+            gsp_effective_capacity,
+        ) = get_gsp_power_from_database(
+            history_duration=self.history_duration,
+            interpolate_minutes=self.interpolate_minutes,
+            load_extra_minutes=self.load_extra_minutes,
+            gsp_ids=self.gsp_ids,
         )
 
         if self.national_only:
@@ -171,13 +173,12 @@ def get_gsp_power_from_database(
             gsp_yield = GSPYield.from_orm(gsp_yield)
 
             gsp_yield_dict = gsp_yield.__dict__
-            
+
             gsp_yield_dict["installed_capacity_mw"] = location.installed_capacity_mw
             gsp_yield_dict["solar_generation_mw"] = gsp_yield_dict["solar_generation_kw"] / 1000
             gsp_yield_dict["gsp_id"] = location.gsp_id
             gsp_yields_dict.append(gsp_yield_dict)
-            
-        
+
         gsp_yields_df = pd.DataFrame(gsp_yields_dict)
         gsp_yields_df.fillna(0, inplace=True)
 
@@ -209,7 +210,7 @@ def get_gsp_power_from_database(
     gsp_installed_capacity_df = gsp_yields_df.pivot(
         index="datetime_utc", columns="gsp_id", values="installed_capacity_mw"
     )
-    
+
     gsp_effective_capacity_df = gsp_yields_df.pivot(
         index="datetime_utc", columns="gsp_id", values="capacity_mwp"
     )
@@ -236,14 +237,14 @@ def get_gsp_power_from_database(
 
     # filter out the extra minutes loaded
     logger.debug(f"{len(gsp_power_df)} of datetimes before filter on {start_utc}")
-    
-    def filter_after_start(df): 
+
+    def filter_after_start(df):
         return df[df.index >= start_utc]
 
     gsp_power_df = filter_after_start(gsp_power_df)
     gsp_installed_capacity_df = filter_after_start(gsp_installed_capacity_df)
     gsp_effective_capacity_df = filter_after_start(gsp_effective_capacity_df)
-    
+
     logger.debug(f"{len(gsp_power_df)} of datetimes after filter on {start_utc}")
 
     # clip values to 0, this just stops any interpolation going below zero

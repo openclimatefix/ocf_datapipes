@@ -39,12 +39,12 @@ def put_gsp_data_into_an_xr_dataarray(
         x_osgb=("gsp_id", x_osgb),
         y_osgb=("gsp_id", y_osgb),
         installed_capacity_megawatt_power=(
-            ("time_utc", "gsp_id"), 
-            installed_capacity_megawatt_power
+            ("time_utc", "gsp_id"),
+            installed_capacity_megawatt_power,
         ),
         effective_capacity_megawatt_power=(
-            ("time_utc", "gsp_id"), 
-            effective_capacity_megawatt_power
+            ("time_utc", "gsp_id"),
+            effective_capacity_megawatt_power,
         ),
     )
     return data_array
