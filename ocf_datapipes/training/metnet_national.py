@@ -37,7 +37,7 @@ def normalize_gsp(x):  # So it can be pickled
     Returns:
         Normalized DataArray
     """
-    return x / x.capacity_megawatt_power
+    return x / x.installed_capacity_megawatt_power
 
 
 def _remove_nans(x):

@@ -36,7 +36,7 @@ def normalize_gsp(x):
     Returns:
         Normalized DataArray
     """
-    return x / x.capacity_megawatt_power
+    return x / x.effective_capacity_megawatt_power
 
 
 def production_sat_scale(x):
