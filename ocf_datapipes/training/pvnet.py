@@ -642,6 +642,4 @@ def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
 
         raise ValueError("Found nans values in satellite data")
 
-
-
     return batch
