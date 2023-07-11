@@ -70,7 +70,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
 
     logger.debug("Add t0 idx and normalize")
     gsp_datapipe = gsp_datapipe.normalize(
-        normalize_fn=lambda x: x / x.capacity_megawatt_power
+        normalize_fn=lambda x: x / x.nominal_capacity_mwp
     ).add_t0_idx_and_sample_period_duration(
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),

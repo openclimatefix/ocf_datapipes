@@ -24,7 +24,7 @@ logger.setLevel(logging.DEBUG)
 
 def normalize_pv(x):  # So it can be pickled
     """
-    Normalize the GSP data
+    Normalize the PV data
 
     Args:
         x: Input DataArray
@@ -93,7 +93,7 @@ def pseudo_irradiance_datapipe(
         use_gsp=False,
         use_pv=use_pv,
     )
-    # Load GSP national data
+    # Load PV data
     used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
@@ -105,7 +105,7 @@ def pseudo_irradiance_datapipe(
     # Now do the extra processing
     pv_history = used_datapipes["pv"].normalize(normalize_fn=normalize_pv)
     pv_datapipe = used_datapipes["pv_future"].normalize(normalize_fn=normalize_pv)
-    # Split into GSP for target, only national, and one for history
+    # Split into PV for target, and one for history
     pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
     pv_loc_datapipe, pv_id_datapipe = LocationPicker(pv_loc_datapipe).fork(2)
 
@@ -171,20 +171,20 @@ def pseudo_irradiance_datapipe(
         )
     # Setting seed in these to keep them the same for creating image and metadata
     if "hrv" in used_datapipes.keys():
-        sat_hrv_datapipe, sat_gsp_datapipe, sat_meta_datapipe = sat_hrv_datapipe.fork(3)
+        sat_hrv_datapipe, sat_pv_datapipe, sat_meta_datapipe = sat_hrv_datapipe.fork(3)
         pv_history, pv_meta = pv_history.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, seed=1337)
+        pv_history = pv_history.create_pv_image(image_datapipe=sat_pv_datapipe, seed=1337)
         pv_meta = pv_meta.create_pv_metadata_image(image_datapipe=sat_meta_datapipe, seed=1337)
     elif "sat" in used_datapipes.keys():
-        sat_datapipe, sat_gsp_datapipe, sat_meta_datapipe = sat_datapipe.fork(3)
+        sat_datapipe, sat_pv_datapipe, sat_meta_datapipe = sat_datapipe.fork(3)
         pv_history, pv_meta = pv_history.fork(2)
-        pv_history = pv_history.create_pv_image(image_datapipe=sat_gsp_datapipe, seed=1337)
+        pv_history = pv_history.create_pv_image(image_datapipe=sat_pv_datapipe, seed=1337)
         pv_meta = pv_meta.create_pv_metadata_image(image_datapipe=sat_meta_datapipe, seed=1337)
     elif "nwp" in used_datapipes.keys():
-        nwp_datapipe, nwp_gsp_datapipe, nwp_meta_datapipe = nwp_datapipe.fork(3)
+        nwp_datapipe, nwp_pv_datapipe, nwp_meta_datapipe = nwp_datapipe.fork(3)
         pv_history, pv_meta = pv_history.fork(2)
         pv_history = pv_history.create_pv_image(
-            image_datapipe=nwp_gsp_datapipe, image_dim="osgb", seed=1337
+            image_datapipe=nwp_pv_datapipe, image_dim="osgb", seed=1337
         )
         pv_meta = pv_meta.create_pv_metadata_image(
             image_datapipe=nwp_meta_datapipe, image_dim="osgb", seed=1337
