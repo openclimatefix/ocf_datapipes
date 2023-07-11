@@ -651,7 +651,8 @@ def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
                     percent_nans = np.sum(nans) / np.prod(sate_data_one_step.shape) * 100
 
                     logger.error(
-                        f"Found nans values in satellite data at index {t} ({dim=}). {percent_nans}% of values are nans"
+                        f"Found nans values in satellite data at index {t} ({dim=}). "
+                        f"{percent_nans}% of values are nans"
                     )
                 else:
                     logger.error(f"Found no nans values in satellite data at index {t} {dim=}")
