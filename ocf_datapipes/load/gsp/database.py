@@ -195,8 +195,11 @@ def get_gsp_power_from_database(
     # pivot on
     gsp_yields_df = gsp_yields_df[
         [
-            "datetime_utc", "gsp_id", "solar_generation_mw", 
-            "nominal_capacity_mwp", "effective_capacity_mwp"
+            "datetime_utc",
+            "gsp_id",
+            "solar_generation_mw",
+            "nominal_capacity_mwp",
+            "effective_capacity_mwp",
         ]
     ]
     logger.debug(gsp_yields_df.columns)
