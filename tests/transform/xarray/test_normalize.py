@@ -30,7 +30,7 @@ def test_normalize_topo(topo_datapipe):
 
 
 def test_normalize_gsp(gsp_datapipe):
-    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_mwp)
+    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=lambda x: x / x.effective_capacity_mwp)
     data = next(iter(gsp_datapipe))
     assert np.min(data) >= 0.0
     assert np.max(data) <= 1.0

@@ -47,6 +47,8 @@ class OpenGSPNationalIterDataPipe(IterDataPipe):
             {
                 "datetime_gmt": "time_utc",
                 "generation_mw": "gsp_pv_power_mw",
+                "installedcapacity_mwp": "nominal_capacity_mwp",
+                "capacity_mwp": "effective_capacity_mwp",
             }
         )
 

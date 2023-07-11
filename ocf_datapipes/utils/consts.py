@@ -287,8 +287,8 @@ class BatchKey(Enum):
     gsp_y_osgb = auto()
     gsp_x_osgb = auto()
     gsp_time_utc = auto()  # Seconds since UNIX epoch (1970-01-01). (batch_size, time)
-    gsp_installedcapacity_mwp = auto()  # (batch_size)
-    gsp_capacity_mwp = auto()  # (batch_size)
+    gsp_nominal_capacity_mwp = auto()  # (batch_size)
+    gsp_effective_capacity_mwp = auto()  # (batch_size)
 
     # GSP Fourier coordinates:
     # Each has shape: (batch_size, 1, n_fourier_features_per_dim),

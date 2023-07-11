@@ -68,7 +68,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
         (
             gsp_pv_power_mw_df,
-            gsp_installed_capacity,
+            gsp_nominal_capacity,
             gsp_effective_capacity,
         ) = get_gsp_power_from_database(
             history_duration=self.history_duration,
@@ -97,8 +97,8 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
             x_osgb=x_osgb,
             y_osgb=y_osgb,
-            installedcapacity_mwp=gsp_installed_capacity.astype(np.float32),
-            capacity_mwp=gsp_effective_capacity.astype(np.float32),
+            nominal_capacity_mwp=gsp_nominal_capacity.astype(np.float32),
+            effective_capacity_mwp=gsp_effective_capacity.astype(np.float32),
         )
 
         if not self.national_only:
@@ -173,7 +173,8 @@ def get_gsp_power_from_database(
             gsp_yield = GSPYield.from_orm(gsp_yield)
 
             gsp_yield_dict = gsp_yield.__dict__
-            gsp_yield_dict["installedcapacity_mwp"] = location.installed_capacity_mw
+            gsp_yield_dict["nominal_capacity_mwp"] = location.installed_capacity_mw
+            gsp_yield_dict["effective_capacity_mwp"] = gsp_yield_dict["capacity_mwp"]
             gsp_yield_dict["solar_generation_mw"] = gsp_yield_dict["solar_generation_kw"] / 1000
             gsp_yield_dict["gsp_id"] = location.gsp_id
             gsp_yields_dict.append(gsp_yield_dict)
@@ -193,7 +194,10 @@ def get_gsp_power_from_database(
 
     # pivot on
     gsp_yields_df = gsp_yields_df[
-        ["datetime_utc", "gsp_id", "solar_generation_mw", "installedcapacity_mwp", "capacity_mwp"]
+        [
+            "datetime_utc", "gsp_id", "solar_generation_mw", 
+            "nominal_capacity_mwp", "effective_capacity_mwp"
+        ]
     ]
     logger.debug(gsp_yields_df.columns)
     logger.debug(gsp_yields_df.index)
@@ -206,18 +210,18 @@ def get_gsp_power_from_database(
         index="datetime_utc", columns="gsp_id", values="solar_generation_mw"
     )
 
-    gsp_installed_capacity_df = gsp_yields_df.pivot(
-        index="datetime_utc", columns="gsp_id", values="installedcapacity_mwp"
+    gsp_nominal_capacity_df = gsp_yields_df.pivot(
+        index="datetime_utc", columns="gsp_id", values="nominal_capacity_mwp"
     )
 
     gsp_effective_capacity_df = gsp_yields_df.pivot(
-        index="datetime_utc", columns="gsp_id", values="capacity_mwp"
+        index="datetime_utc", columns="gsp_id", values="effective_capacity_mwp"
     )
 
     logger.debug(f"{empty_df=}")
     logger.debug(f"{gsp_power_df=}")
     gsp_power_df = empty_df.join(gsp_power_df)
-    gsp_installed_capacity_df = empty_df.join(gsp_installed_capacity_df)
+    gsp_nominal_capacity_df = empty_df.join(gsp_nominal_capacity_df)
     gsp_effective_capacity_df = empty_df.join(gsp_effective_capacity_df)
 
     # interpolate in between, maximum 'live_interpolate_minutes' mins
@@ -227,7 +231,7 @@ def get_gsp_power_from_database(
         gsp_power_df.interpolate(
             limit=limit, inplace=True, method="cubic", fill_value="extrapolate"
         )
-        gsp_installed_capacity_df.interpolate(
+        gsp_nominal_capacity_df.interpolate(
             limit=limit, inplace=True, method="cubic", fill_value="extrapolate"
         )
         gsp_effective_capacity_df.interpolate(
@@ -241,7 +245,7 @@ def get_gsp_power_from_database(
         return df[df.index >= start_utc]
 
     gsp_power_df = filter_after_start(gsp_power_df)
-    gsp_installed_capacity_df = filter_after_start(gsp_installed_capacity_df)
+    gsp_nominal_capacity_df = filter_after_start(gsp_nominal_capacity_df)
     gsp_effective_capacity_df = filter_after_start(gsp_effective_capacity_df)
 
     logger.debug(f"{len(gsp_power_df)} of datetimes after filter on {start_utc}")
@@ -249,4 +253,4 @@ def get_gsp_power_from_database(
     # clip values to 0, this just stops any interpolation going below zero
     gsp_power_df.clip(lower=0, inplace=True)
 
-    return gsp_power_df, gsp_installed_capacity_df, gsp_effective_capacity_df
+    return gsp_power_df, gsp_nominal_capacity_df, gsp_effective_capacity_df
