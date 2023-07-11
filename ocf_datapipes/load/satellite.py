@@ -83,7 +83,7 @@ def open_sat_data(
         ds = open_sat_data(zarr_paths)
         ```
     """
-    _log.info("Opening satellite data: %s", zarr_path)
+    _log.info(f"Opening satellite data: %s, {use_15_minute_data_if_needed=}", zarr_path)
 
     # Silence the warning about large chunks.
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
@@ -113,6 +113,8 @@ def open_sat_data(
         dataset = dataset.load()
         _log.debug("Resampling 15 minute data to 5 mins")
         dataset = dataset.resample(time="5T").interpolate("linear")
+    else:
+        _log.debug("Not using 15 minute data")
 
     # Remove data coordinate dimensions if they exist
     if "x_geostationary_coordinates" in dataset:

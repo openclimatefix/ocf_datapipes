@@ -228,6 +228,7 @@ def _get_datapipes_dict(
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
         use_topo=False,
+        production=production,
     )
     if production:
         configuration: Configuration = datapipes_dict["config"]
