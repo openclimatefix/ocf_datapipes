@@ -635,6 +635,11 @@ def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
     """
     if np.any(np.isnan(batch[BatchKey.satellite_actual])):
         logger.error("Found nans values in satellite data")
+
+        for t in range(batch[BatchKey.satellite_actual].shape[1]):
+            if np.any(np.isnan(batch[BatchKey.satellite_actual][:, t])):
+                logger.error(f"Found nans values in satellite data at time index {t}")
+
         raise ValueError("Found nans values in satellite data")
 
     return batch
