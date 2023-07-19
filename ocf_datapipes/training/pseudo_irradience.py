@@ -458,11 +458,11 @@ def pseudo_irradiance_datapipe(
     )  # .normalize(normalize_fn=normalize_pv)
     # return pv_datapipe.zip_ocf(pv_history,used_datapipes["sat"])
     if is_test:
-       pv_history = pv_history.map(_keep_pv_ids_in_list)
-       pv_datapipe = pv_datapipe.map(_keep_pv_ids_in_list)
+        pv_history = pv_history.map(_keep_pv_ids_in_list)
+        pv_datapipe = pv_datapipe.map(_keep_pv_ids_in_list)
     else:
-       pv_history = pv_history.map(_drop_pv_ids_in_list)
-       pv_datapipe = pv_datapipe.map(_drop_pv_ids_in_list)
+        pv_history = pv_history.map(_drop_pv_ids_in_list)
+        pv_datapipe = pv_datapipe.map(_drop_pv_ids_in_list)
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe, pv_meta_save = pv_datapipe.fork(3)
     pv_loc_datapipe, pv_sav_loc = LocationPicker(
