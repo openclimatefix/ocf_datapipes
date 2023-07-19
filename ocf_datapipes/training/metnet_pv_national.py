@@ -37,7 +37,7 @@ def normalize_gsp(x):  # So it can be pickled
     Returns:
         Normalized DataArray
     """
-    return x / x.capacity_megawatt_power
+    return x / x.nominal_capacity_mwp
 
 
 def normalize_pv(x):  # So it can be pickled

@@ -25,12 +25,12 @@ def test_normalize_topo(topo_datapipe):
     )
     data = next(iter(topo_datapipe))
     assert np.all(data >= -1.0)
-    # TODO Check why this normalization is ends up with a max of 11ish instead
+    # TODO Check why this normalization is ends up with a max of 11-ish instead
     assert np.all(data <= 11.0)
 
 
 def test_normalize_gsp(gsp_datapipe):
-    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_megawatt_power)
+    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=lambda x: x / x.effective_capacity_mwp)
     data = next(iter(gsp_datapipe))
     assert np.min(data) >= 0.0
     assert np.max(data) <= 1.0

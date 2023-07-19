@@ -8,6 +8,7 @@ from ocf_datapipes.training.pvnet import (
     pvnet_datapipe,
 )
 from ocf_datapipes.utils.consts import Location
+import pytest
 
 
 def test_construct_loctime_pipelines(configuration_filename):
@@ -37,7 +38,7 @@ def test_construct_sliced_data_pipeline(configuration_filename):
         t0_datapipe=t0_pipe,
     )
 
-    batch = next(iter(dp))
+    _ = next(iter(dp))
 
 
 def test_pvnet_datapipe(configuration_filename):

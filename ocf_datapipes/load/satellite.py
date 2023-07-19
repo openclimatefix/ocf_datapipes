@@ -1,13 +1,16 @@
 """Satellite loader"""
 import logging
 import subprocess
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Union
 
 import dask
+import fsspec
 import pandas as pd
 import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
+from pathy import Pathy
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -50,12 +53,17 @@ def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
     return dataset
 
 
-def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.DataArray:
+def open_sat_data(
+    zarr_path: Union[Path, str, list[Path], list[str]], use_15_minute_data_if_needed: bool = False
+) -> xr.DataArray:
     """Lazily opens the Zarr store.
 
     Args:
       zarr_path: Cloud URL or local path pattern, or list of these. If GCS URL, it must start with
           'gs://'.
+      use_15_minute_data_if_needed: use_15_minute_data_if_needed: Option to use the 15 minute data
+        if the 5 minute data is not available
+        This is done by checking to see if the last timestamp is within an hour from now
 
     Example:
         With wild cards and GCS path:
@@ -75,12 +83,15 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
         ds = open_sat_data(zarr_paths)
         ```
     """
-    _log.info("Opening satellite data: %s", zarr_path)
+    _log.info(f"Opening satellite data: %s, {use_15_minute_data_if_needed=}", zarr_path)
 
     # Silence the warning about large chunks.
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
     # from 8 seconds to 50 seconds!
     dask.config.set({"array.slicing.split_large_chunks": False})
+
+    # dont load 15 minute data by default
+    use_15_minute_data = False
 
     if isinstance(zarr_path, (list, tuple)):
         dataset = xr.combine_nested(
@@ -90,8 +101,20 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
             join="override",
         )
     else:
-        dataset = _get_single_sat_data(zarr_path)
-    # TODO add 15 mins data satellite option
+        # check the file exists
+        dataset, use_15_minute_data = load_and_check_satellite_data(zarr_path)
+
+    if use_15_minute_data_if_needed and use_15_minute_data:
+        zarr_path_15_minutes = str(zarr_path).replace(".zarr", "_15.zarr")
+
+        _log.info(f"Now going to load {zarr_path_15_minutes} and resample")
+        dataset = _get_single_sat_data(zarr_path_15_minutes)
+
+        dataset = dataset.load()
+        _log.debug("Resampling 15 minute data to 5 mins")
+        dataset = dataset.resample(time="5T").interpolate("linear")
+    else:
+        _log.debug("Not using 15 minute data")
 
     # Remove data coordinate dimensions if they exist
     if "x_geostationary_coordinates" in dataset:
@@ -164,22 +187,82 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
     return data_array
 
 
+def load_and_check_satellite_data(zarr_path) -> [xr.Dataset, bool]:
+    """
+    Load the satellite data,
+
+    1. check if file path exists
+    2. check dataset has been updated in the last hour
+    If 1. or 2. are true, then return True for use_15_minute_data
+
+    Args:
+        zarr_path: the zarr path to load
+
+    Returns:
+        dataset (if loaded),
+        use_15_minute_data, indicating if the 15 minute data should be loaded
+    """
+    filesystem = fsspec.open(Pathy.fluid(zarr_path)).fs
+    if filesystem.exists(zarr_path):
+        dataset = _get_single_sat_data(zarr_path)
+
+        use_15_minute_data = check_last_timestamp(dataset)
+
+    else:
+        _log.info(f"File does not exist {zarr_path}. Will try to load 15 minute data")
+        use_15_minute_data = True
+        dataset = None
+    return dataset, use_15_minute_data
+
+
+def check_last_timestamp(dataset: xr.Dataset, timedelta_hours: float = 1) -> bool:
+    """
+    Check the last timestamp of the dataset to see if it is more than 1 hour ago
+
+    Args:
+        dataset: dataset with time dimension
+        timedelta_hours: the timedelta to check from now
+
+    Returns: bool
+    """
+    latest_time = pd.to_datetime(dataset.time[-1].values)
+    now = datetime.utcnow()
+    if latest_time < now - timedelta(hours=timedelta_hours):
+        _log.info(
+            f"last datestamp is {latest_time}, which is more than "
+            f"{timedelta_hours} hour ago from {now} "
+            f"Will try to load 15 minute data"
+        )
+        return True
+    else:
+        _log.debug(
+            f"last datestamp is {latest_time}, which is less than {timedelta_hours} "
+            f"hour ago from {now}"
+        )
+        return False
+
+
 @functional_datapipe("open_satellite")
 class OpenSatelliteIterDataPipe(IterDataPipe):
     """Open Satellite Zarr"""
 
-    def __init__(self, zarr_path: Union[Path, str]):
+    def __init__(self, zarr_path: Union[Path, str], use_15_minute_data_if_needed: bool = False):
         """
         Opens the satellite Zarr
 
         Args:
             zarr_path: path to the zarr file
+            use_15_minute_data_if_needed: Option to use the 15 minute data if the
+                5 minute data is not available
         """
         self.zarr_path = zarr_path
+        self.use_15_minute_data_if_needed = use_15_minute_data_if_needed
         super().__init__()
 
     def __iter__(self) -> xr.DataArray:
         """Open the Zarr file"""
-        data: xr.DataArray = open_sat_data(zarr_path=self.zarr_path)
+        data: xr.DataArray = open_sat_data(
+            zarr_path=self.zarr_path, use_15_minute_data_if_needed=self.use_15_minute_data_if_needed
+        )
         while True:
             yield data

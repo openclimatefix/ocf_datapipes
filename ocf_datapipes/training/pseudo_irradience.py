@@ -28,7 +28,7 @@ logger.setLevel(logging.DEBUG)
 
 def normalize_pv(x):  # So it can be pickled
     """
-    Normalize the GSP data
+    Normalize the PV data
 
     Args:
         x: Input DataArray

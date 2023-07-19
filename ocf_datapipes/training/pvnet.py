@@ -36,7 +36,7 @@ def normalize_gsp(x):
     Returns:
         Normalized DataArray
     """
-    return x / x.capacity_megawatt_power
+    return x / x.effective_capacity_mwp
 
 
 def production_sat_scale(x):
@@ -85,6 +85,7 @@ def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
 
     Operation is performed in-place on the batch.
     """
+    logger.info("Filling Nans with zeros")
     for k, v in batch.items():
         if isinstance(v, np.ndarray):
             np.nan_to_num(v, copy=False, nan=0.0)
@@ -227,6 +228,7 @@ def _get_datapipes_dict(
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
         use_topo=False,
+        production=production,
     )
     if production:
         configuration: Configuration = datapipes_dict["config"]
@@ -278,7 +280,7 @@ def construct_loctime_pipelines(
         configuration=config,
         key_for_t0="gsp",
         shuffle=True,
-        nwp_max_t0_offset=minutes(90),
+        nwp_max_t0_offset=minutes(180),
     )
 
     return location_pipe, t0_datapipe
@@ -338,14 +340,16 @@ def slice_datapipes_by_time(
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
 
     sat_and_hrv_dropout_kwargs = dict(
-        # In samples where dropout is applied, the first non-nan value could be 20 - 45 mins before
-        # time t0.
-        dropout_timedeltas=[minutes(m) for m in range(-45, -15, 5)],
-        dropout_frac=0 if production else 0.5,
+        # Satellite is either 30 minutes or 60 minutes delayed
+        dropout_timedeltas=[minutes(-60), minutes(-30)],
+        dropout_frac=0 if production else 1.0,
     )
 
-    # Satellite data never more recent than t0-15mins
-    sat_delay = minutes(-15)
+    # Satellite data never more recent than t0-30mins
+    if production:
+        sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
+    else:
+        sat_delay = minutes(-30)
 
     if "nwp" in datapipes_dict:
         datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
@@ -353,8 +357,8 @@ def slice_datapipes_by_time(
             sample_period_duration=minutes(60),
             history_duration=minutes(conf_in.nwp.history_minutes),
             forecast_duration=minutes(conf_in.nwp.forecast_minutes),
-            # The NWP forecast will always be at least 90 minutes stale
-            dropout_timedeltas=[minutes(-90)],
+            # The NWP forecast will always be at least 180 minutes stale
+            dropout_timedeltas=[minutes(-180)],
             dropout_frac=0 if production else 1.0,
         )
 
@@ -467,6 +471,7 @@ def construct_sliced_data_pipeline(
     block_sat: bool = False,
     block_nwp: bool = False,
     production: bool = False,
+    check_satellite_no_zeros: bool = False,
 ) -> IterDataPipe:
     """Constructs data pipeline for the input data config file.
 
@@ -479,6 +484,7 @@ def construct_sliced_data_pipeline(
         block_sat: Whether to load zeroes for satellite data.
         block_nwp: Whether to load zeroes for NWP data.
         production: Whether constucting pipeline for production inference.
+        check_satellite_no_zeros: Whether to check that satellite data has no zeros.
     """
 
     assert not (production and (block_sat or block_nwp))
@@ -569,6 +575,11 @@ def construct_sliced_data_pipeline(
         nwp_block_func = AddZeroedNWPData(configuration)
         combined_datapipe = combined_datapipe.map(nwp_block_func)
 
+    logger.info("Filtering out samples with no data")
+    if check_satellite_no_zeros:
+        # in production we don't want any nans in the satellite data
+        combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+
     combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
     return combined_datapipe
@@ -617,3 +628,36 @@ def pvnet_datapipe(
     )
 
     return datapipe
+
+
+def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
+    """
+    Check if there are any Nans values in the satellite data.
+    """
+    if np.any(np.isnan(batch[BatchKey.satellite_actual])):
+        logger.error("Found nans values in satellite data")
+
+        logger.error(batch[BatchKey.satellite_actual].shape)
+
+        # loop over time and channels
+        for dim in [0, 1]:
+            for t in range(batch[BatchKey.satellite_actual].shape[dim]):
+                if dim == 0:
+                    sate_data_one_step = batch[BatchKey.satellite_actual][t]
+                else:
+                    sate_data_one_step = batch[BatchKey.satellite_actual][:, t]
+                nans = np.isnan(sate_data_one_step)
+
+                if np.any(nans):
+                    percent_nans = np.sum(nans) / np.prod(sate_data_one_step.shape) * 100
+
+                    logger.error(
+                        f"Found nans values in satellite data at index {t} ({dim=}). "
+                        f"{percent_nans}% of values are nans"
+                    )
+                else:
+                    logger.error(f"Found no nans values in satellite data at index {t} {dim=}")
+
+        raise ValueError("Found nans values in satellite data")
+
+    return batch

@@ -11,7 +11,8 @@ def put_gsp_data_into_an_xr_dataarray(
     gsp_id: np.ndarray,
     x_osgb: np.ndarray,
     y_osgb: np.ndarray,
-    capacity_megawatt_power: np.ndarray,
+    nominal_capacity_mwp: np.ndarray,
+    effective_capacity_mwp: np.ndarray,
 ) -> xr.DataArray:
     """
     Converts the GSP data to Xarray DataArray
@@ -22,7 +23,8 @@ def put_gsp_data_into_an_xr_dataarray(
         gsp_id: Id of the GSPs
         x_osgb: OSGB X coordinates
         y_osgb: OSGB y coordinates
-        capacity_megawatt_power: Capacity of each GSP
+        nominal_capacity_mwp: Installed capacity of each GSP
+        effective_capacity_mwp: Estimated effective capacity of each GSP
 
     Returns:
         Xarray DataArray of the GSP data
@@ -36,7 +38,11 @@ def put_gsp_data_into_an_xr_dataarray(
     data_array = data_array.assign_coords(
         x_osgb=("gsp_id", x_osgb),
         y_osgb=("gsp_id", y_osgb),
-        capacity_megawatt_power=(("time_utc", "gsp_id"), capacity_megawatt_power),
+        nominal_capacity_mwp=(("time_utc", "gsp_id"), nominal_capacity_mwp),
+        effective_capacity_mwp=(
+            ("time_utc", "gsp_id"),
+            effective_capacity_mwp,
+        ),
     )
     return data_array
 

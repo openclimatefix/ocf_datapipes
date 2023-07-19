@@ -4,9 +4,37 @@
         ".zgroup": {
             "zarr_format": 2
         },
+        "capacity_mwp/.zarray": {
+            "chunks": [
+                9430,
+                20
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                49,
+                22
+            ],
+            "zarr_format": 2
+        },
+        "capacity_mwp/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "datetime_gmt",
+                "gsp_id"
+            ]
+        },
         "datetime_gmt/.zarray": {
             "chunks": [
-                37657
+                37717
             ],
             "compressor": {
                 "blocksize": 0,
@@ -33,8 +61,8 @@
         },
         "generation_mw/.zarray": {
             "chunks": [
-                49,
-                22
+                9430,
+                20
             ],
             "compressor": {
                 "blocksize": 0,
@@ -61,7 +89,7 @@
         },
         "gsp_id/.zarray": {
             "chunks": [
-                22
+                318
             ],
             "compressor": {
                 "blocksize": 0,
@@ -70,7 +98,7 @@
                 "id": "blosc",
                 "shuffle": 1
             },
-            "dtype": "<i4",
+            "dtype": "<i8",
             "fill_value": null,
             "filters": null,
             "order": "C",
@@ -86,13 +114,13 @@
         },
         "installedcapacity_mwp/.zarray": {
             "chunks": [
-                49,
-                22
+                9430,
+                20
             ],
             "compressor": {
                 "blocksize": 0,
                 "clevel": 5,
-                "cname": "zstd",
+                "cname": "lz4",
                 "id": "blosc",
                 "shuffle": 1
             },

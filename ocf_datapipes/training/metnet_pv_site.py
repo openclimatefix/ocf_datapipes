@@ -28,7 +28,7 @@ logger.setLevel(logging.DEBUG)
 
 def normalize_pv(x):  # So it can be pickled
     """
-    Normalize the GSP data
+    Normalize the PV data
 
     Args:
         x: Input DataArray
@@ -186,9 +186,7 @@ def metnet_site_datapipe(
     match_simon: bool = True,
 ) -> IterDataPipe:
     """
-    Make GSP national data pipe
-
-    Currently only has GSP and NWP's in them
+    Make PV data pipe
 
     Args:
         configuration_filename: the configruation filename for the pipe
@@ -220,7 +218,7 @@ def metnet_site_datapipe(
         use_gsp=False,
         use_pv=use_pv,
     )
-    # Load GSP national data
+    # Load PV data
     used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
 
     # Now get overlapping time periods
@@ -301,15 +299,15 @@ def metnet_site_datapipe(
     modalities = []
 
     if pv_in_image and "hrv" in used_datapipes.keys():
-        sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
+        sat_hrv_datapipe, sat_pv_datapipe = sat_hrv_datapipe.fork(2)
+        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_pv_datapipe)
     elif pv_in_image and "sat" in used_datapipes.keys():
-        sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_gsp_datapipe)
+        sat_datapipe, sat_pv_datapipe = sat_datapipe.fork(2)
+        pv_history = pv_history.create_pv_history_image(image_datapipe=sat_pv_datapipe)
     elif pv_in_image and "nwp" in used_datapipes.keys():
-        nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
+        nwp_datapipe, nwp_pv_datapipe = nwp_datapipe.fork(2)
         pv_history = pv_history.create_pv_history_image(
-            image_datapipe=nwp_gsp_datapipe, image_dim="osgb"
+            image_datapipe=nwp_pv_datapipe, image_dim="osgb"
         )
     if "nwp" in used_datapipes.keys():
         modalities.append(nwp_datapipe)
