@@ -64,6 +64,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 print(
                     f"{location_idx=}, {xr_dataset[self.x_dim_name][location_idx].values=}, {xr_dataset[self.y_dim_name][location_idx].values=}"
                 )
+                print(f"{xr_dataset[self.x_dim_name]=}, {xr_dataset[self.y_dim_name]=}")
                 location = Location(
                     x=xr_dataset[self.x_dim_name][location_idx].values,
                     y=xr_dataset[self.y_dim_name][location_idx].values,
