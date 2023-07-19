@@ -7,7 +7,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import Location
-
+from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb, lat_lon_to_osgb
 logger = logging.getLogger(__name__)
 
 
@@ -61,13 +61,16 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 # Pick 1 random location from the input dataset
                 logger.debug("Selecting random idx")
                 location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))
-                print(
-                    f"{location_idx=}, {xr_dataset[self.x_dim_name][location_idx].values=}, {xr_dataset[self.y_dim_name][location_idx].values=}"
-                )
-                print(f"{xr_dataset[self.x_dim_name]=}, {xr_dataset[self.y_dim_name]=}")
+                #print(
+                #    f"{location_idx=}, {xr_dataset[self.x_dim_name][location_idx].values=}, {xr_dataset[self.y_dim_name][location_idx].values=}"
+                #)
+                #print(f"{xr_dataset[self.x_dim_name]=}, {xr_dataset[self.y_dim_name]=}")
+                x_osgb, y_osgb = lat_lon_to_osgb(xr_dataset[self.x_dim_name][location_idx].values, xr_dataset[self.y_dim_name][location_idx].values)
+                print(f"{x_osgb=}, {y_osgb=}")
                 location = Location(
-                    x=xr_dataset[self.x_dim_name][location_idx].values,
-                    y=xr_dataset[self.y_dim_name][location_idx].values,
+                    x=x_osgb,
+                    y=y_osgb,
+                    coordinate_system="osgb",
                 )
                 if "pv_system_id" in xr_dataset.coords.keys():
                     location.id = int(xr_dataset["pv_system_id"][location_idx].values)

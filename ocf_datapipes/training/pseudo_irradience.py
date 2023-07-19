@@ -466,14 +466,14 @@ def pseudo_irradiance_datapipe(
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe, pv_meta_save = pv_datapipe.fork(3)
     pv_loc_datapipe, pv_sav_loc = LocationPicker(
-        pv_loc_datapipe, return_all_locations=True if is_test else False
-    ).fork(2)
+        pv_loc_datapipe, return_all_locations=True if is_test else False, x_dim_name="latitude", y_dim_name="longitude"
+    ).fork(2, buffer_size=-1)
     pv_sav_loc = pv_sav_loc.map(_get_id_from_location)
     pv_meta_save = pv_meta_save.map(_extract_test_info)
     #
     # Select systems here
     if use_meters:
-        pv_loc_datapipe, pv_loc_datapipe1, pv_loc_datapipe2 = pv_loc_datapipe.fork(3)
+        pv_loc_datapipe, pv_loc_datapipe1, pv_loc_datapipe2 = pv_loc_datapipe.fork(3, buffer_size=-1)
         pv_datapipe = pv_datapipe.select_spatial_slice_meters(
             pv_loc_datapipe1, roi_height_meters=size_meters, roi_width_meters=size_meters
         )
@@ -482,7 +482,7 @@ def pseudo_irradiance_datapipe(
         )
 
     if one_d:
-        pv_loc_datapipe, pv_one_d_datapipe, pv_one_d_datapipe2 = pv_loc_datapipe.fork(3)
+        pv_loc_datapipe, pv_one_d_datapipe, pv_one_d_datapipe2 = pv_loc_datapipe.fork(3, buffer_size=-1)
         pv_datapipe = pv_datapipe.select_id(pv_one_d_datapipe, data_source_name="pv")
         pv_history = pv_history.select_id(pv_one_d_datapipe2, data_source_name="pv")
     # return pv_datapipe.zip_ocf(pv_history, pv_loc_datapipe, pv_meta_save, pv_sav_loc, used_datapipes["sat"])
