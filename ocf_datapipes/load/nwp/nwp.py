@@ -60,5 +60,3 @@ class OpenLatestNWPDataPipe(IterDataPipe):
             time = _nwp.init_time_utc.values
             _log.debug(f"Selected most recent NWP observation, at: {time}")
             yield _nwp
-
-
