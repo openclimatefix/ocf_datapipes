@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
+from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
 
 def open_icon_eu(zarr_path) -> xr.DataArray:
@@ -14,22 +15,7 @@ def open_icon_eu(zarr_path) -> xr.DataArray:
         Xarray DataArray of the NWP data
     """
     # Open the data
-    if type(zarr_path) in [list, tuple] or "*" in str(zarr_path):  # Multi-file dataset
-        nwp = xr.open_mfdataset(
-            zarr_path,
-            engine="zarr",
-            concat_dim="init_time",
-            combine="nested",
-            chunks={},
-        ).sortby("init_time")
-    else:
-        nwp = xr.open_dataset(
-            zarr_path,
-            engine="zarr",
-            consolidated=True,
-            mode="r",
-            chunks="auto",
-        )
+    nwp = open_zarr_paths(zarr_path)
     raise NotImplementedError("ICON data is not yet supported")
     ukv: xr.DataArray = nwp["UKV"]
     del nwp
@@ -49,4 +35,15 @@ def open_icon_eu(zarr_path) -> xr.DataArray:
 
 
 def open_icon_global(zarr_path) -> xr.DataArray:
-    raise NotImplementedError("ICON Global data is not yet supported")
+    """
+    Opens the ICON data
+
+    Args:
+        zarr_path: Path to the zarr to open
+
+    Returns:
+        Xarray DataArray of the NWP data
+    """
+    # Open the data
+    nwp = open_zarr_paths(zarr_path)
+    raise NotImplementedError("ICON data is not yet supported")

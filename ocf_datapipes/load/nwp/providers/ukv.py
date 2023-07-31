@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
+
 
 def open_ukv(zarr_path) -> xr.DataArray:
     """
@@ -14,22 +16,7 @@ def open_ukv(zarr_path) -> xr.DataArray:
         Xarray DataArray of the NWP data
     """
     # Open the data
-    if type(zarr_path) in [list, tuple] or "*" in str(zarr_path):  # Multi-file dataset
-        nwp = xr.open_mfdataset(
-            zarr_path,
-            engine="zarr",
-            concat_dim="init_time",
-            combine="nested",
-            chunks={},
-        ).sortby("init_time")
-    else:
-        nwp = xr.open_dataset(
-            zarr_path,
-            engine="zarr",
-            consolidated=True,
-            mode="r",
-            chunks="auto",
-        )
+    nwp = open_zarr_paths(zarr_path)
     ukv: xr.DataArray = nwp["UKV"]
     del nwp
     ukv = ukv.transpose("init_time", "step", "variable", "y", "x")
