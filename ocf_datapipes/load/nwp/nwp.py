@@ -8,7 +8,8 @@ from ocf_blosc2 import Blosc2  # noqa: F401
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.load.nwp.providers.ukv import open_nwp
+from ocf_datapipes.load.nwp.providers.ukv import open_ukv
+from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 
 _log = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ _log = logging.getLogger(__name__)
 class OpenNWPIterDataPipe(IterDataPipe):
     """Opens NWP Zarr and yields it"""
 
-    def __init__(self, zarr_path: Union[Path, str]):
+    def __init__(self, zarr_path: Union[Path, str], provider: str = "ukv"):
         """
         Opens NWP Zarr and yields it
 
@@ -25,13 +26,21 @@ class OpenNWPIterDataPipe(IterDataPipe):
             zarr_path: Path to the Zarr file
         """
         self.zarr_path = zarr_path
+        if provider == "ukv":
+            self.open_nwp = open_ukv
+        elif provider == "icon-eu":
+            self.open_nwp = open_icon_eu
+        elif provider == "icon-global":
+            self.open_nwp = open_icon_global
+        else:
+            raise ValueError(f"Unknown provider: {provider}")
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Opens the NWP data"""
         _log.debug("Opening NWP data: %s", self.zarr_path)
-        ukv = open_nwp(self.zarr_path)
+        nwp = self.open_nwp(self.zarr_path)
         while True:
-            yield ukv
+            yield nwp
 
 
 @functional_datapipe("open_latest_nwp")

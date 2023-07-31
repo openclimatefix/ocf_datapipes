@@ -3,7 +3,7 @@ import pandas as pd
 import xarray as xr
 
 
-def open_icon(zarr_path) -> xr.DataArray:
+def open_icon_eu(zarr_path) -> xr.DataArray:
     """
     Opens the ICON data
 
@@ -46,3 +46,7 @@ def open_icon(zarr_path) -> xr.DataArray:
     assert time.is_unique
     assert time.is_monotonic_increasing
     return ukv
+
+
+def open_icon_global(zarr_path) -> xr.DataArray:
+    raise NotImplementedError("ICON Global data is not yet supported")

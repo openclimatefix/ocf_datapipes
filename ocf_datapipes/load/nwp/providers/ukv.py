@@ -3,7 +3,7 @@ import pandas as pd
 import xarray as xr
 
 
-def open_nwp(zarr_path) -> xr.DataArray:
+def open_ukv(zarr_path) -> xr.DataArray:
     """
     Opens the NWP data
 
