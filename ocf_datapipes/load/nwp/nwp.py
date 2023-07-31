@@ -8,8 +8,8 @@ from ocf_blosc2 import Blosc2  # noqa: F401
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.load.nwp.providers.ukv import open_ukv
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
+from ocf_datapipes.load.nwp.providers.ukv import open_ukv
 
 _log = logging.getLogger(__name__)
 

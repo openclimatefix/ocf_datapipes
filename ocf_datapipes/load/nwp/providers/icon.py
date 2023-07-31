@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
 
@@ -45,5 +46,5 @@ def open_icon_global(zarr_path) -> xr.DataArray:
         Xarray DataArray of the NWP data
     """
     # Open the data
-    nwp = open_zarr_paths(zarr_path)
+    open_zarr_paths(zarr_path)
     raise NotImplementedError("ICON data is not yet supported")
