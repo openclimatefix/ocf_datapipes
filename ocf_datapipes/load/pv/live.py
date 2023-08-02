@@ -249,10 +249,13 @@ def get_pv_power_from_database(
     # encode pv system id
     for provider in pv_output, solar_sheffield_passiv:
         idx = pv_yields_df["provider"] == provider
-
-        pv_yields_df.loc[idx, "pv_system_id"] = encode_label(
-            pv_yields_df.loc[idx, "pv_system_id"], label=provider
-        )
+        
+        # If not idx.any() we try to assign to no indices and the data type is changed from int to 
+        # float. Avoid this with if statement.
+        if idx.any():
+            pv_yields_df.loc[idx, "pv_system_id"] = encode_label(
+                pv_yields_df.loc[idx, "pv_system_id"], label=provider
+            )
 
     # pivot on
     pv_yields_df = pv_yields_df[["datetime_utc", "pv_system_id", "solar_generation_kw"]]
