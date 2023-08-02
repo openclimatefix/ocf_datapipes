@@ -260,7 +260,7 @@ def get_pv_power_from_database(
     # pivot on
     pv_yields_df = pv_yields_df[["datetime_utc", "pv_system_id", "solar_generation_kw"]]
     pv_yields_df.drop_duplicates(
-        ["datetime_utc", "pv_system_id", "solar_generation_kw"], keep="last", inplace=True
+        ["datetime_utc", "pv_system_id"], keep="last", inplace=True
     )
     pv_yields_df = pv_yields_df.pivot(
         index="datetime_utc", columns="pv_system_id", values="solar_generation_kw"
