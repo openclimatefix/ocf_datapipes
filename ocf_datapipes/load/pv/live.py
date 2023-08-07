@@ -247,7 +247,7 @@ def get_pv_power_from_database(
     )
 
     # encode pv system id
-    for provider in pv_output, solar_sheffield_passiv:
+    for provider in providers:
         idx = pv_yields_df["provider"] == provider
         
         # If not idx.any() we try to assign to no indices and the data type is changed from int to 
@@ -256,6 +256,8 @@ def get_pv_power_from_database(
             pv_yields_df.loc[idx, "pv_system_id"] = encode_label(
                 pv_yields_df.loc[idx, "pv_system_id"], label=provider
             )
+        else:
+            logger.warning(f"Found no pv yields for provider : {providers}")
 
     # pivot on
     pv_yields_df = pv_yields_df[["datetime_utc", "pv_system_id", "solar_generation_kw"]]
