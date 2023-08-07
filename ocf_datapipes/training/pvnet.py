@@ -340,16 +340,12 @@ def slice_datapipes_by_time(
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
 
     sat_and_hrv_dropout_kwargs = dict(
-        # Satellite is either 30 minutes or 60 minutes delayed
+        # Satellite is either 30 minutes or 60 minutes delayed in production. Match during training
         dropout_timedeltas=[minutes(-60), minutes(-30)],
         dropout_frac=0 if production else 1.0,
     )
 
-    # Satellite data never more recent than t0-30mins
-    if production:
-        sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
-    else:
-        sat_delay = minutes(-30)
+    sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
 
     if "nwp" in datapipes_dict:
         datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
