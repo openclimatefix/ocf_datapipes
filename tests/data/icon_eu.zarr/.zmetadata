@@ -87,7 +87,7 @@
             "filters": null,
             "order": "C",
             "shape": [
-                20
+                2
             ],
             "zarr_format": 2
         },
@@ -187,10 +187,10 @@
         },
         "t/.zarray": {
             "chunks": [
-                2,
-                5,
+                3,
+                1,
                 165,
-                345
+                689
             ],
             "compressor": {
                 "clevel": 5,
@@ -203,7 +203,7 @@
             "order": "C",
             "shape": [
                 10,
-                20,
+                2,
                 657,
                 1377
             ],
