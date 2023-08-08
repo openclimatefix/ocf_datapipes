@@ -43,8 +43,6 @@ class SelectChannelsIterDataPipe(IterDataPipe):
                     [v for v in xr_data.data_vars if v not in self.channels]
                 )
                 xr_data = xr_data.to_array(dim=self.dim_name)
-            logger.debug(
-                f"Selecting Channels: {self.channels} out of {xr_data['channel'].values}"
-            )
+            logger.debug(f"Selecting Channels: {self.channels} out of {xr_data['channel'].values}")
             xr_data = xr_data.sel({self.dim_name: list(self.channels)})
             yield xr_data
