@@ -18,14 +18,23 @@ _log = logging.getLogger(__name__)
 class OpenNWPIterDataPipe(IterDataPipe):
     """Opens NWP Zarr and yields it"""
 
-    def __init__(self, zarr_path: Union[Path, str], provider: str = "ukv"):
+    def __init__(
+        self,
+        zarr_path: Union[Path, str],
+        provider: str = "ukv",
+        convert_to_lat_lon: bool = False,
+    ):
         """
         Opens NWP Zarr and yields it
 
         Args:
             zarr_path: Path to the Zarr file
+            provider: NWP provider
+            convert_to_lat_lon: Whether to convert to lat/lon, or leave in native format
+                i.e. OSGB for UKV, Lat/Lon for ICON EU, Icoshedral grid for ICON Global
         """
         self.zarr_path = zarr_path
+        self.convert_to_lat_lon = convert_to_lat_lon
         if provider == "ukv":
             self.open_nwp = open_ukv
         elif provider == "icon-eu":

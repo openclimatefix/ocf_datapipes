@@ -1,0 +1,9 @@
+{
+    "Conventions": "CF-1.7",
+    "GRIB_centre": "edzw",
+    "GRIB_centreDescription": "Offenbach",
+    "GRIB_edition": 2,
+    "GRIB_subCentre": 255,
+    "history": "2023-08-07T23:08 GRIB to CDM+CF via cfgrib-0.9.10.3/ecCodes-2.26.0 with {\"source\": \"../../mnt/storage_ssd_4tb/DWD/ICON_EU/18/icon-eu_europe_regular-lat-lon_single-level_2023080718_000_ALB_RAD.grib2\", \"filter_by_keys\": {}, \"encode_cf\": [\"parameter\", \"time\", \"geography\", \"vertical\"]}",
+    "institution": "Offenbach"
+}
