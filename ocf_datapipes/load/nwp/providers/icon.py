@@ -5,9 +5,13 @@ import xarray as xr
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
 
-def open_icon_eu(zarr_path) -> xr.DataArray:
+def open_icon_eu(zarr_path) -> xr.Dataset:
     """
     Opens the ICON data
+
+    ICON EU Data is on a regular lat/lon grid
+    It has data on multiple pressure levels, as well as the surface
+    Each of the variables is its own data variable
 
     Args:
         zarr_path: Path to the zarr to open
@@ -16,28 +20,22 @@ def open_icon_eu(zarr_path) -> xr.DataArray:
         Xarray DataArray of the NWP data
     """
     # Open the data
-    nwp = open_zarr_paths(zarr_path)
-    raise NotImplementedError("ICON data is not yet supported")
-    ukv: xr.DataArray = nwp["UKV"]
-    del nwp
-    ukv = ukv.transpose("init_time", "step", "variable", "y", "x")
-    ukv = ukv.rename(
-        {"init_time": "init_time_utc", "variable": "channel", "y": "y_osgb", "x": "x_osgb"}
-    )
-    # y_osgb and x_osgb are int64 on disk.
-    for coord_name in ("y_osgb", "x_osgb"):
-        ukv[coord_name] = ukv[coord_name].astype(np.float32)
+    nwp = open_zarr_paths(zarr_path, time_dim="time")
+    nwp = nwp.rename({"time": "init_time_utc"})
     # Sanity checks.
-    assert ukv.y_osgb[0] > ukv.y_osgb[1], "UKV must run from top-to-bottom."
-    time = pd.DatetimeIndex(ukv.init_time_utc)
+    time = pd.DatetimeIndex(nwp.init_time_utc)
     assert time.is_unique
     assert time.is_monotonic_increasing
-    return ukv
+    return nwp
 
 
 def open_icon_global(zarr_path) -> xr.DataArray:
     """
     Opens the ICON data
+
+    ICON Global Data is on an isohedral grid, so the points are not regularly spaced
+    It has data on multiple pressure levels, as well as the surface
+    Each of the variables is its own data variable
 
     Args:
         zarr_path: Path to the zarr to open
