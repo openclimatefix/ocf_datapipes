@@ -10,6 +10,15 @@ def test_load_nwp():
     assert metadata is not None
 
 
+def test_load_icon_eu():
+    nwp_datapipe = OpenNWP(
+        zarr_path="/home/jacob/Development/ocf_datapipes/tests/data/icon_eu.zarr",
+        provider="icon-eu",
+    )
+    metadata = next(iter(nwp_datapipe))
+    assert metadata is not None
+
+
 def test_load_latest_nwp():
     base_nwp_datapipe = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr")
     recent_obs_datapipe = OpenLatestNWPDataPipe(base_nwp_datapipe)
