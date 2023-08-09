@@ -12,7 +12,7 @@ def test_load_nwp():
 
 def test_load_icon_eu():
     nwp_datapipe = OpenNWP(
-        zarr_path="/home/jacob/Development/ocf_datapipes/tests/data/icon_eu.zarr",
+        zarr_path="tests/data/icon_eu.zarr",
         provider="icon-eu",
     )
     metadata = next(iter(nwp_datapipe))
