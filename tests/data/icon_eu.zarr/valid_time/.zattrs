@@ -1,5 +1,6 @@
 {
     "_ARRAY_DIMENSIONS": [
+        "time",
         "step"
     ],
     "calendar": "proleptic_gregorian",
