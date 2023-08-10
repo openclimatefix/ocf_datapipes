@@ -22,6 +22,7 @@ WGS84 = 4326
 
 _osgb_to_lat_lon = pyproj.Transformer.from_crs(crs_from=OSGB36, crs_to=WGS84).transform
 _lat_lon_to_osgb = pyproj.Transformer.from_crs(crs_from=WGS84, crs_to=OSGB36).transform
+_geod = pyproj.Geod(ellps="WGS84")
 
 
 def osgb_to_lat_lon(
@@ -151,3 +152,21 @@ def load_geostationary_area_definition_and_transform_to_latlon(xr_data):
         crs_to=WGS84, crs_from=geostationary_crs
     ).transform
     return geostationary_to_latlon
+
+
+def move_lat_lon_by_meters(lat, lon, meters_north, meters_east):
+    """
+    Move a lat lon by a certain number of meters north and east
+
+    Args:
+        lat: latitude
+        lon: longitude
+        meters_north: number of meters to move north
+        meters_east: number of meters to move east
+
+    Returns:
+        tuple of lat, lon
+    """
+    return _geod.fwd(lons=lon, lats=lat, az=0, dist=meters_north), _geod.fwd(
+        lons=lon, lats=lat, az=90, dist=meters_east
+    )
