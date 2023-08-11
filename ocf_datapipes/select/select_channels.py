@@ -33,8 +33,18 @@ class SelectChannelsIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data in self.source_datapipe:
-            logger.debug(
-                f"Selecting Channels: {self.channels} out of {xr_data['channel'].values}"
-            )
-            xr_data = xr_data.sel({self.dim_name: list(self.channels)})
+            if "channels" not in xr_data.dims and isinstance(
+                xr_data, xr.Dataset
+            ):  # Variables are in their own data variables, not channels
+                logger.debug(
+                    f"Selecting Channels: {self.channels} out of {xr_data.data_vars.keys()}"
+                )
+                # Select data variables from dataset that are in channels
+                xr_data = xr_data[self.channels]
+                xr_data.coords[self.dim_name] = self.channels
+            else:
+                logger.debug(
+                    f"Selecting Channels: {self.channels} out of {xr_data['channel'].values}"
+                )
+                xr_data = xr_data.sel({self.dim_name: list(self.channels)})
             yield xr_data
