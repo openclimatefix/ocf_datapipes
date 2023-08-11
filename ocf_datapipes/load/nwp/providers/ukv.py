@@ -1,3 +1,4 @@
+"""UKV provider loaders"""
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -21,7 +22,12 @@ def open_ukv(zarr_path) -> xr.DataArray:
     del nwp
     ukv = ukv.transpose("init_time", "step", "variable", "y", "x")
     ukv = ukv.rename(
-        {"init_time": "init_time_utc", "variable": "channel", "y": "y_osgb", "x": "x_osgb"}
+        {
+            "init_time": "init_time_utc",
+            "variable": "channel",
+            "y": "y_osgb",
+            "x": "x_osgb",
+        }
     )
     # y_osgb and x_osgb are int64 on disk.
     for coord_name in ("y_osgb", "x_osgb"):

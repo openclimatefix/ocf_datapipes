@@ -1,7 +1,18 @@
+"""Common NWP providers"""
 import xarray as xr
 
 
 def open_zarr_paths(zarr_path, time_dim="init_time") -> xr.Dataset:
+    """
+    Opens the NWP data
+
+    Args:
+        zarr_path: Path to the zarr(s) to open
+        time_dim: Name of the time dimension
+
+    Returns:
+        The opened Xarray Dataset
+    """
     if type(zarr_path) in [list, tuple] or "*" in str(zarr_path):  # Multi-file dataset
         nwp = xr.open_mfdataset(
             zarr_path,
