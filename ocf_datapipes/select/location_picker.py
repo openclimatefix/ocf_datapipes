@@ -59,9 +59,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                         coordinate_system=loc_type,
                     )
                     if "pv_system_id" in xr_dataset.coords.keys():
-                        location.id = int(
-                            xr_dataset["pv_system_id"][location_idx].values
-                        )
+                        location.id = int(xr_dataset["pv_system_id"][location_idx].values)
                     logger.debug(f"Got all location {location}")
                     yield location
             else:
