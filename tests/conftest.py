@@ -25,7 +25,13 @@ import ocf_datapipes
 from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import PV, PVFiles
 from ocf_datapipes.config.save import save_yaml_configuration
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, OpenTopography
+from ocf_datapipes.load import (
+    OpenGSP,
+    OpenNWP,
+    OpenPVFromNetCDF,
+    OpenSatellite,
+    OpenTopography,
+)
 
 
 @pytest.fixture()
@@ -60,6 +66,12 @@ def nwp_datapipe():
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "nwp_data" / "test.zarr"
     )
     return OpenNWP(zarr_path=filename)
+
+
+@pytest.fixture()
+def icon_eu_datapipe():
+    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "icon_eu.zarr"
+    return OpenNWP(zarr_path=filename, provider="icon-eu")
 
 
 @pytest.fixture()
@@ -139,7 +151,12 @@ def db_connection():
         os.environ["DB_URL"] = url
 
         connection = DatabaseConnection(url=url, base=Base_PV, echo=False)
-        from nowcasting_datamodel.models import GSPYieldSQL, LocationSQL, PVSystemSQL, PVYieldSQL
+        from nowcasting_datamodel.models import (
+            GSPYieldSQL,
+            LocationSQL,
+            PVSystemSQL,
+            PVYieldSQL,
+        )
 
         for table in [PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL]:
             table.__table__.create(connection.engine)

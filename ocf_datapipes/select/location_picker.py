@@ -42,7 +42,12 @@ class LocationPickerIterDataPipe(IterDataPipe):
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
             logger.debug("Getting locations")
-
+            if "longitude" in self.x_dim_name:
+                loc_type = "lat_lon"
+            elif "geostationary" in self.x_dim_name:
+                loc_type = "geostationary"
+            else:
+                loc_type = "osgb"
             if self.return_all_locations:
                 logger.debug("Going to return all locations")
 
@@ -51,6 +56,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                     location = Location(
                         x=xr_dataset[self.x_dim_name][location_idx].values,
                         y=xr_dataset[self.y_dim_name][location_idx].values,
+                        coordinate_system=loc_type,
                     )
                     if "pv_system_id" in xr_dataset.coords.keys():
                         location.id = int(xr_dataset["pv_system_id"][location_idx].values)
@@ -65,6 +71,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
                 location = Location(
                     x=xr_dataset[self.x_dim_name][location_idx].values,
                     y=xr_dataset[self.y_dim_name][location_idx].values,
+                    coordinate_system=loc_type,
                 )
                 if "pv_system_id" in xr_dataset.coords.keys():
                     location.id = int(xr_dataset["pv_system_id"][location_idx].values)

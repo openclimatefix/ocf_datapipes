@@ -1,4 +1,8 @@
-from ocf_datapipes.select import LocationPicker, SelectSpatialSliceMeters, SelectSpatialSlicePixels
+from ocf_datapipes.select import (
+    LocationPicker,
+    SelectSpatialSliceMeters,
+    SelectSpatialSlicePixels,
+)
 
 
 def test_select_spatial_slice_meters_passiv(passiv_datapipe):
@@ -26,3 +30,34 @@ def test_select_spatial_slice_pixels_hrv(sat_hrv_datapipe, passiv_datapipe):
     data = next(iter(sat_hrv_datapipe))
     assert len(data.x_geostationary) == 256
     assert len(data.y_geostationary) == 128
+
+
+def test_select_spatial_slice_pixel_icon_eu(passiv_datapipe, icon_eu_datapipe):
+    loc_datapipe = LocationPicker(passiv_datapipe)
+    icon_eu_datapipe = SelectSpatialSlicePixels(
+        icon_eu_datapipe,
+        location_datapipe=loc_datapipe,
+        roi_width_pixels=256,
+        roi_height_pixels=128,
+        y_dim_name="latitude",
+        x_dim_name="longitude",
+    )
+    data = next(iter(icon_eu_datapipe))
+    assert len(data.longitude) == 256
+    assert len(data.latitude) == 128
+
+
+def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
+    loc_datapipe = LocationPicker(passiv_datapipe)
+    icon_eu_datapipe = SelectSpatialSliceMeters(
+        icon_eu_datapipe,
+        location_datapipe=loc_datapipe,
+        roi_width_meters=96_000,
+        roi_height_meters=96_000,
+        dim_name=None,
+        y_dim_name="latitude",
+        x_dim_name="longitude",
+    )
+    data = next(iter(icon_eu_datapipe))
+    assert len(data.longitude) == 23
+    assert len(data.latitude) == 14

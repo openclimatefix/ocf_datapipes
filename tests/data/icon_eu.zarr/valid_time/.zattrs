@@ -1,0 +1,10 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "time",
+        "step"
+    ],
+    "calendar": "proleptic_gregorian",
+    "long_name": "time",
+    "standard_name": "time",
+    "units": "hours since 2023-08-07T06:00:00"
+}

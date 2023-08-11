@@ -3,12 +3,13 @@ import logging
 from pathlib import Path
 from typing import Union
 
-import numpy as np
-import pandas as pd
 import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+
+from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
+from ocf_datapipes.load.nwp.providers.ukv import open_ukv
 
 _log = logging.getLogger(__name__)
 
@@ -17,21 +18,36 @@ _log = logging.getLogger(__name__)
 class OpenNWPIterDataPipe(IterDataPipe):
     """Opens NWP Zarr and yields it"""
 
-    def __init__(self, zarr_path: Union[Path, str]):
+    def __init__(
+        self,
+        zarr_path: Union[Path, str],
+        provider: str = "ukv",
+    ):
         """
         Opens NWP Zarr and yields it
 
         Args:
             zarr_path: Path to the Zarr file
+            provider: NWP provider
+            convert_to_lat_lon: Whether to convert to lat/lon, or leave in native format
+                i.e. OSGB for UKV, Lat/Lon for ICON EU, Icoshedral grid for ICON Global
         """
         self.zarr_path = zarr_path
+        if provider == "ukv":
+            self.open_nwp = open_ukv
+        elif provider == "icon-eu":
+            self.open_nwp = open_icon_eu
+        elif provider == "icon-global":
+            self.open_nwp = open_icon_global
+        else:
+            raise ValueError(f"Unknown provider: {provider}")
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Opens the NWP data"""
         _log.debug("Opening NWP data: %s", self.zarr_path)
-        ukv = open_nwp(self.zarr_path)
+        nwp = self.open_nwp(self.zarr_path)
         while True:
-            yield ukv
+            yield nwp
 
 
 @functional_datapipe("open_latest_nwp")
@@ -60,47 +76,3 @@ class OpenLatestNWPDataPipe(IterDataPipe):
             time = _nwp.init_time_utc.values
             _log.debug(f"Selected most recent NWP observation, at: {time}")
             yield _nwp
-
-
-def open_nwp(zarr_path) -> xr.DataArray:
-    """
-    Opens the NWP data
-
-    Args:
-        zarr_path: Path to the zarr to open
-
-    Returns:
-        Xarray DataArray of the NWP data
-    """
-    # Open the data
-    if type(zarr_path) in [list, tuple] or "*" in str(zarr_path):  # Multi-file dataset
-        nwp = xr.open_mfdataset(
-            zarr_path,
-            engine="zarr",
-            concat_dim="init_time",
-            combine="nested",
-            chunks={},
-        ).sortby("init_time")
-    else:
-        nwp = xr.open_dataset(
-            zarr_path,
-            engine="zarr",
-            consolidated=True,
-            mode="r",
-            chunks="auto",
-        )
-    ukv: xr.DataArray = nwp["UKV"]
-    del nwp
-    ukv = ukv.transpose("init_time", "step", "variable", "y", "x")
-    ukv = ukv.rename(
-        {"init_time": "init_time_utc", "variable": "channel", "y": "y_osgb", "x": "x_osgb"}
-    )
-    # y_osgb and x_osgb are int64 on disk.
-    for coord_name in ("y_osgb", "x_osgb"):
-        ukv[coord_name] = ukv[coord_name].astype(np.float32)
-    # Sanity checks.
-    assert ukv.y_osgb[0] > ukv.y_osgb[1], "UKV must run from top-to-bottom."
-    time = pd.DatetimeIndex(ukv.init_time_utc)
-    assert time.is_unique
-    assert time.is_monotonic_increasing
-    return ukv

@@ -144,7 +144,7 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 class Location(BaseModel):
     """Represent a spatial location."""
 
-    coordinate_system: Optional[str] = "osgb"  # ["osgb", "lat_lon", "geostationary"]
+    coordinate_system: Optional[str] = "osgb"  # ["osgb", "lat_lon", "geostationary", "idx"]
     x: float
     y: float
     id: Optional[int]
@@ -152,7 +152,7 @@ class Location(BaseModel):
     @validator("coordinate_system", pre=True, always=True)
     def validate_coordinate_system(cls, v):
         """Validate 'coordinate_system'"""
-        allowed_coordinate_systen = ["osgb", "lat_lon", "geostationary"]
+        allowed_coordinate_systen = ["osgb", "lat_lon", "geostationary", "idx"]
         if v not in allowed_coordinate_systen:
             raise ValueError(f"coordinate_system = {v} is not in {allowed_coordinate_systen}")
         return v
@@ -171,6 +171,8 @@ class Location(BaseModel):
             min_x, max_x = -180, 180
         if co == "geostationary":
             min_x, max_x = -5568748.275756836, 5567248.074173927
+        if co == "idx":
+            min_x, max_x = 0, np.inf
         if v < min_x or v > max_x:
             raise ValueError(f"x = {v} must be within {[min_x, max_x]} for {co} coordinate system")
         return v
@@ -189,6 +191,8 @@ class Location(BaseModel):
             min_y, max_y = -90, 90
         if co == "geostationary":
             min_y, max_y = 1393687.2151494026, 5570748.323202133
+        if co == "idx":
+            min_y, max_y = 0, np.inf
         if v < min_y or v > max_y:
             raise ValueError(f"y = {v} must be within {[min_y, max_y]} for {co} coordinate system")
         return v
@@ -580,7 +584,8 @@ RSS_MEAN = {
 
 def _to_data_array(d):
     return xr.DataArray(
-        [d[key] for key in SAT_VARIABLE_NAMES], coords={"channel": list(SAT_VARIABLE_NAMES)}
+        [d[key] for key in SAT_VARIABLE_NAMES],
+        coords={"channel": list(SAT_VARIABLE_NAMES)},
     ).astype(np.float32)
 
 

@@ -1,0 +1,313 @@
+{
+    "metadata": {
+        ".zattrs": {
+            "Conventions": "CF-1.7",
+            "GRIB_centre": "edzw",
+            "GRIB_centreDescription": "Offenbach",
+            "GRIB_edition": 2,
+            "GRIB_subCentre": 255,
+            "history": "2023-08-07T11:06 GRIB to CDM+CF via cfgrib-0.9.10.3/ecCodes-2.26.0 with {\"source\": \"../../mnt/storage_ssd_4tb/DWD/ICON_EU/06/icon-eu_europe_regular-lat-lon_single-level_2023080706_000_ALB_RAD.grib2\", \"filter_by_keys\": {}, \"encode_cf\": [\"parameter\", \"time\", \"geography\", \"vertical\"]}",
+            "institution": "Offenbach"
+        },
+        ".zgroup": {
+            "zarr_format": 2
+        },
+        "clct/.zarray": {
+            "chunks": [
+                1,
+                3,
+                165,
+                689
+            ],
+            "compressor": {
+                "clevel": 5,
+                "cname": "blosc2",
+                "id": "blosc2"
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                10,
+                657,
+                1377
+            ],
+            "zarr_format": 2
+        },
+        "clct/.zattrs": {
+            "GRIB_NV": 0,
+            "GRIB_Nx": 1377,
+            "GRIB_Ny": 657,
+            "GRIB_cfName": "unknown",
+            "GRIB_cfVarName": "unknown",
+            "GRIB_dataType": "fc",
+            "GRIB_gridDefinitionDescription": "Latitude/longitude",
+            "GRIB_gridType": "regular_ll",
+            "GRIB_iDirectionIncrementInDegrees": 0.0625,
+            "GRIB_iScansNegatively": 0,
+            "GRIB_jDirectionIncrementInDegrees": 0.0625,
+            "GRIB_jPointsAreConsecutive": 0,
+            "GRIB_jScansPositively": 1,
+            "GRIB_latitudeOfFirstGridPointInDegrees": 29.5,
+            "GRIB_latitudeOfLastGridPointInDegrees": 70.5,
+            "GRIB_longitudeOfFirstGridPointInDegrees": 336.5,
+            "GRIB_longitudeOfLastGridPointInDegrees": 62.5,
+            "GRIB_missingValue": 3.4028234663852886e+38,
+            "GRIB_name": "Total Cloud Cover",
+            "GRIB_numberOfPoints": 904689,
+            "GRIB_paramId": 500046,
+            "GRIB_shortName": "CLCT",
+            "GRIB_stepType": "instant",
+            "GRIB_stepUnits": 0,
+            "GRIB_typeOfLevel": "surface",
+            "GRIB_units": "%",
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "step",
+                "latitude",
+                "longitude"
+            ],
+            "coordinates": "time step surface latitude longitude valid_time",
+            "long_name": "Total Cloud Cover",
+            "standard_name": "unknown",
+            "units": "%"
+        },
+        "isobaricInhPa/.zarray": {
+            "chunks": [
+                20
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2
+            ],
+            "zarr_format": 2
+        },
+        "isobaricInhPa/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "isobaricInhPa"
+            ],
+            "long_name": "pressure",
+            "positive": "down",
+            "standard_name": "air_pressure",
+            "stored_direction": "decreasing",
+            "units": "hPa"
+        },
+        "latitude/.zarray": {
+            "chunks": [
+                657
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                657
+            ],
+            "zarr_format": 2
+        },
+        "latitude/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "latitude"
+            ],
+            "long_name": "latitude",
+            "standard_name": "latitude",
+            "units": "degrees_north"
+        },
+        "longitude/.zarray": {
+            "chunks": [
+                1377
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                1377
+            ],
+            "zarr_format": 2
+        },
+        "longitude/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "longitude"
+            ],
+            "long_name": "longitude",
+            "standard_name": "longitude",
+            "units": "degrees_east"
+        },
+        "step/.zarray": {
+            "chunks": [
+                93
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<i8",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                10
+            ],
+            "zarr_format": 2
+        },
+        "step/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "step"
+            ],
+            "long_name": "time since forecast_reference_time",
+            "standard_name": "forecast_period",
+            "units": "hours"
+        },
+        "t/.zarray": {
+            "chunks": [
+                1,
+                3,
+                1,
+                165,
+                689
+            ],
+            "compressor": {
+                "clevel": 5,
+                "cname": "blosc2",
+                "id": "blosc2"
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                10,
+                2,
+                657,
+                1377
+            ],
+            "zarr_format": 2
+        },
+        "t/.zattrs": {
+            "GRIB_NV": 0,
+            "GRIB_Nx": 1377,
+            "GRIB_Ny": 657,
+            "GRIB_cfName": "air_temperature",
+            "GRIB_cfVarName": "t",
+            "GRIB_dataType": "fc",
+            "GRIB_gridDefinitionDescription": "Latitude/longitude",
+            "GRIB_gridType": "regular_ll",
+            "GRIB_iDirectionIncrementInDegrees": 0.0625,
+            "GRIB_iScansNegatively": 0,
+            "GRIB_jDirectionIncrementInDegrees": 0.0625,
+            "GRIB_jPointsAreConsecutive": 0,
+            "GRIB_jScansPositively": 1,
+            "GRIB_latitudeOfFirstGridPointInDegrees": 29.5,
+            "GRIB_latitudeOfLastGridPointInDegrees": 70.5,
+            "GRIB_longitudeOfFirstGridPointInDegrees": 336.5,
+            "GRIB_longitudeOfLastGridPointInDegrees": 62.5,
+            "GRIB_missingValue": 3.4028234663852886e+38,
+            "GRIB_name": "Temperature",
+            "GRIB_numberOfPoints": 904689,
+            "GRIB_paramId": 130,
+            "GRIB_shortName": "t",
+            "GRIB_stepType": "instant",
+            "GRIB_stepUnits": 0,
+            "GRIB_typeOfLevel": "isobaricInhPa",
+            "GRIB_units": "K",
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "step",
+                "isobaricInhPa",
+                "latitude",
+                "longitude"
+            ],
+            "coordinates": "time step isobaricInhPa latitude longitude valid_time",
+            "long_name": "Temperature",
+            "standard_name": "air_temperature",
+            "units": "K"
+        },
+        "time/.zarray": {
+            "chunks": [
+                2
+            ],
+            "compressor": null,
+            "dtype": "<i8",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2
+            ],
+            "zarr_format": 2
+        },
+        "time/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time"
+            ],
+            "calendar": "proleptic_gregorian",
+            "long_name": "initial time of forecast",
+            "standard_name": "forecast_reference_time",
+            "units": "nanoseconds since 1970-01-01"
+        },
+        "valid_time/.zarray": {
+            "chunks": [
+                2,
+                10
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<i8",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                10
+            ],
+            "zarr_format": 2
+        },
+        "valid_time/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "step"
+            ],
+            "calendar": "proleptic_gregorian",
+            "long_name": "time",
+            "standard_name": "time",
+            "units": "hours since 2023-08-07T06:00:00"
+        }
+    },
+    "zarr_consolidated_format": 1
+}
