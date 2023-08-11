@@ -149,6 +149,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                 bottom, left = move_lat_lon_by_meters(
                     location.latitude, location.longitude, -half_height, -half_width
                 )
+                print(top, right, bottom, left)
             elif location.coordinate_system == "osgb":
                 left = location.x - half_width
                 right = location.x + half_width
@@ -172,8 +173,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                 elif "longitude" == self.x_dim_name:
                     if location.coordinate_system == "osgb":
                         # Convert to geostationary edges
-                        left, bottom = osgb_to_lat_lon(x=left, y=bottom)
-                        right, top = osgb_to_lat_lon(x=right, y=top)
+                        bottom, left = osgb_to_lat_lon(x=left, y=bottom)
+                        top, right = osgb_to_lat_lon(x=right, y=top)
                     x_mask = (left <= xr_data.longitude) & (xr_data.longitude <= right)
                     y_mask = (xr_data.latitude <= top) & (  # Y is flipped
                         bottom <= xr_data.latitude
@@ -188,7 +189,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                     selected = xr_data.isel(x=x_mask, y=y_mask)
                 elif "x_osgb" == self.x_dim_name:
                     if location.coordinate_system == "lat_lon":
-                        # Convert to geostationary edges
+                        # Convert to OSGB
                         left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
                         right, top = lat_lon_to_osgb(longitude=right, latitude=top)
                     # Select data in the region of interest:
@@ -256,14 +257,14 @@ def _get_idx_of_pixel_closest_to_poi(
             return Location(
                 y=y_index.get_indexer([float(location.y)], method="nearest")[0],
                 x=x_index.get_indexer([float(location.x)], method="nearest")[0],
-                coordinate_system="osgb",
+                coordinate_system="idx",
             )
         elif "longitude" == x_dim_name:
             latitude, longitude = osgb_to_lat_lon(x=location.x, y=location.y)
             return Location(
                 y=y_index.get_indexer([float(latitude)], method="nearest")[0],
                 x=x_index.get_indexer([float(longitude)], method="nearest")[0],
-                coordinate_system="lat_lon",
+                coordinate_system="idx",
             )
         else:
             return NotImplementedError("Only 'x_osgb' and 'longitude' are supported")
@@ -272,14 +273,14 @@ def _get_idx_of_pixel_closest_to_poi(
             return Location(
                 y=y_index.get_indexer([float(location.y)], method="nearest")[0],
                 x=x_index.get_indexer([float(location.x)], method="nearest")[0],
-                coordinate_system="lat_lon",
+                coordinate_system="idx",
             )
         elif "x_osgb" == x_dim_name:
             x_osgb, y_osgb = lat_lon_to_osgb(longitude=location.x, latitude=location.y)
             return Location(
                 y=y_index.get_indexer([float(y_osgb)], method="nearest")[0],
                 x=x_index.get_indexer([float(x_osgb)], method="nearest")[0],
-                coordinate_system="osgb",
+                coordinate_system="idx",
             )
         else:
             return NotImplementedError("Only 'x_osgb' and 'longitude' are supported")

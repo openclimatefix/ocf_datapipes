@@ -144,7 +144,9 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 class Location(BaseModel):
     """Represent a spatial location."""
 
-    coordinate_system: Optional[str] = "osgb"  # ["osgb", "lat_lon", "geostationary"]
+    coordinate_system: Optional[
+        str
+    ] = "osgb"  # ["osgb", "lat_lon", "geostationary", "idx"]
     x: float
     y: float
     id: Optional[int]
@@ -152,9 +154,11 @@ class Location(BaseModel):
     @validator("coordinate_system", pre=True, always=True)
     def validate_coordinate_system(cls, v):
         """Validate 'coordinate_system'"""
-        allowed_coordinate_systen = ["osgb", "lat_lon", "geostationary"]
+        allowed_coordinate_systen = ["osgb", "lat_lon", "geostationary", "idx"]
         if v not in allowed_coordinate_systen:
-            raise ValueError(f"coordinate_system = {v} is not in {allowed_coordinate_systen}")
+            raise ValueError(
+                f"coordinate_system = {v} is not in {allowed_coordinate_systen}"
+            )
         return v
 
     @validator("x")
@@ -171,8 +175,12 @@ class Location(BaseModel):
             min_x, max_x = -180, 180
         if co == "geostationary":
             min_x, max_x = -5568748.275756836, 5567248.074173927
+        if co == "idx":
+            min_x, max_x = 0, np.inf
         if v < min_x or v > max_x:
-            raise ValueError(f"x = {v} must be within {[min_x, max_x]} for {co} coordinate system")
+            raise ValueError(
+                f"x = {v} must be within {[min_x, max_x]} for {co} coordinate system"
+            )
         return v
 
     @validator("y")
@@ -189,8 +197,12 @@ class Location(BaseModel):
             min_y, max_y = -90, 90
         if co == "geostationary":
             min_y, max_y = 1393687.2151494026, 5570748.323202133
+        if co == "idx":
+            min_y, max_y = 0, np.inf
         if v < min_y or v > max_y:
-            raise ValueError(f"y = {v} must be within {[min_y, max_y]} for {co} coordinate system")
+            raise ValueError(
+                f"y = {v} must be within {[min_y, max_y]} for {co} coordinate system"
+            )
         return v
 
 
@@ -222,7 +234,9 @@ class BatchKey(Enum):
     #: Time is seconds since UNIX epoch (1970-01-01). Shape: (batch_size, n_timesteps)
     hrvsatellite_time_utc = auto()
     # Added by np_batch_processor.Topography:
-    hrvsatellite_surface_height = auto()  # The surface height at each pixel. (batch_size, y, x)
+    hrvsatellite_surface_height = (
+        auto()
+    )  # The surface height at each pixel. (batch_size, y, x)
 
     # HRV satellite Fourier coordinates:
     # Spatial coordinates. Shape: (batch_size, y, x, n_fourier_features_per_dim)
@@ -274,7 +288,9 @@ class BatchKey(Enum):
     pv_y_osgb_fourier = auto()
     pv_x_osgb_fourier = auto()
     pv_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
-    pv_time_utc_fourier_t0 = auto()  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
+    pv_time_utc_fourier_t0 = (
+        auto()
+    )  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
 
     # -------------- GSP --------------------------------------------
     gsp = auto()  # shape: (batch_size, time, 1)  (the RawGSPDataSource include a '1',
@@ -295,7 +311,9 @@ class BatchKey(Enum):
     gsp_y_osgb_fourier = auto()
     gsp_x_osgb_fourier = auto()
     gsp_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
-    gsp_time_utc_fourier_t0 = auto()  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
+    gsp_time_utc_fourier_t0 = (
+        auto()
+    )  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
 
     # -------------- GSP5Min ----------------------------------------
     # Not used by the Raw data pipeline!
@@ -352,7 +370,9 @@ class BatchKey(Enum):
     #: Time is seconds since UNIX epoch (1970-01-01). Shape: (batch_size, n_timesteps)
     satellite_time_utc = auto()
     # Added by np_batch_processor.Topography:
-    satellite_surface_height = auto()  # The surface height at each pixel. (batch_size, y, x)
+    satellite_surface_height = (
+        auto()
+    )  # The surface height at each pixel. (batch_size, y, x)
 
     # HRV satellite Fourier coordinates:
     # Spatial coordinates. Shape: (batch_size, y, x, n_fourier_features_per_dim)
@@ -506,7 +526,11 @@ NWP_GFS_CHANNEL_NAMES = tuple(NWP_GFS_STD.keys())
 def _to_data_array(d):
     return xr.DataArray(
         [d[key] for key in NWP_CHANNEL_NAMES if key in d.keys()],
-        coords={"channel": [_channel for _channel in NWP_CHANNEL_NAMES if _channel in d.keys()]},
+        coords={
+            "channel": [
+                _channel for _channel in NWP_CHANNEL_NAMES if _channel in d.keys()
+            ]
+        },
     ).astype(np.float32)
 
 
@@ -579,7 +603,8 @@ RSS_MEAN = {
 
 def _to_data_array(d):
     return xr.DataArray(
-        [d[key] for key in SAT_VARIABLE_NAMES], coords={"channel": list(SAT_VARIABLE_NAMES)}
+        [d[key] for key in SAT_VARIABLE_NAMES],
+        coords={"channel": list(SAT_VARIABLE_NAMES)},
     ).astype(np.float32)
 
 

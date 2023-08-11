@@ -22,7 +22,6 @@ class OpenNWPIterDataPipe(IterDataPipe):
         self,
         zarr_path: Union[Path, str],
         provider: str = "ukv",
-        convert_to_lat_lon: bool = False,
     ):
         """
         Opens NWP Zarr and yields it
@@ -34,7 +33,6 @@ class OpenNWPIterDataPipe(IterDataPipe):
                 i.e. OSGB for UKV, Lat/Lon for ICON EU, Icoshedral grid for ICON Global
         """
         self.zarr_path = zarr_path
-        self.convert_to_lat_lon = convert_to_lat_lon
         if provider == "ukv":
             self.open_nwp = open_ukv
         elif provider == "icon-eu":
