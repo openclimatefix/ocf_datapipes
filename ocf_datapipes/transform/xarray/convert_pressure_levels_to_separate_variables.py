@@ -13,6 +13,7 @@ class ConvertPressureLevelsToSeparateVariablesIterDataPipe(IterDataPipe):
     def __init__(
         self,
         source_datapipe: IterDataPipe,
+        pressure_level_name: str = "isobaricInhPa",
         pressure_level_to_use: Optional[list] = None,
     ):
         """
@@ -24,12 +25,16 @@ class ConvertPressureLevelsToSeparateVariablesIterDataPipe(IterDataPipe):
         super().__init__()
         self.source_datapipe = source_datapipe
         self.pressure_level_to_use = pressure_level_to_use
+        self.pressure_level_name = pressure_level_name
+        # For icosohedral grids, the lat/lon points are in one large array, not separate
 
     def __iter__(self) -> xr.DataArray:
         for xr_dataset in self.source_datapipe:
             # Select the given pressure levels
             if self.pressure_level_to_use is not None:
-                xr_dataset = xr_dataset.sel(isobaricInhPa=self.pressure_level_to_use)
+                xr_dataset = xr_dataset.sel(
+                    {self.pressure_level_name: self.pressure_level_to_use}
+                )
             # Unstack the pressure levels into separate variables
             xr_dataarray = xr_dataset.to_stacked_array(
                 "level", sample_dims=["latitude", "longitude", "step", "init_time_utc"]
