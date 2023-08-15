@@ -1,9 +1,9 @@
 """Converts Satellite to int8 for Power Perceiver"""
-import numpy as np
+from typing import Optional
+
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from typing import Optional
 
 
 @functional_datapipe("convert_pressure_levels_to_separate_variables")
@@ -32,9 +32,7 @@ class ConvertPressureLevelsToSeparateVariablesIterDataPipe(IterDataPipe):
         for xr_dataset in self.source_datapipe:
             # Select the given pressure levels
             if self.pressure_level_to_use is not None:
-                xr_dataset = xr_dataset.sel(
-                    {self.pressure_level_name: self.pressure_level_to_use}
-                )
+                xr_dataset = xr_dataset.sel({self.pressure_level_name: self.pressure_level_to_use})
             # Unstack the pressure levels into separate variables
             xr_dataarray = xr_dataset.to_stacked_array(
                 "level", sample_dims=["latitude", "longitude", "step", "init_time_utc"]

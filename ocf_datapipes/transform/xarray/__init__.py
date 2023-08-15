@@ -15,6 +15,9 @@ from ocf_datapipes.transform.xarray.pv.remove_pv_zero_examples import (
 from .add_t0idx_and_sample_period_duration import (
     AddT0IdxAndSamplePeriodDurationIterDataPipe as AddT0IdxAndSamplePeriodDuration,
 )
+from .convert_pressure_levels_to_separate_variables import (
+    ConvertPressureLevelsToSeparateVariablesIterDataPipe as ConvertPressureLevelsToSeparateVariables,
+)
 from .convert_satellite_to_int import (
     ConvertSatelliteToInt8IterDataPipe as ConvertSatelliteToInt8,
 )
@@ -54,6 +57,3 @@ from .reproject_topographic_data import (
 )
 from .standard_dropout import ApplyDropoutTimeIterDataPipe as ApplyDropoutTime
 from .standard_dropout import SelectDropoutTimeIterDataPipe as SelectDropoutTime
-from .convert_pressure_levels_to_separate_variables import (
-    ConvertPressureLevelsToSeparateVariablesIterDataPipe as ConvertPressureLevelsToSeparateVariables,
-)
