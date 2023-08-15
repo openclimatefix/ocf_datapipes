@@ -32,7 +32,9 @@ class ConvertPressureLevelsToSeparateVariablesIterDataPipe(IterDataPipe):
         for xr_dataset in self.source_datapipe:
             # Select the given pressure levels
             if self.pressure_level_to_use is not None:
-                xr_dataset = xr_dataset.sel({self.pressure_level_name: self.pressure_level_to_use})
+                xr_dataset = xr_dataset.sel(
+                    {self.pressure_level_name: self.pressure_level_to_use}
+                )
             # Unstack the pressure levels into separate variables
             xr_dataarray = xr_dataset.to_stacked_array(
                 "level", sample_dims=["latitude", "longitude", "step", "init_time_utc"]
