@@ -29,7 +29,7 @@ def open_icon_eu(zarr_path) -> xr.Dataset:
     return nwp
 
 
-def open_icon_global(zarr_path) -> xr.DataArray:
+def open_icon_global(zarr_path) -> xr.Dataset:
     """
     Opens the ICON data
 
@@ -44,5 +44,10 @@ def open_icon_global(zarr_path) -> xr.DataArray:
         Xarray DataArray of the NWP data
     """
     # Open the data
-    open_zarr_paths(zarr_path)
-    raise NotImplementedError("ICON data is not yet supported")
+    nwp = open_zarr_paths(zarr_path, time_dim="time")
+    nwp = nwp.rename({"time": "init_time_utc"})
+    # Sanity checks.
+    time = pd.DatetimeIndex(nwp.init_time_utc)
+    assert time.is_unique
+    assert time.is_monotonic_increasing
+    return nwp

@@ -25,3 +25,4 @@ fastparquet
 scipy
 pytorch_lightning
 pvlive-api
+xarray-tensorstore

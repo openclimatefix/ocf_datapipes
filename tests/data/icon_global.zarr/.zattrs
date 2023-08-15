@@ -1,0 +1,9 @@
+{
+    "Conventions": "CF-1.7",
+    "GRIB_centre": "edzw",
+    "GRIB_centreDescription": "Offenbach",
+    "GRIB_edition": 2,
+    "GRIB_subCentre": 255,
+    "history": "2023-08-15T15:40 GRIB to CDM+CF via cfgrib-0.9.10.4/ecCodes-2.27.0 with {\"source\": \"../../../../../../run/media/jacob/data/DWD/00/20230814_00/icon_global_icosahedral_single-level_2023081400_000_ALB_RAD.grib2\", \"filter_by_keys\": {}, \"encode_cf\": [\"parameter\", \"time\", \"geography\", \"vertical\"]}",
+    "institution": "Offenbach"
+}
