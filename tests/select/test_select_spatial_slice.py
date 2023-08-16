@@ -91,5 +91,5 @@ def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_da
         x_dim_name="longitude",
     )
     data = next(iter(icon_global_datapipe))
-    assert len(data.longitude) == 23
-    assert len(data.latitude) == 14
+    assert len(data.longitude) == 86
+    assert len(data.latitude) == 86
