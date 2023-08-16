@@ -19,6 +19,15 @@ def test_load_icon_eu():
     assert metadata is not None
 
 
+def test_load_icon_global():
+    nwp_datapipe = OpenNWP(
+        zarr_path="tests/data/icon_global.zarr",
+        provider="icon-global",
+    )
+    metadata = next(iter(nwp_datapipe))
+    assert metadata is not None
+
+
 def test_load_latest_nwp():
     base_nwp_datapipe = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr")
     recent_obs_datapipe = OpenLatestNWPDataPipe(base_nwp_datapipe)

@@ -75,6 +75,12 @@ def icon_eu_datapipe():
 
 
 @pytest.fixture()
+def icon_global_datapipe():
+    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "icon_global.zarr"
+    return OpenNWP(zarr_path=filename, provider="icon-global")
+
+
+@pytest.fixture()
 def passiv_datapipe():
     filename = (
         Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"

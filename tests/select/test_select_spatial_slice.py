@@ -47,6 +47,22 @@ def test_select_spatial_slice_pixel_icon_eu(passiv_datapipe, icon_eu_datapipe):
     assert len(data.latitude) == 128
 
 
+def test_select_spatial_slice_pixel_icon_global(passiv_datapipe, icon_global_datapipe):
+    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
+    icon_global_datapipe = SelectSpatialSlicePixels(
+        icon_global_datapipe,
+        location_datapipe=loc_datapipe,
+        roi_width_pixels=256,
+        roi_height_pixels=128,
+        y_dim_name="latitude",
+        x_dim_name="longitude",
+        location_idx_name="values",
+    )
+    data = next(iter(icon_global_datapipe))
+    assert len(data.longitude) == 32768
+    assert len(data.latitude) == 32768
+
+
 def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
     loc_datapipe = LocationPicker(passiv_datapipe)
     icon_eu_datapipe = SelectSpatialSliceMeters(
@@ -61,3 +77,19 @@ def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
     data = next(iter(icon_eu_datapipe))
     assert len(data.longitude) == 23
     assert len(data.latitude) == 14
+
+
+def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_datapipe):
+    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
+    icon_global_datapipe = SelectSpatialSliceMeters(
+        icon_global_datapipe,
+        location_datapipe=loc_datapipe,
+        roi_width_meters=96_000,
+        roi_height_meters=96_000,
+        dim_name="values",
+        y_dim_name="latitude",
+        x_dim_name="longitude",
+    )
+    data = next(iter(icon_global_datapipe))
+    assert len(data.longitude) == 86
+    assert len(data.latitude) == 86

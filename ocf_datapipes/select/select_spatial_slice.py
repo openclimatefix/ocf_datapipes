@@ -1,9 +1,10 @@
 """Select spatial slices"""
 import logging
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import xarray as xr
+from scipy.spatial import KDTree
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -31,6 +32,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         roi_width_pixels: int,
         y_dim_name: str = "y",
         x_dim_name: str = "x",
+        location_idx_name: Optional[str] = None,
     ):
         """
         Select spatial slice based off pixels from point of interest
@@ -42,6 +44,8 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
             roi_width_pixels: ROI width in pixels
             y_dim_name: Dimension name for Y
             x_dim_name: Dimension name for X
+            location_idx_name: Name for location index of unstructured grid data,
+                None if not relevant
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
@@ -49,9 +53,22 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         self.roi_width_pixels = roi_width_pixels
         self.y_dim_name = y_dim_name
         self.x_dim_name = x_dim_name
+        self.location_idx_name = location_idx_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
+            logger.debug("Selecting spatial slice with pixels")
+            if self.location_idx_name is not None:
+                selected = _get_points_from_unstructured_grids(
+                    xr_data=xr_data,
+                    location=location,
+                    x_dim_name=self.x_dim_name,
+                    y_dim_name=self.y_dim_name,
+                    location_idx_name=self.location_idx_name,
+                    num_points=self.roi_width_pixels * self.roi_height_pixels,
+                )
+                yield selected
+
             if "geostationary" in self.x_dim_name:
                 center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
                     xr_data=xr_data,
@@ -108,7 +125,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         location_datapipe: IterDataPipe,
         roi_height_meters: int,
         roi_width_meters: int,
-        dim_name: str = "pv_system_id",
+        dim_name: Optional[str] = "pv_system_id",
         y_dim_name: str = "y_osgb",
         x_dim_name: str = "x_osgb",
     ):
@@ -140,14 +157,12 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             half_height = self.roi_height_meters // 2
             half_width = self.roi_width_meters // 2
             if location.coordinate_system == "lat_lon":
-                # TODO Check this is right
                 top, right = move_lat_lon_by_meters(
                     location.latitude, location.longitude, half_height, half_width
                 )
                 bottom, left = move_lat_lon_by_meters(
                     location.latitude, location.longitude, -half_height, -half_width
                 )
-                print(top, right, bottom, left)
             elif location.coordinate_system == "osgb":
                 left = location.x - half_width
                 right = location.x + half_width
@@ -197,6 +212,15 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                     )
             else:
                 # Select data in the region of interest and ID:
+                # This also works for unstructured grids
+                # Need to check coordinate systems match
+                if location.coordinate_system == "osgb" and "longitude" in self.x_dim_name:
+                    # Convert to lat_lon edges
+                    left, bottom = osgb_to_lat_lon(x=left, y=bottom)
+                    right, top = osgb_to_lat_lon(x=right, y=top)
+                elif location.coordinate_system == "lat_lon" and "osgb" in self.x_dim_name:
+                    left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
+                    right, top = lat_lon_to_osgb(longitude=right, latitude=top)
                 id_mask = (
                     (left <= getattr(xr_data, self.x_dim_name))
                     & (getattr(xr_data, self.x_dim_name) <= right)
@@ -309,3 +333,60 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
         np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
     )
     return Location(x=x_index_at_center, y=y_index_at_center)
+
+
+def _get_points_from_unstructured_grids(
+    xr_data: xr.DataArray,
+    location: Location,
+    y_dim_name: str = "y",
+    x_dim_name: str = "x",
+    location_idx_name: str = "values",
+    num_points: int = 1,
+):
+    """
+    Get the closest points from an unstructured grid (i.e. Icosahedral grid)
+
+    This is primarily used for the Icosahedral grid, which is not a regular grid,
+     and so is not an image
+
+    Args:
+        xr_data: Xarray dataset
+        location: Location of center point
+        y_dim_name: y_dim name
+        x_dim_name: x_dim name
+        location_idx_name: Name of the index values dimension
+            (i.e. where we index into to get the lat/lon for that point)
+        num_points: Number of points to return (should be width * height)
+
+    Returns:
+        The closest points from the grid
+    """
+    # Check if need to convert from different coordinate system to lat/lon
+    if location.coordinate_system == "osgb":
+        latitude, longitude = osgb_to_lat_lon(x=location.x, y=location.y)
+        location = Location(
+            x=longitude,
+            y=latitude,
+            coordinate_system="lat_lon",
+        )
+    elif location.coordinate_system == "geostationary":
+        raise NotImplementedError(
+            "Does not currently support geostationary coordinates when using unstructured grids"
+        )
+
+    # Extract lat, lon, and locidx data
+    lat = xr_data[y_dim_name].values
+    lon = xr_data[x_dim_name].values
+    locidx = xr_data[location_idx_name].values
+
+    # Create a KDTree
+    tree = KDTree(list(zip(lat, lon)))
+
+    # Query with the [longitude, latitude] of your point
+    _, idx = tree.query([location.x, location.y], k=num_points)
+
+    # Retrieve the location_idxs for these grid points
+    location_idxs = locidx[idx]
+
+    data = xr_data.sel({location_idx_name: location_idxs})
+    return data

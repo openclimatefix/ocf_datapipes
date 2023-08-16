@@ -1,0 +1,26 @@
+{
+    "GRIB_NV": 0,
+    "GRIB_cfName": "air_temperature",
+    "GRIB_cfVarName": "t2m",
+    "GRIB_dataType": "fc",
+    "GRIB_gridDefinitionDescription": "General unstructured grid",
+    "GRIB_gridType": "unstructured_grid",
+    "GRIB_missingValue": 3.4028234663852886e+38,
+    "GRIB_name": "2 metre temperature",
+    "GRIB_numberOfPoints": 2949120,
+    "GRIB_paramId": 167,
+    "GRIB_shortName": "2t",
+    "GRIB_stepType": "instant",
+    "GRIB_stepUnits": 0,
+    "GRIB_typeOfLevel": "heightAboveGround",
+    "GRIB_units": "K",
+    "_ARRAY_DIMENSIONS": [
+        "time",
+        "step",
+        "values"
+    ],
+    "coordinates": "time step heightAboveGround valid_time",
+    "long_name": "2 metre temperature",
+    "standard_name": "air_temperature",
+    "units": "K"
+}
