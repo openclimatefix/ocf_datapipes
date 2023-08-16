@@ -48,7 +48,7 @@ def test_select_spatial_slice_pixel_icon_eu(passiv_datapipe, icon_eu_datapipe):
 
 
 def test_select_spatial_slice_pixel_icon_global(passiv_datapipe, icon_global_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe)
+    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
     icon_global_datapipe = SelectSpatialSlicePixels(
         icon_global_datapipe,
         location_datapipe=loc_datapipe,
@@ -80,7 +80,7 @@ def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
 
 
 def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe)
+    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
     icon_global_datapipe = SelectSpatialSliceMeters(
         icon_global_datapipe,
         location_datapipe=loc_datapipe,
