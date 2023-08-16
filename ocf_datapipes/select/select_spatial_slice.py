@@ -374,6 +374,8 @@ def _get_points_from_unstructured_grids(
         location: Location of center point
         y_dim_name: y_dim name
         x_dim_name: x_dim name
+        location_idx_name: Name of the index values dimension
+            (i.e. where we index into to get the lat/lon for that point)
         num_points: Number of points to return (should be width * height)
 
     Returns:
