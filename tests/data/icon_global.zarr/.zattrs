@@ -4,7 +4,7 @@
     "GRIB_centreDescription": "Offenbach",
     "GRIB_edition": 2,
     "GRIB_subCentre": 255,
-    "coordinates": "longitude latitude",
-    "history": "2023-08-16T12:29 GRIB to CDM+CF via cfgrib-0.9.10.4/ecCodes-2.27.0 with {\"source\": \"../../../../../../run/media/jacob/data/DWD_Global/00/icon_global_icosahedral_single-level_2023081600_000_ALB_RAD.grib2\", \"filter_by_keys\": {}, \"encode_cf\": [\"parameter\", \"time\", \"geography\", \"vertical\"]}",
+    "coordinates": "latitude longitude",
+    "history": "2023-08-15T13:51 GRIB to CDM+CF via cfgrib-0.9.10.4/ecCodes-2.27.0 with {\"source\": \"../../../../../../run/media/jacob/data/DWD/18/20230814_18/icon_global_icosahedral_single-level_2023081418_000_ALB_RAD.grib2\", \"filter_by_keys\": {}, \"encode_cf\": [\"parameter\", \"time\", \"geography\", \"vertical\"]}",
     "institution": "Offenbach"
 }
