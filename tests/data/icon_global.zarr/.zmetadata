@@ -6,7 +6,8 @@
             "GRIB_centreDescription": "Offenbach",
             "GRIB_edition": 2,
             "GRIB_subCentre": 255,
-            "history": "2023-08-15T15:40 GRIB to CDM+CF via cfgrib-0.9.10.4/ecCodes-2.27.0 with {\"source\": \"../../../../../../run/media/jacob/data/DWD/00/20230814_00/icon_global_icosahedral_single-level_2023081400_000_ALB_RAD.grib2\", \"filter_by_keys\": {}, \"encode_cf\": [\"parameter\", \"time\", \"geography\", \"vertical\"]}",
+            "coordinates": "longitude latitude",
+            "history": "2023-08-16T12:29 GRIB to CDM+CF via cfgrib-0.9.10.4/ecCodes-2.27.0 with {\"source\": \"../../../../../../run/media/jacob/data/DWD_Global/00/icon_global_icosahedral_single-level_2023081600_000_ALB_RAD.grib2\", \"filter_by_keys\": {}, \"encode_cf\": [\"parameter\", \"time\", \"geography\", \"vertical\"]}",
             "institution": "Offenbach"
         },
         ".zgroup": {
@@ -41,6 +42,56 @@
             "standard_name": "air_pressure",
             "stored_direction": "decreasing",
             "units": "hPa"
+        },
+        "latitude/.zarray": {
+            "chunks": [
+                184320
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2949120
+            ],
+            "zarr_format": 2
+        },
+        "latitude/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "values"
+            ]
+        },
+        "longitude/.zarray": {
+            "chunks": [
+                184320
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2949120
+            ],
+            "zarr_format": 2
+        },
+        "longitude/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "values"
+            ]
         },
         "step/.zarray": {
             "chunks": [
@@ -222,7 +273,7 @@
             "calendar": "proleptic_gregorian",
             "long_name": "time",
             "standard_name": "time",
-            "units": "hours since 2023-08-14"
+            "units": "hours since 2023-08-16"
         }
     },
     "zarr_consolidated_format": 1
