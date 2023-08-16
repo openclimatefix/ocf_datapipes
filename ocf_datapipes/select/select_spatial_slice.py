@@ -126,7 +126,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         location_datapipe: IterDataPipe,
         roi_height_meters: int,
         roi_width_meters: int,
-        dim_name: str = "pv_system_id",
+        dim_name: Optional[str] = "pv_system_id",
         y_dim_name: str = "y_osgb",
         x_dim_name: str = "x_osgb",
     ):
@@ -218,6 +218,20 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             else:
                 # Select data in the region of interest and ID:
                 # This also works for unstructured grids
+                # Need to check coordinate systems match
+                if (
+                    location.coordinate_system == "osgb"
+                    and "longitude" in self.x_dim_name
+                ):
+                    # Convert to lat_lon edges
+                    left, bottom = osgb_to_lat_lon(x=left, y=bottom)
+                    right, top = osgb_to_lat_lon(x=right, y=top)
+                elif (
+                    location.coordinate_system == "lat_lon"
+                    and "osgb" in self.x_dim_name
+                ):
+                    left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
+                    right, top = lat_lon_to_osgb(longitude=right, latitude=top)
                 id_mask = (
                     (left <= getattr(xr_data, self.x_dim_name))
                     & (getattr(xr_data, self.x_dim_name) <= right)
