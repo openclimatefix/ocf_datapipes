@@ -67,7 +67,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
                     location_idx_name=self.location_idx_name,
                     num_points=self.roi_width_pixels * self.roi_height_pixels,
                 )
-                return selected
+                yield selected
 
             if "geostationary" in self.x_dim_name:
                 center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
@@ -389,5 +389,4 @@ def _get_points_from_unstructured_grids(
     location_idxs = locidx[idx]
 
     data = xr_data.sel({location_idx_name: location_idxs})
-
     return data

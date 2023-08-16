@@ -59,8 +59,8 @@ def test_select_spatial_slice_pixel_icon_global(passiv_datapipe, icon_global_dat
         location_idx_name="values",
     )
     data = next(iter(icon_global_datapipe))
-    assert len(data.longitude) == 256
-    assert len(data.latitude) == 128
+    assert len(data.longitude) == 32768
+    assert len(data.latitude) == 32768
 
 
 def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
