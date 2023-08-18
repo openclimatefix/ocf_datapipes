@@ -14,7 +14,6 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import (
-    intersection_of_pv_system_ids,
     put_pv_data_into_an_xr_dataarray,
 )
 from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
@@ -22,7 +21,7 @@ from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
 _log = logging.getLogger(__name__)
 
 
-@functional_datapipe("open_pv_netcdf")
+#@functional_datapipe("open_pv_netcdf")
 class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     """Datapipe to load NetCDF"""
 
@@ -89,8 +88,8 @@ def join_pv(data_arrays: List[xr.DataArray]) -> xr.DataArray:
 
 
 def load_everything_into_ram(
-    pv_power_filename,
-    pv_metadata_filename,
+    generation_filename,
+    metadata_filename,
     start_dateime: Optional[datetime] = None,
     end_datetime: Optional[datetime] = None,
     time_resolution_minutes: Optional[int] = 5,
@@ -99,35 +98,38 @@ def load_everything_into_ram(
     """Open AND load PV data into RAM."""
 
     # load metadata
-    pv_metadata = _load_pv_metadata(pv_metadata_filename, inferred_metadata_filename)
+    df_metadata = _load_pv_metadata(metadata_filename, inferred_metadata_filename)
 
     # Load pd.DataFrame of power and pd.Series of capacities:
-    (
-        pv_power_watts,
-        pv_capacity_watt_power,
-        pv_system_row_number,
-    ) = _load_pv_power_watts_and_capacity_watt_power(
-        pv_power_filename,
+    df_gen, estimated_capacities = _load_pv_generation_and_capacity(
+        generation_filename,
         start_date=start_dateime,
         end_date=end_datetime,
-        time_resolution_minutes=time_resolution_minutes,
     )
-    # Ensure pv_metadata, pv_power_watts, and pv_capacity_watt_power all have the same set of
-    # PV system IDs, in the same order:
-    pv_metadata, pv_power_watts = intersection_of_pv_system_ids(pv_metadata, pv_power_watts)
-    pv_capacity_watt_power = pv_capacity_watt_power.loc[pv_power_watts.columns]
-    pv_system_row_number = pv_system_row_number.loc[pv_power_watts.columns]
-
+    
+    # Apply clip, filter, and resample
+    df_gen, estimated_capacities = _clip_filter_and_resample(
+        df_gen, 
+        estimated_capacities,
+        time_resolution_minutes=time_resolution_minutes,
+        drop_overnight = True,
+    )
+    
+    # Ensure systems are consistant between generation data, and metadata
+    common_systems = list(np.intersect1d(df_metadata.index, df_gen.columns))
+    df_gen = df_gen[common_systems]
+    df_metadata = df_metadata.loc[common_systems]
+    estimated_capacities = estimated_capacities.loc[common_systems]
+    
+    # Compile data into an xarray DataArray
     data_in_ram = put_pv_data_into_an_xr_dataarray(
-        pv_power_watts=pv_power_watts,
-        y_osgb=pv_metadata.y_osgb.astype(np.float32),
-        x_osgb=pv_metadata.x_osgb.astype(np.float32),
-        capacity_watt_power=pv_capacity_watt_power,
-        pv_system_row_number=pv_system_row_number,
-        latitude=pv_metadata.latitude,
-        longitude=pv_metadata.longitude,
-        tilt=pv_metadata.tilt if hasattr(pv_metadata, "tilt") else None,
-        orientation=pv_metadata.orientation if hasattr(pv_metadata, "orientation") else None,
+        df_gen=df_gen,
+        system_capacities=estimated_capacities,
+        ml_id=df_metadata.ml_id,
+        latitude=df_metadata.latitude,
+        longitude=df_metadata.longitude,
+        tilt=df_metadata.get("tilt"),
+        orientation=df_metadata.get("orientation"),
     )
 
     # Sanity checks:
@@ -138,128 +140,122 @@ def load_everything_into_ram(
     return data_in_ram
 
 
-def _load_pv_power_watts_and_capacity_watt_power(
+def _load_pv_generation_and_capacity(
     filename: Union[str, Path],
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    time_resolution_minutes: Optional[int] = 5,
-) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
-    """Return pv_power_watts, pv_capacity_watt_power, pv_system_row_number.
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Load the PV data and estimates the capacity for each PV system.
+    
+    The capacity is estimated by taking the max value across all datetimes in the input file.
+    
+    Args:
+        filename: The filename (netcdf) of the PV data to load.
+        start_date: Start date to load from.
+        end_date: End of period to load.
 
-    The capacities and pv_system_row_number are computed across the *entire* dataset,
-    and so is independent of the `start_date` and `end_date`. This ensures the PV system
-    row number and capacities stay constant across training and validation.
+    Returns:
+        DataFrame of power output in Watts. Columns are PV systems, rows are datetimes.
+        Series of PV system estimated capacities in Watts
     """
 
     _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
 
-    # Load data in a way that will work in the cloud and locally:
-    if ".parquet" in str(filename):
-        _log.debug(f"Loading PV parquet file {filename}")
-        pv_power_df = pd.read_parquet(filename, engine="fastparquet")
-        _log.debug("Loading PV parquet file: done")
-        pv_power_df["generation_w"] = pv_power_df["generation_wh"] * 12
-        if end_date is not None:
-            pv_power_df = pv_power_df[pv_power_df["timestamp"] < end_date]
-        if start_date is not None:
-            pv_power_df = pv_power_df[pv_power_df["timestamp"] >= start_date]
 
-        # pivot on ss_id
-        _log.debug("Pivoting PV data")
-        pv_power_watts = pv_power_df.pivot(
-            index="timestamp", columns="ss_id", values="generation_w"
-        )
-        _log.debug("Pivoting PV data: done")
-        pv_capacity_watt_power = pv_power_watts.max().astype(np.float32)
+    with fsspec.open(filename, mode="rb") as file:
+        file_bytes = file.read()
 
-    else:
-        with fsspec.open(filename, mode="rb") as file:
-            file_bytes = file.read()
+    _log.info("Loaded solar PV power bytes, now converting to xarray")
+    with io.BytesIO(file_bytes) as file:
+        ds_gen = xr.load_dataset(file, engine="h5netcdf")
 
-        _log.info("Loaded solar PV power bytes, now converting to xarray")
-        with io.BytesIO(file_bytes) as file:
-            pv_power_ds = xr.load_dataset(file, engine="h5netcdf")
+    _log.info("Loaded solar PV power data and converting to pandas.")
+    estimated_capacities = ds_gen.max().to_pandas().astype(np.float32)
+    estimated_capacities.index = estimated_capacities.index.astype(np.int64)
+    
+    df_gen = ds_gen.sel(datetime=slice(start_date, end_date)).to_dataframe()
+    df_gen = df_gen.astype(np.float32)
+    df_gen.columns = df_gen.columns.astype(np.int64)
 
-        _log.info("Loaded solar PV power data and converting to pandas.")
-        pv_capacity_watt_power = pv_power_ds.max().to_pandas().astype(np.float32)
-        pv_power_watts = pv_power_ds.sel(datetime=slice(start_date, end_date)).to_dataframe()
-        pv_power_watts = pv_power_watts.astype(np.float32)
-
-        if "passiv" not in str(filename):
-            _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
-            try:
-                pv_power_watts = (
-                    pv_power_watts.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
-                )
-            except Exception as e:
-                _log.warning(
-                    "Could not convert timezone from London to UTC. "
-                    "Going to try and carry on anyway"
-                )
-                _log.warning(e)
-
-    pv_capacity_watt_power.index = [np.int32(col) for col in pv_capacity_watt_power.index]
-    pv_power_watts.columns = pv_power_watts.columns.astype(np.int64)
-
-    # Create pv_system_row_number. We use the index of
-    # `pv_capacity_watt_power` because that includes
-    # the PV system IDs for the entire dataset (independent of `start_date` and `end_date`).
-    # We use `float32` for the ID because we use NaN to indicate a missing PV system,
-    # or that this whole example doesn't include PV.
-    all_pv_system_ids = pv_capacity_watt_power.index
-    pv_system_row_number = np.arange(start=0, stop=len(all_pv_system_ids), dtype=np.float32)
-    pv_system_row_number = pd.Series(pv_system_row_number, index=all_pv_system_ids)
+    if "passiv" not in str(filename):
+        _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
+        try:
+            df_gen = (
+                df_gen.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
+            )
+        except Exception as e:
+            _log.warning(
+                "Could not convert timezone from London to UTC. "
+                "Going to try and carry on anyway"
+            )
+            _log.warning(e)    
 
     _log.info(
         "After loading:"
-        f" {len(pv_power_watts)} PV power datetimes."
-        f" {len(pv_power_watts.columns)} PV power PV system IDs."
+        f" {len(df_gen)} PV power datetimes."
+        f" {len(df_gen.columns)} PV power PV system IDs."
     )
+    
+    # Sanity checks:
+    assert not df_gen.columns.duplicated().any()
+    assert not df_gen.index.duplicated().any()
+    assert np.isfinite(estimated_capacities).all()
+    assert (estimated_capacities >= 0).all()
+    assert np.array_equal(df_gen.columns, estimated_capacities.index)
+    
+    return df_gen, estimated_capacities
 
-    pv_power_watts = pv_power_watts.clip(lower=0, upper=5e7)
-    pv_power_watts = _drop_pv_systems_which_produce_overnight(pv_power_watts)
+def _clip_filter_and_resample(
+    df_gen, 
+    estimated_capacities,
+    time_resolution_minutes: Optional[int] = 5,
+    drop_overnight = True,
+):
+    """Clip, filter, and resample the PV data.
+    """
+    df_gen = df_gen.clip(lower=0, upper=5e7)
+    if drop_overnight:
+        df_gen = _drop_pv_systems_which_produce_overnight(df_gen)
+        estimated_capacities = estimated_capacities[df_gen.columns]
 
     # Resample to 5-minutely and interpolate up to 15 minutes ahead.
     # TODO: Issue #74: Give users the option to NOT resample (because Perceiver IO
     # doesn't need all the data to be perfectly aligned).
-    pv_power_watts = pv_power_watts.resample(f"{time_resolution_minutes}T").interpolate(
+    df_gen = df_gen.resample(f"{time_resolution_minutes}T").interpolate(
         method="time", limit=3
     )
-    pv_power_watts.dropna(axis="index", how="all", inplace=True)
-    pv_power_watts.dropna(axis="columns", how="all", inplace=True)
+    
+    df_gen.dropna(axis="index", how="all", inplace=True)
+    df_gen.dropna(axis="columns", how="all", inplace=True)
+    estimated_capacities = estimated_capacities[df_gen.columns]
 
     # Drop any PV systems whose PV capacity is too low:
-    PV_CAPACITY_THRESHOLD_W = 100
-    pv_systems_to_drop = pv_capacity_watt_power.index[
-        pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W
-    ]
-    pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
+    CAPACITY_THRESHOLD_W = 100
+    mask = (estimated_capacities <= CAPACITY_THRESHOLD_W)
+        
     _log.info(
-        f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
-        f" {PV_CAPACITY_THRESHOLD_W}"
+        f"Dropping {mask.sum()} PV systems because their max power is less than"
+        f" {CAPACITY_THRESHOLD_W}"
     )
-    pv_power_watts.drop(columns=pv_systems_to_drop, inplace=True)
-
-    # Ensure that capacity and pv_system_row_num use the same PV system IDs as the power DF:
-    pv_system_ids = pv_power_watts.columns
-    pv_capacity_watt_power = pv_capacity_watt_power.loc[pv_system_ids]
-    pv_system_row_number = pv_system_row_number.loc[pv_system_ids]
-
+        
+    df_gen = df_gen.loc[:, ~mask]
+    estimated_capacities = estimated_capacities[~mask]
+    
     _log.info(
         f"After filtering & resampling to {time_resolution_minutes} minutes:"
-        f" pv_power = {pv_power_watts.values.nbytes / 1e6:,.1f} MBytes."
-        f" {len(pv_power_watts)} PV power datetimes."
-        f" {len(pv_power_watts.columns)} PV power PV system IDs."
+        f" pv_power = {df_gen.values.nbytes / 1e6:,.1f} MBytes."
+        f" {len(df_gen)} PV power datetimes."
+        f" {len(df_gen.columns)} PV power PV system IDs."
     )
 
     # Sanity checks:
-    assert not pv_power_watts.columns.duplicated().any()
-    assert not pv_power_watts.index.duplicated().any()
-    assert np.isfinite(pv_capacity_watt_power).all()
-    assert (pv_capacity_watt_power >= 0).all()
-    assert np.isfinite(pv_system_row_number).all()
-    assert np.array_equal(pv_power_watts.columns, pv_capacity_watt_power.index)
-    return pv_power_watts, pv_capacity_watt_power, pv_system_row_number
+    assert not df_gen.columns.duplicated().any()
+    assert not df_gen.index.duplicated().any()
+    assert np.isfinite(estimated_capacities).all()
+    assert (estimated_capacities >= 0).all()
+    assert np.array_equal(df_gen.columns, estimated_capacities.index), (df_gen.columns, estimated_capacities.index)
+    
+    return df_gen, estimated_capacities
 
 
 # Adapted from nowcasting_dataset.data_sources.pv.pv_data_source
@@ -268,8 +264,8 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
 
     Shape of the returned pd.DataFrame for Passiv PV data:
         Index: ss_id (Sheffield Solar ID)
-        Columns: llsoacd, orientation, tilt, kwp, operational_at,
-            latitude, longitude, system_id, x_osgb, y_osgb
+        Columns: llsoacd, orientation, tilt, kwp, operational_at, latitude, longitude, system_id, 
+            ml_id
     """
     _log.info(f"Loading PV metadata from {filename}")
 
@@ -278,30 +274,26 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
     else:
         index_col = "system_id"
 
-    pv_metadata = pd.read_csv(filename, index_col=index_col)
+    df_metadata = pd.read_csv(filename, index_col=index_col)
 
-    # Load inferred metadata if passiv
+    # Maybe load inferred metadata if passiv
     if "passiv" in str(filename) and inferred_filename is not None:
-        pv_metadata = _load_inferred_metadata(filename, pv_metadata)
+        df_metadata = _load_inferred_metadata(filename, df_metadata)
 
-    if "Unnamed: 0" in pv_metadata.columns:
-        pv_metadata.drop(columns="Unnamed: 0", inplace=True)
+    if "Unnamed: 0" in df_metadata.columns:
+        df_metadata.drop(columns="Unnamed: 0", inplace=True)
+    
+    # Add ml_id column if not in metadata
+    if "ml_id" not in df_metadata.columns:
+        df_metadata["ml_id"] = np.nan 
+    df_metadata["ml_id"] = df_metadata.ml_id.astype(pd.Int64Dtype())
 
-    _log.info(f"Found {len(pv_metadata)} PV systems in {filename}")
-
-    # drop any systems with no lon or lat:
-    pv_metadata.dropna(subset=["longitude", "latitude"], how="any", inplace=True)
-
-    _log.debug(f"Found {len(pv_metadata)} PV systems with locations")
-
-    pv_metadata["x_osgb"], pv_metadata["y_osgb"] = lat_lon_to_osgb(
-        latitude=pv_metadata["latitude"], longitude=pv_metadata["longitude"]
-    )
-
+    _log.info(f"Found {len(df_metadata)} PV systems in {filename}")
+    
     # Rename PVOutput.org tilt name to be simpler
     # There is a second degree tilt, but this should be fine for now
-    if "array_tilt_degrees" in pv_metadata.columns:
-        pv_metadata["tilt"] = pv_metadata["array_tilt_degrees"]
+    if "array_tilt_degrees" in df_metadata.columns:
+        df_metadata["tilt"] = df_metadata["array_tilt_degrees"]
 
     # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by default
     mapping = {
@@ -315,17 +307,17 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
         "NW": 315.0,
         "EW": np.nan,
     }
-    pv_metadata = pv_metadata.replace({"orientation": mapping})
+    df_metadata = df_metadata.replace({"orientation": mapping})
 
-    return pv_metadata
+    return df_metadata
 
 
-def _load_inferred_metadata(filename: str, pv_metadata: pd.DataFrame) -> pd.DataFrame:
+def _load_inferred_metadata(filename: str, df_metadata: pd.DataFrame) -> pd.DataFrame:
     inferred_metadata = pd.read_csv(filename, index_col="ss_id")
     inferred_metadata = inferred_metadata.rename({"capacity": "kwp"})
     # Replace columns with new data if in the PV metadata already
-    pv_metadata.update(inferred_metadata)
-    return pv_metadata
+    df_metadata.update(inferred_metadata)
+    return df_metadata
 
 
 def _drop_pv_systems_which_produce_overnight(pv_power_watts: pd.DataFrame) -> pd.DataFrame:
@@ -345,3 +337,15 @@ def _drop_pv_systems_which_produce_overnight(pv_power_watts: pd.DataFrame) -> pd
     bad_systems = pv_power_normalised.columns[pv_above_threshold_at_night]
     _log.info(f"{len(bad_systems)} bad PV systems found and removed!")
     return pv_power_watts.drop(columns=bad_systems)
+
+
+if __name__=="__main__":
+    ds = load_everything_into_ram(
+        generation_filename="/mnt/disks/nwp/passive/v0/passiv.netcdf",
+        metadata_filename="/mnt/disks/nwp/passive/v0/system_metadata_OCF_ONLY.csv",
+        start_dateime = "2020-01-01 00:00",
+        end_datetime =  "2020-02-01 00:00",
+        time_resolution_minutes = 5,
+        inferred_metadata_filename = None,
+    )
+    ds
