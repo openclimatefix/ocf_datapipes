@@ -16,12 +16,11 @@ from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import (
     put_pv_data_into_an_xr_dataarray,
 )
-from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
 
 _log = logging.getLogger(__name__)
 
 
-#@functional_datapipe("open_pv_netcdf")
+@functional_datapipe("open_pv_netcdf")
 class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
     """Datapipe to load NetCDF"""
 
@@ -337,15 +336,3 @@ def _drop_pv_systems_which_produce_overnight(pv_power_watts: pd.DataFrame) -> pd
     bad_systems = pv_power_normalised.columns[pv_above_threshold_at_night]
     _log.info(f"{len(bad_systems)} bad PV systems found and removed!")
     return pv_power_watts.drop(columns=bad_systems)
-
-
-if __name__=="__main__":
-    ds = load_everything_into_ram(
-        generation_filename="/mnt/disks/nwp/passive/v0/passiv.netcdf",
-        metadata_filename="/mnt/disks/nwp/passive/v0/system_metadata_OCF_ONLY.csv",
-        start_dateime = "2020-01-01 00:00",
-        end_datetime =  "2020-02-01 00:00",
-        time_resolution_minutes = 5,
-        inferred_metadata_filename = None,
-    )
-    ds
