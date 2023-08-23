@@ -13,7 +13,10 @@ logger = logging.getLogger(__name__)
 
 def test_drop_with_passiv_datapipe(passiv_datapipe):
     before_dropping_pv_with_night_output = AssignDayNightStatus(passiv_datapipe)
-    after_dropping_pv_with_night_output = DropNightPV(before_dropping_pv_with_night_output)
+    after_dropping_pv_with_night_output = DropNightPV(
+        before_dropping_pv_with_night_output, 
+        threshold=0
+    )
 
     data_before_drop = next(iter(before_dropping_pv_with_night_output))
     data_after_drop = next(iter(after_dropping_pv_with_night_output))
@@ -66,6 +69,9 @@ def test_drop_with_constructed_dataarray():
     data_array = xr.DataArray(
         data,
         coords=ALL_COORDS,
+    )
+    data_array = data_array.assign_coords(
+        capacity_watt_power=("pv_system_id", np.ones(len(pv_system_id))),
     )
 
     # run the function

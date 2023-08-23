@@ -33,7 +33,6 @@ class AddSunPositionIterDataPipe(IterDataPipe):
         assert self.modality_name in [
             "hrvsatellite",
             "gsp",
-            "gsp_5_min",
             "pv",
             "nwp_target_time",
             "satellite",
@@ -53,8 +52,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 y_osgb_centre = y_osgb[:, y_centre_idx, x_centre_idx]  # Shape: (example,)
                 x_osgb_centre = x_osgb[:, y_centre_idx, x_centre_idx]  # Shape: (example,)
             elif self.modality_name == "pv":
-                pv_y_osgb = np_batch[BatchKey.pv_y_osgb]
-                pv_x_osgb = np_batch[BatchKey.pv_x_osgb]
+                lats = np_batch[BatchKey.pv_latitude]
+                lons = np_batch[BatchKey.pv_longitude]
                 time_utc = np_batch[BatchKey.pv_time_utc]
                 # Sometimes, the PV coords can all be NaNs if there are no PV systems
                 # for that datetime and location. e.g. in northern Scotland!
@@ -62,19 +61,30 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                     warnings.filterwarnings(
                         action="ignore", category=RuntimeWarning, message="Mean of empty slice"
                     )
-                    y_osgb_centre = np.nanmean(pv_y_osgb, axis=1)
-                    x_osgb_centre = np.nanmean(pv_x_osgb, axis=1)
+                    lats = np.nanmean(lats, axis=1)
+                    lons = np.nanmean(lons, axis=1)
             elif self.modality_name == "nwp_target_time":
                 y_osgb_centre = np_batch[BatchKey.nwp_y_osgb].mean(axis=-1)
                 x_osgb_centre = np_batch[BatchKey.nwp_x_osgb].mean(axis=-1)
                 time_utc = np_batch[BatchKey.nwp_target_time_utc]
-            else:  # gsp and gsp_5_min:
-                y_osgb_centre = np_batch[BatchKey.gsp_y_osgb]
-                x_osgb_centre = np_batch[BatchKey.gsp_x_osgb]
-                time_utc = np_batch[BatchKey[self.modality_name + "_time_utc"]]
-
+            elif self.modality_name == "gsp":
+                y_osgb = np_batch[BatchKey.gsp_y_osgb]
+                x_osgb = np_batch[BatchKey.gsp_x_osgb]
+                time_utc = np_batch[BatchKey.gsp_time_utc]
+                #  We calculate the sun angles for the cnetre of the GSP locations
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        action="ignore", category=RuntimeWarning, message="Mean of empty slice"
+                    )
+                    y_osgb_centre = np.nanmean(y_osgb, axis=1)
+                    x_osgb_centre = np.nanmean(x_osgb, axis=1)
+            else:
+                raise ValueError(f"Unrecognized modality: {self.modality_name }")
+            
+            # As we move away from OSGB and towards lat, lon we can exclude more sources here
+            if self.modality_name not in ["pv"]:
                 # Convert to the units that pvlib expects: lat, lon.
-            lats, lons = osgb_to_lat_lon(x=x_osgb_centre, y=y_osgb_centre)
+                lats, lons = osgb_to_lat_lon(x=x_osgb_centre, y=y_osgb_centre)
 
             # Loop round each example to get the Sun's elevation and azimuth:
             azimuth = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
@@ -85,9 +95,9 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             if len(time_utc.shape) == 1:
                 lat, lon = lats[0], lons[0]
                 if not np.isfinite([lat, lon]).all():
-                    assert (
-                        self.modality_name == "pv"
-                    ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
+                    assert self.modality_name == "pv", (
+                        f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
+                    )
                     must_be_finite = False
 
                 else:
@@ -112,7 +122,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
 
                     else:
                         dt = pd.to_datetime(time_utc[example_idx], unit="s")
-
+                        
                         solpos = pvlib.solarposition.get_solarposition(
                             time=dt,
                             latitude=lat,

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def put_pv_data_into_an_xr_dataarray(
     df_gen: pd.DataFrame,
     system_capacities: pd.Series,
-    ml_id: [pd.Series],
+    ml_id: pd.Series,
     longitude: pd.Series,
     latitude: pd.Series,
     tilt: Optional[pd.Series] = None,

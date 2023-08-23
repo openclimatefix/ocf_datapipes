@@ -2,7 +2,7 @@ from ocf_datapipes.config.model import PV, PVFiles
 from ocf_datapipes.load import OpenPVFromNetCDF
 
 
-def test_remove_nans_all_pv_systems(pv_parquet_file):
+def test_remove_nans_all_pv_systems(pv_netcdf_file):
     pv = PV()
     pv_file = PVFiles(
         pv_filename="tests/data/pv/passiv/test.nc",

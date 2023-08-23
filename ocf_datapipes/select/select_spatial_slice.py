@@ -125,9 +125,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         location_datapipe: IterDataPipe,
         roi_height_meters: int,
         roi_width_meters: int,
-        dim_name: Optional[str] = "pv_system_id",
-        y_dim_name: str = "y_osgb",
-        x_dim_name: str = "x_osgb",
+        dim_name: Optional[str] = None, #"pv_system_id",
     ):
         """
         Select spatial slice based off pixels from point of interest
@@ -138,16 +136,12 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             roi_height_meters: ROI height in meters
             roi_width_meters: ROI width in meters
             dim_name: Dimension name to select for ID, None for coordinates
-            y_dim_name: the y dimension name, this is so we can switch between osgb and lat,lon
-            x_dim_name: the x dimension name, this is so we can switch between osgb and lat,lon
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
         self.roi_height_meters = roi_height_meters
         self.roi_width_meters = roi_width_meters
         self.dim_name = dim_name
-        self.y_dim_name = y_dim_name
-        self.x_dim_name = x_dim_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
@@ -156,20 +150,45 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
 
             half_height = self.roi_height_meters // 2
             half_width = self.roi_width_meters // 2
+            
             if location.coordinate_system == "lat_lon":
                 top, right = move_lat_lon_by_meters(
-                    location.latitude, location.longitude, half_height, half_width
+                    location.y, location.x, half_height, half_width
                 )
                 bottom, left = move_lat_lon_by_meters(
-                    location.latitude, location.longitude, -half_height, -half_width
+                    location.y, location.x, -half_height, -half_width
                 )
+                
             elif location.coordinate_system == "osgb":
                 left = location.x - half_width
                 right = location.x + half_width
                 bottom = location.y - half_height
                 top = location.y + half_height
+                
+            else:
+                raise ValueError(
+                    f"Location coord system not recognized: {location.coordinate_system}")
+                
+            if "longitude" in xr_data.coords:
+                x_dim_name = "longitude"
+                y_dim_name = "latitude"
+                xr_coords = "lat_lon"
+            elif "x_osgb" in xr_data.coords:
+                x_dim_name = "x_osgb"
+                y_dim_name = "y_osgb"
+                xr_coords = "osgb"
+            elif "x_geostationary" in xr_data.coords:
+                x_dim_name = "x_geostationary"
+                y_dim_name = "y_geostationary"
+                xr_coords = "geostationary"
+            else:
+                raise ValueError(
+                    "None of x_osgb, x_geostationary, or longitude found in coords: "
+                    f"{xr_data.coords}"
+                )
+            
             if self.dim_name is None:  # Do it off coordinates, not ID
-                if "x_geostationary" == self.x_dim_name:
+                if xr_coords=="geostationary":
                     left, bottom, right, top = _convert_to_geostationary(
                         location, xr_data, left, bottom, right, top
                     )
@@ -179,7 +198,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                         bottom <= xr_data.y_geostationary
                     )
                     selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
-                elif "longitude" == self.x_dim_name:
+                
+                elif xr_coords=="lat_lon":
                     if location.coordinate_system == "osgb":
                         # Convert to geostationary edges
                         bottom, left = osgb_to_lat_lon(x=left, y=bottom)
@@ -189,14 +209,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                         bottom <= xr_data.latitude
                     )
                     selected = xr_data.isel(longitude=x_mask, latitude=y_mask)
-                elif "x" == self.x_dim_name:
-                    left, bottom, right, top = _convert_to_geostationary(
-                        location, xr_data, left, bottom, right, top
-                    )
-                    x_mask = (left <= xr_data.x) & (xr_data.x <= right)
-                    y_mask = (xr_data.y <= top) & (bottom <= xr_data.y)  # Y is flipped
-                    selected = xr_data.isel(x=x_mask, y=y_mask)
-                elif "x_osgb" == self.x_dim_name:
+                
+                elif xr_coords=="osgb":
                     if location.coordinate_system == "lat_lon":
                         # Convert to OSGB
                         left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
@@ -205,29 +219,26 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                     x_mask = (left <= xr_data.x_osgb) & (xr_data.x_osgb <= right)
                     y_mask = (xr_data.y_osgb <= top) & (bottom <= xr_data.y_osgb)
                     selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
-                else:
-                    raise ValueError(
-                        f"{self.x_dim_name=} not in 'x', 'x_osgb',"
-                        f" 'x_geostationary', 'longitude', and {self.dim_name=} is 'None'"
-                    )
+
             else:
                 # Select data in the region of interest and ID:
                 # This also works for unstructured grids
                 # Need to check coordinate systems match
-                if location.coordinate_system == "osgb" and "longitude" in self.x_dim_name:
+                if location.coordinate_system == "osgb" and xr_coords=="lat_lon":
                     # Convert to lat_lon edges
                     left, bottom = osgb_to_lat_lon(x=left, y=bottom)
                     right, top = osgb_to_lat_lon(x=right, y=top)
-                elif location.coordinate_system == "lat_lon" and "osgb" in self.x_dim_name:
+
+                elif location.coordinate_system == "lat_lon" and xr_coords=="osgb":
                     left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
                     right, top = lat_lon_to_osgb(longitude=right, latitude=top)
+                    
                 id_mask = (
-                    (left <= getattr(xr_data, self.x_dim_name))
-                    & (getattr(xr_data, self.x_dim_name) <= right)
-                    & (getattr(xr_data, self.y_dim_name) <= top)
-                    & (bottom <= getattr(xr_data, self.y_dim_name))
+                    (left <= getattr(xr_data, x_dim_name))
+                    & (getattr(xr_data, x_dim_name) <= right)
+                    & (getattr(xr_data, y_dim_name) <= top)
+                    & (bottom <= getattr(xr_data, y_dim_name))
                 )
-
                 selected = xr_data.isel({self.dim_name: id_mask})
             yield selected
 

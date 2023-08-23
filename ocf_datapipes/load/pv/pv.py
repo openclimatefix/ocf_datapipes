@@ -44,7 +44,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.inferred_metadata_filenames = [
             pv_files_group.inferred_metadata_filename for pv_files_group in pv.pv_files_groups
         ]
-        self.start_dateime = pv.start_datetime
+        self.start_datetime = pv.start_datetime
         self.end_datetime = pv.end_datetime
 
         
@@ -54,9 +54,8 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
             one_data: xr.DataArray = load_everything_into_ram(
                 self.pv_power_filenames[i],
                 self.pv_metadata_filenames[i],
-                start_dateime=self.start_dateime,
+                start_datetime=self.start_datetime,
                 end_datetime=self.end_datetime,
-                time_resolution_minutes=self.pv.time_resolution_minutes,
                 inferred_metadata_filename=self.inferred_metadata_filenames[i],
             )
             pv_datas_xr.append(one_data)
@@ -91,7 +90,7 @@ def load_everything_into_ram(
     inferred_metadata_filename: Optional[Union[str, Path]] = None,
     start_datetime: Optional[datetime] = None,
     end_datetime: Optional[datetime] = None,
-    estimated_capacity_percentile: float = 99,
+    estimated_capacity_percentile: float = 100,
 ) -> xr.DataArray:
     """Load PV data into xarray DataArray in RAM.
     

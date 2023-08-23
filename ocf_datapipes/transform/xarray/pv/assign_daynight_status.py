@@ -94,13 +94,13 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
                 "Calculating the day-night status using method 'simple' is only appropriate for "
                 "UK PV datasets"
             )
-            self._status_func = self._status_by_hour
+            self._status_func = self._get_status_by_hour
             
         elif method=="elevation":
             logger.warning(
                 "Calculating the day-night status using method 'elevation' can take a long time"
             )
-            self._status_func = self._status_by_elevation
+            self._status_func = self._get_status_by_elevation
         else:
             raise ValueError(f"Method '{method}' not recognised")
 
@@ -125,7 +125,7 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
         return ds
     
     
-    def _status_by_elevation(self, ds):
+    def _get_status_by_elevation(self, ds):
         
         elevation = xr.full_like(ds, fill_value=np.nan).astype(np.float32)
 
@@ -166,5 +166,4 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
 
         # Reading the Xarray dataset
         for ds in self.source_datapipe:
-            ds = self._method_fn
-            yield ds
+            yield self._status_func(ds)

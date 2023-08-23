@@ -167,6 +167,6 @@ def move_lat_lon_by_meters(lat, lon, meters_north, meters_east):
     Returns:
         tuple of lat, lon
     """
-    return _geod.fwd(lons=lon, lats=lat, az=0, dist=meters_north), _geod.fwd(
-        lons=lon, lats=lat, az=90, dist=meters_east
-    )
+    new_lat = _geod.fwd(lons=lon, lats=lat, az=0, dist=meters_north)[1]
+    new_lon = _geod.fwd(lons=lon, lats=lat, az=90, dist=meters_east)[0]
+    return new_lat, new_lon

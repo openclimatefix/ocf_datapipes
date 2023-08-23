@@ -10,7 +10,11 @@ def test_create_pv_image(passiv_datapipe, sat_datapipe):
 
 
 def test_create_pv_image_take_last_value(passiv_datapipe, sat_datapipe):
-    pv_image_datapipe = CreatePVImage(passiv_datapipe, sat_datapipe, take_n_pv_values_per_pixel=1)
+    pv_image_datapipe = CreatePVImage(
+        passiv_datapipe, 
+        sat_datapipe, 
+        max_num_pv_systems_per_pixel=1
+    )
     data = next(iter(pv_image_datapipe))
     assert np.max(data) > 0
 
@@ -36,7 +40,11 @@ def test_create_pv_image_pvoutput(pvoutput_datapipe, sat_datapipe):
 
 
 def test_create_pv_image_take_last_value_pvoutput(pvoutput_datapipe, sat_datapipe):
-    pv_image_datapipe = CreatePVImage(pvoutput_datapipe, sat_datapipe, take_n_pv_values_per_pixel=1)
+    pv_image_datapipe = CreatePVImage(
+        pvoutput_datapipe, 
+        sat_datapipe, 
+        max_num_pv_systems_per_pixel=1
+    )
     data = next(iter(pv_image_datapipe))
     assert np.max(data) > 0
 

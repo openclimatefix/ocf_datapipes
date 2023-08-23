@@ -42,16 +42,16 @@ def make_fake_pv_data(configuration: Configuration, t0_datetime_utc: datetime):
     batch[BatchKey.pv_t0_idx] = get_n_time_steps_from_config(
         input_data_configuration=pv_config, include_forecast=False
     )
-    batch[BatchKey.pv_system_row_number] = np.random.randint(0, 100, (batch_size, n_pv_systems))
+    batch[BatchKey.pv_ml_id] = np.random.randint(0, 100, (batch_size, n_pv_systems))
     batch[BatchKey.pv_id] = np.random.randint(0, 1000, (batch_size, n_pv_systems))
     batch[BatchKey.pv_mask] = np.random.randint(0, 1, (batch_size, n_pv_systems))
-    batch[BatchKey.pv_x_osgb] = np.random.randint(0, 10**6, (batch_size, n_pv_systems))
-    batch[BatchKey.pv_y_osgb] = np.random.randint(0, 10**6, (batch_size, n_pv_systems))
+    batch[BatchKey.pv_latitude] = np.random.randint(0, 10**6, (batch_size, n_pv_systems))
+    batch[BatchKey.pv_longitude] = np.random.randint(0, 10**6, (batch_size, n_pv_systems))
 
-    batch[BatchKey.pv_x_osgb_fourier] = np.random.random(
+    batch[BatchKey.pv_latitude_fourier] = np.random.random(
         (batch_size, n_pv_systems, n_fourier_features)
     )
-    batch[BatchKey.pv_y_osgb_fourier] = np.random.random(
+    batch[BatchKey.pv_longitude_fourier] = np.random.random(
         (batch_size, n_pv_systems, n_fourier_features)
     )
     batch[BatchKey.pv_time_utc_fourier] = np.random.random(

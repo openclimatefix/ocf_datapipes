@@ -85,8 +85,8 @@ def nwp_pv_datapipe(
         location_datapipe4,
     ) = pv_location_datapipe.location_picker(
         return_all_locations=return_all,
-        x_dim_name=configuration.input_data.pv.x_dim_name,
-        y_dim_name=configuration.input_data.pv.y_dim_name,
+        x_dim_name="longitude",
+        y_dim_name="latitude",
     ).fork(
         4, buffer_size=BUFFER_SIZE
     )
@@ -202,9 +202,5 @@ def nwp_pv_datapipe(
         .encode_space_time()
         .add_sun_position(modality_name="pv")
     )
-
-    # combined_datapipe = combined_datapipe.add_length(
-    #     configuration=configuration, train_validation_test=tag
-    # )
 
     return combined_datapipe

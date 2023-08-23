@@ -41,13 +41,14 @@ class LocationPickerIterDataPipe(IterDataPipe):
     def __iter__(self) -> Location:
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
-            logger.debug("Getting locations")
             if "longitude" in self.x_dim_name:
                 loc_type = "lat_lon"
             elif "geostationary" in self.x_dim_name:
                 loc_type = "geostationary"
-            else:
+            elif "osgb" in self.x_dim_name:
                 loc_type = "osgb"
+            else:
+                raise ValueError("Coordinate system not recongised")
             if self.return_all_locations:
                 logger.debug("Going to return all locations")
 
@@ -63,7 +64,6 @@ class LocationPickerIterDataPipe(IterDataPipe):
                     logger.debug(f"Got all location {location}")
                     yield location
             else:
-                # Assumes all datasets have osgb coordinates for selecting locations
                 # Pick 1 random location from the input dataset
                 logger.debug("Selecting random idx")
                 location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))

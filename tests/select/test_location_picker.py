@@ -37,14 +37,17 @@ def test_location_picker_all_locations(gsp_datapipe):
         ).all()
 
 
-def test_location_picker_with_id(configuration_with_pv_parquet):
+def test_location_picker_with_id(configuration_with_pv_netcdf):
     # load configuration
-    config_datapipe = OpenConfiguration(configuration_with_pv_parquet)
+    config_datapipe = OpenConfiguration(configuration_with_pv_netcdf)
     configuration: Configuration = next(iter(config_datapipe))
 
     pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
 
-    location_datapipe = pv_location_datapipe.location_picker()
+    location_datapipe = pv_location_datapipe.location_picker(
+        x_dim_name="longitude",
+        y_dim_name="latitude",
+    )
 
     data = next(iter(location_datapipe))
 

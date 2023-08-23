@@ -20,7 +20,7 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
     def __init__(
         self, 
         source_datapipe: IterDataPipe, 
-        daynight_method: Union["simple", "elevation"] = "simple",
+        daynight_method: Union["simple", "elevation"] = "elevation",
     ):
         """Fill nighttime NaNs with zeros.
 
@@ -30,7 +30,6 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
                 `AssignDayNightStatusIterDataPipe` for details
         """
         self.source_datapipe = source_datapipe
-        self.elevation_limit = elevation_limit
         
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
@@ -44,7 +43,7 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
             should_fill = is_night & is_nan
 
             # set value
-            logger.debug("Setting night nans to 0")
+            logger.debug("Setting night NaNs to 0")
             xr_data = xr_data.where(~should_fill, other=0.0)
 
             while True:
