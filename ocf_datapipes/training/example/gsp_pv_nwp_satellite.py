@@ -105,8 +105,6 @@ def gsp_pv_nwp_satellite_data_pipeline(
         location_datapipe=location_datapipes[0],
         roi_height_meters=configuration.input_data.gsp.gsp_image_size_pixels_height,
         roi_width_meters=configuration.input_data.gsp.gsp_image_size_pixels_width,
-        y_dim_name="y_osgb",
-        x_dim_name="x_osgb",
         dim_name="gsp_id",
     ).fork(
         3
@@ -116,16 +114,12 @@ def gsp_pv_nwp_satellite_data_pipeline(
         location_datapipe=location_datapipes[1],
         roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
         roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
-        y_dim_name="y_osgb",
-        x_dim_name="x_osgb",
     ).fork(2)
     # take NWP space slice
     nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(
         location_datapipe=location_datapipes[2],
         roi_height_pixels=configuration.input_data.nwp.nwp_image_size_pixels_height,
         roi_width_pixels=configuration.input_data.nwp.nwp_image_size_pixels_width,
-        y_dim_name="y_osgb",
-        x_dim_name="x_osgb",
     ).fork(2)
 
     # take Satellite space slice
@@ -136,8 +130,6 @@ def gsp_pv_nwp_satellite_data_pipeline(
         location_datapipe=location_datapipes[3],
         roi_height_pixels=configuration.input_data.satellite.satellite_image_size_pixels_height,
         roi_width_pixels=configuration.input_data.satellite.satellite_image_size_pixels_width,
-        y_dim_name="y_geostationary",
-        x_dim_name="x_geostationary",
     ).fork(
         2
     )

@@ -15,38 +15,12 @@ from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_osgb,
     load_geostationary_area_definition_and_transform_latlon,
+    spatial_coord_type,
 )
 
+from ocf_datapipes.utils.utils import searchsorted
+
 logger = logging.getLogger(__name__)
-
-
-def _search_coords(ds: xr.Dataset):
-    """Searches the dataset to determine the kind of spatial coordinates present.
-    
-    Args:
-        Dataset with spatial coords
-        
-    Returns:
-        str: The kind of the coordinate system
-        x_coord: Name of the x-coordinate
-        y_coord: Name of the y-coordinate
-    """
-    if "longitude" in ds.coords:
-        return "lat_lon", "longitude", "latitude"
-    elif "x_geostationary" in ds.coords:
-        return "geostationary", "x_geostationary", "y_geostationary"
-    elif "x_osgb" in ds.coords:
-        return "osgb", "x_osgb", "y_osgb"
-    elif "x" in ds.coords:
-        return "xy", "x", "y"
-    else:
-        return None, None, None
-    
-def _search_sorted(a, v, side='left', assume_ascending=True):
-    if assume_ascending:
-        return np.searchsorted(a, v, side=side)
-    else:
-        return np.searchsorted(-a, -v, side=side)
     
 
 @functional_datapipe("create_pv_image")
@@ -101,8 +75,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
             
-            pv_coords, pv_x_dim, pv_y_dim = _search_coords(pv_systems_xr)
-            image_coords, image_x_dim, image_y_dim = _search_coords(image_xr)
+            pv_coords, pv_x_dim, pv_y_dim = spatial_coord_type(pv_systems_xr)
+            image_coords, image_x_dim, image_y_dim = spatial_coord_type(image_xr)
             
             # Check if the coords are ascending
             x_vals = image_xr[image_x_dim].values
@@ -120,7 +94,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             assert y_ascend or y_descend
             
             # Randomly sample systems if too many
-            if self.max_num_pv_systems <= len(pv_systems_xr.pv_system_id.values):
+            if self.max_num_pv_systems <= len(pv_systems_xr.pv_system_id):
                 subset_of_pv_system_ids = self.rng.choice(
                     pv_systems_xr.pv_system_id,
                     size=self.max_num_pv_systems,
@@ -176,8 +150,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                     # Skip the PV system if pvlib normalizarion requested but cannot be completed
                     continue
                     
-                x_idx = _search_sorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
-                y_idx = _search_sorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
+                x_idx = searchsorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
+                y_idx = searchsorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
                 
                 pv_position_dict[(y_idx, x_idx)].append(pv_system)
                         
@@ -230,8 +204,8 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             
             if self.always_return_first:
                 while True:
-                    yield pv_image
-            yield pv_image
+                    yield pv_image_xr
+            yield pv_image_xr
 
 
 def _normalize_by_pvlib(pv_system):

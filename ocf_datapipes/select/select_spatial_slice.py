@@ -15,7 +15,9 @@ from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_osgb,
     move_lat_lon_by_meters,
     osgb_to_lat_lon,
+    spatial_coord_type,
 )
+from ocf_datapipes.utils.utils import searchsorted
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +32,6 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         location_datapipe: IterDataPipe,
         roi_height_pixels: int,
         roi_width_pixels: int,
-        y_dim_name: str = "y",
-        x_dim_name: str = "x",
         location_idx_name: Optional[str] = None,
     ):
         """
@@ -42,8 +42,6 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
             location_datapipe: Location datapipe
             roi_height_pixels: ROI height in pixels
             roi_width_pixels: ROI width in pixels
-            y_dim_name: Dimension name for Y
-            x_dim_name: Dimension name for X
             location_idx_name: Name for location index of unstructured grid data,
                 None if not relevant
         """
@@ -51,37 +49,32 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
         self.location_datapipe = location_datapipe
         self.roi_height_pixels = roi_height_pixels
         self.roi_width_pixels = roi_width_pixels
-        self.y_dim_name = y_dim_name
-        self.x_dim_name = x_dim_name
         self.location_idx_name = location_idx_name
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
             logger.debug("Selecting spatial slice with pixels")
+            
+            xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+            
             if self.location_idx_name is not None:
                 selected = _get_points_from_unstructured_grids(
                     xr_data=xr_data,
                     location=location,
-                    x_dim_name=self.x_dim_name,
-                    y_dim_name=self.y_dim_name,
                     location_idx_name=self.location_idx_name,
                     num_points=self.roi_width_pixels * self.roi_height_pixels,
                 )
                 yield selected
 
-            if "geostationary" in self.x_dim_name:
+            if xr_coords=="geostationary":
                 center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
                     xr_data=xr_data,
                     center_osgb=location,
-                    x_dim_name=self.x_dim_name,
-                    y_dim_name=self.y_dim_name,
                 )
             else:
                 center_idx: Location = _get_idx_of_pixel_closest_to_poi(
                     xr_data=xr_data,
                     location=location,
-                    x_dim_name=self.x_dim_name,
-                    y_dim_name=self.y_dim_name,
                 )
 
             # Compute the index for left and right:
@@ -95,18 +88,18 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
 
             # Sanity check!
             assert left_idx >= 0, f"{left_idx=} must be >= 0!"
-            data_width_pixels = len(xr_data[self.x_dim_name])
+            data_width_pixels = len(xr_data[xr_x_dim])
             assert right_idx <= data_width_pixels, f"{right_idx=} must be <= {data_width_pixels=}"
             assert top_idx >= 0, f"{top_idx=} must be >= 0!"
-            data_height_pixels = len(xr_data[self.y_dim_name])
+            data_height_pixels = len(xr_data[xr_y_dim])
             assert (
                 bottom_idx <= data_height_pixels
             ), f"{bottom_idx=} must be <= {data_height_pixels=}"
 
             selected = xr_data.isel(
                 {
-                    self.x_dim_name: slice(left_idx, right_idx),
-                    self.y_dim_name: slice(top_idx, bottom_idx),
+                    xr_x_dim: slice(left_idx, right_idx),
+                    xr_y_dim: slice(top_idx, bottom_idx),
                 }
             )
             yield selected
@@ -148,9 +141,12 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             # Compute the index for left and right:
             logger.debug("Getting Spatial Slice Meters")
 
+            xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+            
             half_height = self.roi_height_meters // 2
             half_width = self.roi_width_meters // 2
             
+            # Find the bounding box values for the location in either lat-lon or OSGB coord systems
             if location.coordinate_system == "lat_lon":
                 top, right = move_lat_lon_by_meters(
                     location.y, location.x, half_height, half_width
@@ -168,56 +164,40 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             else:
                 raise ValueError(
                     f"Location coord system not recognized: {location.coordinate_system}")
-                
-            if "longitude" in xr_data.coords:
-                x_dim_name = "longitude"
-                y_dim_name = "latitude"
-                xr_coords = "lat_lon"
-            elif "x_osgb" in xr_data.coords:
-                x_dim_name = "x_osgb"
-                y_dim_name = "y_osgb"
-                xr_coords = "osgb"
-            elif "x_geostationary" in xr_data.coords:
-                x_dim_name = "x_geostationary"
-                y_dim_name = "y_geostationary"
-                xr_coords = "geostationary"
-            else:
-                raise ValueError(
-                    "None of x_osgb, x_geostationary, or longitude found in coords: "
-                    f"{xr_data.coords}"
-                )
             
             if self.dim_name is None:  # Do it off coordinates, not ID
+                
                 if xr_coords=="geostationary":
                     left, bottom, right, top = _convert_to_geostationary(
                         location, xr_data, left, bottom, right, top
                     )
-
+                    
                     x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
-                    y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
-                        bottom <= xr_data.y_geostationary
-                    )
+                    y_mask = (bottom <= xr_data.y_geostationary) & (xr_data.y_geostationary <= top)
+                    
                     selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
                 
                 elif xr_coords=="lat_lon":
+                    
                     if location.coordinate_system == "osgb":
-                        # Convert to geostationary edges
                         bottom, left = osgb_to_lat_lon(x=left, y=bottom)
                         top, right = osgb_to_lat_lon(x=right, y=top)
+                    
                     x_mask = (left <= xr_data.longitude) & (xr_data.longitude <= right)
-                    y_mask = (xr_data.latitude <= top) & (  # Y is flipped
-                        bottom <= xr_data.latitude
-                    )
+                    y_mask =  (bottom <= xr_data.latitude) & (xr_data.latitude <= top)
                     selected = xr_data.isel(longitude=x_mask, latitude=y_mask)
                 
                 elif xr_coords=="osgb":
+                    
                     if location.coordinate_system == "lat_lon":
-                        # Convert to OSGB
                         left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
                         right, top = lat_lon_to_osgb(longitude=right, latitude=top)
-                    # Select data in the region of interest:
+                        
+                    x_mask = (left <= xr_data.longitude) & (xr_data.longitude <= right)
+                    y_mask = (bottom <= xr_data.latitude) & (xr_data.latitude <= top)
+                    
                     x_mask = (left <= xr_data.x_osgb) & (xr_data.x_osgb <= right)
-                    y_mask = (xr_data.y_osgb <= top) & (bottom <= xr_data.y_osgb)
+                    y_mask = (bottom <= xr_data.y_osgb) & (xr_data.y_osgb <= top)
                     selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
 
             else:
@@ -234,10 +214,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                     right, top = lat_lon_to_osgb(longitude=right, latitude=top)
                     
                 id_mask = (
-                    (left <= getattr(xr_data, x_dim_name))
-                    & (getattr(xr_data, x_dim_name) <= right)
-                    & (getattr(xr_data, y_dim_name) <= top)
-                    & (bottom <= getattr(xr_data, y_dim_name))
+                    (left <= xr_data[xr_x_dim]) & (xr_data[xr_x_dim] <= right) &
+                    (bottom <= xr_data[xr_y_dim]) & (xr_data[xr_y_dim] <= top)
                 )
                 selected = xr_data.isel({self.dim_name: id_mask})
             yield selected
@@ -260,31 +238,29 @@ def _convert_to_geostationary(location, xr_data, left, bottom, right, top):
 def _get_idx_of_pixel_closest_to_poi(
     xr_data: xr.DataArray,
     location: Location,
-    y_dim_name: str = "y",
-    x_dim_name: str = "x",
 ) -> Location:
     """
     Return x and y index location of pixel at center of region of interest.
 
     Args:
         xr_data: Xarray dataset
-        location: Center in OSGB coordinates
-        y_dim_name: Y dimension name
-        x_dim_name: X dimension name
-
+        location: Center
     Returns:
         The Location for the center pixel
     """
-    y_index = xr_data.get_index(y_dim_name)
-    x_index = xr_data.get_index(x_dim_name)
+    xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+    
+    y_index = xr_data.get_index(xr_y_dim)
+    x_index = xr_data.get_index(xr_x_dim)
+    
     if location.coordinate_system == "osgb":
-        if "x_osgb" == x_dim_name:
+        if xr_coords=="osgb":
             return Location(
                 y=y_index.get_indexer([float(location.y)], method="nearest")[0],
                 x=x_index.get_indexer([float(location.x)], method="nearest")[0],
                 coordinate_system="idx",
             )
-        elif "longitude" == x_dim_name:
+        elif xr_coords=="lat_lon":
             latitude, longitude = osgb_to_lat_lon(x=location.x, y=location.y)
             return Location(
                 y=y_index.get_indexer([float(latitude)], method="nearest")[0],
@@ -292,15 +268,18 @@ def _get_idx_of_pixel_closest_to_poi(
                 coordinate_system="idx",
             )
         else:
-            return NotImplementedError("Only 'x_osgb' and 'longitude' are supported")
+            raise NotImplementedError(
+                f"Only 'osgb' and 'lat_lon' are supported - not '{xr_coords}'"
+            )
+    
     elif location.coordinate_system == "lat_lon":
-        if "longitude" == x_dim_name:
+        if xr_coords=="lat_lon":
             return Location(
                 y=y_index.get_indexer([float(location.y)], method="nearest")[0],
                 x=x_index.get_indexer([float(location.x)], method="nearest")[0],
                 coordinate_system="idx",
             )
-        elif "x_osgb" == x_dim_name:
+        elif xr_coords=="osgb":
             x_osgb, y_osgb = lat_lon_to_osgb(longitude=location.x, latitude=location.y)
             return Location(
                 y=y_index.get_indexer([float(y_osgb)], method="nearest")[0],
@@ -308,14 +287,14 @@ def _get_idx_of_pixel_closest_to_poi(
                 coordinate_system="idx",
             )
         else:
-            return NotImplementedError("Only 'x_osgb' and 'longitude' are supported")
+            raise NotImplementedError(
+                f"Only 'osgb' and 'lat_lon' are supported - not '{xr_coords}'"
+            )
 
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
     xr_data: xr.DataArray,
     center_osgb: Location,
-    x_dim_name="x_geostationary",
-    y_dim_name="y_geostationary",
 ) -> Location:
     """
     Return x and y index location of pixel at center of region of interest.
@@ -323,34 +302,37 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     Args:
         xr_data: Xarray dataset
         center_osgb: Center in OSGB coordinates
-        x_dim_name: X dimension name
-        y_dim_name: Y dimension name
 
     Returns:
         Location for the center pixel in geostationary coordinates
-    """
+    """    
+    
+    xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+    
     _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-    center_geostationary_tuple = _osgb_to_geostationary(xx=center_osgb.x, yy=center_osgb.y)
-    center_geostationary = Location(
-        x=center_geostationary_tuple[0],
-        y=center_geostationary_tuple[1],
-        coordinate_system="geostationary",
-    )
+    x, y = _osgb_to_geostationary(xx=center_osgb.x, yy=center_osgb.y)
+    center_geostationary = Location(x=x, y=y, coordinate_system="geostationary")
 
     # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:
-    x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
-    # y_geostationary is in descending order:
-    y_index_at_center = len(xr_data[y_dim_name]) - (
-        np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
+    x_index_at_center = searchsorted(
+        xr_data[xr_x_dim].values, 
+        center_geostationary.x,
+        assume_ascending=True
     )
+
+    # y_geostationary is in descending order:
+    y_index_at_center = searchsorted(
+        xr_data[xr_y_dim].values, 
+        center_geostationary.y,
+        assume_ascending=False
+    )
+    
     return Location(x=x_index_at_center, y=y_index_at_center)
 
 
 def _get_points_from_unstructured_grids(
     xr_data: xr.DataArray,
     location: Location,
-    y_dim_name: str = "y",
-    x_dim_name: str = "x",
     location_idx_name: str = "values",
     num_points: int = 1,
 ):
@@ -363,8 +345,6 @@ def _get_points_from_unstructured_grids(
     Args:
         xr_data: Xarray dataset
         location: Location of center point
-        y_dim_name: y_dim name
-        x_dim_name: x_dim name
         location_idx_name: Name of the index values dimension
             (i.e. where we index into to get the lat/lon for that point)
         num_points: Number of points to return (should be width * height)
@@ -372,6 +352,9 @@ def _get_points_from_unstructured_grids(
     Returns:
         The closest points from the grid
     """
+    xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+    assert xr_coords=="lat_lon"
+    
     # Check if need to convert from different coordinate system to lat/lon
     if location.coordinate_system == "osgb":
         latitude, longitude = osgb_to_lat_lon(x=location.x, y=location.y)
@@ -386,8 +369,8 @@ def _get_points_from_unstructured_grids(
         )
 
     # Extract lat, lon, and locidx data
-    lat = xr_data[y_dim_name].values
-    lon = xr_data[x_dim_name].values
+    lat = xr_data.longitude.values
+    lon = xr_data.latitude.values
     locidx = xr_data[location_idx_name].values
 
     # Create a KDTree

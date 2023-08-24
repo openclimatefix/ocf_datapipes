@@ -15,10 +15,9 @@ from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
     load_geostationary_area_definition_and_transform_osgb,
     load_geostationary_area_definition_and_transform_latlon,
+    spatial_coord_type,
 )
-from ocf_datapipes.transform.xarray.pv.create_pv_image import (
-    _search_coords, _search_sorted
-)
+from ocf_datapipes.utils.utils import searchsorted
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +65,8 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
             
-            pv_coords, pv_x_dim, pv_y_dim = _search_coords(pv_systems_xr)
-            image_coords, image_x_dim, image_y_dim = _search_coords(image_xr)
+            pv_coords, pv_x_dim, pv_y_dim = spatial_coord_type(pv_systems_xr)
+            image_coords, image_x_dim, image_y_dim = spatial_coord_type(image_xr)
             
             # Check if the coords are ascending
             x_vals = image_xr[image_x_dim].values
@@ -137,8 +136,8 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                     # Skip the PV system if not inside the image
                     continue
                     
-                x_idx = _search_sorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
-                y_idx = _search_sorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
+                x_idx = searchsorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
+                y_idx = searchsorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
                 
                 # TODO: should we be using an average here? Overwiting will occur as it is
                 pv_meta_image[:, y_idx, x_idx] = np.array([pv_system["tilt"], pv_system["orientation"]])

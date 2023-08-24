@@ -122,8 +122,6 @@ def pseudo_irradiance_datapipe(
             pv_nwp_image_loc_datapipe,
             roi_height_pixels=size,
             roi_width_pixels=size,
-            x_dim_name="x_osgb",
-            y_dim_name="y_osgb",
         )
         nwp_datapipe = ThreadPoolMapper(
             nwp_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
@@ -138,8 +136,6 @@ def pseudo_irradiance_datapipe(
             pv_sat_image_loc_datapipe,
             roi_height_pixels=size,
             roi_width_pixels=size,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
         )
         sat_datapipe = ThreadPoolMapper(
             sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
@@ -153,8 +149,6 @@ def pseudo_irradiance_datapipe(
             pv_hrv_image_loc_datapipe,
             roi_height_pixels=size,
             roi_width_pixels=size,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
         )
         sat_hrv_datapipe = ThreadPoolMapper(
             sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
@@ -167,8 +161,6 @@ def pseudo_irradiance_datapipe(
             pv_hrv_image_loc_datapipe,
             roi_height_pixels=size,
             roi_width_pixels=size,
-            x_dim_name="x_osgb",
-            y_dim_name="y_osgb",
         )
         topo_datapipe = ThreadPoolMapper(
             topo_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size

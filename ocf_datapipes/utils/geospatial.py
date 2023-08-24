@@ -5,6 +5,7 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 import pvlib
 import pyproj
 
@@ -170,3 +171,26 @@ def move_lat_lon_by_meters(lat, lon, meters_north, meters_east):
     new_lat = _geod.fwd(lons=lon, lats=lat, az=0, dist=meters_north)[1]
     new_lon = _geod.fwd(lons=lon, lats=lat, az=90, dist=meters_east)[0]
     return new_lat, new_lon
+
+
+def spatial_coord_type(ds: xr.Dataset):
+    """Searches the dataset to determine the kind of spatial coordinates present.
+    
+    Args:
+        Dataset with spatial coords
+        
+    Returns:
+        str: The kind of the coordinate system
+        x_coord: Name of the x-coordinate
+        y_coord: Name of the y-coordinate
+    """
+    if "longitude" in ds.coords:
+        return "lat_lon", "longitude", "latitude"
+    elif "x_geostationary" in ds.coords:
+        return "geostationary", "x_geostationary", "y_geostationary"
+    elif "x_osgb" in ds.coords:
+        return "osgb", "x_osgb", "y_osgb"
+    elif "x" in ds.coords:
+        return "xy", "x", "y"
+    else:
+        return None, None, None
