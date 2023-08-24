@@ -8,7 +8,6 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
-from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
 
 logger = logging.getLogger(__name__)
 

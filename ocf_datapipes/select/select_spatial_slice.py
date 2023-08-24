@@ -10,11 +10,11 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
-    lat_lon_to_osgb,
-    load_geostationary_area_definition_and_transform_latlon,
-    load_geostationary_area_definition_and_transform_osgb,
-    move_lat_lon_by_meters,
-    osgb_to_lat_lon,
+    lon_lat_to_osgb,
+    osgb_to_lon_lat,
+    lon_lat_to_geostationary_area_coords,
+    osgb_to_geostationary_area_coords,
+    move_lon_lat_by_meters,
     spatial_coord_type,
 )
 from ocf_datapipes.utils.utils import searchsorted
@@ -140,7 +140,8 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
             # Compute the index for left and right:
             logger.debug("Getting Spatial Slice Meters")
-
+            
+            # Get the spatial coords of the xarray data
             xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
             
             half_height = self.roi_height_meters // 2
@@ -148,12 +149,12 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             
             # Find the bounding box values for the location in either lat-lon or OSGB coord systems
             if location.coordinate_system == "lat_lon":
-                top, right = move_lat_lon_by_meters(
-                    location.y, location.x, half_height, half_width
+                right, top = move_lon_lat_by_meters(
+                    location.x, location.y, half_width, half_height,
                 )
-                bottom, left = move_lat_lon_by_meters(
-                    location.y, location.x, -half_height, -half_width
-                )
+                left, bottom = move_lon_lat_by_meters(
+                    location.x, location.y, -half_width, -half_height,
+                )                
                 
             elif location.coordinate_system == "osgb":
                 left = location.x - half_width
@@ -165,74 +166,66 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
                 raise ValueError(
                     f"Location coord system not recognized: {location.coordinate_system}")
             
-            if self.dim_name is None:  # Do it off coordinates, not ID
+            # Change the bounding coordinates [left, right, bottom, top] to the same
+            # coordinate system as the xarray data            
+            (left, right), (bottom, top) = convert_coords_to_match_xarray(
+                x=np.array([left, right], dtype=np.float32),
+                y=np.array([bottom, top], dtype=np.float32),
+                from_coords=location.coordinate_system,
+                xr_data=xr_data,
+            )
+            
+            # Do it off coordinates, not ID
+            if self.dim_name is None:  
                 
-                if xr_coords=="geostationary":
-                    left, bottom, right, top = _convert_to_geostationary(
-                        location, xr_data, left, bottom, right, top
-                    )
-                    
-                    x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
-                    y_mask = (bottom <= xr_data.y_geostationary) & (xr_data.y_geostationary <= top)
-                    
-                    selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
-                
-                elif xr_coords=="lat_lon":
-                    
-                    if location.coordinate_system == "osgb":
-                        bottom, left = osgb_to_lat_lon(x=left, y=bottom)
-                        top, right = osgb_to_lat_lon(x=right, y=top)
-                    
-                    x_mask = (left <= xr_data.longitude) & (xr_data.longitude <= right)
-                    y_mask =  (bottom <= xr_data.latitude) & (xr_data.latitude <= top)
-                    selected = xr_data.isel(longitude=x_mask, latitude=y_mask)
-                
-                elif xr_coords=="osgb":
-                    
-                    if location.coordinate_system == "lat_lon":
-                        left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
-                        right, top = lat_lon_to_osgb(longitude=right, latitude=top)
-                        
-                    x_mask = (left <= xr_data.longitude) & (xr_data.longitude <= right)
-                    y_mask = (bottom <= xr_data.latitude) & (xr_data.latitude <= top)
-                    
-                    x_mask = (left <= xr_data.x_osgb) & (xr_data.x_osgb <= right)
-                    y_mask = (bottom <= xr_data.y_osgb) & (xr_data.y_osgb <= top)
-                    selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
+                # Select a patch from the xarray data
+                x_mask = (left <= xr_data[xr_x_dim]) & (xr_data[xr_x_dim] <= right)
+                y_mask = (bottom <= xr_data[xr_y_dim]) & (xr_data[xr_y_dim] <= top)
+                selected = xr_data.isel({xr_x_dim:x_mask, xr_y_dim:y_mask})
 
             else:
                 # Select data in the region of interest and ID:
                 # This also works for unstructured grids
-                # Need to check coordinate systems match
-                if location.coordinate_system == "osgb" and xr_coords=="lat_lon":
-                    # Convert to lat_lon edges
-                    left, bottom = osgb_to_lat_lon(x=left, y=bottom)
-                    right, top = osgb_to_lat_lon(x=right, y=top)
-
-                elif location.coordinate_system == "lat_lon" and xr_coords=="osgb":
-                    left, bottom = lat_lon_to_osgb(longitude=left, latitude=bottom)
-                    right, top = lat_lon_to_osgb(longitude=right, latitude=top)
                     
                 id_mask = (
                     (left <= xr_data[xr_x_dim]) & (xr_data[xr_x_dim] <= right) &
                     (bottom <= xr_data[xr_y_dim]) & (xr_data[xr_y_dim] <= top)
                 )
                 selected = xr_data.isel({self.dim_name: id_mask})
+                
             yield selected
 
 
-def _convert_to_geostationary(location, xr_data, left, bottom, right, top):
-    if location.coordinate_system == "osgb":
-        # Convert to geostationary edges
-        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-        left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
-        right, top = _osgb_to_geostationary(xx=right, yy=top)
-    elif location.coordinate_system == "lat_lon":
-        # Convert to geostationary edges
-        _lat_lon_to_geostationary = load_geostationary_area_definition_and_transform_latlon(xr_data)
-        left, bottom = _lat_lon_to_geostationary(xx=left, yy=bottom)
-        right, top = _lat_lon_to_geostationary(xx=right, yy=top)
-    return left, bottom, right, top
+def convert_coords_to_match_xarray(x, y, from_coords, xr_data):
+    
+    xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+
+    assert from_coords in ["osgb", "lat_lon"]
+    assert xr_coords in ["geostationary", "osgb", "lat_lon"]
+    
+    if xr_coords=="geostationary":
+
+        if from_coords == "osgb":
+            x, y = osgb_to_geostationary_area_coords(x, y, xr_data)
+
+        elif from_coords == "lat_lon":
+            x, y = lon_lat_to_geostationary_area_coords(x, y, xr_data)
+
+    elif xr_coords=="lat_lon":
+
+        if from_coords == "osgb":
+            x, y = osgb_to_lon_lat(x, y)
+        
+        # else the from_coords=="lat_lon" and we don't need to convert
+
+    elif xr_coords=="osgb":
+
+        if from_coords == "lat_lon":
+            x, y = lon_lat_to_osgb(x, y)
+            
+        # else the from_coords=="osgb" and we don't need to convert
+    
+    return x, y
 
 
 def _get_idx_of_pixel_closest_to_poi(
@@ -309,8 +302,7 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
     
-    _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-    x, y = _osgb_to_geostationary(xx=center_osgb.x, yy=center_osgb.y)
+    x, y = osgb_to_geostationary_area_coords(x=center_osgb.x, y=center_osgb.y, xr_data=xr_data)
     center_geostationary = Location(x=x, y=y, coordinate_system="geostationary")
 
     # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:

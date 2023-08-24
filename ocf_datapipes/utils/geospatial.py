@@ -21,32 +21,168 @@ OSGB36 = 27700
 WGS84 = 4326
 
 
-_osgb_to_lat_lon = pyproj.Transformer.from_crs(crs_from=OSGB36, crs_to=WGS84).transform
-_lat_lon_to_osgb = pyproj.Transformer.from_crs(crs_from=WGS84, crs_to=OSGB36).transform
+_osgb_to_lon_lat = pyproj.Transformer.from_crs(crs_from=OSGB36, crs_to=WGS84, always_xy=True).transform
+_lon_lat_to_osgb = pyproj.Transformer.from_crs(crs_from=WGS84, crs_to=OSGB36, always_xy=True).transform
 _geod = pyproj.Geod(ellps="WGS84")
 
 
-def osgb_to_lat_lon(
+def osgb_to_lon_lat(
     x: Union[Number, np.ndarray], y: Union[Number, np.ndarray]
 ) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
-    """Change OSGB coordinates to lat, lon.
+    """Change OSGB coordinates to lon, lat.
 
     Args:
         x: osgb east-west
         y: osgb north-south
-    Return: 2-tuple of latitude (north-south), longitude (east-west).
+    Return: 2-tuple of longitude (east-west), latitude (north-south)
     """
-    return _osgb_to_lat_lon(xx=x, yy=y)
+    return _osgb_to_lon_lat(xx=x, yy=y)
 
 
-def lat_lon_to_osgb(
-    latitude: Union[Number, np.ndarray], longitude: Union[Number, np.ndarray]
+def lon_lat_to_osgb(
+    x: Union[Number, np.ndarray], y: Union[Number, np.ndarray],
 ) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
-    """Change lat, lon coordinates to OSGB.
+    """Change lon-lat coordinates to OSGB.
 
-    Return: 2-tuple of OSGB x, y.
+    Args:
+        x: longitude east-west
+        y: latitude north-south
+
+    Return: 2-tuple of OSGB x, y
     """
-    return _lat_lon_to_osgb(xx=latitude, yy=longitude)
+    return _lon_lat_to_osgb(xx=x, yy=y)
+
+
+def lon_lat_to_geostationary_area_coords(
+    x: Union[Number, np.ndarray], 
+    y: Union[Number, np.ndarray],
+    xr_data: Union[xr.Dataset, xr.DataArray],
+) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
+    """Loads geostationary area and change from lon-lat to geostationaery coords
+
+    Args:
+        x: Longitude east-west
+        y: Latitude north-south
+        xr_data: xarray object with geostationary area
+
+    Returns:
+        Geostationary coords: x, y
+    """
+    # Only load these if using geostationary projection
+    import pyproj
+    import pyresample
+
+    try:
+        area_definition_yaml = xr_data.attrs["area"]
+    except KeyError:
+        area_definition_yaml = xr_data.data.attrs["area"]
+    geostationary_area_definition = pyresample.area_config.load_area_from_string(
+        area_definition_yaml
+    )
+    geostationary_crs = geostationary_area_definition.crs
+    lonlat_to_geostationary = pyproj.Transformer.from_crs(
+        crs_from=WGS84, crs_to=geostationary_crs, always_xy=True,
+    ).transform
+    return lonlat_to_geostationary(xx=x, yy=y)
+
+
+def osgb_to_geostationary_area_coords(
+    x: Union[Number, np.ndarray], 
+    y: Union[Number, np.ndarray],
+    xr_data: Union[xr.Dataset, xr.DataArray],
+) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
+    """Loads geostationary area and transformation from OSGB to geostationary coords
+
+    Args:
+        x: osgb east-west
+        y: osgb north-south
+        xr_data: xarray object with geostationary area
+
+    Returns:
+        Geostationary coords: x, y
+    """
+    # Only load these if using geostationary projection
+    import pyproj
+    import pyresample
+
+    try:
+        area_definition_yaml = xr_data.attrs["area"]
+    except KeyError:
+        area_definition_yaml = xr_data.data.attrs["area"]
+    geostationary_area_definition = pyresample.area_config.load_area_from_string(
+        area_definition_yaml
+    )
+    geostationary_crs = geostationary_area_definition.crs
+    osgb_to_geostationary = pyproj.Transformer.from_crs(
+        crs_from=OSGB36, crs_to=geostationary_crs, always_xy=True
+    ).transform
+    return osgb_to_geostationary(xx=x, yy=y)
+
+
+def geostationary_area_coords_to_osgb(
+    x: Union[Number, np.ndarray], 
+    y: Union[Number, np.ndarray],
+    xr_data: Union[xr.Dataset, xr.DataArray],
+) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
+    """Loads geostationary area and change from geostationary coords to OSGB
+
+    Args:
+        x: geostationary x coord
+        y: geostationary y coord
+        xr_data: xarray object with geostationary area
+
+    Returns:
+        OSGB x, OSGB y
+    """
+    # Only load these if using geostationary projection
+    import pyproj
+    import pyresample
+
+    try:
+        area_definition_yaml = xr_data.attrs["area"]
+    except KeyError:
+        area_definition_yaml = xr_data.data.attrs["area"]
+    geostationary_area_definition = pyresample.area_config.load_area_from_string(
+        area_definition_yaml
+    )
+    geostationary_crs = geostationary_area_definition.crs
+    geostationary_to_osgb = pyproj.Transformer.from_crs(
+        crs_from=geostationary_crs, crs_to=OSGB36, always_xy=True
+    ).transform
+    return geostationary_to_osgb(xx=x, yy=y)
+
+
+def geostationary_area_coords_to_lonlat(
+    x: Union[Number, np.ndarray], 
+    y: Union[Number, np.ndarray],
+    xr_data: Union[xr.Dataset, xr.DataArray],
+) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
+    """Loads geostationary area and change from geostationary to lon-lat coords
+
+    Args:
+        x: geostationary x coord
+        y: geostationary y coord
+        xr_data: xarray object with geostationary area
+
+    Returns:
+        longitude, latitude
+    """
+    # Only load these if using geostationary projection
+    import pyproj
+    import pyresample
+
+    try:
+        area_definition_yaml = xr_data.attrs["area"]
+    except KeyError:
+        area_definition_yaml = xr_data.data.attrs["area"]
+    geostationary_area_definition = pyresample.area_config.load_area_from_string(
+        area_definition_yaml
+    )
+    geostationary_crs = geostationary_area_definition.crs
+    geostationary_to_lonlat = pyproj.Transformer.from_crs(
+        crs_from=geostationary_crs, crs_to=WGS84, always_xy=True
+    ).transform
+    return geostationary_to_lonlat(xx=x, yy=y)
 
 
 def calculate_azimuth_and_elevation_angle(
@@ -77,100 +213,22 @@ def calculate_azimuth_and_elevation_angle(
     return solpos[["elevation", "azimuth"]]
 
 
-def load_geostationary_area_definition_and_transform_osgb(xr_data):
+def move_lon_lat_by_meters(lon, lat, meters_east, meters_north):
     """
-    Loads geostationary area and transformation from OSGB to geostationaery
+    Move a (lon, lat) by a certain number of meters north and east
 
     Args:
-        xr_data: Xarray object with geostationary area
-
-    Returns:
-        The transform
-    """
-    # Only load these if using geostationary projection
-    import pyproj
-    import pyresample
-
-    try:
-        area_definition_yaml = xr_data.attrs["area"]
-    except KeyError:
-        area_definition_yaml = xr_data.data.attrs["area"]
-    geostationary_area_definition = pyresample.area_config.load_area_from_string(
-        area_definition_yaml
-    )
-    geostationary_crs = geostationary_area_definition.crs
-    osgb_to_geostationary = pyproj.Transformer.from_crs(
-        crs_from=OSGB36, crs_to=geostationary_crs
-    ).transform
-    return osgb_to_geostationary
-
-
-def load_geostationary_area_definition_and_transform_latlon(xr_data):
-    """
-    Loads geostationary area and transformation from Latlon to geostationaery
-
-    Args:
-        xr_data: Xarray object with geostationary area
-
-    Returns:
-        The transform
-    """
-    # Only load these if using geostationary projection
-    import pyproj
-    import pyresample
-
-    area_definition_yaml = xr_data.attrs["area"]
-    geostationary_area_definition = pyresample.area_config.load_area_from_string(
-        area_definition_yaml
-    )
-    geostationary_crs = geostationary_area_definition.crs
-    latlon_to_geostationary = pyproj.Transformer.from_crs(
-        crs_from=WGS84, crs_to=geostationary_crs
-    ).transform
-    return latlon_to_geostationary
-
-
-def load_geostationary_area_definition_and_transform_to_latlon(xr_data):
-    """
-    Loads geostationary area and transformation from Latlon to geostationaery
-
-    Args:
-        xr_data: Xarray object with geostationary area
-
-    Returns:
-        The transform
-    """
-    # Only load these if using geostationary projection
-    import pyproj
-    import pyresample
-
-    area_definition_yaml = xr_data.attrs["area"]
-    geostationary_area_definition = pyresample.area_config.load_area_from_string(
-        area_definition_yaml
-    )
-    geostationary_crs = geostationary_area_definition.crs
-    geostationary_to_latlon = pyproj.Transformer.from_crs(
-        crs_to=WGS84, crs_from=geostationary_crs
-    ).transform
-    return geostationary_to_latlon
-
-
-def move_lat_lon_by_meters(lat, lon, meters_north, meters_east):
-    """
-    Move a lat lon by a certain number of meters north and east
-
-    Args:
-        lat: latitude
         lon: longitude
-        meters_north: number of meters to move north
+        lat: latitude
         meters_east: number of meters to move east
+        meters_north: number of meters to move north
 
     Returns:
         tuple of lat, lon
     """
-    new_lat = _geod.fwd(lons=lon, lats=lat, az=0, dist=meters_north)[1]
     new_lon = _geod.fwd(lons=lon, lats=lat, az=90, dist=meters_east)[0]
-    return new_lat, new_lon
+    new_lat = _geod.fwd(lons=lon, lats=lat, az=0, dist=meters_north)[1]
+    return new_lon, new_lat
 
 
 def spatial_coord_type(ds: xr.Dataset):

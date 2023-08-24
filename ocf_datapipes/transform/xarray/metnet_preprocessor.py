@@ -10,9 +10,8 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.geospatial import (
-    load_geostationary_area_definition_and_transform_osgb,
-    load_geostationary_area_definition_and_transform_to_latlon,
-    osgb_to_lat_lon,
+    geostationary_area_coords_to_lonlat,
+    osgb_to_geostationary_area_coords,
 )
 from ocf_datapipes.utils.parallel import run_with_threadpool
 from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
@@ -231,18 +230,20 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
     top = location.y + half_height
     if "x_geostationary" in xr_data.coords:
         # Convert to geostationary edges
-        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-        left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
-        right, top = _osgb_to_geostationary(xx=right, yy=top)
-        x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
-        y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
-            bottom <= xr_data.y_geostationary
+        (left, right), (bottom, top) = osgb_to_geostationary_area_coords(
+            x=np.array([left, right]),
+            y=np.array([bottom, top]),
+            xr_data=xr_data,
         )
+        x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
+        y_mask = (bottom <= xr_data.y_geostationary) & (xr_data.y_geostationary <= top)
         selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
     elif "x" in xr_data.coords:
-        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-        left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
-        right, top = _osgb_to_geostationary(xx=right, yy=top)
+        (left, right), (bottom, top) = osgb_to_geostationary_area_coords(
+            x=np.array([left, right]),
+            y=np.array([bottom, top]),
+            xr_data=xr_data,
+        )
         x_mask = (left <= xr_data.x) & (xr_data.x <= right)
         y_mask = (xr_data.y <= top) & (bottom <= xr_data.y)  # Y is flipped
         selected = xr_data.isel(x=x_mask, y=y_mask)
@@ -301,11 +302,13 @@ def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
         dtype=np.float32,
     )
     if "geostationary" in x_dim:
-        transform_to_latlon = load_geostationary_area_definition_and_transform_to_latlon(image_xr)
-        lats, lons = transform_to_latlon(xx=image_xr[x_dim].values, yy=image_xr[y_dim].values)
+        lons, lats = geostationary_area_coords_to_lonlat(
+            x=image_xr[x_dim].values, 
+            y=image_xr[y_dim].values,
+            xr_data=image_xr
+        )
     else:
-        transform_to_latlon = osgb_to_lat_lon
-        lats, lons = transform_to_latlon(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
+        lons, lats = osgb_to_lon_lat(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
     time_utc = image_xr[time_dim].values
 
     # Loop round each example to get the Sun's elevation and azimuth:

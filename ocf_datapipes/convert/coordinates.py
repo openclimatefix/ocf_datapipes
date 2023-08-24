@@ -6,14 +6,14 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.geospatial import (
-    lat_lon_to_osgb,
-    load_geostationary_area_definition_and_transform_latlon,
-    osgb_to_lat_lon,
+    lon_lat_to_osgb,
+    geostationary_area_coords_to_lonlat,
+    osgb_to_lon_lat,
 )
 
 
-@functional_datapipe("convert_latlon_to_osgb")
-class ConvertLatLonToOSGBIterDataPipe(IterDataPipe):
+@functional_datapipe("convert_lonlat_to_osgb")
+class ConvertLonLatToOSGBIterDataPipe(IterDataPipe):
     """Convert from Lat/Lon object to OSGB"""
 
     def __init__(self, source_datapipe: IterDataPipe):
@@ -28,19 +28,19 @@ class ConvertLatLonToOSGBIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Convert from Lat/Lon to OSGB"""
         for xr_data in self.source_datapipe:
-            xr_data["x_osgb"], xr_data["y_osgb"] = lat_lon_to_osgb(
-                latitude=xr_data["latitude"], longitude=xr_data["longitude"]
+            xr_data["x_osgb"], xr_data["y_osgb"] = lon_lat_to_osgb(
+                 longitude=xr_data["longitude"], latitude=xr_data["latitude"],
             )
             yield xr_data
 
 
-@functional_datapipe("convert_osgb_to_latlon")
-class ConvertOSGBToLatLonIterDataPipe(IterDataPipe):
+@functional_datapipe("convert_osgb_to_lonlat")
+class ConvertOSGBToLonLatIterDataPipe(IterDataPipe):
     """Convert from OSGB to Lat/Lon"""
 
     def __init__(self, source_datapipe: IterDataPipe):
         """
-        Convert from OSGB to Lat/Lon
+        Convert from OSGB to lon-lat coordinates
 
         Args:
             source_datapipe: Datapipe emitting Xarray objects with OSGB data
@@ -50,19 +50,19 @@ class ConvertOSGBToLatLonIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Convert and add lat/lon to Xarray object"""
         for xr_data in self.source_datapipe:
-            xr_data["latitude"], xr_data["longitude"] = osgb_to_lat_lon(
+            xr_data["longitude"], xr_data["latitude"] = osgb_to_lon_lat(
                 x=xr_data["x_osgb"], y=xr_data["y_osgb"]
             )
             yield xr_data
 
 
-@functional_datapipe("convert_geostationary_to_latlon")
-class ConvertGeostationaryToLatLonIterDataPipe(IterDataPipe):
-    """Convert from geostationary to Lat/Lon points"""
+@functional_datapipe("convert_geostationary_to_lonlat")
+class ConvertGeostationaryToLonLatIterDataPipe(IterDataPipe):
+    """Convert from geostationary to Lon/Lat points"""
 
     def __init__(self, source_datapipe: IterDataPipe):
         """
-        Convert from Geostationary to Lat/Lon points and add to Xarray object
+        Convert from Geostationary to Lon/Lat points and add to Xarray object
 
         Args:
             source_datapipe: Datapipe emitting Xarray object with geostationary points
@@ -70,10 +70,10 @@ class ConvertGeostationaryToLatLonIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        """Convert from geostationary to Lat/Lon and yield the Xarray object"""
+        """Convert from geostationary to Lon/Lat and yield the Xarray object"""
         for xr_data in self.source_datapipe:
-            transform = load_geostationary_area_definition_and_transform_latlon(xr_data)
-            xr_data["latitude"], xr_data["longitude"] = transform(
-                xx=xr_data["x_geostationary"], yy=xr_data["y_geostationary"]
+            xr_data["longitude"], xr_data["latitude"] = geostationary_area_coords_to_lonlat(
+                x=xr_data["x_geostationary"], y=xr_data["y_geostationary"], xr_data=xr_data,
             )
+
             yield xr_data

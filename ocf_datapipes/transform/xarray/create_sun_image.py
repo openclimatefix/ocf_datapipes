@@ -9,9 +9,9 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
-    load_geostationary_area_definition_and_transform_latlon,
-    load_geostationary_area_definition_and_transform_osgb,
-    osgb_to_lat_lon,
+    geostationary_area_coords_to_lonlat,
+    geostationary_area_coords_to_osgb,
+    osgb_to_lon_lat,
 )
 
 ELEVATION_MEAN = 37.4
@@ -61,17 +61,12 @@ class CreateSunImageIterDataPipe(IterDataPipe):
                 dtype=np.float32,
             )
             if "geostationary" in self.x_dim:
-                transform_to_latlon = load_geostationary_area_definition_and_transform_latlon(
-                    image_xr
+                lons, lats = geostationary_area_coords_to_lonlat(
+                    x=image_xr[self.x_dim].values, y=image_xr[self.y_dim].values, xr_data=image_xr
                 )
-                lats, lons = transform_to_latlon(
-                    xx=image_xr[self.x_dim].values, yy=image_xr[self.y_dim].values
-                )
-                print(lats.shape)
 
             else:
-                transform_to_latlon = osgb_to_lat_lon
-                lats, lons = transform_to_latlon(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
+                lons, lats = osgb_to_lon_lat(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
             time_utc = image_xr[self.time_dim].values
 
             # Loop round each example to get the Sun's elevation and azimuth:

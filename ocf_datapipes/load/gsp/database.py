@@ -16,7 +16,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray
-from ocf_datapipes.utils.geospatial import lat_lon_to_osgb
+from ocf_datapipes.utils.geospatial import lon_lat_to_osgb
 
 try:
     from ocf_datapipes.utils.eso import get_gsp_shape_from_eso
@@ -78,7 +78,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
         )
 
         if self.national_only:
-            x_osgb, y_osgb = lat_lon_to_osgb(latitude=55.3781, longitude=-3.4360)
+            x_osgb, y_osgb = lon_lat_to_osgb(x=-3.4360, y=55.3781)
             x_osgb = [x_osgb]
             y_osgb = [y_osgb]
         else:

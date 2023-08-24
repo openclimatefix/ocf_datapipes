@@ -8,7 +8,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey
-from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
+from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 
 ELEVATION_MEAN = 37.4
 ELEVATION_STD = 12.7
@@ -85,7 +85,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             # As we move away from OSGB and towards lat, lon we can exclude more sources here
             if self.modality_name not in ["pv"]:
                 # Convert to the units that pvlib expects: lat, lon.
-                lats, lons = osgb_to_lat_lon(x=x_osgb_centre, y=y_osgb_centre)
+                lons, lats = osgb_to_lon_lat(x=x_osgb_centre, y=y_osgb_centre)
 
             # Loop round each example to get the Sun's elevation and azimuth:
             azimuth = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)

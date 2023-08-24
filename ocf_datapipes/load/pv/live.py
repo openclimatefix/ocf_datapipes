@@ -22,7 +22,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import encode_label, put_pv_data_into_an_xr_dataarray
-from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle, lat_lon_to_osgb
+from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle
 
 logger = logging.getLogger(__name__)
 

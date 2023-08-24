@@ -13,8 +13,8 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
-    load_geostationary_area_definition_and_transform_osgb,
-    load_geostationary_area_definition_and_transform_latlon,
+    lon_lat_to_geostationary_area_coords,
+    osgb_to_geostationary_area_coords,
     spatial_coord_type,
 )
 from ocf_datapipes.utils.utils import searchsorted
@@ -104,20 +104,16 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                 pv_system = pv_systems_xr.isel(pv_system_id=i)
                 
                 if pv_coords=="osgb" and image_coords=="geostationary":
-                    _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
-                        image_xr
-                    )
-                    pv_y, pv_x = _osgb_to_geostationary(
-                        xx=pv_system["x_osgb"].values, 
-                        yy=pv_system["y_osgb"].values,
+                    pv_x, pv_y = osgb_to_geostationary_area_coords(
+                        x=pv_system["x_osgb"].values, 
+                        y=pv_system["y_osgb"].values,
+                        xr_data=image_xr,
                     )
                 elif pv_coords=="lat_lon" and image_coords=="geostationary":
-                    _latlon_to_geostationary = (
-                        load_geostationary_area_definition_and_transform_latlon(image_xr)
-                    )
-                    pv_y, pv_x = _latlon_to_geostationary(
-                        xx=pv_system["longitude"].values, 
-                        yy=pv_system["latitude"].values,
+                    pv_x, pv_y = lon_lat_to_geostationary_area_coords(
+                        x=pv_system["longitude"].values, 
+                        y=pv_system["latitude"].values,
+                        xr_data=image_xr,
                     )
                     
                 else:
