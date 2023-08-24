@@ -52,7 +52,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 y_osgb_centre = y_osgb[:, y_centre_idx, x_centre_idx]  # Shape: (example,)
                 x_osgb_centre = x_osgb[:, y_centre_idx, x_centre_idx]  # Shape: (example,)
             elif self.modality_name == "pv":
-                lats = np_batch[BatchKey.pv_latitude]
+                lats = np_batch[BatchKey.pv_latitude] 
                 lons = np_batch[BatchKey.pv_longitude]
                 time_utc = np_batch[BatchKey.pv_time_utc]
                 # Sometimes, the PV coords can all be NaNs if there are no PV systems
@@ -68,16 +68,17 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 x_osgb_centre = np_batch[BatchKey.nwp_x_osgb].mean(axis=-1)
                 time_utc = np_batch[BatchKey.nwp_target_time_utc]
             elif self.modality_name == "gsp":
-                y_osgb = np_batch[BatchKey.gsp_y_osgb]
-                x_osgb = np_batch[BatchKey.gsp_x_osgb]
+                y_osgb = np_batch[BatchKey.gsp_y_osgb] # Shape: (example, optional[n_gsps])
+                x_osgb = np_batch[BatchKey.gsp_x_osgb] # Shape: (example, optional[n_gsps])
                 time_utc = np_batch[BatchKey.gsp_time_utc]
                 #  We calculate the sun angles for the cnetre of the GSP locations
-                with warnings.catch_warnings():
-                    warnings.filterwarnings(
-                        action="ignore", category=RuntimeWarning, message="Mean of empty slice"
-                    )
-                    y_osgb_centre = np.nanmean(y_osgb, axis=1)
-                    x_osgb_centre = np.nanmean(x_osgb, axis=1)
+                if len(x_osgb.shape)>1:
+                    with warnings.catch_warnings():
+                        y_osgb_centre = np.nanmean(y_osgb, axis=1)
+                        x_osgb_centre = np.nanmean(x_osgb, axis=1)
+                else:
+                    y_osgb_centre = y_osgb
+                    x_osgb_centre = x_osgb
             else:
                 raise ValueError(f"Unrecognized modality: {self.modality_name }")
             
