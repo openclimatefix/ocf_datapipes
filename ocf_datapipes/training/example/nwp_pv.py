@@ -199,7 +199,6 @@ def nwp_pv_datapipe(
     logger.debug("Combine all the data sources")
     combined_datapipe = (
         MergeNumpyModalities([pv_datapipe, nwp_datapipe])
-        .encode_space_time()
         .add_sun_position(modality_name="pv")
     )
 

@@ -114,6 +114,7 @@ def gsp_pv_nwp_satellite_data_pipeline(
         location_datapipe=location_datapipes[1],
         roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
         roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
+        dim_name="pv_system_id",
     ).fork(2)
     # take NWP space slice
     nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(
@@ -248,8 +249,6 @@ def gsp_pv_nwp_satellite_data_pipeline(
     logger.debug("Combine all the data sources")
     combined_datapipe = (
         MergeNumpyModalities([gsp_datapipe, nwp_datapipe, pv_datapipe, satellite_datapipe])
-        # .encode_space_time()
-        # .add_sun_position(modality_name="gsp")
     )
 
     return combined_datapipe

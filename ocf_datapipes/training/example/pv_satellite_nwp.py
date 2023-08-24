@@ -76,23 +76,24 @@ def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration
     )
 
     # Pick locations
-    location_datapipes = pv_location_datapipe.location_picker().fork(4, buffer_size=BUFFER_SIZE)
+    #assert False, f"{[*next(iter(pv_location_datapipe)).coords]}"
+    location_datapipes = pv_location_datapipe.location_picker(
+        x_dim_name="longitude",
+        y_dim_name="latitude",
+    ).fork(4, buffer_size=BUFFER_SIZE)
 
     # take PV space slice
     pv_datapipe, pv_time_periods_datapipe, pv_t0_datapipe = pv_datapipe.select_spatial_slice_meters(
         location_datapipe=location_datapipes[1],
         roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
         roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
-        y_dim_name="y_osgb",
-        x_dim_name="x_osgb",
+        dim_name="pv_system_id",
     ).fork(3)
     # take NWP space slice
     nwp_datapipe, nwp_time_periods_datapipe = nwp_datapipe.select_spatial_slice_pixels(
         location_datapipe=location_datapipes[2],
         roi_height_pixels=configuration.input_data.nwp.nwp_image_size_pixels_height,
         roi_width_pixels=configuration.input_data.nwp.nwp_image_size_pixels_width,
-        y_dim_name="y_osgb",
-        x_dim_name="x_osgb",
     ).fork(2)
 
     # take Satellite space slice
@@ -103,8 +104,6 @@ def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration
         location_datapipe=location_datapipes[3],
         roi_height_pixels=configuration.input_data.satellite.satellite_image_size_pixels_height,
         roi_width_pixels=configuration.input_data.satellite.satellite_image_size_pixels_width,
-        y_dim_name="y_geostationary",
-        x_dim_name="x_geostationary",
     ).fork(
         2
     )
@@ -200,8 +199,7 @@ def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration
     logger.debug("Combine all the data sources")
     combined_datapipe = (
         MergeNumpyModalities([nwp_datapipe, pv_datapipe, satellite_datapipe])
-        # .encode_space_time()
-        # .add_sun_position(modality_name="gsp")
+
     )
 
     return combined_datapipe
