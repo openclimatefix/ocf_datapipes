@@ -52,7 +52,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 y_osgb_centre = y_osgb[:, y_centre_idx, x_centre_idx]  # Shape: (example,)
                 x_osgb_centre = x_osgb[:, y_centre_idx, x_centre_idx]  # Shape: (example,)
             elif self.modality_name == "pv":
-                lats = np_batch[BatchKey.pv_latitude] 
+                lats = np_batch[BatchKey.pv_latitude]
                 lons = np_batch[BatchKey.pv_longitude]
                 time_utc = np_batch[BatchKey.pv_time_utc]
                 # Sometimes, the PV coords can all be NaNs if there are no PV systems
@@ -68,11 +68,11 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 x_osgb_centre = np_batch[BatchKey.nwp_x_osgb].mean(axis=-1)
                 time_utc = np_batch[BatchKey.nwp_target_time_utc]
             elif self.modality_name == "gsp":
-                y_osgb = np_batch[BatchKey.gsp_y_osgb] # Shape: (example, optional[n_gsps])
-                x_osgb = np_batch[BatchKey.gsp_x_osgb] # Shape: (example, optional[n_gsps])
+                y_osgb = np_batch[BatchKey.gsp_y_osgb]  # Shape: (example, optional[n_gsps])
+                x_osgb = np_batch[BatchKey.gsp_x_osgb]  # Shape: (example, optional[n_gsps])
                 time_utc = np_batch[BatchKey.gsp_time_utc]
-                #  We calculate the sun angles for the cnetre of the GSP locations
-                if len(x_osgb.shape)>1:
+                #  We calculate the sun angles for the cnetre of the GSP locations
+                if len(x_osgb.shape) > 1:
                     with warnings.catch_warnings():
                         y_osgb_centre = np.nanmean(y_osgb, axis=1)
                         x_osgb_centre = np.nanmean(x_osgb, axis=1)
@@ -81,8 +81,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                     x_osgb_centre = x_osgb
             else:
                 raise ValueError(f"Unrecognized modality: {self.modality_name }")
-            
-            # As we move away from OSGB and towards lat, lon we can exclude more sources here
+
+            # As we move away from OSGB and towards lat, lon we can exclude more sources here
             if self.modality_name not in ["pv"]:
                 # Convert to the units that pvlib expects: lat, lon.
                 lons, lats = osgb_to_lon_lat(x=x_osgb_centre, y=y_osgb_centre)
@@ -96,9 +96,9 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             if len(time_utc.shape) == 1:
                 lat, lon = lats[0], lons[0]
                 if not np.isfinite([lat, lon]).all():
-                    assert self.modality_name == "pv", (
-                        f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
-                    )
+                    assert (
+                        self.modality_name == "pv"
+                    ), f"{self.modality_name} lat and lon must be finite! But {lat=} {lon=}!"
                     must_be_finite = False
 
                 else:
@@ -123,7 +123,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
 
                     else:
                         dt = pd.to_datetime(time_utc[example_idx], unit="s")
-                        
+
                         solpos = pvlib.solarposition.get_solarposition(
                             time=dt,
                             latitude=lat,

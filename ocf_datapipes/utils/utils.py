@@ -93,7 +93,7 @@ def is_sorted(array: np.ndarray) -> bool:
     return np.all(array[:-1] <= array[1:])
 
 
-def searchsorted(a, v, side='left', assume_ascending=True):
+def searchsorted(a, v, side="left", assume_ascending=True):
     if assume_ascending:
         return np.searchsorted(a, v, side=side)
     else:

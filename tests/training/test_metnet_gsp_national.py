@@ -21,9 +21,7 @@ def test_metnet_gsp_national_datapipe():
 
 def test_metnet_gsp_national_image_datapipe():
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
-    datapipe = metnet_national_datapipe(
-        filename, use_pv=False, gsp_in_image=True, output_size=128
-    )
+    datapipe = metnet_national_datapipe(filename, use_pv=False, gsp_in_image=True, output_size=128)
     dataloader = iter(datapipe)
     batch = next(dataloader)
     x, y = batch

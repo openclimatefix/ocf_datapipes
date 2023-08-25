@@ -247,8 +247,8 @@ def gsp_pv_nwp_satellite_data_pipeline(
     # Join data pipes together, and get extra details
     #####################################
     logger.debug("Combine all the data sources")
-    combined_datapipe = (
-        MergeNumpyModalities([gsp_datapipe, nwp_datapipe, pv_datapipe, satellite_datapipe])
+    combined_datapipe = MergeNumpyModalities(
+        [gsp_datapipe, nwp_datapipe, pv_datapipe, satellite_datapipe]
     )
 
     return combined_datapipe

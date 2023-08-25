@@ -22,9 +22,9 @@ class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of PV data
-            min_capacity_watts: Threshold of PV system power in watts. Systems with capacity lower 
+            min_capacity_watts: Threshold of PV system power in watts. Systems with capacity lower
                 than this are dropped.
-            max_capacity_watts: Threshold of PV system power in watts. Systems with capacity higher 
+            max_capacity_watts: Threshold of PV system power in watts. Systems with capacity higher
                 than this are dropped.
         """
         self.source_datapipe = source_datapipe
@@ -32,7 +32,7 @@ class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
         self.max_capaciity_watts = max_capacity_watts
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for ds in self.source_datapipe:            
+        for ds in self.source_datapipe:
             too_low = ds.capacity_watt_power < self.min_capacity_watts
             too_high = ds.capacity_watt_power > self.max_capacity_watts
             mask = np.logical_or(too_low, too_high)

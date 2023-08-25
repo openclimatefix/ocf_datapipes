@@ -197,9 +197,8 @@ def nwp_pv_datapipe(
     #
     #####################################
     logger.debug("Combine all the data sources")
-    combined_datapipe = (
-        MergeNumpyModalities([pv_datapipe, nwp_datapipe])
-        .add_sun_position(modality_name="pv")
+    combined_datapipe = MergeNumpyModalities([pv_datapipe, nwp_datapipe]).add_sun_position(
+        modality_name="pv"
     )
 
     return combined_datapipe

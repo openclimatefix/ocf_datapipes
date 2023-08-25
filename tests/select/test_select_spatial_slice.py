@@ -87,12 +87,11 @@ def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
         roi_width_meters=96_000,
         roi_height_meters=96_000,
         dim_name=None,
-
     )
     data = next(iter(icon_eu_datapipe))
-    
-    # This assertion is sometimes 23 and sometimes 24 - why is it variable? Is 96km not integer of
-    # grid spacing?
+
+    # This assertion is sometimes 23 and sometimes 24 - why is it variable? Is 96km not integer of
+    # grid spacing?
     assert len(data.longitude) in [23, 24]
     assert len(data.latitude) == 14
 
@@ -110,7 +109,6 @@ def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_da
         roi_width_meters=96_000,
         roi_height_meters=96_000,
         dim_name="values",
-
     )
     data = next(iter(icon_global_datapipe))
     assert len(data.longitude) == 86

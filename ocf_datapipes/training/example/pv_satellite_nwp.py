@@ -76,7 +76,7 @@ def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration
     )
 
     # Pick locations
-    #assert False, f"{[*next(iter(pv_location_datapipe)).coords]}"
+    # assert False, f"{[*next(iter(pv_location_datapipe)).coords]}"
     location_datapipes = pv_location_datapipe.location_picker(
         x_dim_name="longitude",
         y_dim_name="latitude",
@@ -197,9 +197,6 @@ def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration
     # Join data pipes together, and get extra details
     #####################################
     logger.debug("Combine all the data sources")
-    combined_datapipe = (
-        MergeNumpyModalities([nwp_datapipe, pv_datapipe, satellite_datapipe])
-
-    )
+    combined_datapipe = MergeNumpyModalities([nwp_datapipe, pv_datapipe, satellite_datapipe])
 
     return combined_datapipe

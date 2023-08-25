@@ -6,8 +6,8 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils.geospatial import (
-    lon_lat_to_osgb,
     geostationary_area_coords_to_lonlat,
+    lon_lat_to_osgb,
     osgb_to_lon_lat,
 )
 
@@ -29,7 +29,8 @@ class ConvertLonLatToOSGBIterDataPipe(IterDataPipe):
         """Convert from Lat/Lon to OSGB"""
         for xr_data in self.source_datapipe:
             xr_data["x_osgb"], xr_data["y_osgb"] = lon_lat_to_osgb(
-                 longitude=xr_data["longitude"], latitude=xr_data["latitude"],
+                longitude=xr_data["longitude"],
+                latitude=xr_data["latitude"],
             )
             yield xr_data
 
@@ -73,7 +74,9 @@ class ConvertGeostationaryToLonLatIterDataPipe(IterDataPipe):
         """Convert from geostationary to Lon/Lat and yield the Xarray object"""
         for xr_data in self.source_datapipe:
             xr_data["longitude"], xr_data["latitude"] = geostationary_area_coords_to_lonlat(
-                x=xr_data["x_geostationary"], y=xr_data["y_geostationary"], xr_data=xr_data,
+                x=xr_data["x_geostationary"],
+                y=xr_data["y_geostationary"],
+                xr_data=xr_data,
             )
 
             yield xr_data

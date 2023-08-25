@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 def test_drop_with_passiv_datapipe(passiv_datapipe):
     before_dropping_pv_with_night_output = AssignDayNightStatus(passiv_datapipe)
     after_dropping_pv_with_night_output = DropNightPV(
-        before_dropping_pv_with_night_output, 
-        threshold=0
+        before_dropping_pv_with_night_output, threshold=0
     )
 
     data_before_drop = next(iter(before_dropping_pv_with_night_output))
