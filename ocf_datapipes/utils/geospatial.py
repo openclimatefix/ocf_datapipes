@@ -231,7 +231,7 @@ def move_lon_lat_by_meters(lon, lat, meters_east, meters_north):
         meters_north: number of meters to move north
 
     Returns:
-        tuple of lat, lon
+        tuple of lon, lat
     """
     new_lon = _geod.fwd(lons=lon, lats=lat, az=90, dist=meters_east)[0]
     new_lat = _geod.fwd(lons=lon, lats=lat, az=0, dist=meters_north)[1]

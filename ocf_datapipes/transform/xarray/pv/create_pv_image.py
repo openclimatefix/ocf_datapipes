@@ -139,7 +139,11 @@ class CreatePVImageIterDataPipe(IterDataPipe):
 
                 x_idx = searchsorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
                 y_idx = searchsorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
-
+                x_idx = searchsorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
+                y_idx = searchsorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
+                # Might be better alternative:
+                # x_idx = image_xr.get_index(image_x_dim).get_indexer([pv_x], method="nearest")[0]
+                # y_idx = image_xr.get_index(image_y_dim).get_indexer([pv_y], method="nearest")[0]
                 pv_position_dict[(y_idx, x_idx)].append(pv_system)
 
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates

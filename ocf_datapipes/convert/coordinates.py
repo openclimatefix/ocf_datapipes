@@ -14,11 +14,11 @@ from ocf_datapipes.utils.geospatial import (
 
 @functional_datapipe("convert_lonlat_to_osgb")
 class ConvertLonLatToOSGBIterDataPipe(IterDataPipe):
-    """Convert from Lat/Lon object to OSGB"""
+    """Convert from Lon/Lat object to OSGB"""
 
     def __init__(self, source_datapipe: IterDataPipe):
         """
-        Convert from Lat/Lon to OSGB
+        Convert from Lon/Lat to OSGB
 
         Args:
             source_datapipe: Datapipe emitting Xarray objects with latitude and longitude data
@@ -37,7 +37,7 @@ class ConvertLonLatToOSGBIterDataPipe(IterDataPipe):
 
 @functional_datapipe("convert_osgb_to_lonlat")
 class ConvertOSGBToLonLatIterDataPipe(IterDataPipe):
-    """Convert from OSGB to Lat/Lon"""
+    """Convert from OSGB to Lon/Lat"""
 
     def __init__(self, source_datapipe: IterDataPipe):
         """
