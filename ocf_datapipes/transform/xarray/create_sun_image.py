@@ -11,6 +11,7 @@ from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,
     osgb_to_lon_lat,
+    osgb_to_geostationary_area_coords,
 )
 
 ELEVATION_MEAN = 37.4
