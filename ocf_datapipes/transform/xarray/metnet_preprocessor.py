@@ -8,17 +8,14 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.select.select_spatial_slice import convert_coords_to_match_xarray
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,
-    osgb_to_geostationary_area_coords,
-    osgb_to_lon_lat,
     move_lon_lat_by_meters,
+    osgb_to_lon_lat,
     spatial_coord_type,
 )
-
-from ocf_datapipes.select.select_spatial_slice import convert_coords_to_match_xarray
-
 from ocf_datapipes.utils.parallel import run_with_threadpool
 from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
 
@@ -220,29 +217,33 @@ def _crop_and_resample(
         roi_width_meters=context_width,
         roi_height_meters=context_height,
     )
-    
+
     # Resamples to the same number of pixels for both center and contexts
     xr_context = _resample_to_pixel_size(xr_context, output_height_pixels, output_width_pixels)
     return xr_context
 
 
 def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meters: int):
-    
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
-    
+
     # Compute the index for left and right:
     half_height = roi_height_meters // 2
     half_width = roi_width_meters // 2
 
-
-    # Find the bounding box values for the location in either lat-lon or OSGB coord systems
+    # Find the bounding box values for the location in either lat-lon or OSGB coord systems
     if location.coordinate_system == "lat_lon":
         right, top = move_lon_lat_by_meters(
-            location.x, location.y, half_width, half_height,
+            location.x,
+            location.y,
+            half_width,
+            half_height,
         )
         left, bottom = move_lon_lat_by_meters(
-            location.x, location.y, -half_width, -half_height,
-        )                
+            location.x,
+            location.y,
+            -half_width,
+            -half_height,
+        )
 
     elif location.coordinate_system == "osgb":
         left = location.x - half_width
@@ -251,22 +252,19 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
         top = location.y + half_height
 
     else:
-        raise ValueError(
-            f"Location coord system not recognized: {location.coordinate_system}")
-        
-    
+        raise ValueError(f"Location coord system not recognized: {location.coordinate_system}")
+
     (left, right), (bottom, top) = convert_coords_to_match_xarray(
         x=np.array([left, right], dtype=np.float32),
         y=np.array([bottom, top], dtype=np.float32),
         from_coords=location.coordinate_system,
         xr_data=xr_data,
     )
-        
-        
+
     # Select a patch from the xarray data
     x_mask = (left <= xr_data[xr_x_dim]) & (xr_data[xr_x_dim] <= right)
     y_mask = (bottom <= xr_data[xr_y_dim]) & (xr_data[xr_y_dim] <= top)
-    selected = xr_data.isel({xr_x_dim:x_mask, xr_y_dim:y_mask})
+    selected = xr_data.isel({xr_x_dim: x_mask, xr_y_dim: y_mask})
 
     return selected
 
@@ -318,9 +316,7 @@ def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
     )
     if "geostationary" in x_dim:
         lons, lats = geostationary_area_coords_to_lonlat(
-            x=image_xr[x_dim].values, 
-            y=image_xr[y_dim].values,
-            xr_data=image_xr
+            x=image_xr[x_dim].values, y=image_xr[y_dim].values, xr_data=image_xr
         )
     else:
         lons, lats = osgb_to_lon_lat(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)

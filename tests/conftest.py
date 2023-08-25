@@ -321,23 +321,23 @@ def pv_netcdf_file():
     - ss_id
     - generation_wh
     """
-    
+
     datetimes = pd.date_range("2022-09-01 00:00", "2022-09-08 00:00", freq="5T")
     pv_system_ids = (np.arange(10) + 9905).astype(str)
 
     data = np.full((len(datetimes), len(pv_system_ids)), fill_value=9.1)
     da = xr.DataArray(
         data,
-        coords = (
+        coords=(
             ("datetime", datetimes),
             ("pv_system_id", pv_system_ids),
-        )
+        ),
     )
 
     da = da.where(da.datetime.dt.hour < 21, other=0)
     da = da.where(da.datetime.dt.hour > 3, other=0)
-    
-    da.isel(datetime=slice(0,3), pv_system_id=0).values[:] = np.nan
+
+    da.isel(datetime=slice(0, 3), pv_system_id=0).values[:] = np.nan
     ds = da.to_dataset(dim="pv_system_id")
 
     with tempfile.TemporaryDirectory() as tmpdir:

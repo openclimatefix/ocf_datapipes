@@ -1,17 +1,12 @@
 """Convert point PV sites to image output"""
 import logging
-from collections import defaultdict
-from typing import Union
 
 import numpy as np
-import pandas as pd
-import pvlib
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils import Zipper
-from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
     lon_lat_to_geostationary_area_coords,
     osgb_to_geostationary_area_coords,
@@ -52,8 +47,8 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                 Only use for if making the image at the beginning of the stack
             seed: Random seed to use if using max_num_pv_systems
         """
-        assert max_num_pv_systems>0
-        
+        assert max_num_pv_systems > 0
+
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
         self.normalize = normalize
@@ -63,25 +58,24 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
-            
             pv_coords, pv_x_dim, pv_y_dim = spatial_coord_type(pv_systems_xr)
             image_coords, image_x_dim, image_y_dim = spatial_coord_type(image_xr)
-            
-            # Check if the coords are ascending
+
+            # Check if the coords are ascending
             x_vals = image_xr[image_x_dim].values
             y_vals = image_xr[image_y_dim].values
-            
+
             x_ascend = (x_vals == np.sort(x_vals)).all()
             y_ascend = (y_vals == np.sort(y_vals)).all()
-            
+
             # Check if coords are descending
             x_descend = (x_vals == np.sort(x_vals)[::-1]).all()
             y_descend = (y_vals == np.sort(y_vals)[::-1]).all()
-            
-            # Coords must be either ascending or descending order
+
+            # Coords must be either ascending or descending order
             assert x_ascend or x_descend
             assert y_ascend or y_descend
-            
+
             # Randomly sample systems if too many
             if self.max_num_pv_systems <= len(pv_systems_xr.pv_system_id.values):
                 subset_of_pv_system_ids = self.rng.choice(
@@ -90,58 +84,57 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                     replace=False,
                 )
                 pv_systems_xr = pv_systems_xr.sel(pv_system_id=subset_of_pv_system_ids)
-            
+
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
             pv_meta_image = np.zeros(
                 (2, len(image_xr[image_y_dim]), len(image_xr[image_x_dim])),
                 dtype=np.float32,
             )
-            
+
             for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
-                
                 # went for isel incase there is a duplicated pv_system_id
                 pv_system = pv_systems_xr.isel(pv_system_id=i)
-                
-                if pv_coords=="osgb" and image_coords=="geostationary":
+
+                if pv_coords == "osgb" and image_coords == "geostationary":
                     pv_x, pv_y = osgb_to_geostationary_area_coords(
-                        x=pv_system["x_osgb"].values, 
+                        x=pv_system["x_osgb"].values,
                         y=pv_system["y_osgb"].values,
                         xr_data=image_xr,
                     )
-                elif pv_coords=="lat_lon" and image_coords=="geostationary":
+                elif pv_coords == "lat_lon" and image_coords == "geostationary":
                     pv_x, pv_y = lon_lat_to_geostationary_area_coords(
-                        x=pv_system["longitude"].values, 
+                        x=pv_system["longitude"].values,
                         y=pv_system["latitude"].values,
                         xr_data=image_xr,
                     )
-                    
+
                 else:
                     raise NotImplementedError(
                         f"PV coords of type {pv_coords} and image coords of type {image_coords}"
                     )
 
                 # Check the PV system is within the image
-                in_range = (
-                    (image_xr[image_x_dim].min() < pv_x < image_xr[image_x_dim].max())
-                    and 
-                    (image_xr[image_y_dim].min() < pv_y < image_xr[image_y_dim].max())
+                in_range = (image_xr[image_x_dim].min() < pv_x < image_xr[image_x_dim].max()) and (
+                    image_xr[image_y_dim].min() < pv_y < image_xr[image_y_dim].max()
                 )
-                
+
                 if not in_range:
-                    # Skip the PV system if not inside the image
+                    # Skip the PV system if not inside the image
                     continue
-                    
+
                 x_idx = searchsorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
                 y_idx = searchsorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
-                
-                # TODO: should we be using an average here? Overwiting will occur as it is
-                pv_meta_image[:, y_idx, x_idx] = np.array([pv_system["tilt"], pv_system["orientation"]])
+
+                # TODO: should we be using an average here? Overwiting will occur as it is
+                pv_meta_image[:, y_idx, x_idx] = np.array(
+                    [pv_system["tilt"], pv_system["orientation"]]
+                )
 
             if self.normalize:
                 pv_meta_image = pv_meta_image / np.array([MAX_TILT, MAX_ORIENTATION])[:, None, None]
 
             # Should return xarray
-            # Same coordinates as the image xarray, so can take that            
+            # Same coordinates as the image xarray, so can take that
             pv_meta_image_xr = xr.DataArray(
                 data=pv_meta_image,
                 coords=(
@@ -153,5 +146,5 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                 name="pv_meta_image",
             )
             pv_meta_image_xr.attrs = image_xr.attrs
-            
+
             yield pv_meta_image_xr

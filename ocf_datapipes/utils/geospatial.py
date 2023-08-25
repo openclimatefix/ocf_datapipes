@@ -5,9 +5,9 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
-import xarray as xr
 import pvlib
 import pyproj
+import xarray as xr
 
 # OSGB is also called "OSGB 1936 / British National Grid -- United
 # Kingdom Ordnance Survey".  OSGB is used in many UK electricity
@@ -21,8 +21,12 @@ OSGB36 = 27700
 WGS84 = 4326
 
 
-_osgb_to_lon_lat = pyproj.Transformer.from_crs(crs_from=OSGB36, crs_to=WGS84, always_xy=True).transform
-_lon_lat_to_osgb = pyproj.Transformer.from_crs(crs_from=WGS84, crs_to=OSGB36, always_xy=True).transform
+_osgb_to_lon_lat = pyproj.Transformer.from_crs(
+    crs_from=OSGB36, crs_to=WGS84, always_xy=True
+).transform
+_lon_lat_to_osgb = pyproj.Transformer.from_crs(
+    crs_from=WGS84, crs_to=OSGB36, always_xy=True
+).transform
 _geod = pyproj.Geod(ellps="WGS84")
 
 
@@ -40,7 +44,8 @@ def osgb_to_lon_lat(
 
 
 def lon_lat_to_osgb(
-    x: Union[Number, np.ndarray], y: Union[Number, np.ndarray],
+    x: Union[Number, np.ndarray],
+    y: Union[Number, np.ndarray],
 ) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
     """Change lon-lat coordinates to OSGB.
 
@@ -54,7 +59,7 @@ def lon_lat_to_osgb(
 
 
 def lon_lat_to_geostationary_area_coords(
-    x: Union[Number, np.ndarray], 
+    x: Union[Number, np.ndarray],
     y: Union[Number, np.ndarray],
     xr_data: Union[xr.Dataset, xr.DataArray],
 ) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
@@ -81,13 +86,15 @@ def lon_lat_to_geostationary_area_coords(
     )
     geostationary_crs = geostationary_area_definition.crs
     lonlat_to_geostationary = pyproj.Transformer.from_crs(
-        crs_from=WGS84, crs_to=geostationary_crs, always_xy=True,
+        crs_from=WGS84,
+        crs_to=geostationary_crs,
+        always_xy=True,
     ).transform
     return lonlat_to_geostationary(xx=x, yy=y)
 
 
 def osgb_to_geostationary_area_coords(
-    x: Union[Number, np.ndarray], 
+    x: Union[Number, np.ndarray],
     y: Union[Number, np.ndarray],
     xr_data: Union[xr.Dataset, xr.DataArray],
 ) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
@@ -120,7 +127,7 @@ def osgb_to_geostationary_area_coords(
 
 
 def geostationary_area_coords_to_osgb(
-    x: Union[Number, np.ndarray], 
+    x: Union[Number, np.ndarray],
     y: Union[Number, np.ndarray],
     xr_data: Union[xr.Dataset, xr.DataArray],
 ) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
@@ -153,7 +160,7 @@ def geostationary_area_coords_to_osgb(
 
 
 def geostationary_area_coords_to_lonlat(
-    x: Union[Number, np.ndarray], 
+    x: Union[Number, np.ndarray],
     y: Union[Number, np.ndarray],
     xr_data: Union[xr.Dataset, xr.DataArray],
 ) -> tuple[Union[Number, np.ndarray], Union[Number, np.ndarray]]:
@@ -233,10 +240,10 @@ def move_lon_lat_by_meters(lon, lat, meters_east, meters_north):
 
 def spatial_coord_type(ds: xr.Dataset):
     """Searches the dataset to determine the kind of spatial coordinates present.
-    
+
     Args:
         ds: Dataset with spatial coords
-        
+
     Returns:
         str: The kind of the coordinate system
         x_coord: Name of the x-coordinate

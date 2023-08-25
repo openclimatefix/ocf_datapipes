@@ -3,11 +3,9 @@
 import logging
 from typing import Union
 
-import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-
 
 logger = logging.getLogger(__name__)
 
@@ -29,15 +27,13 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
                 "simple" or "elevation". See `AssignDayNightStatusIterDataPipe` for details
         """
         self.source_datapipe = source_datapipe
-        
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Run iter"""
 
         for xr_data in self.source_datapipe.assign_daynight_status():
-            
             # get maks data for nighttime and nans
-            is_night = xr_data.status_daynight=='night'
+            is_night = xr_data.status_daynight == "night"
             is_nan = xr_data.isnull()
             should_fill = is_night & is_nan
 

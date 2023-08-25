@@ -157,7 +157,7 @@ def metnet_site_datapipe(
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)
-            
+
     # Now combine in the MetNet format
     modalities = []
 
@@ -172,7 +172,7 @@ def metnet_site_datapipe(
         pv_history = pv_history.create_pv_history_image(
             image_datapipe=nwp_pv_datapipe, image_dim="osgb"
         )
-            
+
     if "nwp" in used_datapipes.keys():
         modalities.append(nwp_datapipe)
     if "hrv" in used_datapipes.keys():

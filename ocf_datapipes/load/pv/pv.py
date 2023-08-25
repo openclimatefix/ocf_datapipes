@@ -47,7 +47,6 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.start_datetime = pv.start_datetime
         self.end_datetime = pv.end_datetime
 
-        
     def __iter__(self):
         pv_datas_xr = []
         for i in range(len(self.pv_power_filenames)):
@@ -93,7 +92,7 @@ def load_everything_into_ram(
     estimated_capacity_percentile: float = 100,
 ) -> xr.DataArray:
     """Load PV data into xarray DataArray in RAM.
-    
+
     Args:
         generation_filename: Filepath to the PV generation data
         metadata_filename: Filepath to the PV metadata
@@ -114,18 +113,18 @@ def load_everything_into_ram(
         end_date=end_datetime,
         estimated_capacity_percentile=estimated_capacity_percentile,
     )
-    
+
     # Drop systems and timestamps where all values are NaN
     df_gen.dropna(axis="index", how="all", inplace=True)
     df_gen.dropna(axis="columns", how="all", inplace=True)
     estimated_capacities = estimated_capacities[df_gen.columns]
-    
+
     # Ensure systems are consistant between generation data, and metadata
     common_systems = list(np.intersect1d(df_metadata.index, df_gen.columns))
     df_gen = df_gen[common_systems]
     df_metadata = df_metadata.loc[common_systems]
     estimated_capacities = estimated_capacities.loc[common_systems]
-    
+
     # Compile data into an xarray DataArray
     data_in_ram = put_pv_data_into_an_xr_dataarray(
         df_gen=df_gen,
@@ -152,9 +151,9 @@ def _load_pv_generation_and_capacity(
     estimated_capacity_percentile: float = 99,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """Load the PV data and estimates the capacity for each PV system.
-    
+
     The capacity is estimated by taking the max value across all datetimes in the input file.
-    
+
     Args:
         filename: The filename (netcdf) of the PV data to load
         start_date: Start date to load from
@@ -169,7 +168,6 @@ def _load_pv_generation_and_capacity(
 
     _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
 
-
     with fsspec.open(filename, mode="rb") as file:
         file_bytes = file.read()
 
@@ -179,12 +177,12 @@ def _load_pv_generation_and_capacity(
 
     _log.info("Loaded solar PV power data and converting to pandas.")
     estimated_capacities = (
-        ds_gen.quantile(estimated_capacity_percentile/100, dim="datetime")
+        ds_gen.quantile(estimated_capacity_percentile / 100, dim="datetime")
         .to_pandas()
         .astype(np.float32)
     )
     estimated_capacities.index = estimated_capacities.index.astype(np.int64)
-    
+
     df_gen = ds_gen.sel(datetime=slice(start_date, end_date)).to_dataframe()
     df_gen = df_gen.astype(np.float32)
     df_gen.columns = df_gen.columns.astype(np.int64)
@@ -192,29 +190,26 @@ def _load_pv_generation_and_capacity(
     if "passiv" not in str(filename):
         _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
         try:
-            df_gen = (
-                df_gen.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
-            )
+            df_gen = df_gen.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
         except Exception as e:
             _log.warning(
-                "Could not convert timezone from London to UTC. "
-                "Going to try and carry on anyway"
+                "Could not convert timezone from London to UTC. " "Going to try and carry on anyway"
             )
-            _log.warning(e)    
+            _log.warning(e)
 
     _log.info(
         "After loading:"
         f" {len(df_gen)} PV power datetimes."
         f" {len(df_gen.columns)} PV power PV system IDs."
     )
-    
+
     # Sanity checks
     assert not df_gen.columns.duplicated().any()
     assert not df_gen.index.duplicated().any()
     assert np.isfinite(estimated_capacities).all()
     assert (estimated_capacities >= 0).all()
     assert np.array_equal(df_gen.columns, estimated_capacities.index)
-    
+
     return df_gen, estimated_capacities
 
 
@@ -224,7 +219,7 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
 
     Shape of the returned pd.DataFrame for Passiv PV data:
         Index: ss_id (Sheffield Solar ID)
-        Columns: llsoacd, orientation, tilt, kwp, operational_at, latitude, longitude, system_id, 
+        Columns: llsoacd, orientation, tilt, kwp, operational_at, latitude, longitude, system_id,
             ml_id
     """
     _log.info(f"Loading PV metadata from {filename}")
@@ -242,13 +237,13 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
 
     if "Unnamed: 0" in df_metadata.columns:
         df_metadata.drop(columns="Unnamed: 0", inplace=True)
-    
-    # Add ml_id column if not in metadata
+
+    # Add ml_id column if not in metadata
     if "ml_id" not in df_metadata.columns:
-        df_metadata["ml_id"] = np.nan 
+        df_metadata["ml_id"] = np.nan
 
     _log.info(f"Found {len(df_metadata)} PV systems in {filename}")
-    
+
     # Rename PVOutput.org tilt name to be simpler
     # There is a second degree tilt, but this should be fine for now
     if "array_tilt_degrees" in df_metadata.columns:

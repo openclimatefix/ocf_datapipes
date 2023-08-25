@@ -10,7 +10,6 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,
-    geostationary_area_coords_to_osgb,
     osgb_to_lon_lat,
 )
 

@@ -132,9 +132,10 @@ def get_gsp_shape_from_eso(
             # calculate the centroid before using - to_crs
             shape_gpd["centroid_x"] = shape_gpd["geometry"].centroid.x
             shape_gpd["centroid_y"] = shape_gpd["geometry"].centroid.y
-            shape_gpd["centroid_lon"], shape_gpd["centroid_lat"], = osgb_to_lon_lat(
-                x=shape_gpd["centroid_x"], y=shape_gpd["centroid_y"]
-            )
+            (
+                shape_gpd["centroid_lon"],
+                shape_gpd["centroid_lat"],
+            ) = osgb_to_lon_lat(x=shape_gpd["centroid_x"], y=shape_gpd["centroid_y"])
 
             # Decided not project the shape data to WGS84, as we want to keep
             # all 'batch' data the same projection.

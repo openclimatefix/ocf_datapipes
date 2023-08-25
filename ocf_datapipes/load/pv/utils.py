@@ -22,7 +22,7 @@ def put_pv_data_into_an_xr_dataarray(
     """Convert to an xarray DataArray.
 
     Args:
-        df_gen: pd.DataFrame where the columns are PV systems (and the column names are ints), and 
+        df_gen: pd.DataFrame where the columns are PV systems (and the column names are ints), and
             the index is UTC datetime
         system_capacities: The max power output of each PV system in Watts. Index is PV system IDs.
         ml_id: The `ml_id` used to identify each PV system
@@ -58,7 +58,7 @@ def put_pv_data_into_an_xr_dataarray(
         capacity_watt_power=("pv_system_id", system_capacities),
         ml_id=("pv_system_id", ml_id),
     )
-    
+
     if tilt is not None:
         data_array = data_array.assign_coords(
             tilt=("pv_system_id", tilt),
