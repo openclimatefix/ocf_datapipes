@@ -93,11 +93,11 @@ def is_sorted(array: np.ndarray) -> bool:
     return np.all(array[:-1] <= array[1:])
 
 
-def searchsorted(a, v, side='left', assume_ascending=True):
+def searchsorted(a, v, side="left", assume_ascending=True):
     """Find indices where elements should be inserted to maintain order.
-    
+
     Can be either sorted in ascending order or descending order
-    
+
     Args:
         a: Target array
         v: Values to insert into `a`

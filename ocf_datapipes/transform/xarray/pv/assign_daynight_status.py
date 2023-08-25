@@ -2,7 +2,6 @@
 This is a class function that assigns day night status
 """
 import logging
-from typing import Union
 
 import numpy as np
 import pvlib

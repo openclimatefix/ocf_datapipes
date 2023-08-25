@@ -2,7 +2,6 @@
 This is a class function that drops the pv systems with generates power over night.
 """
 import logging
-from typing import Union
 
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
@@ -29,14 +28,13 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
             source_datapipe: A datapipe that emits xarray Dataset of PV generation
             threshold: Relative threshold for night-time production. Any system that generates more
                 power than this in any night-time timestamp will be dropped
-            daynight_method: Method used to assign datetimes to either 'night' or 'day'. Either 
+            daynight_method: Method used to assign datetimes to either 'night' or 'day'. Either
                 "simple" or "elevation". See `AssignDayNightStatusIterDataPipe` for details
         """
         assert daynight_method in ["simple", "elevation"]
         self.source_datapipe = source_datapipe
         self.threshold = threshold
         self.daynight_method = daynight_method
-        
 
     def __iter__(self) -> xr.DataArray():
         # TODO: Make more general
