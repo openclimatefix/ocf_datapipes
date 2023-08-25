@@ -342,7 +342,7 @@ def pv_netcdf_file():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = tmpdir + "/data.nc"
-        ds.to_netcdf(filename)
+        ds.to_netcdf(filename, format="NETCDF4")
         yield filename
 
 
