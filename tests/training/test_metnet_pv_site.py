@@ -13,7 +13,5 @@ def test_metnet_site_datapipe():
     datapipe = metnet_site_datapipe(filename, use_nwp=False, pv_in_image=True)
 
     batch = next(iter(datapipe))
-    import numpy as np
-    assert False, f"{np.array(batch[1])}"
     assert np.isfinite(batch[0]).all()
     assert np.isfinite(batch[1]).all()
