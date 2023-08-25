@@ -165,12 +165,13 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 
                 # Randomly sample systems if too many per pixel
                 if self.max_num_pv_systems_per_pixel < len(system_list):
-                    system_list = self.rng.choice(
-                        system_list,
-                        size=self.take_n_pv_values_per_pixel,
+                    random_inds = self.rng.choice(
+                        np.arange(len(system_list)),
+                        size=self.max_num_pv_systems_per_pixel,
                         replace=False,
                     )
-                
+                    system_list = [system_list[i] for i in random_inds]
+                    
                 # Find average output timeseries of all systems in pixel
                 avg_generation = np.zeros_like(system_list[0].values)
                 for pv_system in system_list:

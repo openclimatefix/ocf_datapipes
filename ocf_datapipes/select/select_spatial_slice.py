@@ -243,46 +243,25 @@ def _get_idx_of_pixel_closest_to_poi(
     """
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
     
-    y_index = xr_data.get_index(xr_y_dim)
+    if xr_coords not in ["osgb", "lat_lon"]:
+            raise NotImplementedError(
+                f"Only 'osgb' and 'lat_lon' are supported - not '{xr_coords}'"
+            )
+        
+    # Convert location coords to match xarray data
+    x, y = convert_coords_to_match_xarray(
+        location.x, location.y, 
+        from_coords=location.coordinate_system, 
+        xr_data=xr_data,
+    )
+    
     x_index = xr_data.get_index(xr_x_dim)
+    y_index = xr_data.get_index(xr_y_dim)
     
-    if location.coordinate_system == "osgb":
-        if xr_coords=="osgb":
-            return Location(
-                y=y_index.get_indexer([float(location.y)], method="nearest")[0],
-                x=x_index.get_indexer([float(location.x)], method="nearest")[0],
-                coordinate_system="idx",
-            )
-        elif xr_coords=="lat_lon":
-            latitude, longitude = osgb_to_lat_lon(x=location.x, y=location.y)
-            return Location(
-                y=y_index.get_indexer([float(latitude)], method="nearest")[0],
-                x=x_index.get_indexer([float(longitude)], method="nearest")[0],
-                coordinate_system="idx",
-            )
-        else:
-            raise NotImplementedError(
-                f"Only 'osgb' and 'lat_lon' are supported - not '{xr_coords}'"
-            )
+    closest_x = x_index.get_indexer([x], method="nearest")[0]
+    closest_y = y_index.get_indexer([y], method="nearest")[0]
     
-    elif location.coordinate_system == "lat_lon":
-        if xr_coords=="lat_lon":
-            return Location(
-                y=y_index.get_indexer([float(location.y)], method="nearest")[0],
-                x=x_index.get_indexer([float(location.x)], method="nearest")[0],
-                coordinate_system="idx",
-            )
-        elif xr_coords=="osgb":
-            x_osgb, y_osgb = lat_lon_to_osgb(longitude=location.x, latitude=location.y)
-            return Location(
-                y=y_index.get_indexer([float(y_osgb)], method="nearest")[0],
-                x=x_index.get_indexer([float(x_osgb)], method="nearest")[0],
-                coordinate_system="idx",
-            )
-        else:
-            raise NotImplementedError(
-                f"Only 'osgb' and 'lat_lon' are supported - not '{xr_coords}'"
-            )
+    return Location(x=closest_x, y=closest_y, coordinate_system="idx")
 
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
@@ -349,7 +328,7 @@ def _get_points_from_unstructured_grids(
     
     # Check if need to convert from different coordinate system to lat/lon
     if location.coordinate_system == "osgb":
-        latitude, longitude = osgb_to_lat_lon(x=location.x, y=location.y)
+        longitude, latitude = osgb_to_lon_lat(x=location.x, y=location.y)
         location = Location(
             x=longitude,
             y=latitude,

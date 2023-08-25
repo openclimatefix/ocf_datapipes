@@ -75,8 +75,6 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             load_extra_minutes=self.load_extra_minutes,
         )
 
-        pv_system_row_number = pd.Series([1] * len(pv_power.columns), index=pv_power.columns)
-
         # select metadata that is in pv_power
         logger.debug(
             f"There are currently {len(pv_metadata.index)} pv system in the metadata, "
@@ -97,11 +95,11 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             ml_id=pv_metadata.ml_id,
             latitude=pv_metadata.latitude,
             longitude=pv_metadata.longitude,
-            tilt=df_metadata.get("tilt"),
-            orientation=df_metadata.get("orientation"),
+            tilt=pv_metadata.get("tilt"),
+            orientation=pv_metadata.get("orientation"),
         )
 
-        logger.info(f"Found {len(data_xr.pv_system_row_number)} PV systems")
+        logger.info(f"Found {len(data_xr.ml_id)} PV systems")
 
         while True:
             yield data_xr
@@ -140,14 +138,17 @@ def get_metadata_from_database(providers: List[str] = None) -> pd.DataFrame:
 
         if len(pv_systems_df) == 0:
             pv_systems_df = pd.DataFrame(
-                columns=["pv_system_id", "latitude", "longitude", "installed_capacity_kw", "ml_id"]
+                columns=["pv_system_id", "latitude", "longitude", "installed_capacity_kw"]
             )
         else:
             pv_systems_df.index = encode_label(pv_systems_df["pv_system_id"], label=provider)
             pv_systems_df["installed_capacity_kw"] = pv_systems_df["ml_capacity_kw"]
             pv_systems_df = pv_systems_df[
-                ["latitude", "longitude", "installed_capacity_kw", "ml_id"]
+                ["latitude", "longitude", "installed_capacity_kw"]
             ]
+            
+        # TODO - we expect this ID from the database
+        pv_systems_df["ml_id"] = np.nan
 
         pv_system_all_df.append(pv_systems_df)
 
