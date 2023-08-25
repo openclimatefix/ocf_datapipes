@@ -198,7 +198,7 @@ def calculate_azimuth_and_elevation_angle(
     """
     Calculation the azimuth angle, and the elevation angle for several datetamps.
 
-    But for one specific osgb location
+    But for one specific lat/lon location
 
     More details see:
     https://www.celestis.com/resources/faq/what-are-the-azimuth-and-elevation-of-a-satellite/
