@@ -22,7 +22,7 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
         self, 
         source_datapipe: IterDataPipe,
         threshold=0.2,
-        daynight_method: Union["simple", "elevation"] = "simple",
+        daynight_method: str = "simple",
     ):
         """Drops the PV systems producing output overnight.
 
@@ -30,12 +30,14 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
             source_datapipe: A datapipe that emits xarray Dataset of PV generation
             threshold: Relative threshold for night-time production. Any system that generates more 
                 power than this in any night-time timestamp will be dropped
-            daynight_method: Method used to assign datetimes to either 'night' or 'day'. See 
-                `AssignDayNightStatusIterDataPipe` for details
+            daynight_method: Method used to assign datetimes to either 'night' or 'day'. Either 
+                "simple" or "elevation". See `AssignDayNightStatusIterDataPipe` for details
         """
+        assert daynight_method in ["simple", "elevation"]
         self.source_datapipe = source_datapipe
         self.threshold = threshold
         self.daynight_method = daynight_method
+        
 
     def __iter__(self) -> xr.DataArray():
         # TODO: Make more general

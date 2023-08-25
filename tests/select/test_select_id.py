@@ -12,10 +12,7 @@ def test_select_id(configuration_with_pv_netcdf, nwp_data_with_id_filename):
 
     nwp_datapipe = OpenNWPID(netcdf_path=nwp_data_with_id_filename)
 
-    location_datapipe = pv_location_datapipe.location_picker(
-        x_dim_name="longitude",
-        y_dim_name="latitude",
-    )
+    location_datapipe = pv_location_datapipe.location_picker()
 
     nwp_datapipe = nwp_datapipe.select_id(
         location_datapipe=location_datapipe,

@@ -44,10 +44,7 @@ def test_location_picker_with_id(configuration_with_pv_netcdf):
 
     pv_location_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
 
-    location_datapipe = pv_location_datapipe.location_picker(
-        x_dim_name="longitude",
-        y_dim_name="latitude",
-    )
+    location_datapipe = pv_location_datapipe.location_picker()
 
     data = next(iter(location_datapipe))
 

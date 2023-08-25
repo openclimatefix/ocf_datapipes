@@ -21,7 +21,8 @@ class ConvertPVToNumpyIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe emitting PV Xarray objects
-            return_pv_id: Whether to return PV Id or now
+            return_pv_id: Whether to return PV ID
+            return_ml_id: Whether to return ML ID
         """
         super().__init__()
         self.source_datapipe = source_datapipe

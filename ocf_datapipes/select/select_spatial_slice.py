@@ -197,6 +197,14 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
 
 
 def convert_coords_to_match_xarray(x, y, from_coords, xr_data):
+    """Convert x and y coords to cooridnate system matching xarray data
+    
+    Args:
+        x: Float or array-like
+        y: Float or array-like
+        from_coords: String describing coordinate system of x and y
+        xr_data: xarray data object to which coordinates should be matched
+    """
     
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
 

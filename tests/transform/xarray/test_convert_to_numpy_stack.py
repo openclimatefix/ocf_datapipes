@@ -4,11 +4,7 @@ import numpy as np
 
 
 def test_stack_xarray(sat_hrv_datapipe, sat_datapipe, nwp_datapipe, passiv_datapipe):
-    loc1, loc2 = LocationPicker(
-        passiv_datapipe,
-        x_dim_name="longitude",
-        y_dim_name="latitude",
-    ).fork(2)
+    loc1, loc2 = LocationPicker(passiv_datapipe).fork(2)
     sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_pixels(
         loc1,
         roi_height_pixels=32,

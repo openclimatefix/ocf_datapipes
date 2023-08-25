@@ -84,9 +84,7 @@ def nwp_pv_datapipe(
         location_datapipe3,
         location_datapipe4,
     ) = pv_location_datapipe.location_picker(
-        return_all_locations=return_all,
-        x_dim_name="longitude",
-        y_dim_name="latitude",
+        return_all_locations=return_all
     ).fork(
         4, buffer_size=BUFFER_SIZE
     )

@@ -5,6 +5,7 @@ from typing import Optional
 import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+from ocf_datapipes.utils.geospatial import spatial_coord_type
 
 from ocf_datapipes.utils.consts import Location
 
@@ -19,8 +20,6 @@ class LocationPickerIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         return_all_locations: bool = False,
-        x_dim_name: Optional[str] = "x_osgb",
-        y_dim_name: Optional[str] = "y_osgb",
     ):
         """
         Picks locations from a dataset and returns them
@@ -29,34 +28,25 @@ class LocationPickerIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe emitting Xarray Dataset
             return_all_locations: Whether to return all locations,
                 if True, also returns them in order
-            x_dim_name: x dimension name, defaulted to 'x_osgb'
-            y_dim_name: y dimension name, defaulted to 'y_osgb'
         """
         super().__init__()
         self.source_datapipe = source_datapipe
         self.return_all_locations = return_all_locations
-        self.x_dim_name = x_dim_name
-        self.y_dim_name = y_dim_name
 
     def __iter__(self) -> Location:
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
-            if "longitude" in self.x_dim_name:
-                loc_type = "lat_lon"
-            elif "geostationary" in self.x_dim_name:
-                loc_type = "geostationary"
-            elif "osgb" in self.x_dim_name:
-                loc_type = "osgb"
-            else:
-                raise ValueError("Coordinate system not recongised")
+            
+            loc_type, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
+            
             if self.return_all_locations:
                 logger.debug("Going to return all locations")
 
                 # Iterate through all locations in dataset
-                for location_idx in range(len(xr_dataset[self.x_dim_name])):
+                for location_idx in range(len(xr_dataset[xr_x_dim])):
                     location = Location(
-                        x=xr_dataset[self.x_dim_name][location_idx].values,
-                        y=xr_dataset[self.y_dim_name][location_idx].values,
+                        x=xr_dataset[xr_x_dim][location_idx].values,
+                        y=xr_dataset[xr_y_dim][location_idx].values,
                         coordinate_system=loc_type,
                     )
                     if "pv_system_id" in xr_dataset.coords.keys():
@@ -66,11 +56,11 @@ class LocationPickerIterDataPipe(IterDataPipe):
             else:
                 # Pick 1 random location from the input dataset
                 logger.debug("Selecting random idx")
-                location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))
+                location_idx = np.random.randint(0, len(xr_dataset[xr_x_dim]))
                 logger.debug(f"{location_idx=}")
                 location = Location(
-                    x=xr_dataset[self.x_dim_name][location_idx].values,
-                    y=xr_dataset[self.y_dim_name][location_idx].values,
+                    x=xr_dataset[xr_x_dim][location_idx].values,
+                    y=xr_dataset[xr_y_dim][location_idx].values,
                     coordinate_system=loc_type,
                 )
                 if "pv_system_id" in xr_dataset.coords.keys():

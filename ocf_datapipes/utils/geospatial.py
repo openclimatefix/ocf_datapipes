@@ -235,7 +235,7 @@ def spatial_coord_type(ds: xr.Dataset):
     """Searches the dataset to determine the kind of spatial coordinates present.
     
     Args:
-        Dataset with spatial coords
+        ds: Dataset with spatial coords
         
     Returns:
         str: The kind of the coordinate system

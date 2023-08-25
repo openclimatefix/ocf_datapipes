@@ -69,7 +69,7 @@ class AssignDayNightStatusIterDataPipe(IterDataPipe):
     def __init__(
         self, 
         source_datapipe: IterDataPipe,
-        method: Union["simple", "elevation"] = "simple",
+        method: "simple",
     ):
         """This method adds extra coordinate of day night status.
 

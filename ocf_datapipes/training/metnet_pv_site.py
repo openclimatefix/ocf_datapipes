@@ -106,11 +106,7 @@ def metnet_site_datapipe(
     pv_datapipe = used_datapipes["pv_future"].normalize(normalize_fn=normalize_pv)
     # Split into PV for target, and one for history
     pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
-    pv_loc_datapipe, pv_id_datapipe = LocationPicker(
-        pv_loc_datapipe,
-        x_dim_name="longitude",
-        y_dim_name="latitude",
-    ).fork(2)
+    pv_loc_datapipe, pv_id_datapipe = LocationPicker(pv_loc_datapipe).fork(2)
     pv_history = pv_history.select_id(pv_id_datapipe, data_source_name="pv")
 
     if "nwp" in used_datapipes.keys():

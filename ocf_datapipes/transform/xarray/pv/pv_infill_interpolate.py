@@ -63,7 +63,7 @@ class PVInterpolateInfillIterDataPipe(IterDataPipe):
             )
             
             # Create new copy of the DataArray
-            ds_interp = ds.sel(time_utc=a.index, method="nearest")
+            ds_interp = ds.sel(time_utc=ds.index, method="nearest")
             
             # Fill with interpolated values
             ds_interp.values[:] = df_interp.values

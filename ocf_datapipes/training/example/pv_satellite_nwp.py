@@ -77,10 +77,7 @@ def pv_nwp_satellite_data_pipeline(configuration: Union[Path, str, Configuration
 
     # Pick locations
     #assert False, f"{[*next(iter(pv_location_datapipe)).coords]}"
-    location_datapipes = pv_location_datapipe.location_picker(
-        x_dim_name="longitude",
-        y_dim_name="latitude",
-    ).fork(4, buffer_size=BUFFER_SIZE)
+    location_datapipes = pv_location_datapipe.location_picker().fork(4, buffer_size=BUFFER_SIZE)
 
     # take PV space slice
     pv_datapipe, pv_time_periods_datapipe, pv_t0_datapipe = pv_datapipe.select_spatial_slice_meters(

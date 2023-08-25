@@ -6,11 +6,7 @@ from ocf_datapipes.select import (
 
 
 def test_select_spatial_slice_meters_passiv(passiv_datapipe):
-    loc_datapipe = LocationPicker(
-        passiv_datapipe,
-        y_dim_name="latitude",
-        x_dim_name="longitude",
-    )
+    loc_datapipe = LocationPicker(passiv_datapipe)
     passiv_datapipe = SelectSpatialSliceMeters(
         passiv_datapipe,
         location_datapipe=loc_datapipe,
@@ -23,11 +19,7 @@ def test_select_spatial_slice_meters_passiv(passiv_datapipe):
 
 
 def test_select_spatial_slice_pixels_hrv(passiv_datapipe, sat_hrv_datapipe):
-    loc_datapipe = LocationPicker(
-        passiv_datapipe,
-        y_dim_name="latitude",
-        x_dim_name="longitude",
-    )
+    loc_datapipe = LocationPicker(passiv_datapipe)
     sat_hrv_datapipe = SelectSpatialSlicePixels(
         sat_hrv_datapipe,
         location_datapipe=loc_datapipe,
@@ -40,11 +32,7 @@ def test_select_spatial_slice_pixels_hrv(passiv_datapipe, sat_hrv_datapipe):
 
 
 def test_select_spatial_slice_pixel_icon_eu(passiv_datapipe, icon_eu_datapipe):
-    loc_datapipe = LocationPicker(
-        passiv_datapipe,
-        y_dim_name="latitude",
-        x_dim_name="longitude",
-    )
+    loc_datapipe = LocationPicker(passiv_datapipe)
     icon_eu_datapipe = SelectSpatialSlicePixels(
         icon_eu_datapipe,
         location_datapipe=loc_datapipe,
@@ -57,12 +45,7 @@ def test_select_spatial_slice_pixel_icon_eu(passiv_datapipe, icon_eu_datapipe):
 
 
 def test_select_spatial_slice_pixel_icon_global(passiv_datapipe, icon_global_datapipe):
-    loc_datapipe = LocationPicker(
-        passiv_datapipe,
-        y_dim_name="latitude",
-        x_dim_name="longitude",
-        return_all_locations=True,
-    )
+    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
     icon_global_datapipe = SelectSpatialSlicePixels(
         icon_global_datapipe,
         location_datapipe=loc_datapipe,
@@ -76,11 +59,7 @@ def test_select_spatial_slice_pixel_icon_global(passiv_datapipe, icon_global_dat
 
 
 def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
-    loc_datapipe = LocationPicker(
-        passiv_datapipe,
-        y_dim_name="latitude",
-        x_dim_name="longitude",
-    )
+    loc_datapipe = LocationPicker(passiv_datapipe)
     icon_eu_datapipe = SelectSpatialSliceMeters(
         icon_eu_datapipe,
         location_datapipe=loc_datapipe,
@@ -98,12 +77,7 @@ def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
 
 
 def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_datapipe):
-    loc_datapipe = LocationPicker(
-        passiv_datapipe,
-        y_dim_name="latitude",
-        x_dim_name="longitude",
-        return_all_locations=True,
-    )
+    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
     icon_global_datapipe = SelectSpatialSliceMeters(
         icon_global_datapipe,
         location_datapipe=loc_datapipe,

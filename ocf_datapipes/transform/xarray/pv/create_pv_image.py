@@ -32,7 +32,6 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         image_datapipe: IterDataPipe,
         normalize: bool = False,
-        image_dim: str = "geostationary",
         max_num_pv_systems: int = np.inf,
         always_return_first: bool = False,
         seed: int = None,

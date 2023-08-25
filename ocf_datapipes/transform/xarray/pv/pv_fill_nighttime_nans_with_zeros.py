@@ -19,14 +19,14 @@ class PVFillNightNansIterDataPipe(IterDataPipe):
     def __init__(
         self, 
         source_datapipe: IterDataPipe, 
-        daynight_method: Union["simple", "elevation"] = "elevation",
+        daynight_method: str = "elevation",
     ):
         """Fill nighttime NaNs with zeros.
 
         Args:
             source_datapipe: A datapipe that emits xarray Dataset of PV generation
-            daynight_method: Method used to assign datetimes to either 'night' or 'day'. See 
-                `AssignDayNightStatusIterDataPipe` for details
+            daynight_method: Method used to assign datetimes to either 'night' or 'day'. Either 
+                "simple" or "elevation". See `AssignDayNightStatusIterDataPipe` for details
         """
         self.source_datapipe = source_datapipe
         
