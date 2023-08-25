@@ -1,13 +1,12 @@
 """Pick locations from a dataset"""
 import logging
-from typing import Optional
 
 import numpy as np
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
-from ocf_datapipes.utils.geospatial import spatial_coord_type
 
 from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils.geospatial import spatial_coord_type
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +35,8 @@ class LocationPickerIterDataPipe(IterDataPipe):
     def __iter__(self) -> Location:
         """Returns locations from the inputs datapipe"""
         for xr_dataset in self.source_datapipe:
-            
             loc_type, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
-            
+
             if self.return_all_locations:
                 logger.debug("Going to return all locations")
 

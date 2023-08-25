@@ -56,7 +56,7 @@ class PVInterpolateInfillIterDataPipe(IterDataPipe):
                     limit_direction="both",
                 )
             )
-            # Create new copy of the DataArray with correct time index shape
+            # Create new copy of the DataArray with correct time index shape
             ds_interp = ds.sel(time_utc=df_interp.index, method="nearest")
 
             # Fill with interpolated values
