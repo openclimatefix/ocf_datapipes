@@ -313,15 +313,7 @@ def gsp_yields(db_session):
 
 
 @pytest.fixture()
-def pv_netcdf_file():
-    """Create a file with PV data with the following columns
-
-    Columns
-    - timestamp
-    - ss_id
-    - generation_wh
-    """
-
+def pv_xarray_data():
     datetimes = pd.date_range("2022-09-01 00:00", "2022-09-08 00:00", freq="5T")
     pv_system_ids = (np.arange(10) + 9905).astype(str)
 
@@ -338,13 +330,48 @@ def pv_netcdf_file():
     da = da.where(da.datetime.dt.hour > 3, other=0)
 
     da.isel(datetime=slice(0, 3), pv_system_id=0).values[:] = np.nan
-    ds = da.to_dataset(dim="pv_system_id")
+    return da
+
+
+@pytest.fixture()
+def pv_netcdf_file(pv_xarray_data):
+    """Create a netcdf file with PV data with the following dimensions
+
+    - datetime
+    - pv_system_id
+    """
+
+    ds = pv_xarray_data.to_dataset(dim="pv_system_id")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = tmpdir + "/data.nc"
         ds.to_netcdf(filename, engine="h5netcdf")
         yield filename
+        
 
+@pytest.fixture()
+def pv_parquet_file(pv_xarray_data):
+    """Create a parquet file with PV data with the following columns
+
+    Columns
+    - timestamp
+    - ss_id
+    - generation_wh
+    """
+
+    # Convert to watt-hours energy for each 5-minute step
+    da = pv_xarray_data / 12
+    
+    # Flatten into DataFrame and rename
+    data_df = da.to_dataframe("generation_wh").reset_index(level=[0,1])
+    data_df = data_df.rename(dict(datetime="timestamp", pv_system_id="ss_id"), axis=1)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filename = tmpdir + "/data.parquet"
+        data_df.to_parquet(filename, engine="fastparquet")
+        yield filename
+
+        
 
 @pytest.fixture()
 def gsp_zarr_file():
