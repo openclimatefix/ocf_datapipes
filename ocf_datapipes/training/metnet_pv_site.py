@@ -93,8 +93,12 @@ def metnet_site_datapipe(
         use_pv=use_pv,
     )
     # Load PV data
-    used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
-
+    used_datapipes["pv"] = (
+        used_datapipes["pv"]
+        .select_train_test_time(start_time, end_time)
+        .pv_interpolate_infill()
+    )
+    
     # Now get overlapping time periods
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="pv")
 
@@ -195,6 +199,7 @@ def metnet_site_datapipe(
         output_height_pixels=output_size,
         add_sun_features=use_sun,
     )
+
     pv_datapipe = ConvertPVToNumpy(pv_datapipe)
 
     if not pv_in_image:
