@@ -83,11 +83,7 @@ def nwp_pv_datapipe(
         location_datapipe2,
         location_datapipe3,
         location_datapipe4,
-    ) = pv_location_datapipe.location_picker(
-        return_all_locations=return_all,
-        x_dim_name=configuration.input_data.pv.x_dim_name,
-        y_dim_name=configuration.input_data.pv.y_dim_name,
-    ).fork(
+    ) = pv_location_datapipe.location_picker(return_all_locations=return_all).fork(
         4, buffer_size=BUFFER_SIZE
     )
 
@@ -197,14 +193,8 @@ def nwp_pv_datapipe(
     #
     #####################################
     logger.debug("Combine all the data sources")
-    combined_datapipe = (
-        MergeNumpyModalities([pv_datapipe, nwp_datapipe])
-        .encode_space_time()
-        .add_sun_position(modality_name="pv")
+    combined_datapipe = MergeNumpyModalities([pv_datapipe, nwp_datapipe]).add_sun_position(
+        modality_name="pv"
     )
-
-    # combined_datapipe = combined_datapipe.add_length(
-    #     configuration=configuration, train_validation_test=tag
-    # )
 
     return combined_datapipe

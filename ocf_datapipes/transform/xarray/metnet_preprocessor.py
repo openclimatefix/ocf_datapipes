@@ -8,11 +8,13 @@ import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
+from ocf_datapipes.select.select_spatial_slice import convert_coords_to_match_xarray
 from ocf_datapipes.utils import Zipper
 from ocf_datapipes.utils.geospatial import (
-    load_geostationary_area_definition_and_transform_osgb,
-    load_geostationary_area_definition_and_transform_to_latlon,
-    osgb_to_lat_lon,
+    geostationary_area_coords_to_lonlat,
+    move_lon_lat_by_meters,
+    osgb_to_lon_lat,
+    spatial_coord_type,
 )
 from ocf_datapipes.utils.parallel import run_with_threadpool
 from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
@@ -215,42 +217,54 @@ def _crop_and_resample(
         roi_width_meters=context_width,
         roi_height_meters=context_height,
     )
+
     # Resamples to the same number of pixels for both center and contexts
     xr_context = _resample_to_pixel_size(xr_context, output_height_pixels, output_width_pixels)
     return xr_context
 
 
 def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meters: int):
+    xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+
     # Compute the index for left and right:
     half_height = roi_height_meters // 2
     half_width = roi_width_meters // 2
 
-    left = location.x - half_width
-    right = location.x + half_width
-    bottom = location.y - half_height
-    top = location.y + half_height
-    if "x_geostationary" in xr_data.coords:
-        # Convert to geostationary edges
-        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-        left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
-        right, top = _osgb_to_geostationary(xx=right, yy=top)
-        x_mask = (left <= xr_data.x_geostationary) & (xr_data.x_geostationary <= right)
-        y_mask = (xr_data.y_geostationary <= top) & (  # Y is flipped
-            bottom <= xr_data.y_geostationary
+    # Find the bounding box values for the location in either lat-lon or OSGB coord systems
+    if location.coordinate_system == "lat_lon":
+        right, top = move_lon_lat_by_meters(
+            location.x,
+            location.y,
+            half_width,
+            half_height,
         )
-        selected = xr_data.isel(x_geostationary=x_mask, y_geostationary=y_mask)
-    elif "x" in xr_data.coords:
-        _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-        left, bottom = _osgb_to_geostationary(xx=left, yy=bottom)
-        right, top = _osgb_to_geostationary(xx=right, yy=top)
-        x_mask = (left <= xr_data.x) & (xr_data.x <= right)
-        y_mask = (xr_data.y <= top) & (bottom <= xr_data.y)  # Y is flipped
-        selected = xr_data.isel(x=x_mask, y=y_mask)
+        left, bottom = move_lon_lat_by_meters(
+            location.x,
+            location.y,
+            -half_width,
+            -half_height,
+        )
+
+    elif location.coordinate_system == "osgb":
+        left = location.x - half_width
+        right = location.x + half_width
+        bottom = location.y - half_height
+        top = location.y + half_height
+
     else:
-        # Select data in the region of interest:
-        x_mask = (left <= xr_data.x_osgb) & (xr_data.x_osgb <= right)
-        y_mask = (xr_data.y_osgb <= top) & (bottom <= xr_data.y_osgb)
-        selected = xr_data.isel(x_osgb=x_mask, y_osgb=y_mask)
+        raise ValueError(f"Location coord system not recognized: {location.coordinate_system}")
+
+    (left, right), (bottom, top) = convert_coords_to_match_xarray(
+        x=np.array([left, right], dtype=np.float32),
+        y=np.array([bottom, top], dtype=np.float32),
+        from_coords=location.coordinate_system,
+        xr_data=xr_data,
+    )
+
+    # Select a patch from the xarray data
+    x_mask = (left <= xr_data[xr_x_dim]) & (xr_data[xr_x_dim] <= right)
+    y_mask = (bottom <= xr_data[xr_y_dim]) & (xr_data[xr_y_dim] <= top)
+    selected = xr_data.isel({xr_x_dim: x_mask, xr_y_dim: y_mask})
 
     return selected
 
@@ -301,11 +315,11 @@ def _create_sun_image(image_xr, x_dim, y_dim, time_dim, normalize):
         dtype=np.float32,
     )
     if "geostationary" in x_dim:
-        transform_to_latlon = load_geostationary_area_definition_and_transform_to_latlon(image_xr)
-        lats, lons = transform_to_latlon(xx=image_xr[x_dim].values, yy=image_xr[y_dim].values)
+        lons, lats = geostationary_area_coords_to_lonlat(
+            x=image_xr[x_dim].values, y=image_xr[y_dim].values, xr_data=image_xr
+        )
     else:
-        transform_to_latlon = osgb_to_lat_lon
-        lats, lons = transform_to_latlon(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
+        lons, lats = osgb_to_lon_lat(x=image_xr.x_osgb.values, y=image_xr.y_osgb.values)
     time_utc = image_xr[time_dim].values
 
     # Loop round each example to get the Sun's elevation and azimuth:

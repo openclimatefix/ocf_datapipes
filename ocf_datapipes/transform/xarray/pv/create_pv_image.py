@@ -1,7 +1,6 @@
 """Convert point PV sites to image output"""
 import logging
 from collections import defaultdict
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -11,8 +10,11 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.utils import Zipper
-from ocf_datapipes.utils.consts import Location
-from ocf_datapipes.utils.geospatial import load_geostationary_area_definition_and_transform_osgb
+from ocf_datapipes.utils.geospatial import (
+    lon_lat_to_geostationary_area_coords,
+    osgb_to_geostationary_area_coords,
+    spatial_coord_type,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,10 @@ class CreatePVImageIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         image_datapipe: IterDataPipe,
         normalize: bool = False,
-        image_dim: str = "geostationary",
-        max_num_pv_systems: int = -1,
+        max_num_pv_systems: int = np.inf,
         always_return_first: bool = False,
         seed: int = None,
-        take_n_pv_values_per_pixel: int = -1,
+        max_num_pv_systems_per_pixel: int = np.inf,
         normalize_by_pvlib: bool = False,
     ):
         """
@@ -42,35 +43,37 @@ class CreatePVImageIterDataPipe(IterDataPipe):
             source_datapipe: Source datapipe of PV data
             image_datapipe: Datapipe emitting images to get the shape from, with coordinates
             normalize: Whether to normalize based off the image max, or leave raw data
-            image_dim: Dimension name for the x and y dimensions
-            max_num_pv_systems: Max number of PV systems to use
+            max_num_pv_systems: Max number of PV systems to consider to generate entire image
             always_return_first: Always return the first image data cube, to save computation
                 Only use for if making the image at the beginning of the stack
             seed: Random seed to use if using max_num_pv_systems
-            take_n_pv_values_per_pixel: Take N PV values as the value for the pixel
-                If -1, averages the PV generation if there are multiple PVs per pixel.
+            max_num_pv_systems_per_pixel: Limit the number of PV systems used when finding the
+                generation timeseries in each pixel
             normalize_by_pvlib: Normalize by pvlib's poa_global based off
                 tilt/orientation/capacity/lat/lon of the system
 
         """
-        if normalize_by_pvlib is not False or normalize is not False:
-            assert normalize != normalize_by_pvlib, ValueError(
-                "Cannot normalize by both max, and pvlib"
-            )
+        if normalize_by_pvlib and normalize:
+            raise ValueError("Cannot normalize by both max, and pvlib")
+        assert max_num_pv_systems_per_pixel > 0
+        assert max_num_pv_systems > 0
+
         self.source_datapipe = source_datapipe
         self.image_datapipe = image_datapipe
         self.normalize = normalize
-        self.x_dim = "x_" + image_dim
-        self.y_dim = "y_" + image_dim
         self.max_num_pv_systems = max_num_pv_systems
         self.rng = np.random.default_rng(seed=seed)
         self.always_return_first = always_return_first
-        self.take_n_pv_values_per_pixel = take_n_pv_values_per_pixel
+        self.max_num_pv_systems_per_pixel = max_num_pv_systems_per_pixel
         self.normalize_by_pvlib = normalize_by_pvlib
 
     def __iter__(self) -> xr.DataArray:
         for pv_systems_xr, image_xr in Zipper(self.source_datapipe, self.image_datapipe):
-            if 0 < self.max_num_pv_systems <= len(pv_systems_xr.pv_system_id.values):
+            pv_coords, pv_x_dim, pv_y_dim = spatial_coord_type(pv_systems_xr)
+            image_coords, image_x_dim, image_y_dim = spatial_coord_type(image_xr)
+
+            # Randomly sample systems if too many
+            if self.max_num_pv_systems <= len(pv_systems_xr.pv_system_id):
                 subset_of_pv_system_ids = self.rng.choice(
                     pv_systems_xr.pv_system_id,
                     size=self.max_num_pv_systems,
@@ -78,71 +81,72 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 )
                 pv_systems_xr = pv_systems_xr.sel(pv_system_id=subset_of_pv_system_ids)
 
-            if "geostationary" in self.x_dim:
-                _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(
-                    image_xr
+            # Find and store spatial index positions of the PV systems within the target image
+            pv_position_dict = defaultdict(list)
+
+            for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
+                # went for isel incase there is a duplicated pv_system_id
+                pv_system = pv_systems_xr.isel(pv_system_id=i)
+
+                if pv_coords == "osgb" and image_coords == "geostationary":
+                    pv_x, pv_y = osgb_to_geostationary_area_coords(
+                        x=pv_system["x_osgb"].values,
+                        y=pv_system["y_osgb"].values,
+                        xr_data=image_xr,
+                    )
+                elif pv_coords == "lat_lon" and image_coords == "geostationary":
+                    pv_x, pv_y = lon_lat_to_geostationary_area_coords(
+                        x=pv_system["longitude"].values,
+                        y=pv_system["latitude"].values,
+                        xr_data=image_xr,
+                    )
+
+                else:
+                    raise NotImplementedError(
+                        f"PV coords of type {pv_coords} and image coords of type {image_coords}"
+                    )
+
+                # Check the PV system is within the image
+                in_range = (image_xr[image_x_dim].min() < pv_x < image_xr[image_x_dim].max()) and (
+                    image_xr[image_y_dim].min() < pv_y < image_xr[image_y_dim].max()
                 )
+
+                # If normalizing by pvlib we need tilt and orientation values
+                is_normalizable = (not self.normalize_by_pvlib) or np.isfinite(
+                    [pv_system.orientation.values, pv_system.tilt.values]
+                ).all()
+
+                if not in_range or not is_normalizable:
+                    # Skip the PV system if not inside the image
+                    # Skip the PV system if pvlib normalizarion requested but cannot be completed
+                    continue
+
+                x_idx = image_xr.get_index(image_x_dim).get_indexer([pv_x], method="nearest")[0]
+                y_idx = image_xr.get_index(image_y_dim).get_indexer([pv_y], method="nearest")[0]
+
+                pv_position_dict[(y_idx, x_idx)].append(pv_system)
+
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
             pv_image = np.zeros(
                 (
                     len(pv_systems_xr["time_utc"]),
-                    len(image_xr[self.y_dim]),
-                    len(image_xr[self.x_dim]),
+                    len(image_xr[image_y_dim]),
+                    len(image_xr[image_x_dim]),
                 ),
                 dtype=np.float32,
             )
-            pv_position_dict = defaultdict(list)
-            for i, pv_system_id in enumerate(pv_systems_xr["pv_system_id"]):
-                try:
-                    # went for isel incase there is a duplicated pv_system_id
-                    pv_system = pv_systems_xr.isel(pv_system_id=i)
-                except Exception as e:
-                    logger.warning(
-                        f"Could not select {pv_system_id} " f"from {pv_systems_xr.pv_system_id}"
-                    )
-                    raise e
-                if "geostationary" in self.x_dim:
-                    pv_x, pv_y = _osgb_to_geostationary(
-                        xx=pv_system["x_osgb"].values, yy=pv_system["y_osgb"].values
-                    )
-                else:
-                    pv_x = pv_system["x_osgb"]
-                    pv_y = pv_system["y_osgb"]
-                # Quick check as search sorted doesn't give an error if it is not in the range
-                if pv_x < image_xr[self.x_dim][0].values or pv_x > image_xr[self.x_dim][-1].values:
-                    continue
-                # Y Coordinates are in reverse for satellite data
-                if pv_y > image_xr[self.y_dim][0].values or pv_y < image_xr[self.y_dim][-1].values:
-                    continue
-                if "geostationary" in self.x_dim:
-                    x_idx = np.searchsorted(image_xr[self.x_dim].values, pv_x) - 1
-                    # y_geostationary is in descending order:
-                    y_idx = len(image_xr[self.y_dim]) - (
-                        np.searchsorted(image_xr[self.y_dim].values[::-1], pv_y) - 1
-                    )
-                else:
-                    x_idx = np.searchsorted(pv_x, image_xr[self.x_dim])
-                    y_idx = np.searchsorted(pv_y, image_xr[self.y_dim])
-                if x_idx == len(image_xr[self.x_dim]) or y_idx == len(image_xr[self.y_dim]):
-                    continue
-                # Add location to same one, so know if multiple overlap
-                # Filter if normalizing by pvlib,
-                # only include ones that have tilt and orientation as numbers
-                if self.normalize_by_pvlib:
-                    if not np.isfinite(pv_system.orientation.values) and not np.isfinite(
-                        pv_system.tilt.values
-                    ):
-                        continue
-                pv_position_dict[(y_idx, x_idx)].append(pv_system)
-            for location, system_list in pv_position_dict.items():
-                y_idx, x_idx = location[0], location[1]
-                if 0 < self.take_n_pv_values_per_pixel < len(system_list):
-                    system_numbers = self.rng.choice(
-                        list(range(len(system_list))),
-                        size=self.take_n_pv_values_per_pixel,
+
+            for (y_idx, x_idx), system_list in pv_position_dict.items():
+                # Randomly sample systems if too many per pixel
+                if self.max_num_pv_systems_per_pixel < len(system_list):
+                    random_inds = self.rng.choice(
+                        np.arange(len(system_list)),
+                        size=self.max_num_pv_systems_per_pixel,
                         replace=False,
                     )
-                    system_list = [system_list[idx] for idx in system_numbers]
+                    system_list = [system_list[i] for i in random_inds]
+
+                # Find average output timeseries of all systems in pixel
                 avg_generation = np.zeros_like(system_list[0].values)
                 for pv_system in system_list:
                     if self.normalize_by_pvlib:
@@ -152,68 +156,27 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                 pv_image[:, y_idx, x_idx] = avg_generation
 
             if self.normalize:
-                if np.nanmax(pv_image) > 0:
-                    pv_image /= np.nanmax(pv_image)
-            pv_image = np.nan_to_num(pv_image)
+                max_val = np.nanmax(pv_image)
+                if max_val > 0:
+                    pv_image = pv_image / max_val
 
-            # Should return Xarray as in Xarray transforms
+            # Should return xarray
             # Same coordinates as the image xarray, so can take that
-            pv_image = _create_data_array_from_image(pv_image, pv_systems_xr, image_xr)
+            pv_image_xr = xr.DataArray(
+                data=pv_image,
+                coords=(
+                    ("time_utc", pv_systems_xr.time_utc.values),
+                    (image_y_dim, image_xr[image_y_dim].values),
+                    (image_x_dim, image_xr[image_x_dim].values),
+                ),
+                name="pv_image",
+            )
+            pv_image_xr.attrs = image_xr.attrs
+
             if self.always_return_first:
                 while True:
-                    yield pv_image
-            yield pv_image
-
-
-def _create_data_array_from_image(
-    pv_image: np.ndarray,
-    pv_systems_xr: Union[xr.Dataset, xr.DataArray],
-    image_xr: Union[xr.Dataset, xr.DataArray],
-):
-    data_array = xr.DataArray(
-        data=pv_image,
-        coords=(
-            ("time_utc", pv_systems_xr.time_utc.values),
-            ("y_geostationary", image_xr.y_geostationary.values),
-            ("x_geostationary", image_xr.x_geostationary.values),
-        ),
-        name="pv_image",
-    ).astype(np.float32)
-    data_array.attrs = image_xr.attrs
-    return data_array
-
-
-def _get_idx_of_pixel_closest_to_poi_geostationary(
-    xr_data: xr.DataArray,
-    center_osgb: Location,
-    x_dim_name="x_geostationary",
-    y_dim_name="y_geostationary",
-) -> Location:
-    """
-    Return x and y index location of pixel at center of region of interest.
-
-    Args:
-        xr_data: Xarray dataset
-        center_osgb: Center in OSGB coordinates
-        x_dim_name: X dimension name
-        y_dim_name: Y dimension name
-
-    Returns:
-        Location for the center pixel in geostationary coordinates
-    """
-    _osgb_to_geostationary = load_geostationary_area_definition_and_transform_osgb(xr_data)
-    center_geostationary_tuple = _osgb_to_geostationary(xx=center_osgb.x, yy=center_osgb.y)
-    center_geostationary = Location(
-        x=center_geostationary_tuple[0], y=center_geostationary_tuple[1]
-    )
-
-    # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:
-    x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
-    # y_geostationary is in descending order:
-    y_index_at_center = len(xr_data[y_dim_name]) - (
-        np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
-    )
-    return Location(x=x_index_at_center, y=y_index_at_center)
+                    yield pv_image_xr
+            yield pv_image_xr
 
 
 def _normalize_by_pvlib(pv_system):

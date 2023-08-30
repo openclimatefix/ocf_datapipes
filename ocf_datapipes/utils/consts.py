@@ -19,7 +19,7 @@ SATELLITE_SPACER_LEN = 17  # Patch of 4x4 + 1 for surface height.
 PV_SPACER_LEN = 18  # 16 for embedding dim + 1 for marker + 1 for history
 
 PV_SYSTEM_ID: str = "pv_system_id"
-PV_SYSTEM_ROW_NUMBER = "pv_system_row_number"
+PV_ML_ID = "pv_ml_id"
 PV_SYSTEM_X_COORDS = "pv_system_x_coords"
 PV_SYSTEM_Y_COORDS = "pv_system_y_coords"
 
@@ -117,7 +117,7 @@ DEFAULT_REQUIRED_KEYS = [
     SATELLITE_Y_COORDS,
     PV_YIELD,
     PV_SYSTEM_ID,
-    PV_SYSTEM_ROW_NUMBER,
+    PV_ML_ID,
     PV_SYSTEM_X_COORDS,
     PV_SYSTEM_Y_COORDS,
     X_CENTERS_OSGB,
@@ -204,7 +204,7 @@ class BatchKey(Enum):
     This is also where we document the exact shape of each element.
 
     Each `DataSource` may be split into several different BatchKey elements. For example, the
-    PV PreparedDataSource yields `pv` and `pv_system_row_number` BatchKeys.
+    PV PreparedDataSource yields `pv` and `pv_ml_id` BatchKeys.
     """
 
     # -------------- HRVSATELLITE -----------------------------------
@@ -255,7 +255,7 @@ class BatchKey(Enum):
     # -------------- PV ---------------------------------------------
     pv = auto()  # shape: (batch_size, time, n_pv_systems)
     pv_t0_idx = auto()  # shape: scalar
-    pv_system_row_number = auto()  # shape: (batch_size, n_pv_systems)
+    pv_ml_id = auto()  # shape: (batch_size, n_pv_systems)
     pv_id = auto()  # shape: (batch_size, n_pv_systems)
     # PV AC system capacity in watts peak.
     # Warning: In v15, pv_capacity_watt_power is sometimes 0. This will be fixed in
@@ -268,15 +268,15 @@ class BatchKey(Enum):
 
     # PV coordinates:
     # Each has shape: (batch_size, n_pv_systems), will be NaN for missing PV systems.
-    pv_y_osgb = auto()
-    pv_x_osgb = auto()
+    pv_latitude = auto()
+    pv_longitude = auto()
     pv_time_utc = auto()  # Seconds since UNIX epoch (1970-01-01).
 
     # PV Fourier coordinates:
     # Each has shape: (batch_size, n_pv_systems, n_fourier_features_per_dim),
     # and will be NaN for missing PV systems.
-    pv_y_osgb_fourier = auto()
-    pv_x_osgb_fourier = auto()
+    pv_latitude_fourier = auto()
+    pv_longitude_fourier = auto()
     pv_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
     pv_time_utc_fourier_t0 = auto()  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
 
@@ -302,13 +302,6 @@ class BatchKey(Enum):
     gsp_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
     gsp_time_utc_fourier_t0 = auto()  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
 
-    # -------------- GSP5Min ----------------------------------------
-    # Not used by the Raw data pipeline!
-    gsp_5_min = auto()  # shape: (batch_size, time)
-    gsp_5_min_time_utc = auto()  # shape: (batch_size, time)
-    gsp_5_min_time_utc_fourier = auto()  # shape: (batch_size, time, n_fourier_features)
-    gsp_5_min_t0_idx = auto()
-
     # -------------- SUN --------------------------------------------
     # Solar position at every timestep. shape = (batch_size, n_timesteps)
     # The solar position data comes from two alternative sources: either the Sun pre-prepared
@@ -319,8 +312,6 @@ class BatchKey(Enum):
     satellite_solar_elevation = auto()
     gsp_solar_azimuth = auto()
     gsp_solar_elevation = auto()
-    gsp_5_min_solar_azimuth = auto()
-    gsp_5_min_solar_elevation = auto()
     pv_solar_azimuth = auto()
     pv_solar_elevation = auto()
     nwp_target_time_solar_azimuth = auto()

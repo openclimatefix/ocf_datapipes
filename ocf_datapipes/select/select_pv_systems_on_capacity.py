@@ -22,31 +22,18 @@ class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of PV data
-            min_capacity_watts: Min capacity in watts
-            max_capacity_watts: Max capacity in watts
+            min_capacity_watts: Threshold of PV system power in watts. Systems with capacity lower
+                than this are dropped.
+            max_capacity_watts: Threshold of PV system power in watts. Systems with capacity higher
+                than this are dropped.
         """
         self.source_datapipe = source_datapipe
         self.min_capacity_watts = min_capacity_watts
         self.max_capaciity_watts = max_capacity_watts
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        for xr_data in self.source_datapipe:
-            # Drop based off capacity here
-            # TODO Do
-            yield xr_data
-
-
-"""
-
-# Drop any PV systems whose PV capacity is too low:
-    PV_CAPACITY_THRESHOLD_W = 100
-    pv_systems_to_drop =
-    pv_capacity_watt_power.index[pv_capacity_watt_power <= PV_CAPACITY_THRESHOLD_W]
-    pv_systems_to_drop = pv_systems_to_drop.intersection(pv_power_watts.columns)
-    _log.info(
-        f"Dropping {len(pv_systems_to_drop)} PV systems because their max power is less than"
-        f" {PV_CAPACITY_THRESHOLD_W}"
-    )
-    pv_power_watts.drop(columns=pv_systems_to_drop, inplace=True)
-
-"""
+        for ds in self.source_datapipe:
+            too_low = ds.capacity_watt_power < self.min_capacity_watts
+            too_high = ds.capacity_watt_power > self.max_capacity_watts
+            mask = np.logical_or(too_low, too_high)
+            yield ds.where(~mask, drop=True)

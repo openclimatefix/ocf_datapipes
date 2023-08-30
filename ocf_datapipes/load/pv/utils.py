@@ -10,82 +10,55 @@ from nowcasting_datamodel.models.pv import providers
 logger = logging.getLogger(__name__)
 
 
-def intersection_of_pv_system_ids(
-    pv_metadata: pd.DataFrame, pv_power: pd.DataFrame
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Only pick PV systems for which we have metadata."""
-    pv_system_ids = pv_metadata.index.intersection(pv_power.columns)
-    pv_system_ids = np.sort(pv_system_ids)
-    pv_power = pv_power[pv_system_ids]
-    pv_metadata = pv_metadata.loc[pv_system_ids]
-    return pv_metadata, pv_power
-
-
 def put_pv_data_into_an_xr_dataarray(
-    pv_power_watts: pd.DataFrame,
-    y_osgb: pd.Series,
-    x_osgb: pd.Series,
-    capacity_watt_power: pd.Series,
-    pv_system_row_number: pd.Series,
-    longitude: Optional[pd.Series] = None,
-    latitude: Optional[pd.Series] = None,
+    df_gen: pd.DataFrame,
+    system_capacities: pd.Series,
+    ml_id: pd.Series,
+    longitude: pd.Series,
+    latitude: pd.Series,
     tilt: Optional[pd.Series] = None,
     orientation: Optional[pd.Series] = None,
 ) -> xr.DataArray:
     """Convert to an xarray DataArray.
 
     Args:
-        pv_power_watts: pd.DataFrame where the columns are PV systems (and the column names are
-            ints), and the index is UTC datetime.
-        x_osgb: The x location. Index = PV system ID ints.
-        y_osgb: The y location. Index = PV system ID ints.
-        capacity_watt_power: The max power output of each PV system in Watts.
-         Index = PV system ID ints.
-        pv_system_row_number: The integer position of the PV system in the metadata.
-            Used to create the PV system ID embedding.
+        df_gen: pd.DataFrame where the columns are PV systems (and the column names are ints), and
+            the index is UTC datetime
+        system_capacities: The max power output of each PV system in Watts. Index is PV system IDs.
+        ml_id: The `ml_id` used to identify each PV system
         longitude: longitude of the locations
         latitude: latitude of the locations
         tilt: Tilt of the panels
         orientation: Orientation of the panels
     """
     # Sanity check!
-    pv_system_ids = pv_power_watts.columns
+    system_ids = df_gen.columns
     for name, series in (
-        ("x_osgb", x_osgb),
-        ("y_osgb", y_osgb),
-        ("capacity_watt_power", capacity_watt_power),
-        ("pv_system_row_number", pv_system_row_number),
+        ("longitude", longitude),
+        ("latitude", latitude),
+        ("system_capacities", system_capacities),
     ):
         logger.debug(f"Checking {name}")
-        if not np.array_equal(series.index, pv_system_ids, equal_nan=True):
-            logger.debug(f"Index of {name} does not equal {pv_system_ids}. Index is {series.index}")
-            assert np.array_equal(series.index, pv_system_ids, equal_nan=True)
+        if not np.array_equal(series.index, system_ids, equal_nan=True):
+            logger.debug(f"Index of {name} does not equal {system_ids}. Index is {series.index}")
+            assert np.array_equal(series.index, system_ids, equal_nan=True)
 
     data_array = xr.DataArray(
-        data=pv_power_watts.values,
+        data=df_gen.values,
         coords=(
-            ("time_utc", pv_power_watts.index.values),
-            ("pv_system_id", pv_power_watts.columns),
+            ("time_utc", df_gen.index.values),
+            ("pv_system_id", system_ids),
         ),
         name="pv_power_watts",
     ).astype(np.float32)
 
     data_array = data_array.assign_coords(
-        x_osgb=("pv_system_id", x_osgb),
-        y_osgb=("pv_system_id", y_osgb),
-        capacity_watt_power=("pv_system_id", capacity_watt_power),
-        pv_system_row_number=("pv_system_id", pv_system_row_number),
+        longitude=("pv_system_id", longitude),
+        latitude=("pv_system_id", latitude),
+        capacity_watt_power=("pv_system_id", system_capacities),
+        ml_id=("pv_system_id", ml_id),
     )
-    # Sample period duration is required so PVDownsample transform knows by how much
-    # to change the pv_t0_idx:
-    if latitude is not None:
-        data_array = data_array.assign_coords(
-            latitude=("pv_system_id", latitude),
-        )
-    if longitude is not None:
-        data_array = data_array.assign_coords(
-            longitude=("pv_system_id", longitude),
-        )
+
     if tilt is not None:
         data_array = data_array.assign_coords(
             tilt=("pv_system_id", tilt),
@@ -94,8 +67,6 @@ def put_pv_data_into_an_xr_dataarray(
         data_array = data_array.assign_coords(
             orientation=("pv_system_id", orientation),
         )
-
-    assert len(pv_system_row_number) > 0
 
     return data_array
 

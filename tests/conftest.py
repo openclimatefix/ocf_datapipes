@@ -313,8 +313,45 @@ def gsp_yields(db_session):
 
 
 @pytest.fixture()
-def pv_parquet_file():
-    """Create a file with PV data with the following columns
+def pv_xarray_data():
+    datetimes = pd.date_range("2022-09-01 00:00", "2022-09-08 00:00", freq="5T")
+    pv_system_ids = (np.arange(10) + 9905).astype(str)
+
+    data = np.full((len(datetimes), len(pv_system_ids)), fill_value=9.1)
+    da = xr.DataArray(
+        data,
+        coords=(
+            ("datetime", datetimes),
+            ("pv_system_id", pv_system_ids),
+        ),
+    )
+
+    da = da.where(da.datetime.dt.hour < 21, other=0)
+    da = da.where(da.datetime.dt.hour > 3, other=0)
+
+    da.isel(datetime=slice(0, 3), pv_system_id=0).values[:] = np.nan
+    return da
+
+
+@pytest.fixture()
+def pv_netcdf_file(pv_xarray_data):
+    """Create a netcdf file with PV data with the following dimensions
+
+    - datetime
+    - pv_system_id
+    """
+
+    ds = pv_xarray_data.to_dataset(dim="pv_system_id")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filename = tmpdir + "/data.nc"
+        ds.to_netcdf(filename, engine="h5netcdf")
+        yield filename
+
+
+@pytest.fixture()
+def pv_parquet_file(pv_xarray_data):
+    """Create a parquet file with PV data with the following columns
 
     Columns
     - timestamp
@@ -322,25 +359,12 @@ def pv_parquet_file():
     - generation_wh
     """
 
-    date = datetime(2022, 9, 1)
-    ids = range(0, 10)
-    days = 7
+    # Convert to watt-hours energy for each 5-minute step
+    da = pv_xarray_data / 12
 
-    data = []
-    for id in ids:
-        # 288 5 minutes stamps in each day
-        for i in range(0, 288 * days):
-            datestamp = date + timedelta(minutes=i * 5)
-            if datestamp.hour > 21 or datestamp.hour < 3:
-                value = 0
-            else:
-                value = 9.1
-
-            data.append([datestamp, 9905 + id, value])
-
-    data_df = pd.DataFrame(data, columns=["timestamp", "ss_id", "generation_wh"])
-
-    data_df.loc[0:3, "generation_wh"] = np.nan
+    # Flatten into DataFrame and rename
+    data_df = da.to_dataframe("generation_wh").reset_index(level=[0, 1])
+    data_df = data_df.rename(dict(datetime="timestamp", pv_system_id="ss_id"), axis=1)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = tmpdir + "/data.parquet"
@@ -518,7 +542,7 @@ def configuration():
 
 
 @pytest.fixture()
-def configuration_with_pv_parquet(pv_parquet_file):
+def configuration_with_pv_netcdf(pv_netcdf_file):
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
     configuration = load_yaml_configuration(filename=filename)
@@ -527,7 +551,7 @@ def configuration_with_pv_parquet(pv_parquet_file):
         configuration.input_data.pv.pv_files_groups = [
             configuration.input_data.pv.pv_files_groups[0]
         ]
-        configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
+        configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_netcdf_file
         configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
 
@@ -535,13 +559,13 @@ def configuration_with_pv_parquet(pv_parquet_file):
 
 
 @pytest.fixture()
-def configuration_with_pv_parquet_and_nwp(pv_parquet_file, nwp_data_with_id_filename):
+def configuration_with_pv_netcdf_and_nwp(pv_netcdf_file, nwp_data_with_id_filename):
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
         configuration_filename = tmpdir + "/configuration.yaml"
-        configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_parquet_file
+        configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_netcdf_file
         configuration.input_data.pv.pv_files_groups = [
             configuration.input_data.pv.pv_files_groups[0]
         ]

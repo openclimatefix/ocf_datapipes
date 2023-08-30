@@ -21,7 +21,7 @@ import geopandas as gpd
 import pandas as pd
 import requests
 
-from ocf_datapipes.utils.geospatial import osgb_to_lat_lon
+from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 from ocf_datapipes.utils.pvlive import get_list_of_gsp_ids
 
 logger = logging.getLogger(__name__)
@@ -132,9 +132,10 @@ def get_gsp_shape_from_eso(
             # calculate the centroid before using - to_crs
             shape_gpd["centroid_x"] = shape_gpd["geometry"].centroid.x
             shape_gpd["centroid_y"] = shape_gpd["geometry"].centroid.y
-            shape_gpd["centroid_lat"], shape_gpd["centroid_lon"] = osgb_to_lat_lon(
-                x=shape_gpd["centroid_x"], y=shape_gpd["centroid_y"]
-            )
+            (
+                shape_gpd["centroid_lon"],
+                shape_gpd["centroid_lat"],
+            ) = osgb_to_lon_lat(x=shape_gpd["centroid_x"], y=shape_gpd["centroid_y"])
 
             # Decided not project the shape data to WGS84, as we want to keep
             # all 'batch' data the same projection.

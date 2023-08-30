@@ -33,12 +33,12 @@ class ConvertPVToNumpyBatchIterDataPipe(IterDataPipe):
             example: NumpyBatch = {
                 BatchKey.pv: xr_data.values,
                 BatchKey.pv_t0_idx: xr_data.attrs["t0_idx"],
-                BatchKey.pv_system_row_number: xr_data["pv_system_row_number"].values,
+                BatchKey.pv_ml_id: xr_data["ml_id"].values,
                 BatchKey.pv_id: xr_data["pv_system_id"].values.astype(np.float32),
                 BatchKey.pv_capacity_watt_power: xr_data["capacity_watt_power"].values,
                 BatchKey.pv_time_utc: datetime64_to_float(xr_data["time_utc"].values),
-                BatchKey.pv_x_osgb: xr_data["x_osgb"].values,
-                BatchKey.pv_y_osgb: xr_data["y_osgb"].values,
+                BatchKey.pv_latitude: xr_data["latitude"].values,
+                BatchKey.pv_longitude: xr_data["longitude"].values,
             }
 
             yield example

@@ -3,7 +3,6 @@ This is a class function that drops the pv systems with generates power over nig
 """
 import logging
 
-import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
@@ -17,45 +16,42 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
     Drop the pv systems which generates power over night date from a timeseries xarray Dataset.
     """
 
-    def __init__(self, source_datapipe: IterDataPipe):
-        """
-        This method drops the PV systems producing output overnight
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        threshold=0.2,
+        daynight_method: str = "simple",
+    ):
+        """Drops the PV systems producing output overnight.
 
         Args:
-            source_datapipe: A datapipe that emmits Xarray Dataset of the pv.netcdf file
+            source_datapipe: A datapipe that emits xarray Dataset of PV generation
+            threshold: Relative threshold for night-time production. Any system that generates more
+                power than this in any night-time timestamp will be dropped
+            daynight_method: Method used to assign datetimes to either 'night' or 'day'. Either
+                "simple" or "elevation". See `AssignDayNightStatusIterDataPipe` for details
         """
+        assert daynight_method in ["simple", "elevation"]
         self.source_datapipe = source_datapipe
+        self.threshold = threshold
+        self.daynight_method = daynight_method
 
     def __iter__(self) -> xr.DataArray():
-        logger.warning("This droping of the nighttime pv is only applicable to the UK PV datasets")
+        # TODO: Make more general
 
-        for xr_dataset in self.source_datapipe:
-            # Getting the list of the pv system id
-            pv_sys_id_list = xr_dataset.coords["pv_system_id"].values
+        for ds in self.source_datapipe.assign_daynight_status(self.daynight_method):
+            # Select the night-time values
+            ds_night = ds.where(ds.status_daynight == "night", drop=True)
 
-            # Grouping the datastet with only night status
-            night_ds = xr_dataset.groupby("status_daynight")["night"].values
+            # Find relative maximum night-time generation for each system
+            night_time_max_gen = (ds_night / ds_night.capacity_watt_power).max(dim="time_utc")
 
-            # Getting the shape of the array
-            night_ds_shape = night_ds.shape
-
-            # Checking if all the systems has any values other than zero (including NaN)
-            check_nonzero = [(np.array(night_ds[:, m]) != 0) for m in range(night_ds_shape[1])]
-
-            # Checking if all the systems has NaN in their daily outputs
-            check_isnan = [
-                np.logical_not(np.isnan(night_ds[:, m])) for m in range(night_ds_shape[1])
-            ]
-
-            # Checking if there are any systems which has numeric values (not including np.zeros)
-            # and (not including np.nan)
-            final_check = np.logical_and(check_nonzero, check_isnan)
-
-            # Getting the indices of system ids to drop
-            drop_pv_sys_id = np.where(final_check.any(axis=1))[0]
+            # Find systems above threshold
+            mask = night_time_max_gen > self.threshold
 
             logger.info(
-                f"Dropping the pv systems{pv_sys_id_list[drop_pv_sys_id]} with night time pv output"
+                f"Dropping {mask.sum().item()} PV systems with IDs:"
+                f"{mask.where(mask, drop=True).pv_system_id.values}"
             )
-            xr_dataset = xr_dataset.drop_sel(pv_system_id=pv_sys_id_list[drop_pv_sys_id])
-            yield xr_dataset
+            ds = ds.where(~mask, drop=True)
+            yield ds

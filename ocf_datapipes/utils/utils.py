@@ -93,6 +93,24 @@ def is_sorted(array: np.ndarray) -> bool:
     return np.all(array[:-1] <= array[1:])
 
 
+def searchsorted(a, v, side="left", assume_ascending=True):
+    """Find indices where elements should be inserted to maintain order.
+
+    Can be either sorted in ascending order or descending order
+
+    Args:
+        a: Target array
+        v: Values to insert into `a`
+        side: If ‘left’, the index of the first suitable location found is given. If ‘right’, return
+            the last such index
+        assume_ascending: Whether `a` is in ascending order, else assumed descending
+    """
+    if assume_ascending:
+        return np.searchsorted(a, v, side=side)
+    else:
+        return np.searchsorted(-a, -v, side=side)
+
+
 def check_path_exists(path: Union[str, Path]):
     """Raise a FileNotFoundError if `path` does not exist.
 

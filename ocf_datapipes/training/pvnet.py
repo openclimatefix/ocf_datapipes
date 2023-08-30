@@ -512,8 +512,6 @@ def construct_sliced_data_pipeline(
             location_pipe_copy,
             roi_height_pixels=conf_nwp.nwp_image_size_pixels_height,
             roi_width_pixels=conf_nwp.nwp_image_size_pixels_width,
-            x_dim_name="x_osgb",
-            y_dim_name="y_osgb",
         )
         nwp_datapipe = nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
         numpy_modalities.append(nwp_datapipe.convert_nwp_to_numpy_batch())
@@ -526,8 +524,6 @@ def construct_sliced_data_pipeline(
             location_pipe_copy,
             roi_height_pixels=conf_sat.satellite_image_size_pixels_height,
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
@@ -539,8 +535,6 @@ def construct_sliced_data_pipeline(
         location_datapipe=location_pipe_copy,
         roi_height_meters=1,
         roi_width_meters=1,
-        y_dim_name="y_osgb",
-        x_dim_name="x_osgb",
         dim_name="gsp_id",
     )
 
@@ -549,8 +543,6 @@ def construct_sliced_data_pipeline(
         location_datapipe=location_pipe,
         roi_height_meters=1,
         roi_width_meters=1,
-        y_dim_name="y_osgb",
-        x_dim_name="x_osgb",
         dim_name="gsp_id",
     )
 

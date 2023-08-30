@@ -93,7 +93,9 @@ def metnet_site_datapipe(
         use_pv=use_pv,
     )
     # Load PV data
-    used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
+    used_datapipes["pv"] = (
+        used_datapipes["pv"].select_train_test_time(start_time, end_time).pv_interpolate_infill()
+    )
 
     # Now get overlapping time periods
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes, key_for_t0="pv")
@@ -120,8 +122,6 @@ def metnet_site_datapipe(
             roi_height_meters=context_size_meters,
             roi_width_meters=context_size_meters,
             dim_name=None,
-            x_dim_name="x_osgb",
-            y_dim_name="y_osgb",
         )
         # Multithread the data
         nwp_datapipe = ThreadPoolMapper(
@@ -138,8 +138,6 @@ def metnet_site_datapipe(
             roi_height_meters=context_size_meters,
             roi_width_meters=context_size_meters,
             dim_name=None,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
         )
         sat_datapipe = ThreadPoolMapper(
             sat_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
@@ -154,8 +152,6 @@ def metnet_site_datapipe(
             roi_height_meters=context_size_meters,
             roi_width_meters=context_size_meters,
             dim_name=None,
-            x_dim_name="x_geostationary",
-            y_dim_name="y_geostationary",
         )
         sat_hrv_datapipe = ThreadPoolMapper(
             sat_hrv_datapipe, _load_xarray_values, max_workers=8, scheduled_tasks=batch_size
@@ -178,6 +174,7 @@ def metnet_site_datapipe(
         pv_history = pv_history.create_pv_history_image(
             image_datapipe=nwp_pv_datapipe, image_dim="osgb"
         )
+
     if "nwp" in used_datapipes.keys():
         modalities.append(nwp_datapipe)
     if "hrv" in used_datapipes.keys():
@@ -200,6 +197,7 @@ def metnet_site_datapipe(
         output_height_pixels=output_size,
         add_sun_features=use_sun,
     )
+
     pv_datapipe = ConvertPVToNumpy(pv_datapipe)
 
     if not pv_in_image:

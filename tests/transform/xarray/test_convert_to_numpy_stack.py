@@ -9,15 +9,11 @@ def test_stack_xarray(sat_hrv_datapipe, sat_datapipe, nwp_datapipe, passiv_datap
         loc1,
         roi_height_pixels=32,
         roi_width_pixels=32,
-        y_dim_name="y_geostationary",
-        x_dim_name="x_geostationary",
     )
     sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
         loc2,
         roi_height_pixels=32,
         roi_width_pixels=32,
-        y_dim_name="y_geostationary",
-        x_dim_name="x_geostationary",
     )
     datapipe = StackXarray([sat_hrv_datapipe, sat_datapipe])
     data = next(iter(datapipe))

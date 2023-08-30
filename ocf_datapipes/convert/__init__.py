@@ -6,9 +6,9 @@ from ocf_datapipes.convert.numpy.batch.pv import (
     ConvertPVToNumpyBatchIterDataPipe as ConvertPVToNumpyBatch,
 )
 
-from .coordinates import ConvertGeostationaryToLatLonIterDataPipe as ConvertGeostationaryToLatLon
-from .coordinates import ConvertLatLonToOSGBIterDataPipe as ConvertLatLonToOSGB
-from .coordinates import ConvertOSGBToLatLonIterDataPipe as ConvertOSGBToLatLon
+from .coordinates import ConvertGeostationaryToLonLatIterDataPipe as ConvertGeostationaryToLonLat
+from .coordinates import ConvertLonLatToOSGBIterDataPipe as ConvertLonLatToOSGB
+from .coordinates import ConvertOSGBToLonLatIterDataPipe as ConvertOSGBToLonLat
 from .numpy.gsp import ConvertGSPToNumpyIterDataPipe as ConvertGSPToNumpy
 from .numpy.pv import ConvertPVToNumpyIterDataPipe as ConvertPVToNumpy
 from .nwp import ConvertNWPToNumpyBatchIterDataPipe as ConvertNWPToNumpyBatch

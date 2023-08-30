@@ -58,10 +58,7 @@ def simple_pv_datapipe(
 
     logger.debug("Getting locations")
     # might have to fork this if we add NWPs
-    location_datapipe1 = pv_location_datapipe.location_picker(
-        x_dim_name="longitude",
-        y_dim_name="latitude",
-    )
+    location_datapipe1 = pv_location_datapipe.location_picker()
     logger.debug("Got locations")
 
     logger.debug("Making PV space slice")
@@ -74,12 +71,6 @@ def simple_pv_datapipe(
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
         .select_id(location_datapipe=location_datapipe1, data_source_name="pv")
-        # .select_spatial_slice_meters(
-        #     location_datapipe=location_datapipe1,
-        #     roi_width_meters=configuration.input_data.pv.pv_image_size_meters_width,
-        #     roi_height_meters=configuration.input_data.pv.pv_image_size_meters_height,
-        #     x_dim_name="longitude", y_dim_name="latitude"
-        # )
         .ensure_n_pv_systems_per_example(n_pv_systems_per_example=1)
         .remove_nans()
         .fork(3, buffer_size=BUFFERSIZE)
@@ -112,21 +103,7 @@ def simple_pv_datapipe(
         .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
     )
 
-    ####################################
-    #
-    # Join data pipes together, and get extra details
-    # TODO add simple NWP data
-    #
-    #####################################
     logger.debug("Combine all the data sources")
-    combined_datapipe = (
-        MergeNumpyModalities([pv_datapipe])
-        # .align_gsp_to_5_min(batch_key_for_5_min_datetimes=BatchKey.pv_time_utc)
-        .encode_space_time().add_sun_position(modality_name="pv")
-    )
-
-    # combined_datapipe = combined_datapipe.add_length(
-    #     configuration=configuration, train_validation_test=tag
-    # )
+    combined_datapipe = MergeNumpyModalities([pv_datapipe]).add_sun_position(modality_name="pv")
 
     return combined_datapipe

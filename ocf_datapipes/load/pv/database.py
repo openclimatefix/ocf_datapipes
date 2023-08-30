@@ -22,7 +22,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import encode_label, put_pv_data_into_an_xr_dataarray
-from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle, lat_lon_to_osgb
+from ocf_datapipes.utils.geospatial import calculate_azimuth_and_elevation_angle
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +75,6 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             load_extra_minutes=self.load_extra_minutes,
         )
 
-        pv_system_row_number = pd.Series([1] * len(pv_power.columns), index=pv_power.columns)
-
         # select metadata that is in pv_power
         logger.debug(
             f"There are currently {len(pv_metadata.index)} pv system in the metadata, "
@@ -90,17 +88,18 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         logger.debug(f"There are now {len(pv_metadata.index)} pv system in the metadata")
         logger.debug(f"There are now {len(pv_power.columns)} pv system in the power data")
 
+        # Compile data into an xarray DataArray
         data_xr = put_pv_data_into_an_xr_dataarray(
-            pv_power_watts=pv_power,  # TODO check this is watts
-            y_osgb=pv_metadata.y_osgb.astype(np.float32),
-            x_osgb=pv_metadata.x_osgb.astype(np.float32),
-            capacity_watt_power=pv_metadata.capacity_watt_power,
-            pv_system_row_number=pv_system_row_number,
+            df_gen=pv_power,
+            system_capacities=pv_metadata.capacity_watt_power,
+            ml_id=pv_metadata.ml_id,
             latitude=pv_metadata.latitude,
             longitude=pv_metadata.longitude,
+            tilt=pv_metadata.get("tilt"),
+            orientation=pv_metadata.get("orientation"),
         )
 
-        logger.info(f"Found {len(data_xr.pv_system_row_number)} PV systems")
+        logger.info(f"Found {len(data_xr.ml_id)} PV systems")
 
         while True:
             yield data_xr
@@ -146,18 +145,14 @@ def get_metadata_from_database(providers: List[str] = None) -> pd.DataFrame:
             pv_systems_df["installed_capacity_kw"] = pv_systems_df["ml_capacity_kw"]
             pv_systems_df = pv_systems_df[["latitude", "longitude", "installed_capacity_kw"]]
 
+        # TODO - we expect this ID from the database
+        pv_systems_df["ml_id"] = np.nan
+
         pv_system_all_df.append(pv_systems_df)
 
     pv_system_all_df = pd.concat(pv_system_all_df)
 
     logger.debug(f"Found {len(pv_system_all_df)} pv systems")
-
-    # add x_osgb and y_osgb
-    x_osgb, y_osgb = lat_lon_to_osgb(
-        latitude=pv_system_all_df["latitude"], longitude=pv_system_all_df["longitude"]
-    )
-    pv_system_all_df["x_osgb"] = x_osgb
-    pv_system_all_df["y_osgb"] = y_osgb
 
     pv_system_all_df["capacity_kw"] = pv_system_all_df["installed_capacity_kw"]
     pv_system_all_df["capacity_watt_power"] = pv_system_all_df["capacity_kw"] * 1000

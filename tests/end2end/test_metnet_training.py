@@ -3,50 +3,30 @@ import torch
 import torchdata.datapipes as dp
 import xarray
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, Mapper
-from torchdata.datapipes.utils import to_graph
 
 xarray.set_options(keep_attrs=True)
 
 from datetime import timedelta
 
-from ocf_datapipes.batch import MergeNumpyExamplesToBatch, MergeNumpyModalities
-from ocf_datapipes.convert import (
-    ConvertGSPToNumpyBatch,
-    ConvertNWPToNumpyBatch,
-    ConvertPVToNumpyBatch,
-    ConvertSatelliteToNumpyBatch,
-)
-from ocf_datapipes.experimental import EnsureNNWPVariables, SetSystemIDsToOne
 from ocf_datapipes.select import (
     DropGSP,
     LocationPicker,
     SelectLiveT0Time,
     SelectLiveTimeSlice,
     SelectSpatialSliceMeters,
-    SelectSpatialSlicePixels,
-    SelectTimeSlice,
 )
-from ocf_datapipes.transform.numpy import (
-    AddSunPosition,
-    AddTopographicData,
-    AlignGSPto5Min,
-    EncodeSpaceTime,
-    ExtendTimestepsToFuture,
-    SaveT0Time,
-)
+
 from ocf_datapipes.transform.xarray import (
     AddT0IdxAndSamplePeriodDuration,
-    ConvertSatelliteToInt8,
     ConvertToNWPTargetTime,
     CreatePVImage,
     Downsample,
-    EnsureNPVSystemsPerExample,
     Normalize,
     PreProcessMetNet,
     ReprojectTopography,
 )
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD, BatchKey
+
+from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD
 
 import pytest
 

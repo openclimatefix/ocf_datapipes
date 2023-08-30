@@ -6,7 +6,7 @@ from freezegun import freeze_time
 from nowcasting_datamodel.models import PVSystem, PVSystemSQL, pv_output
 
 from ocf_datapipes.config.model import PV, PVFiles
-from ocf_datapipes.load.pv.live import (
+from ocf_datapipes.load.pv.database import (
     OpenPVFromDBIterDataPipe,
     get_metadata_from_database,
     get_pv_power_from_database,
