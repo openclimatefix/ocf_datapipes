@@ -13,7 +13,7 @@ setup(
     version="1.2.49",
     license="MIT",
     description="Pytorch Datapipes built for use in Open Climate Fix's forecasting work",
-    author="Jacob Bieker, Jack Kelly, Peter Dudfield",
+    author="Jacob Bieker, Jack Kelly, Peter Dudfield, James Fulton",
     author_email="info@openclimatefix.org",
     company="Open Climate Fix Ltd",
     install_requires=install_requires,
