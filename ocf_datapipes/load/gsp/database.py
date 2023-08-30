@@ -231,15 +231,9 @@ def get_gsp_power_from_database(
     # note data is in 30 minutes chunks
     limit = int(interpolate_minutes / 30)
     if limit > 0:
-        gsp_power_df.interpolate(
-            limit=limit, inplace=True, method="cubic", fill_value="extrapolate"
-        )
-        gsp_nominal_capacity_df.interpolate(
-            limit=limit, inplace=True, method="cubic", fill_value="extrapolate"
-        )
-        gsp_effective_capacity_df.interpolate(
-            limit=limit, inplace=True, method="cubic", fill_value="extrapolate"
-        )
+        gsp_power_df.interpolate(limit=limit, inplace=True, method="cubic")
+        gsp_nominal_capacity_df.interpolate(limit=limit, inplace=True, method="cubic")
+        gsp_effective_capacity_df.interpolate(limit=limit, inplace=True, method="cubic")
 
     # filter out the extra minutes loaded
     logger.debug(f"{len(gsp_power_df)} of datetimes before filter on {start_utc}")
