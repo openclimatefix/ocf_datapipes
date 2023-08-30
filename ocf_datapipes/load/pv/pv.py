@@ -167,14 +167,13 @@ def _load_pv_generation_and_capacity(
     """
 
     _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
-            
-        
+
     # Load data in a way that will work in the cloud and locally:
     if ".parquet" in str(filename):
         _log.debug(f"Loading PV parquet file {filename}")
-        
+
         df_raw = pd.read_parquet(filename, engine="fastparquet")
-        
+
         # Assuming the data is reported 5-minutely
         # The power output in watts is 12 times (60 minutes /5 minutes) the energy in watt-hours
         df_raw["generation_w"] = df_raw["generation_wh"] * 12
@@ -182,7 +181,7 @@ def _load_pv_generation_and_capacity(
         # pivot on ss_id
         df_gen = df_raw.pivot(index="timestamp", columns="ss_id", values="generation_w")
         del df_raw
-        
+
     else:
         with fsspec.open(filename, mode="rb") as file:
             file_bytes = file.read()
@@ -190,30 +189,30 @@ def _load_pv_generation_and_capacity(
         _log.info("Loaded solar PV power bytes, now converting to xarray")
         with io.BytesIO(file_bytes) as file:
             ds_gen = xr.load_dataset(file, engine="h5netcdf")
-            
+
         df_gen = ds_gen.to_dataframe()
-        
+
         if "passiv" not in str(filename):
             _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
             try:
                 df_gen = df_gen.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
             except Exception as e:
                 _log.warning(
-                    "Could not convert timezone from London to UTC. " "Going to try and carry on anyway"
+                    "Could not convert timezone from London to UTC. "
+                    "Going to try and carry on anyway"
                 )
                 _log.warning(e)
-                
+
     # Fix data types
     df_gen = df_gen.astype(np.float32)
     df_gen.columns = df_gen.columns.astype(np.int64)
-
 
     _log.info("Loaded solar PV power data and converting to pandas.")
     estimated_capacities = df_gen.quantile(estimated_capacity_percentile / 100)
 
     # Filter to given time
-    df_gen = df_gen.loc[slice(start_date,end_date)]
-    
+    df_gen = df_gen.loc[slice(start_date, end_date)]
+
     # Remove systems with no generation data
     mask = estimated_capacities > 0
     estimated_capacities = estimated_capacities[mask]

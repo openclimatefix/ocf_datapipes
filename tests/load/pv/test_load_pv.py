@@ -17,7 +17,7 @@ def test_open_passiv_from_nc():
     data = next(iter(pv_datapipe))
     assert data is not None
     assert len(data.pv_system_id) == 2
-    
+
 
 def test_open_passiv_from_parquet(pv_parquet_file):
     pv = PV(

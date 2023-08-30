@@ -347,7 +347,7 @@ def pv_netcdf_file(pv_xarray_data):
         filename = tmpdir + "/data.nc"
         ds.to_netcdf(filename, engine="h5netcdf")
         yield filename
-        
+
 
 @pytest.fixture()
 def pv_parquet_file(pv_xarray_data):
@@ -361,9 +361,9 @@ def pv_parquet_file(pv_xarray_data):
 
     # Convert to watt-hours energy for each 5-minute step
     da = pv_xarray_data / 12
-    
+
     # Flatten into DataFrame and rename
-    data_df = da.to_dataframe("generation_wh").reset_index(level=[0,1])
+    data_df = da.to_dataframe("generation_wh").reset_index(level=[0, 1])
     data_df = data_df.rename(dict(datetime="timestamp", pv_system_id="ss_id"), axis=1)
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -371,7 +371,6 @@ def pv_parquet_file(pv_xarray_data):
         data_df.to_parquet(filename, engine="fastparquet")
         yield filename
 
-        
 
 @pytest.fixture()
 def gsp_zarr_file():
