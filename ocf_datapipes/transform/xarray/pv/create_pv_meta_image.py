@@ -12,7 +12,6 @@ from ocf_datapipes.utils.geospatial import (
     osgb_to_geostationary_area_coords,
     spatial_coord_type,
 )
-from ocf_datapipes.utils.utils import searchsorted
 
 logger = logging.getLogger(__name__)
 
