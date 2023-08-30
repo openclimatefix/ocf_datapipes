@@ -68,7 +68,6 @@ def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
         dim_name=None,
     )
     data = next(iter(icon_eu_datapipe))
-    assert False
 
     # Grid longitude spacing is 0.0625 degrees which is 4km at latitude 55 degrees North
     # Slice can cover 17 or 18 grid points depending on where its centred
