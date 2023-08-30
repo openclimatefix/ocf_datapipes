@@ -186,6 +186,13 @@ def _load_pv_generation_and_capacity(
     df_gen = ds_gen.sel(datetime=slice(start_date, end_date)).to_dataframe()
     df_gen = df_gen.astype(np.float32)
     df_gen.columns = df_gen.columns.astype(np.int64)
+    
+    
+    # Remove systems with no generation data
+    mask = estimated_capacities > 0
+    estimated_capacities = estimated_capacities[mask]
+    df_gen = df_gen.loc[:, mask]
+    
 
     if "passiv" not in str(filename):
         _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
@@ -207,7 +214,7 @@ def _load_pv_generation_and_capacity(
     assert not df_gen.columns.duplicated().any()
     assert not df_gen.index.duplicated().any()
     assert np.isfinite(estimated_capacities).all()
-    assert (estimated_capacities >= 0).all()
+    assert (estimated_capacities > 0).all()
     assert np.array_equal(df_gen.columns, estimated_capacities.index)
 
     return df_gen, estimated_capacities
