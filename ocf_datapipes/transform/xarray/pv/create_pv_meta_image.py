@@ -61,21 +61,6 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
             pv_coords, pv_x_dim, pv_y_dim = spatial_coord_type(pv_systems_xr)
             image_coords, image_x_dim, image_y_dim = spatial_coord_type(image_xr)
 
-            # Check if the coords are ascending
-            x_vals = image_xr[image_x_dim].values
-            y_vals = image_xr[image_y_dim].values
-
-            x_ascend = (x_vals == np.sort(x_vals)).all()
-            y_ascend = (y_vals == np.sort(y_vals)).all()
-
-            # Check if coords are descending
-            x_descend = (x_vals == np.sort(x_vals)[::-1]).all()
-            y_descend = (y_vals == np.sort(y_vals)[::-1]).all()
-
-            # Coords must be either ascending or descending order
-            assert x_ascend or x_descend
-            assert y_ascend or y_descend
-
             # Randomly sample systems if too many
             if self.max_num_pv_systems <= len(pv_systems_xr.pv_system_id.values):
                 subset_of_pv_system_ids = self.rng.choice(
@@ -122,8 +107,8 @@ class CreatePVMetadataImageIterDataPipe(IterDataPipe):
                     # Skip the PV system if not inside the image
                     continue
 
-                x_idx = searchsorted(image_xr[image_x_dim], pv_x, assume_ascending=x_ascend)
-                y_idx = searchsorted(image_xr[image_y_dim], pv_y, assume_ascending=y_ascend)
+                x_idx = image_xr.get_index(image_x_dim).get_indexer([pv_x], method="nearest")[0]
+                y_idx = image_xr.get_index(image_y_dim).get_indexer([pv_y], method="nearest")[0]
 
                 # TODO: should we be using an average here? Overwiting will occur as it is
                 pv_meta_image[:, y_idx, x_idx] = np.array(
