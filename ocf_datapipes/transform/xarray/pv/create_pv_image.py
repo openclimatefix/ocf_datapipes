@@ -15,7 +15,6 @@ from ocf_datapipes.utils.geospatial import (
     osgb_to_geostationary_area_coords,
     spatial_coord_type,
 )
-from ocf_datapipes.utils.utils import searchsorted
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +123,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
 
                 x_idx = image_xr.get_index(image_x_dim).get_indexer([pv_x], method="nearest")[0]
                 y_idx = image_xr.get_index(image_y_dim).get_indexer([pv_y], method="nearest")[0]
-                
+
                 pv_position_dict[(y_idx, x_idx)].append(pv_system)
 
             # Create empty image to use for the PV Systems, assumes image has x and y coordinates
