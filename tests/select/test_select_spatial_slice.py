@@ -68,9 +68,12 @@ def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
         dim_name=None,
     )
     data = next(iter(icon_eu_datapipe))
+    assert False
 
-    # Grid spacing is 0.0625 degrees, or around 7km. 96km is 13.7 grid cells
-    assert len(data.longitude) == 18
+    # Grid longitude spacing is 0.0625 degrees which is 4km at latitude 55 degrees North
+    # Slice can cover 17 or 18 grid points depending on where its centred
+    assert len(data.longitude) in [17, 18]
+    # Grid latitude spacing is 0.0625 degrees - around 7km
     assert len(data.latitude) == 10
 
 

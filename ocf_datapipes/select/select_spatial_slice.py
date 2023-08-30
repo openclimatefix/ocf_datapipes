@@ -108,8 +108,6 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
 @functional_datapipe("select_spatial_slice_meters")
 class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
     """Select spatial slice based off meters from point of interest
-
-    Currently assumes that there is pv_system_id to use isel on
     """
 
     def __init__(
@@ -129,6 +127,23 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             roi_height_meters: ROI height in meters
             roi_width_meters: ROI width in meters
             dim_name: Dimension name to select for ID, None for coordinates
+            
+        Notes:
+            Using spatial slicing based on distance rather than number of pixels will often yield 
+            slices which can vary by 1 pixel in height and/or width.
+            
+            E.g. Suppose the Xarray data has x-coords = [1,2,3,4,5]. We want to slice a spatial 
+            window with a size which equates to 2.2 along the x-axis. If we choose to slice around 
+            the point x=3 this will slice out the x-coords [2,3,4]. If we choose to slice around the
+            point x=2.5 this will slice out the x-coords [2,3]. Hence the returned slice can have 
+            size either 2 or 3 in the x-axis depending on the spatial location selected. 
+            
+            Also, if selecting over a large span of latitudes, this may also causes pixel sizes of 
+            the yielded outputs to change. For example, if the Xarray data is on a regularly spaced
+            longitude-latitude grid, then the structure of the grid means that the longitudes near
+            to the poles are spaced closer together (measured in meters) than at the equator. So 
+            slices near the equator will have less pixels in the x-axis than slices taken near the 
+            poles.
         """
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
