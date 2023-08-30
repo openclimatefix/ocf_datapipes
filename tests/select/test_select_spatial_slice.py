@@ -85,5 +85,6 @@ def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_da
         dim_name="values",
     )
     data = next(iter(icon_global_datapipe))
-    assert len(data.longitude) == 86
-    assert len(data.latitude) == 86
+    # ICON global has roughly 13km spacing, so this should be around 7x7 grid
+    assert len(data.longitude) == 49
+    assert len(data.latitude) == 49
