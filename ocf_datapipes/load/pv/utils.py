@@ -25,7 +25,7 @@ def put_pv_data_into_an_xr_dataarray(
     Args:
         df_gen: pd.DataFrame where the columns are PV systems (and the column names are ints), and
             the index is UTC datetime
-        observed_system_capacities: The max power output observed in the time series for PV system 
+        observed_system_capacities: The max power output observed in the time series for PV system
             in watts. Index is PV system IDs
         metadata_system_capacities: The metadata value for each PV system capacities in watts
         ml_id: The `ml_id` used to identify each PV system
@@ -44,7 +44,6 @@ def put_pv_data_into_an_xr_dataarray(
         ("latitude", latitude),
         ("tilt", tilt),
         ("orientation", orientation),
-
     ):
         if (series is not None) and (not np.array_equal(series.index, system_ids, equal_nan=True)):
             raise ValueError(

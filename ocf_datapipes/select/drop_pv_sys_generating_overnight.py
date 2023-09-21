@@ -44,8 +44,8 @@ class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
             ds_night = ds.where(ds.status_daynight == "night", drop=True)
 
             # Find relative maximum night-time generation for each system
-            night_time_max_gen = (
-                (ds_night / ds_night.observed_capacity_watt_power).max(dim="time_utc")
+            night_time_max_gen = (ds_night / ds_night.observed_capacity_watt_power).max(
+                dim="time_utc"
             )
 
             # Find systems above threshold

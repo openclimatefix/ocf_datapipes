@@ -7,6 +7,7 @@ import torch
 import ocf_datapipes
 from ocf_datapipes.training.pseudo_irradience import pseudo_irradiance_datapipe
 
+
 @pytest.mark.skip(
     reason="Looks like pseudo_irradiance_datapipe is using local changes not yet merged"
 )
