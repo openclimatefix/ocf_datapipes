@@ -48,39 +48,21 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.end_datetime = pv.end_datetime
 
     def __iter__(self):
-        pv_datas_xr = []
+        pv_array_list = []
         for i in range(len(self.pv_power_filenames)):
-            one_data: xr.DataArray = load_everything_into_ram(
+            pv_array: xr.DataArray = load_everything_into_ram(
                 self.pv_power_filenames[i],
                 self.pv_metadata_filenames[i],
                 start_datetime=self.start_datetime,
                 end_datetime=self.end_datetime,
                 inferred_metadata_filename=self.inferred_metadata_filenames[i],
             )
-            pv_datas_xr.append(one_data)
+            pv_array_list.append(pv_array)
 
-        data = join_pv(pv_datas_xr)
+        pv_array = xr.concat(pv_array_list, dim="pv_system_id")
 
         while True:
-            yield data
-
-
-def join_pv(data_arrays: List[xr.DataArray]) -> xr.DataArray:
-    """Join PV data arrays together.
-
-    Args:
-        data_arrays: List of PV data arrays
-
-    Returns: one data array containing all pv systems
-    """
-
-    if len(data_arrays) == 1:
-        return data_arrays[0]
-
-    # expand each dataset to full time_utc
-    joined_data_array = xr.concat(data_arrays, dim="pv_system_id")
-
-    return joined_data_array
+            yield pv_array
 
 
 def load_everything_into_ram(
@@ -126,7 +108,7 @@ def load_everything_into_ram(
     estimated_capacities = estimated_capacities.loc[common_systems]
 
     # Compile data into an xarray DataArray
-    data_in_ram = put_pv_data_into_an_xr_dataarray(
+    xr_array = put_pv_data_into_an_xr_dataarray(
         df_gen=df_gen,
         observed_system_capacities=estimated_capacities,
         metadata_system_capacities=df_metadata.capacity_watts,
@@ -138,11 +120,11 @@ def load_everything_into_ram(
     )
 
     # Sanity checks
-    time_utc = pd.DatetimeIndex(data_in_ram.time_utc)
+    time_utc = pd.DatetimeIndex(xr_array.time_utc)
     assert time_utc.is_monotonic_increasing
     assert time_utc.is_unique
 
-    return data_in_ram
+    return xr_array
 
 
 def _load_pv_generation_and_capacity(
@@ -246,16 +228,17 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
     """
     _log.info(f"Loading PV metadata from {filename}")
 
+    
     index_col = "ss_id" if "passiv" in str(filename) else "system_id"
     df_metadata = pd.read_csv(filename, index_col=index_col)
 
-    # Drop if exists
+    # Drop if exists
     df_metadata.drop(columns="Unnamed: 0", inplace=True, errors="ignore")
 
     # Add ml_id column if not in metadata already
     if "ml_id" not in df_metadata.columns:
         df_metadata["ml_id"] = np.nan
-
+        
     if "passiv" in str(filename):
         # Add capacity in watts
         df_metadata["capacity_watts"] = df_metadata.kwp * 1000
@@ -263,14 +246,14 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
         if inferred_filename is not None:
             df_metadata = _load_inferred_metadata(filename, df_metadata)
     else:
-        # For PVOutput.org data
-        df_metadata["capacity_watts"] = df_metadata.system_size_watts
+        # For PVOutput.org data
+        df_metadata["capacity_watts"]  = df_metadata.system_size_watts
         # Rename PVOutput.org tilt name to be simpler
         # There is a second degree tilt, but this should be fine for now
         if "array_tilt_degrees" in df_metadata.columns:
             df_metadata["tilt"] = df_metadata["array_tilt_degrees"]
-
-        # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by
+            
+        # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by 
         # default
         mapping = {
             "N": 0.0,
@@ -287,7 +270,7 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
         df_metadata["orientation"] = df_metadata.orientation.map(mapping)
 
     _log.info(f"Found {len(df_metadata)} PV systems in {filename}")
-
+    
     return df_metadata
 
 

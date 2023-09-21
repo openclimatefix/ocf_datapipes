@@ -45,7 +45,7 @@ def put_pv_data_into_an_xr_dataarray(
         ("tilt", tilt),
         ("orientation", orientation),
     ):
-        if (series is not None) and (not np.array_equal(series.index, system_ids, equal_nan=True)):
+        if (series is not None) and (not np.array_equal(series.index, system_ids)):
             raise ValueError(
                 f"Index of {name} does not equal {system_ids}. Index is {series.index}"
             )
