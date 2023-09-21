@@ -70,7 +70,7 @@ def test_drop_with_constructed_dataarray():
         coords=ALL_COORDS,
     )
     data_array = data_array.assign_coords(
-        capacity_watt_power=("pv_system_id", np.ones(len(pv_system_id))),
+        observed_capacity_watt_power=("pv_system_id", np.ones(len(pv_system_id))),
     )
 
     # run the function

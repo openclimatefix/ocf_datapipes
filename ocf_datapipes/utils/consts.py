@@ -260,7 +260,8 @@ class BatchKey(Enum):
     # PV AC system capacity in watts peak.
     # Warning: In v15, pv_capacity_watt_power is sometimes 0. This will be fixed in
     # https://github.com/openclimatefix/nowcasting_dataset/issues/622
-    pv_capacity_watt_power = auto()  # shape: (batch_size, n_pv_systems)
+    pv_observed_capacity_watt_power = auto()  # shape: (batch_size, n_pv_systems)
+    pv_metadata_capacity_watt_power = auto()  # shape: (batch_size, n_pv_systems)
     #: pv_mask is True for good PV systems in each example.
     # The RawPVDataSource doesn't use pv_mask. Instead is sets missing PV systems to NaN
     # across all PV batch keys.

@@ -128,7 +128,8 @@ def load_everything_into_ram(
     # Compile data into an xarray DataArray
     data_in_ram = put_pv_data_into_an_xr_dataarray(
         df_gen=df_gen,
-        system_capacities=estimated_capacities,
+        observed_system_capacities=estimated_capacities,
+        metadata_system_capacities=df_metadata.capacity_watts,
         ml_id=df_metadata.ml_id,
         latitude=df_metadata.latitude,
         longitude=df_metadata.longitude,
@@ -241,49 +242,52 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
     Shape of the returned pd.DataFrame for Passiv PV data:
         Index: ss_id (Sheffield Solar ID)
         Columns: llsoacd, orientation, tilt, kwp, operational_at, latitude, longitude, system_id,
-            ml_id
+            ml_id, capacity_watts
     """
     _log.info(f"Loading PV metadata from {filename}")
 
-    if "passiv" in str(filename):
-        index_col = "ss_id"
-    else:
-        index_col = "system_id"
-
+    
+    index_col = "ss_id" if "passiv" in str(filename) else "system_id"
     df_metadata = pd.read_csv(filename, index_col=index_col)
 
-    # Maybe load inferred metadata if passiv
-    if inferred_filename is not None:
-        df_metadata = _load_inferred_metadata(filename, df_metadata)
+    # Drop if exists
+    df_metadata.drop(columns="Unnamed: 0", inplace=True, errors="ignore")
 
-    if "Unnamed: 0" in df_metadata.columns:
-        df_metadata.drop(columns="Unnamed: 0", inplace=True)
-
-    # Add ml_id column if not in metadata
+    # Add ml_id column if not in metadata already
     if "ml_id" not in df_metadata.columns:
         df_metadata["ml_id"] = np.nan
+        
+    if "passiv" in str(filename):
+        # Add capacity in watts
+        df_metadata["capacity_watts"] = df_metadata.kwp * 1000
+        # Maybe load inferred metadata if passiv
+        if inferred_filename is not None:
+            df_metadata = _load_inferred_metadata(filename, df_metadata)
+    else:
+        # For PVOutput.org data
+        df_metadata["capacity_watts"]  = df_metadata.system_size_watts
+        # Rename PVOutput.org tilt name to be simpler
+        # There is a second degree tilt, but this should be fine for now
+        if "array_tilt_degrees" in df_metadata.columns:
+            df_metadata["tilt"] = df_metadata["array_tilt_degrees"]
+            
+        # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by 
+        # default
+        mapping = {
+            "N": 0.0,
+            "NE": 45.0,
+            "E": 90.0,
+            "SE": 135.0,
+            "S": 180.0,
+            "SW": 225.0,
+            "W": 270.0,
+            "NW": 315.0,
+        }
+
+        # Any other keys other than those in the dict above are mapped to NaN
+        df_metadata["orientation"] = df_metadata.orientation.map(mapping)
 
     _log.info(f"Found {len(df_metadata)} PV systems in {filename}")
-
-    # Rename PVOutput.org tilt name to be simpler
-    # There is a second degree tilt, but this should be fine for now
-    if "array_tilt_degrees" in df_metadata.columns:
-        df_metadata["tilt"] = df_metadata["array_tilt_degrees"]
-
-    # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by default
-    mapping = {
-        "N": 0.0,
-        "NE": 45.0,
-        "E": 90.0,
-        "SE": 135.0,
-        "S": 180.0,
-        "SW": 225.0,
-        "W": 270.0,
-        "NW": 315.0,
-    }
-    
-    # Any other keys other than those in the dict are mapped to NaN
-    df_metadata["orientation"] = df_metadata.orientation.map(mapping)
     
     return df_metadata
 

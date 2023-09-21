@@ -74,6 +74,9 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
             interpolate_minutes=self.interpolate_minutes,
             load_extra_minutes=self.load_extra_minutes,
         )
+        
+        # Database record is very short. Set observed max to NaN
+        pv_metadata['observed_capacity_watt_power'] = np.nan
 
         # select metadata that is in pv_power
         logger.debug(
@@ -91,7 +94,8 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         # Compile data into an xarray DataArray
         data_xr = put_pv_data_into_an_xr_dataarray(
             df_gen=pv_power,
-            system_capacities=pv_metadata.capacity_watt_power,
+            observed_system_capacities=pv_metadata.observed_capacity_watt_power,
+            metadata_system_capacities=pv_metadata.capacity_watt_power,
             ml_id=pv_metadata.ml_id,
             latitude=pv_metadata.latitude,
             longitude=pv_metadata.longitude,
