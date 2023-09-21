@@ -272,18 +272,19 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
 
     # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by default
     mapping = {
-        "S": 180.0,
-        "SE": 135.0,
-        "SW": 225.0,
-        "E": 90.0,
-        "W": 270.0,
         "N": 0.0,
         "NE": 45.0,
+        "E": 90.0,
+        "SE": 135.0,
+        "S": 180.0,
+        "SW": 225.0,
+        "W": 270.0,
         "NW": 315.0,
-        "EW": np.nan,
     }
-    df_metadata = df_metadata.replace({"orientation": mapping})
-
+    
+    # Any other keys other than those in the dict are mapped to NaN
+    df_metadata["orientation"] = df_metadata.orientation.map(mapping)
+    
     return df_metadata
 
 
