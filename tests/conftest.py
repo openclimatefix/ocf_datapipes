@@ -2,6 +2,8 @@ import os
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import uuid
+
 
 import numpy as np
 import pandas as pd
@@ -148,7 +150,52 @@ def gsp_datapipe():
 
 
 @pytest.fixture
-def db_connection():
+def pv_system_db_data():
+    
+    # Create generation data
+    n_systems = 10
+
+    t0 = pd.Timestamp.now().floor("5T")
+    datetimes = pd.date_range(t0 - timedelta(minutes=120), t0, freq="5T")
+    site_uuids = [str(uuid.uuid4()) for _ in range(n_systems)]
+
+    data = np.zeros((len(datetimes), n_systems))
+
+    # Make data a nice sinusoidal curve
+    data[:] = 0.5*(1-np.cos((datetimes.hour + datetimes.minute/60)/24 * 2*np.pi).values)[:, None]
+
+    # Chuck in some nan values
+    data[:, 1] = np.nan
+    data[-5:, 2] = np.nan
+    data[::3, 3] = np.nan
+
+    da = xr.DataArray(
+        data,
+        coords=(
+            ("end_utc", datetimes),
+            ("site_uuid", site_uuids),
+        ),
+    )
+    
+    # Reshape for tabular database
+    df_gen = da.to_dataframe("generation_power_kw").reset_index()
+    df_gen["start_utc"] = df_gen["end_utc"] -  timedelta(minutes=5)
+
+    # Create metadata
+    df_meta = pd.DataFrame(dict(
+        site_uuid = site_uuids,
+        orientation = np.random.uniform(0, 360, n_systems),
+        tilt = np.random.uniform(0, 90, n_systems),
+        longitude = np.random.uniform(-3.07, 0.59, n_systems),
+        latitude = np.random.uniform(51.56, 52.89, n_systems),
+        capacity_kw = np.random.uniform(1, 5, n_systems),
+        ml_id = np.arange(n_systems),
+    ))
+    
+    return df_gen, df_meta
+
+@pytest.fixture
+def db_connection(pv_system_db_data):
     """Create data connection"""
 
     with tempfile.NamedTemporaryFile(suffix=".db") as temp:
@@ -166,11 +213,15 @@ def db_connection():
 
         for table in [PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL]:
             table.__table__.create(connection.engine)
+            
+        # Create and populate pvsites tables
+        df_gen, df_meta = pv_system_db_data
+        with connection.engine.connect() as conn:
+            df_gen.to_sql(name='generation', con=conn, index=False)
+            df_meta.to_sql(name='sites', con=conn, index=False)
+            conn.commit()
 
         yield connection
-
-        for table in [PVYieldSQL, PVSystemSQL, GSPYieldSQL, LocationSQL]:
-            table.__table__.drop(connection.engine)
 
 
 @pytest.fixture(scope="function", autouse=True)
