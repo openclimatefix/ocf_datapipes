@@ -4,14 +4,10 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from sqlalchemy import text
-
 import numpy as np
 import pandas as pd
 from nowcasting_datamodel.connection import DatabaseConnection
-from nowcasting_datamodel.models.base import Base_PV
-from nowcasting_datamodel.models.base import Base_Forecast
-
+from nowcasting_datamodel.models.base import Base_Forecast, Base_PV
 from nowcasting_datamodel.models.pv import (
     PVSystem,
     PVSystemSQL,
@@ -21,6 +17,7 @@ from nowcasting_datamodel.models.pv import (
     solar_sheffield_passiv,
 )
 from nowcasting_datamodel.read.read_pv import get_pv_systems, get_pv_yield
+from sqlalchemy import text
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
@@ -372,10 +369,10 @@ class OpenPVFromPVSitesDBIterDataPipe(IterDataPipe):
     def __iter__(self):
         df_metadata = get_metadata_from_pvsites_database()
         df_gen = get_pv_power_from_pvsites_database(history_duration=self.history_duration)
-        
+
         # Database record is very short. Set observed max to NaN
-        df_metadata['observed_capacity_watt_power'] = np.nan
-        
+        df_metadata["observed_capacity_watt_power"] = np.nan
+
         # Ensure systems are consistant between generation data, and metadata
         common_systems = list(np.intersect1d(df_metadata.index, df_gen.columns))
         df_gen = df_gen[common_systems]
@@ -404,46 +401,42 @@ def get_metadata_from_pvsites_database() -> pd.DataFrame:
     # make database connection
     url = os.getenv("DB_URL_PV")
     db_connection = DatabaseConnection(url=url, base=Base_Forecast)
-    
-    with db_connection.engine.connect() as conn:
 
-        df_sites_metadata = pd.DataFrame(
-            conn.execute(text("SELECT * FROM sites")).fetchall()
-        )
-        
-    df_sites_metadata['capacity_watts'] = df_sites_metadata['capacity_kw'] * 1000
-    
+    with db_connection.engine.connect() as conn:
+        df_sites_metadata = pd.DataFrame(conn.execute(text("SELECT * FROM sites")).fetchall())
+
+    df_sites_metadata["capacity_watts"] = df_sites_metadata["capacity_kw"] * 1000
+
     df_sites_metadata = df_sites_metadata.set_index("site_uuid")
-    
+
     return df_sites_metadata
-    
+
 
 def get_pv_power_from_pvsites_database(history_duration: timedelta):
     """Load recent generation data from the pvsites database"""
-    
+
     # make database connection
     url = os.getenv("DB_URL_PV")
     db_connection = DatabaseConnection(url=url, base=Base_Forecast)
-    
+
     columns = "site_uuid, generation_power_kw, start_utc, end_utc"
-    
+
     start_time = f"{datetime.now() - history_duration}"
 
     with db_connection.engine.connect() as conn:
-
         df_db_raw = pd.DataFrame(
-            conn.execute(text(
-                f"SELECT {columns} FROM generation where end_utc >= '{start_time}'"
-            )).fetchall()
+            conn.execute(
+                text(f"SELECT {columns} FROM generation where end_utc >= '{start_time}'")
+            ).fetchall()
         )
-    
+
     # Reshape
     df_gen = df_db_raw.pivot(index="end_utc", columns="site_uuid", values="generation_power_kw")
-    
+
     # Rescale from kW to W
     df_gen = df_gen * 1000
 
     # Fix data types
     df_gen = df_gen.astype(np.float32)
-    
+
     return df_gen

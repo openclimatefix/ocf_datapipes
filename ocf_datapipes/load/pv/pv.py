@@ -3,7 +3,7 @@ import io
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import fsspec
 import numpy as np
@@ -228,17 +228,16 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
     """
     _log.info(f"Loading PV metadata from {filename}")
 
-    
     index_col = "ss_id" if "passiv" in str(filename) else "system_id"
     df_metadata = pd.read_csv(filename, index_col=index_col)
 
-    # Drop if exists
+    # Drop if exists
     df_metadata.drop(columns="Unnamed: 0", inplace=True, errors="ignore")
 
     # Add ml_id column if not in metadata already
     if "ml_id" not in df_metadata.columns:
         df_metadata["ml_id"] = np.nan
-        
+
     if "passiv" in str(filename):
         # Add capacity in watts
         df_metadata["capacity_watts"] = df_metadata.kwp * 1000
@@ -246,14 +245,14 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
         if inferred_filename is not None:
             df_metadata = _load_inferred_metadata(filename, df_metadata)
     else:
-        # For PVOutput.org data
-        df_metadata["capacity_watts"]  = df_metadata.system_size_watts
+        # For PVOutput.org data
+        df_metadata["capacity_watts"] = df_metadata.system_size_watts
         # Rename PVOutput.org tilt name to be simpler
         # There is a second degree tilt, but this should be fine for now
         if "array_tilt_degrees" in df_metadata.columns:
             df_metadata["tilt"] = df_metadata["array_tilt_degrees"]
-            
-        # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by 
+
+        # Need to change orientation to a number if a string (i.e. SE) that PVOutput.org uses by
         # default
         mapping = {
             "N": 0.0,
@@ -270,7 +269,7 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
         df_metadata["orientation"] = df_metadata.orientation.map(mapping)
 
     _log.info(f"Found {len(df_metadata)} PV systems in {filename}")
-    
+
     return df_metadata
 
 
