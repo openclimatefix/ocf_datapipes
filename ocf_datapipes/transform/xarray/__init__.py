@@ -44,6 +44,7 @@ from .normalize import NormalizeIterDataPipe as Normalize
 from .nwp_dropout import (
     ConvertToNWPTargetTimeWithDropoutIterDataPipe as ConvertToNWPTargetTimeWithDropout,
 )
+from .pv_dropout import ApplyPVDropoutIterDataPipe as ApplyPVDropout
 from .pv.assign_daynight_status import (
     AssignDayNightStatusIterDataPipe as AssignDayNightStatus,
 )
