@@ -10,6 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import OpenGSPFromDatabase
+from ocf_datapipes.load import OpenPVFromPVSitesDB
 from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     open_and_return_datapipes,
@@ -39,6 +40,18 @@ def normalize_gsp(x):
     return x / x.effective_capacity_mwp
 
 
+def normalize_pv(x):
+    """Normalize the PV data
+
+    Args:
+        x: Input DataArray
+
+    Returns:
+        Normalized DataArray
+    """
+    return (x / x.metadata_capacity_watt_power).clip(None, 5)
+
+
 def production_sat_scale(x):
     """Scale the production satellite data
 
@@ -51,18 +64,18 @@ def production_sat_scale(x):
     return x / 1024
 
 
-def pvnet_concat_gsp(gsp_dataarrays: List[xr.DataArray]):
-    """This function is used to combine the split history and future gsp dataarrays.
+def concat_xr_time_utc(gsp_dataarrays: List[xr.DataArray]):
+    """This function is used to combine the split history and future gsp/pv dataarrays.
 
     These are split inside the `slice_datapipes_by_time()` function below.
 
     Splitting them inside that function allows us to apply dropout to the
-    history GSP whilst leaving the future GSP without NaNs.
+    history GSP/PV whilst leaving the future GSP/PV without NaNs.
 
     We recombine the history and future with this function to allow us to use the
     `MergeNumpyModalities()` datapipe without redefining the BatchKeys.
 
-    The `pvnet` model was also written to use a GSP array which has historical and future
+    The `pvnet` model was also written to use a GSP/PV array which has historical and future
     and to split it out. These maintains that assumption.
     """
     return xr.concat(gsp_dataarrays, dim="time_utc")
@@ -78,6 +91,29 @@ def gsp_drop_national(x: Union[xr.DataArray, xr.Dataset]):
         Filtered data source
     """
     return x.where(x.gsp_id != 0, drop=True)
+
+
+def select_pv_by_ml_id(x: Union[xr.DataArray, xr.Dataset], ml_ids: np.array):
+    """Select specific set of PV systems by ML ID.
+    
+    Args:
+        x: Data source of PV data
+        ml_ids: List-like of ML IDs to select
+        
+    Returns:
+        Filtered data source
+    """
+    x_filtered = (
+        # Many ML-IDs are null, so filter first
+        x.where(~x.ml_id.isnull(), drop=True)
+        # Swap dimensions so we can select by ml_id coordinate
+        .swap_dims({"pv_system_id":"ml_id"})
+        # Select IDs - missing IDs are given NaN values
+        .reindex(ml_id=ml_ids)
+        # Swap back dimensions
+        .swap_dims({"ml_id":"pv_system_id"})
+    )
+    return x_filtered
 
 
 def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
@@ -223,21 +259,30 @@ def _get_datapipes_dict(
     datapipes_dict = open_and_return_datapipes(
         configuration_filename=config_filename,
         use_gsp=(not production),
-        use_pv=False,
+        use_pv=(not production),
         use_sat=not block_sat,  # Only loaded if we aren't replacing them with zeros
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
         use_topo=False,
         production=production,
     )
+    
     if production:
-        configuration: Configuration = datapipes_dict["config"]
+        config: Configuration = datapipes_dict["config"]
 
         datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+            history_duration=timedelta(minutes=config.input_data.gsp.history_minutes),
         )
-        datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
+        if "sat" in datapipes_dict:
+            datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
+        if "pv" in datapipes_dict:
+            datapipes_dict["pv"] = OpenPVFromPVSitesDB(config.input_data.pv.history_minutes)
+        
+    if "pv" in datapipes_dict:
+        datapipes_dict["pv"] = datapipes_dict["pv"].map(
+            lambda ds: select_pv_by_ml_id(ds, config.input_data.pv.ml_ids),
+        )
 
     return datapipes_dict
 
@@ -418,12 +463,34 @@ def slice_datapipes_by_time(
         )
 
         datapipes_dict["pv"] = datapipes_dict["pv"].select_time_slice(
-            t0_datapipe=get_t0_datapipe("pv"),
+            t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(5),
             interval_start=minutes(-conf_in.pv.history_minutes),
             interval_end=minutes(0),
             fill_selection=production,
         )
+        
+        # Dropout on the PV, but not the future PV
+        pv_dropout_time_datapipe = get_t0_datapipe("pv").select_dropout_time(
+            # All PV data could be delayed by up to 30 minutes 
+            # (this does not stem from production - just setting for now)
+            dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
+            dropout_frac=0.1 if production else 1,
+        )
+
+        datapipes_dict["pv"] = datapipes_dict["pv"].apply_dropout_time(
+            dropout_time_datapipe=pv_dropout_time_datapipe,
+        )
+        
+        # Apply extra PV dropout using different delays per system and droping out entire PV systems
+        # independently
+        if not production:
+            datapipes_dict["pv"].apply_pv_dropout(
+                system_dropout_fraction: np.linspace(0, 0.2, 100),
+                system_dropout_timedeltas: [minutes(m) for m in [-15, -10, -5, 0]],
+            )
+        
+        
 
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
@@ -527,6 +594,15 @@ def construct_sliced_data_pipeline(
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
+        
+    if "pv" in datapipes_dict:
+        # Recombine PV arrays - see function doc for further explanation
+        pv_datapipe = (
+            datapipes_dict["pv"].zip_ocf(datapipes_dict["pv_future"])
+            .map(concat_xr_time_utc)
+        )
+        pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
+        numpy_modalities.append(pv_datapipe.convert_pv_to_numpy(return_ml_id=True))
 
     # GSP always assumed to be in data
     location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
@@ -547,7 +623,7 @@ def construct_sliced_data_pipeline(
     )
 
     # Recombine GSP arrays - see function doc for further explanation
-    gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(pvnet_concat_gsp)
+    gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(concat_xr_time_utc)
     gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
 
     numpy_modalities.append(gsp_datapipe.convert_gsp_to_numpy_batch())
