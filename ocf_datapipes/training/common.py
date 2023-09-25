@@ -124,11 +124,12 @@ def open_and_return_datapipes(
 
     if use_pv:
         logger.debug("Opening PV")
-        pv_datapipe = OpenPVFromNetCDF(
-            pv=configuration.input_data.pv
-        ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+        pv_datapipe = (
+            OpenPVFromNetCDF(pv=configuration.input_data.pv)
+            .add_t0_idx_and_sample_period_duration(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+            )
         )
 
         used_datapipes["pv"] = pv_datapipe
@@ -228,7 +229,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
     for i, key in enumerate(list(datapipes_to_return.keys())):
         datapipes_to_return[key + "_t0"] = t0_datapipes[i]
 
-    # Readd config for later
+    # Read config for later
     datapipes_to_return["config"] = configuration
     if "topo" in used_datapipes.keys():
         datapipes_to_return["topo"] = used_datapipes["topo"]
