@@ -95,11 +95,11 @@ def gsp_drop_national(x: Union[xr.DataArray, xr.Dataset]):
 
 def select_pv_by_ml_id(x: Union[xr.DataArray, xr.Dataset], ml_ids: np.array):
     """Select specific set of PV systems by ML ID.
-    
+
     Args:
         x: Data source of PV data
         ml_ids: List-like of ML IDs to select
-        
+
     Returns:
         Filtered data source
     """
@@ -266,7 +266,7 @@ def _get_datapipes_dict(
         use_topo=False,
         production=production,
     )
-    
+
     if production:
         config: Configuration = datapipes_dict["config"]
 
@@ -278,7 +278,7 @@ def _get_datapipes_dict(
             datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
         if "pv" in datapipes_dict:
             datapipes_dict["pv"] = OpenPVFromPVSitesDB(config.input_data.pv.history_minutes)
-        
+
     if "pv" in datapipes_dict:
         datapipes_dict["pv"] = datapipes_dict["pv"].map(
             lambda ds: select_pv_by_ml_id(ds, config.input_data.pv.ml_ids),
@@ -469,10 +469,10 @@ def slice_datapipes_by_time(
             interval_end=minutes(0),
             fill_selection=production,
         )
-        
+
         # Dropout on the PV, but not the future PV
         pv_dropout_time_datapipe = get_t0_datapipe("pv").select_dropout_time(
-            # All PV data could be delayed by up to 30 minutes 
+            # All PV data could be delayed by up to 30 minutes
             # (this does not stem from production - just setting for now)
             dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
             dropout_frac=0.1 if production else 1,
@@ -481,7 +481,7 @@ def slice_datapipes_by_time(
         datapipes_dict["pv"] = datapipes_dict["pv"].apply_dropout_time(
             dropout_time_datapipe=pv_dropout_time_datapipe,
         )
-        
+
         # Apply extra PV dropout using different delays per system and droping out entire PV systems
         # independently
         if not production:
@@ -489,8 +489,8 @@ def slice_datapipes_by_time(
                 system_dropout_fraction: np.linspace(0, 0.2, 100),
                 system_dropout_timedeltas: [minutes(m) for m in [-15, -10, -5, 0]],
             )
-        
-        
+
+
 
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
@@ -594,7 +594,7 @@ def construct_sliced_data_pipeline(
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
-        
+
     if "pv" in datapipes_dict:
         # Recombine PV arrays - see function doc for further explanation
         pv_datapipe = (
