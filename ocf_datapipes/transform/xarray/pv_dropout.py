@@ -23,7 +23,7 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
     def __init__(
         self,
         source_datapipe: IterDataPipe,
-        system_dropout_fraction: List[float],
+        system_dropout_fractions: List[float],
         system_dropout_timedeltas: List[timedelta],
     ):
         """Apply PV system dropout to mimic production
@@ -49,8 +49,8 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
             "Must include list of relative dropout timedeltas"
         )
         assert all(
-            [t < timedelta(minutes=0) for t in system_dropout_timedeltas]
-        ), "dropout timedeltas must be negative"
+            [t <= timedelta(minutes=0) for t in system_dropout_timedeltas]
+        ), f"dropout timedeltas must be negative: {system_dropout_timedeltas}"
 
         assert all(
             [0 <= f <= 1 for f in system_dropout_fractions]
