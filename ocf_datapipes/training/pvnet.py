@@ -266,10 +266,11 @@ def _get_datapipes_dict(
         use_topo=False,
         production=production,
     )
+        
+    config: Configuration = datapipes_dict["config"]
 
     if production:
-        config: Configuration = datapipes_dict["config"]
-
+        
         datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=config.input_data.gsp.history_minutes),
@@ -279,11 +280,11 @@ def _get_datapipes_dict(
         if "pv" in datapipes_dict:
             datapipes_dict["pv"] = OpenPVFromPVSitesDB(config.input_data.pv.history_minutes)
 
-    if "pv" in datapipes_dict:
+    if "pv" in datapipes_dict and config.input_data.pv.pv_ml_ids!=[]:
         datapipes_dict["pv"] = datapipes_dict["pv"].map(
-            lambda ds: select_pv_by_ml_id(ds, config.input_data.pv.ml_ids),
+            lambda ds: select_pv_by_ml_id(ds, config.input_data.pv.pv_ml_ids),
         )
-
+    
     return datapipes_dict
 
 
@@ -486,8 +487,8 @@ def slice_datapipes_by_time(
         # independently
         if not production:
             datapipes_dict["pv"].apply_pv_dropout(
-                system_dropout_fraction: np.linspace(0, 0.2, 100),
-                system_dropout_timedeltas: [minutes(m) for m in [-15, -10, -5, 0]],
+                system_dropout_fractions=np.linspace(0, 0.2, 100),
+                system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
             )
 
 
@@ -602,7 +603,8 @@ def construct_sliced_data_pipeline(
             .map(concat_xr_time_utc)
         )
         pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
-        numpy_modalities.append(pv_datapipe.convert_pv_to_numpy(return_ml_id=True))
+        
+        numpy_modalities.append(pv_datapipe.convert_pv_to_numpy_batch())
 
     # GSP always assumed to be in data
     location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
