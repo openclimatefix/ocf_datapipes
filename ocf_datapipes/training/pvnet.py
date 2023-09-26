@@ -117,7 +117,7 @@ def select_pv_by_ml_id(x: Union[xr.DataArray, xr.Dataset], ml_ids: np.array):
 
 def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
     """Fill NaNs in PV data with the value -1
-    
+
     Args:
         x: Input DataArray
 
