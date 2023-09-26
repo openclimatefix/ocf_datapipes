@@ -46,7 +46,7 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
 
         assert len(system_dropout_timedeltas) >= 1, \
             "Must include list of relative dropout timedeltas",
-        
+
         assert all([t <= timedelta(minutes=0) for t in system_dropout_timedeltas]), \
             f"dropout timedeltas must be negative: {system_dropout_timedeltas}"
 
