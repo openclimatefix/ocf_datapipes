@@ -44,14 +44,17 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
         self.system_dropout_fractions = system_dropout_fractions
         self.system_dropout_timedeltas = system_dropout_timedeltas
 
-        assert len(system_dropout_timedeltas) >= 1, \
-            "Must include list of relative dropout timedeltas"
+        assert (
+            len(system_dropout_timedeltas) >= 1
+        ), "Must include list of relative dropout timedeltas"
 
-        assert all([t <= timedelta(minutes=0) for t in system_dropout_timedeltas]), \
-            f"dropout timedeltas must be negative: {system_dropout_timedeltas}"
+        assert all(
+            [t <= timedelta(minutes=0) for t in system_dropout_timedeltas]
+        ), f"dropout timedeltas must be negative: {system_dropout_timedeltas}"
 
-        assert all([0 <= f <= 1 for f in system_dropout_fractions]), \
-            "dropout fractions must be in open range (0, 1)"
+        assert all(
+            [0 <= f <= 1 for f in system_dropout_fractions]
+        ), "dropout fractions must be in open range (0, 1)"
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through Xarray dataset using dropout"""
