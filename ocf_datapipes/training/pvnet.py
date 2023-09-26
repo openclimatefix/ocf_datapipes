@@ -124,7 +124,7 @@ def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
     Returns:
         Normalized DataArray
     """
-    return ds.fillna(-1)
+    return x.fillna(-1)
 
 
 def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
