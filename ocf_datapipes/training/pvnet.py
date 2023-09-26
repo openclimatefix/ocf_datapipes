@@ -115,6 +115,18 @@ def select_pv_by_ml_id(x: Union[xr.DataArray, xr.Dataset], ml_ids: np.array):
     return x_filtered
 
 
+def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
+    """Fill NaNs in PV data with the value -1
+    
+    Args:
+        x: Input DataArray
+
+    Returns:
+        Normalized DataArray
+    """
+    return ds.fillna(-1)
+
+
 def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
     """Fills all NaN values in each np.ndarray in the batch dictionary with zeros.
 
@@ -598,6 +610,7 @@ def construct_sliced_data_pipeline(
             datapipes_dict["pv"].zip_ocf(datapipes_dict["pv_future"]).map(concat_xr_time_utc)
         )
         pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
+        pv_datapipe = pv_datapipe.map(fill_nans_in_pv)
 
         numpy_modalities.append(pv_datapipe.convert_pv_to_numpy_batch())
 
