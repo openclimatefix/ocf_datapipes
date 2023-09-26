@@ -9,8 +9,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenGSPFromDatabase
-from ocf_datapipes.load import OpenPVFromPVSitesDB
+from ocf_datapipes.load import OpenGSPFromDatabase, OpenPVFromPVSitesDB
 from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     open_and_return_datapipes,
@@ -104,14 +103,14 @@ def select_pv_by_ml_id(x: Union[xr.DataArray, xr.Dataset], ml_ids: np.array):
         Filtered data source
     """
     x_filtered = (
-        # Many ML-IDs are null, so filter first
+        # Many ML-IDs are null, so filter first
         x.where(~x.ml_id.isnull(), drop=True)
         # Swap dimensions so we can select by ml_id coordinate
-        .swap_dims({"pv_system_id":"ml_id"})
+        .swap_dims({"pv_system_id": "ml_id"})
         # Select IDs - missing IDs are given NaN values
         .reindex(ml_id=ml_ids)
         # Swap back dimensions
-        .swap_dims({"ml_id":"pv_system_id"})
+        .swap_dims({"ml_id": "pv_system_id"})
     )
     return x_filtered
 
@@ -266,11 +265,10 @@ def _get_datapipes_dict(
         use_topo=False,
         production=production,
     )
-        
+
     config: Configuration = datapipes_dict["config"]
 
     if production:
-        
         datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(minutes=30),
             history_duration=timedelta(minutes=config.input_data.gsp.history_minutes),
@@ -280,11 +278,11 @@ def _get_datapipes_dict(
         if "pv" in datapipes_dict:
             datapipes_dict["pv"] = OpenPVFromPVSitesDB(config.input_data.pv.history_minutes)
 
-    if "pv" in datapipes_dict and config.input_data.pv.pv_ml_ids!=[]:
+    if "pv" in datapipes_dict and config.input_data.pv.pv_ml_ids != []:
         datapipes_dict["pv"] = datapipes_dict["pv"].map(
             lambda ds: select_pv_by_ml_id(ds, config.input_data.pv.pv_ml_ids),
         )
-    
+
     return datapipes_dict
 
 
@@ -474,7 +472,7 @@ def slice_datapipes_by_time(
         # Dropout on the PV, but not the future PV
         pv_dropout_time_datapipe = get_t0_datapipe("pv").select_dropout_time(
             # All PV data could be delayed by up to 30 minutes
-            # (this does not stem from production - just setting for now)
+            # (this does not stem from production - just setting for now)
             dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
             dropout_frac=0.1 if production else 1,
         )
@@ -490,8 +488,6 @@ def slice_datapipes_by_time(
                 system_dropout_fractions=np.linspace(0, 0.2, 100),
                 system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
             )
-
-
 
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
@@ -599,11 +595,10 @@ def construct_sliced_data_pipeline(
     if "pv" in datapipes_dict:
         # Recombine PV arrays - see function doc for further explanation
         pv_datapipe = (
-            datapipes_dict["pv"].zip_ocf(datapipes_dict["pv_future"])
-            .map(concat_xr_time_utc)
+            datapipes_dict["pv"].zip_ocf(datapipes_dict["pv_future"]).map(concat_xr_time_utc)
         )
         pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
-        
+
         numpy_modalities.append(pv_datapipe.convert_pv_to_numpy_batch())
 
     # GSP always assumed to be in data
