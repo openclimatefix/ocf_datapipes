@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
 from torchdata.datapipes.iter import IterDataPipe
+from torchdata.datapipes import functional_datapipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
@@ -91,28 +92,47 @@ def gsp_drop_national(x: Union[xr.DataArray, xr.Dataset]):
     """
     return x.where(x.gsp_id != 0, drop=True)
 
+@functional_datapipe("pvnet_select_pv_by_ml_id")
+class PVNetSelectPVbyMLIDIterDataPipe(IterDataPipe):
+    """Select specific set of PV systems by ML ID."""
 
-def select_pv_by_ml_id(x: Union[xr.DataArray, xr.Dataset], ml_ids: np.array):
-    """Select specific set of PV systems by ML ID.
+    def __init__(self, source_datapipe: IterDataPipe, ml_ids: np.array):
+        """Select specific set of PV systems by ML ID.
 
-    Args:
-        x: Data source of PV data
-        ml_ids: List-like of ML IDs to select
+        Args:
+            source_datapipe: Datapipe emitting PV xarray data
+            ml_ids: List-like of ML IDs to select
 
-    Returns:
-        Filtered data source
-    """
-    x_filtered = (
-        # Many ML-IDs are null, so filter first
-        x.where(~x.ml_id.isnull(), drop=True)
-        # Swap dimensions so we can select by ml_id coordinate
-        .swap_dims({"pv_system_id": "ml_id"})
-        # Select IDs - missing IDs are given NaN values
-        .reindex(ml_id=ml_ids)
-        # Swap back dimensions
-        .swap_dims({"ml_id": "pv_system_id"})
-    )
-    return x_filtered
+        Returns:
+            Filtered data source
+        """
+        self.source_datapipe = source_datapipe
+        self.ml_ids = ml_ids
+
+    def __iter__(self):
+        for x in self.source_datapipe:
+            
+            # Check for missing IDs
+            ml_ids_not_in_data = ~np.isin(self.ml_ids, x.ml_id)
+            if ml_ids_not_in_data.any():
+                missing_ml_ids = np.array(self.ml_ids)[ml_ids_not_in_data]
+                logger.warning(
+                    f"The following ML IDs were mising in the PV site-level input data: "
+                    f"{missing_ml_ids}. The values for these IDs will be set to NaN."
+                
+                )
+            
+            x_filtered = (
+                # Many ML-IDs are null, so filter first
+                x.where(~x.ml_id.isnull(), drop=True)
+                # Swap dimensions so we can select by ml_id coordinate
+                .swap_dims({"pv_system_id": "ml_id"})
+                # Select IDs - missing IDs are given NaN values
+                .reindex(ml_id=self.ml_ids)
+                # Swap back dimensions
+                .swap_dims({"ml_id": "pv_system_id"})
+            )
+            yield x_filtered
 
 
 def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
@@ -291,8 +311,8 @@ def _get_datapipes_dict(
             datapipes_dict["pv"] = OpenPVFromPVSitesDB(config.input_data.pv.history_minutes)
 
     if "pv" in datapipes_dict and config.input_data.pv.pv_ml_ids != []:
-        datapipes_dict["pv"] = datapipes_dict["pv"].map(
-            lambda ds: select_pv_by_ml_id(ds, config.input_data.pv.pv_ml_ids),
+        datapipes_dict["pv"] = datapipes_dict["pv"].pvnet_select_pv_by_ml_id(
+            config.input_data.pv.pv_ml_ids
         )
 
     return datapipes_dict
