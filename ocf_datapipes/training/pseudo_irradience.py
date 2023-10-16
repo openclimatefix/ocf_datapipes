@@ -108,7 +108,7 @@ def _normalize_by_pvlib(pv_system):
     )
     # Guess want fraction of total irradiance on panel, to get fraction to do with capacity
     fraction_clear_sky = total_irradiance["poa_global"] / (
-            clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
+        clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
     print(fraction_clear_sky)
     pv_system /= pv_system.capacity_watt_power
@@ -380,23 +380,23 @@ def _get_id_from_location(x):
 
 
 def pseudo_irradiance_datapipe(
-        configuration_filename: Union[Path, str],
-        use_sun: bool = True,
-        use_nwp: bool = True,
-        use_sat: bool = True,
-        use_hrv: bool = True,
-        use_pv: bool = True,
-        use_topo: bool = True,
-        use_future: bool = False,
-        size: int = 256,
-        size_meters: int = 256_000,
-        use_meters: bool = False,
-        start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
-        end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
-        batch_size: int = 1,
-        normalize_by_pvlib: bool = True,
-        one_d: bool = False,
-        is_test: bool = False,
+    configuration_filename: Union[Path, str],
+    use_sun: bool = True,
+    use_nwp: bool = True,
+    use_sat: bool = True,
+    use_hrv: bool = True,
+    use_pv: bool = True,
+    use_topo: bool = True,
+    use_future: bool = False,
+    size: int = 256,
+    size_meters: int = 256_000,
+    use_meters: bool = False,
+    start_time: datetime.datetime = datetime.datetime(2014, 1, 1),
+    end_time: datetime.datetime = datetime.datetime(2023, 1, 1),
+    batch_size: int = 1,
+    normalize_by_pvlib: bool = True,
+    one_d: bool = False,
+    is_test: bool = False,
 ) -> IterDataPipe:
     """
     Make Pseudo-Irradience Datapipe
