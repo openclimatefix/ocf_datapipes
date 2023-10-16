@@ -1,0 +1,14 @@
+{
+    "Conventions": "CF-1.7",
+    "GRIB_centre": "ecmf",
+    "GRIB_centreDescription": "European Centre for Medium-Range Weather Forecasts",
+    "GRIB_subCentre": 0,
+    "_ARRAY_DIMENSIONS": [
+        "variable",
+        "init_time",
+        "step",
+        "latitude",
+        "longitude"
+    ],
+    "institution": "European Centre for Medium-Range Weather Forecasts"
+}
