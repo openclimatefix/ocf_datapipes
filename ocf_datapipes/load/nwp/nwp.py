@@ -10,6 +10,7 @@ from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
+from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
 
 _log = logging.getLogger(__name__)
 
@@ -39,6 +40,8 @@ class OpenNWPIterDataPipe(IterDataPipe):
             self.open_nwp = open_icon_eu
         elif provider == "icon-global":
             self.open_nwp = open_icon_global
+        elif provider == "ecmwf":
+            self.open_nwp = open_ifs
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
