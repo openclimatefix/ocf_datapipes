@@ -17,8 +17,12 @@ def open_ifs(zarr_path) -> xr.DataArray:
     """
     # Open the data
     nwp = open_zarr_paths(zarr_path)
-    # TODO This name should change to be something not UKV
-    ifs: xr.DataArray = nwp["UKV"]
+    dataVars = list(nwp.data_vars.keys())
+    if  len(dataVars) > 1:
+        raise Exception("Too many TLDVs")
+    else:
+        dataVar = dataVars[0]
+    ifs: xr.Dataset = nwp[dataVar]
     del nwp
     ifs = ifs.transpose("init_time", "step", "variable", "latitude", "longitude")
     ifs = ifs.rename(

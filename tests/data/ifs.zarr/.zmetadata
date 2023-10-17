@@ -4,7 +4,7 @@
         ".zgroup": {
             "zarr_format": 2
         },
-        "UKV/.zarray": {
+        "ECMWF_BLAH/.zarray": {
             "chunks": [
                 17,
                 1,
@@ -30,7 +30,7 @@
             ],
             "zarr_format": 2
         },
-        "UKV/.zattrs": {
+        "ECMWF_BLAH/.zattrs": {
             "Conventions": "CF-1.7",
             "GRIB_centre": "ecmf",
             "GRIB_centreDescription": "European Centre for Medium-Range Weather Forecasts",
