@@ -18,7 +18,7 @@ def open_ifs(zarr_path) -> xr.DataArray:
     # Open the data
     nwp = open_zarr_paths(zarr_path)
     dataVars = list(nwp.data_vars.keys())
-    if  len(dataVars) > 1:
+    if len(dataVars) > 1:
         raise Exception("Too many TLDVs")
     else:
         dataVar = dataVars[0]
