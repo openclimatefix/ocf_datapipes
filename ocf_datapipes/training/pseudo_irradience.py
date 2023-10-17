@@ -418,6 +418,10 @@ def pseudo_irradiance_datapipe(
         batch_size: Batch size for the datapipe
         one_d: Whether to return a 1D array or not, i.e. a single PV site in the center as
             opposed to a 2D array of PV sites
+        size_meters: Size, in meters, of the output image
+        use_meters: Whether to use meters or pixels
+        normalize_by_pvlib: Whether to normalize the PV generation by the PVLib generation
+        is_test: Whether to return the test set or not
 
     Returns: datapipe
     """
