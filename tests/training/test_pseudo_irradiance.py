@@ -7,6 +7,7 @@ import torch
 import ocf_datapipes
 from ocf_datapipes.training.pseudo_irradience import pseudo_irradiance_datapipe
 
+
 @pytest.mark.skip("This test is failing because of file args, skipping for now")
 def test_pseudo_irradiance_datapipe():
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
