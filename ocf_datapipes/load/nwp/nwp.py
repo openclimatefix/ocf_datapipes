@@ -34,13 +34,13 @@ class OpenNWPIterDataPipe(IterDataPipe):
                 i.e. OSGB for UKV, Lat/Lon for ICON EU, Icoshedral grid for ICON Global
         """
         self.zarr_path = zarr_path
-        if provider == "ukv":
+        if provider.lower() == "ukv" or provider == "UKMetOffice":
             self.open_nwp = open_ukv
-        elif provider == "icon-eu":
+        elif provider.lower() == "icon-eu":
             self.open_nwp = open_icon_eu
-        elif provider == "icon-global":
+        elif provider.lower() == "icon-global":
             self.open_nwp = open_icon_global
-        elif provider == "ecmwf":
+        elif provider.lower() == "ecmwf":
             self.open_nwp = open_ifs
         else:
             raise ValueError(f"Unknown provider: {provider}")
