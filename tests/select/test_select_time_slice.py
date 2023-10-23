@@ -119,7 +119,7 @@ def test_select_time_slice_sat(sat_datapipe):
         assert sat_samples[i].time_utc[1] == t0_values[i]
         # Correct number of time steps are all NaN
         sat_sel = sat_samples[i].isel(x_geostationary=0, y_geostationary=0, channel=0)
-        
-        assert (np.isnan(sat_sel.values) == expected_missing_steps[i]).all(), (
-            f"{np.isnan(sat_sel.values)}!={expected_missing_steps[i]}"
-        )
+
+        assert (
+            np.isnan(sat_sel.values) == expected_missing_steps[i]
+        ).all(), f"{np.isnan(sat_sel.values)}!={expected_missing_steps[i]}"

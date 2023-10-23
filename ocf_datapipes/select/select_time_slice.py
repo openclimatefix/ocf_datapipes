@@ -141,7 +141,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             end_dt,
             freq=self.sample_period_duration,
         )
-        
+
         # These are the times we use for interpolation to the requested_times
         buffer_requested_times = pd.date_range(
             start_dt - dt_buffer,
