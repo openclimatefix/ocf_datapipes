@@ -366,6 +366,7 @@ def slice_datapipes_by_time(
             interval_start=minutes(-conf_in.satellite.history_minutes),
             interval_end=sat_delay,
             fill_selection=production,
+            max_steps_gap=2,
         )
 
         # Generate randomly sampled dropout times
@@ -399,6 +400,7 @@ def slice_datapipes_by_time(
             interval_start=minutes(-conf_in.hrvsatellite.history_minutes),
             interval_end=sat_delay,
             fill_selection=production,
+            max_steps_gap=2,
         )
 
         # Apply the dropout
