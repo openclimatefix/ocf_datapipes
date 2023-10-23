@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def fill_1d_bool_gaps(x, max_gap, fill_ends=False):
-    """In a boolean array, fill consecutive False elements their number is less than the gap_size.
+    """In a boolean array, fill consecutive False elements if their number is less than the gap_size.
 
     Args:
         x: A 1-dimensional boolean array
