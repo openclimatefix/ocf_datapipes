@@ -143,8 +143,14 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         )
 
         # If all the requested times are present we avoid running interpolation
-        if np.isin(requested_times, ds.time_utc).all():
+        requested_time_exists = np.isin(requested_times, ds.time_utc)
+        if requested_time_exists.all():
             return ds.sel(time_utc=slice(start_dt, end_dt))
+        
+        # If less than 2 of the requested times are present we cannot infill
+        if requested_time_exists.sum()<2:
+            logger.warning("Cannot run interpolate infilling with less than 2 time steps available")
+            return self._sel_fillnan(xr_data, start_dt, end_dt)
 
         logger.info("Some requested times are missing - running interpolation")
         # These are the times we use for interpolation to the requested_times
