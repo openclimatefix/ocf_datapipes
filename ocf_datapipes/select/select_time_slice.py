@@ -141,18 +141,7 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             end_dt,
             freq=self.sample_period_duration,
         )
-
-        # If all the requested times are present we avoid running interpolation
-        requested_time_exists = np.isin(requested_times, ds.time_utc)
-        if requested_time_exists.all():
-            return ds.sel(time_utc=slice(start_dt, end_dt))
-
-        # If less than 2 of the requested times are present we cannot infill
-        if requested_time_exists.sum() < 2:
-            logger.warning("Cannot run interpolate infilling with less than 2 time steps available")
-            return self._sel_fillnan(xr_data, start_dt, end_dt)
-
-        logger.info("Some requested times are missing - running interpolation")
+        
         # These are the times we use for interpolation to the requested_times
         buffer_requested_times = pd.date_range(
             start_dt - dt_buffer,
@@ -160,6 +149,16 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
             freq=self.sample_period_duration,
         )
 
+        # If all the requested times are present we avoid running interpolation
+        if np.isin(requested_times, ds.time_utc).all():
+            return ds.sel(time_utc=slice(start_dt, end_dt))
+
+        # If less than 2 of the buffer requested times are present we cannot infill
+        elif np.isin(buffer_requested_times, ds.time_utc).sum() < 2:
+            logger.warning("Cannot run interpolate infilling with less than 2 time steps available")
+            return self._sel_fillnan(xr_data, start_dt, end_dt)
+
+        logger.info("Some requested times are missing - running interpolation")
         # Find the timestamps which are within max gap size
         mask = np.isin(buffer_requested_times, ds.time_utc)
         valid_fill_times = fill_1d_bool_gaps(mask, self.max_steps_gap, fill_ends=False)
@@ -183,7 +182,6 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
 
         # Filter to selected times
         ds_out = ds_out.sel(time_utc=slice(start_dt, end_dt))
-
         return ds_out
 
     def _sel_default(self, xr_data, start_dt, end_dt):

@@ -86,9 +86,8 @@ def test_select_time_slice_sat(sat_datapipe):
     # ------------------- Check with interpolation --------------------
 
     data_times = pd.to_datetime(data.time_utc.values)
-    t0_datapipe = IterableWrapper(data_times[[0, 1, 4, 5]])
-
-    missing_sat_data = data.sel(time_utc=data_times[[0, 2, 3, 6]])
+    missing_sat_data = data.sel(time_utc=data_times[[0, 2, 3, 6, 7, 9]])
+    t0_datapipe = IterableWrapper(data_times[[0, 1, 4, 5, 7]])
     missing_sat_datapipe = IterableWrapper([missing_sat_data]).repeat(len(t0_datapipe))
 
     # For each sample the timestamps should be missing in this order
@@ -98,6 +97,7 @@ def test_select_time_slice_sat(sat_datapipe):
             [False, False, False],
             [False, True, True],
             [True, True, False],
+            [False, False, False],
         ]
     )
 
@@ -119,4 +119,7 @@ def test_select_time_slice_sat(sat_datapipe):
         assert sat_samples[i].time_utc[1] == t0_values[i]
         # Correct number of time steps are all NaN
         sat_sel = sat_samples[i].isel(x_geostationary=0, y_geostationary=0, channel=0)
-        assert (np.isnan(sat_sel.values) == expected_missing_steps[i]).all()
+        
+        assert (np.isnan(sat_sel.values) == expected_missing_steps[i]).all(), (
+            f"{np.isnan(sat_sel.values)}!={expected_missing_steps[i]}"
+        )
