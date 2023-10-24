@@ -272,6 +272,11 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
         description="Tthe CSV files describing each PV system.",
     )
 
+    pv_ml_ids: List[int] = Field(
+        None,
+        description="List of the ML IDs of the PV systems you'd like to filter to.",
+    )
+
     is_live: bool = Field(
         False, description="Option if to use live data from the nowcasting pv database"
     )

@@ -36,7 +36,7 @@ def normalize_pv(x):  # So it can be pickled
     Returns:
         Normalized DataArray
     """
-    return x / x.capacity_watt_power
+    return x / x.observed_capacity_wp
 
 
 def _remove_nans(x):
@@ -111,7 +111,7 @@ def _normalize_by_pvlib(pv_system):
         clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
     print(fraction_clear_sky)
-    pv_system /= pv_system.capacity_watt_power
+    pv_system /= pv_system.observed_capacity_wp
     print(pv_system)
     pv_system *= fraction_clear_sky
     print(pv_system)
@@ -468,8 +468,6 @@ def pseudo_irradiance_datapipe(
     pv_loc_datapipe, pv_sav_loc = LocationPicker(
         pv_loc_datapipe,
         return_all_locations=True if is_test else False,
-        x_dim_name="latitude",
-        y_dim_name="longitude",
     ).fork(2, buffer_size=-1)
     pv_sav_loc = pv_sav_loc.map(_get_id_from_location)
     pv_meta_save = pv_meta_save.map(_extract_test_info)

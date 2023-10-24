@@ -63,7 +63,7 @@ def simple_pv_datapipe(
 
     logger.debug("Making PV space slice")
     pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe = (
-        pv_datapipe.normalize(normalize_fn=lambda x: x / x.capacity_watt_power)
+        pv_datapipe.normalize(normalize_fn=lambda x: x / x.observed_capacity_wp)
         .add_t0_idx_and_sample_period_duration(
             sample_period_duration=timedelta(
                 minutes=configuration.input_data.pv.time_resolution_minutes
