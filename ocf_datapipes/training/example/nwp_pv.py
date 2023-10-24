@@ -181,7 +181,10 @@ def nwp_pv_datapipe(
         forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
     )
 
-    if configuration.input_data.nwp.nwp_provider == "UKMetOffice" or configuration.input_data.nwp.nwp_provider == "ukv":
+    if (
+        configuration.input_data.nwp.nwp_provider == "UKMetOffice"
+        or configuration.input_data.nwp.nwp_provider == "ukv"
+    ):
         nwp_datapipe = nwp_datapipe.normalize(mean=NWP_MEAN, std=NWP_STD)
     else:
         nwp_datapipe = nwp_datapipe.normalize(mean=NWP_GFS_MEAN, std=NWP_GFS_STD)
