@@ -418,6 +418,10 @@ def pseudo_irradiance_datapipe(
         batch_size: Batch size for the datapipe
         one_d: Whether to return a 1D array or not, i.e. a single PV site in the center as
             opposed to a 2D array of PV sites
+        size_meters: Size, in meters, of the output image
+        use_meters: Whether to use meters or pixels
+        normalize_by_pvlib: Whether to normalize the PV generation by the PVLib generation
+        is_test: Whether to return the test set or not
 
     Returns: datapipe
     """
@@ -434,7 +438,6 @@ def pseudo_irradiance_datapipe(
         use_gsp=False,
         use_pv=use_pv,
     )
-    # print(used_datapipes.keys())
     # Load GSP national data
     used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
 
@@ -442,12 +445,9 @@ def pseudo_irradiance_datapipe(
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(
         used_datapipes, key_for_t0="pv", return_all_times=True if is_test else False
     )
-    # print(used_datapipes.keys())
-    # return used_datapipes["pv"].zip_ocf(used_datapipes["nwp"],used_datapipes["pv_t0"],used_datapipes["nwp_t0"])
     # And now get time slices
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
     # print(used_datapipes.keys())
-    # return used_datapipes["pv"].zip_ocf(used_datapipes["sat"],used_datapipes["pv_future"])
 
     # Now do the extra processing
     pv_history = used_datapipes["pv"].map(
@@ -490,7 +490,6 @@ def pseudo_irradiance_datapipe(
         )
         pv_datapipe = pv_datapipe.select_id(pv_one_d_datapipe, data_source_name="pv")
         pv_history = pv_history.select_id(pv_one_d_datapipe2, data_source_name="pv")
-    # return pv_datapipe.zip_ocf(pv_history, pv_loc_datapipe, pv_meta_save, pv_sav_loc, used_datapipes["sat"])
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
@@ -594,7 +593,6 @@ def pseudo_irradiance_datapipe(
         pv_datapipe, pv_meta = pv_datapipe.fork(2)
         pv_meta = pv_meta.map(_get_meta)
         pv_datapipe = pv_datapipe.map(_get_values)
-        # return pv_datapipe.zip_ocf(pv_history, pv_loc_datapipe, pv_meta_save, pv_sav_loc, pv_meta, sat_datapipe)
     else:
         if "hrv" in used_datapipes.keys():
             sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
@@ -664,7 +662,6 @@ def pseudo_irradiance_datapipe(
         elif "sat" in used_datapipes.keys():
             sat_datapipe, sun_image_datapipe = sat_datapipe.fork(2)
             sun_image_datapipe = sun_image_datapipe.create_sun_image(normalize=True)
-    # return pv_datapipe.zip_ocf(pv_history, pv_loc_datapipe, pv_meta_save, pv_sav_loc, pv_meta, sat_datapipe)
     if "nwp" in used_datapipes.keys():
         nwp_datapipe, time_image_datapipe = nwp_datapipe.fork(2, buffer_size=100)
         time_image_datapipe = time_image_datapipe.create_time_image(
@@ -679,7 +676,6 @@ def pseudo_irradiance_datapipe(
         time_image_datapipe = time_image_datapipe.create_time_image()
     else:
         time_image_datapipe = None
-    # return pv_datapipe.zip_ocf(pv_history, pv_loc_datapipe, pv_meta_save, pv_sav_loc, pv_meta, sat_datapipe, time_image_datapipe)
 
     modalities = []
     if not one_d:
@@ -698,7 +694,6 @@ def pseudo_irradiance_datapipe(
         modalities.append(time_image_datapipe)
 
     stacked_xarray_inputs = StackXarray(modalities)
-    # return pv_datapipe.zip_ocf(pv_history, pv_loc_datapipe, pv_meta_save, pv_sav_loc, pv_meta, stacked_xarray_inputs)
     return stacked_xarray_inputs.batch(batch_size).zip_ocf(
         pv_meta.batch(batch_size),
         pv_datapipe.batch(batch_size),
