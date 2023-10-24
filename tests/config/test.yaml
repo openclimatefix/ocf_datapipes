@@ -30,6 +30,7 @@ input_data:
     n_pv_systems_per_example: 32
     start_datetime: "2010-01-01 00:00:00"
     end_datetime: "2030-01-01 00:00:00"
+    pv_ml_ids: []
   satellite:
     satellite_channels:
       - IR_016

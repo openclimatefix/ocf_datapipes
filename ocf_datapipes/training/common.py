@@ -228,7 +228,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
     for i, key in enumerate(list(datapipes_to_return.keys())):
         datapipes_to_return[key + "_t0"] = t0_datapipes[i]
 
-    # Readd config for later
+    # Re-add config for later
     datapipes_to_return["config"] = configuration
     if "topo" in used_datapipes.keys():
         datapipes_to_return["topo"] = used_datapipes["topo"]

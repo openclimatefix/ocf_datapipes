@@ -209,6 +209,6 @@ def _normalize_by_pvlib(pv_system):
     fraction_clear_sky = total_irradiance["poa_global"] / (
         clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
-    pv_system /= pv_system.capacity_watt_power
+    pv_system /= pv_system.observed_capacity_wp
     pv_system *= fraction_clear_sky
     return pv_system
