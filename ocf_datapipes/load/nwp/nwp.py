@@ -9,9 +9,9 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
+from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
-from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 
 _log = logging.getLogger(__name__)
 
