@@ -111,7 +111,7 @@ def load_everything_into_ram(
     xr_array = put_pv_data_into_an_xr_dataarray(
         df_gen=df_gen,
         observed_system_capacities=estimated_capacities,
-        metadata_system_capacities=df_metadata.capacity_watts,
+        nominal_system_capacities=df_metadata.capacity_watts,
         ml_id=df_metadata.ml_id,
         latitude=df_metadata.latitude,
         longitude=df_metadata.longitude,

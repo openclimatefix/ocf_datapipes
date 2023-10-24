@@ -45,7 +45,7 @@ def normalize_pv(x):  # So it can be pickled
     Returns:
         Normalized DataArray
     """
-    return x / x.observed_capacity_watt_power
+    return x / x.observed_capacity_wp
 
 
 def _remove_nans(x):

@@ -152,8 +152,8 @@ def test_open_pv_from_pvsites_db():
     for variable in [
         "time_utc",
         "pv_system_id",
-        "observed_capacity_watt_power",
-        "metadata_capacity_watt_power",
+        "observed_capacity_wp",
+        "nominal_capacity_wp",
         "orientation",
         "tilt",
         "longitude",

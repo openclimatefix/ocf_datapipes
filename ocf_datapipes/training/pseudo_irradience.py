@@ -36,7 +36,7 @@ def normalize_pv(x):  # So it can be pickled
     Returns:
         Normalized DataArray
     """
-    return x / x.observed_capacity_watt_power
+    return x / x.observed_capacity_wp
 
 
 def _remove_nans(x):
@@ -111,7 +111,7 @@ def _normalize_by_pvlib(pv_system):
         clear_sky["dni"] + clear_sky["dhi"] + clear_sky["ghi"]
     )
     print(fraction_clear_sky)
-    pv_system /= pv_system.observed_capacity_watt_power
+    pv_system /= pv_system.observed_capacity_wp
     print(pv_system)
     pv_system *= fraction_clear_sky
     print(pv_system)

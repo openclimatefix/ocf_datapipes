@@ -33,7 +33,7 @@ class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for ds in self.source_datapipe:
-            too_low = ds.observed_capacity_watt_power < self.min_capacity_watts
-            too_high = ds.observed_capacity_watt_power > self.max_capacity_watts
+            too_low = ds.observed_capacity_wp < self.min_capacity_watts
+            too_high = ds.observed_capacity_wp > self.max_capacity_watts
             mask = np.logical_or(too_low, too_high)
             yield ds.where(~mask, drop=True)

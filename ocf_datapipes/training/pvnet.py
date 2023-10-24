@@ -49,7 +49,7 @@ def normalize_pv(x):
     Returns:
         Normalized DataArray
     """
-    return (x / x.metadata_capacity_watt_power).clip(None, 5)
+    return (x / x.nominal_capacity_wp).clip(None, 5)
 
 
 def production_sat_scale(x):

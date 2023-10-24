@@ -164,6 +164,10 @@ class BatchKey(Enum):
     pv_id = auto()  # shape: (batch_size, n_pv_systems)
     pv_observed_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
     pv_nominal_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
+    #: pv_mask is True for good PV systems in each example.
+    # The RawPVDataSource doesn't use pv_mask. Instead is sets missing PV systems to NaN
+    # across all PV batch keys.
+    pv_mask = auto()  # shape: (batch_size, n_pv_systems)
 
     # PV coordinates:
     # Each has shape: (batch_size, n_pv_systems), will be NaN for missing PV systems.

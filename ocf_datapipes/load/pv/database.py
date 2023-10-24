@@ -96,7 +96,7 @@ class OpenPVFromDBIterDataPipe(IterDataPipe):
         data_xr = put_pv_data_into_an_xr_dataarray(
             df_gen=pv_power,
             observed_system_capacities=pv_metadata.observed_capacity_watt_power,
-            metadata_system_capacities=pv_metadata.capacity_watt_power,
+            nominal_system_capacities=pv_metadata.capacity_watt_power,
             ml_id=pv_metadata.ml_id,
             latitude=pv_metadata.latitude,
             longitude=pv_metadata.longitude,
@@ -371,7 +371,7 @@ class OpenPVFromPVSitesDBIterDataPipe(IterDataPipe):
         df_gen = get_pv_power_from_pvsites_database(history_duration=self.history_duration)
 
         # Database record is very short. Set observed max to NaN
-        df_metadata["observed_capacity_watt_power"] = np.nan
+        df_metadata["observed_capacity_wp"] = np.nan
 
         # Ensure systems are consistant between generation data, and metadata
         common_systems = list(np.intersect1d(df_metadata.index, df_gen.columns))
@@ -381,8 +381,8 @@ class OpenPVFromPVSitesDBIterDataPipe(IterDataPipe):
         # Compile data into an xarray DataArray
         xr_array = put_pv_data_into_an_xr_dataarray(
             df_gen=df_gen,
-            observed_system_capacities=df_metadata.observed_capacity_watt_power,
-            metadata_system_capacities=df_metadata.capacity_watts,
+            observed_system_capacities=df_metadata.observed_capacity_wp,
+            nominal_system_capacities=df_metadata.nominal_capacity_wp,
             ml_id=df_metadata.ml_id,
             latitude=df_metadata.latitude,
             longitude=df_metadata.longitude,
@@ -405,7 +405,7 @@ def get_metadata_from_pvsites_database() -> pd.DataFrame:
     with db_connection.engine.connect() as conn:
         df_sites_metadata = pd.DataFrame(conn.execute(text("SELECT * FROM sites")).fetchall())
 
-    df_sites_metadata["capacity_watts"] = df_sites_metadata["capacity_kw"] * 1000
+    df_sites_metadata["nominal_capacity_wp"] = df_sites_metadata["capacity_kw"] * 1000
 
     df_sites_metadata = df_sites_metadata.set_index("site_uuid")
 
