@@ -11,6 +11,7 @@ from torchdata.datapipes.iter import IterDataPipe
 from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
+from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 
 _log = logging.getLogger(__name__)
 
@@ -42,6 +43,8 @@ class OpenNWPIterDataPipe(IterDataPipe):
             self.open_nwp = open_icon_global
         elif provider.lower() == "ecmwf":
             self.open_nwp = open_ifs
+        elif provider.lower() == "gfs":
+            self.open_nwp = open_gfs
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
