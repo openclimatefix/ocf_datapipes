@@ -37,9 +37,7 @@ def test_normalize_gsp(gsp_datapipe):
 
 
 def test_normalize_passiv(passiv_datapipe):
-    passiv_datapipe = passiv_datapipe.normalize(
-        normalize_fn=lambda x: x / x.observed_capacity_wp
-    )
+    passiv_datapipe = passiv_datapipe.normalize(normalize_fn=lambda x: x / x.observed_capacity_wp)
     data = next(iter(passiv_datapipe))
     assert np.min(data) >= 0.0
     assert np.max(data) <= 1.0
