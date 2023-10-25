@@ -249,13 +249,20 @@ def spatial_coord_type(ds: xr.Dataset):
         x_coord: Name of the x-coordinate
         y_coord: Name of the y-coordinate
     """
-    if "longitude" in ds.coords:
+    if isinstance(xr.Dataset, ds):
+        dimension_coords = set([v for k in d.keys() for v in list(ds[k].xindexes)])
+    elif isinstance(xr.DataArray, ds):
+        dimension_coords = set(ds.xindexes)
+    else:
+        raise ValueError(f"Unrecognized input type: {type(ds)}")
+    
+    if "longitude" in dimension_coords:
         return "lat_lon", "longitude", "latitude"
-    elif "x_geostationary" in ds.coords:
+    elif "x_geostationary" in dimension_coords:
         return "geostationary", "x_geostationary", "y_geostationary"
-    elif "x_osgb" in ds.coords:
+    elif "x_osgb" in dimension_coords:
         return "osgb", "x_osgb", "y_osgb"
-    elif "x" in ds.coords:
+    elif "x" in dimension_coords:
         return "xy", "x", "y"
     else:
         return None, None, None
