@@ -250,7 +250,7 @@ def spatial_coord_type(ds: xr.Dataset):
         y_coord: Name of the y-coordinate
     """
     if isinstance(xr.Dataset, ds):
-        dimension_coords = set([v for k in d.keys() for v in list(ds[k].xindexes)])
+        dimension_coords = set([v for k in ds.keys() for v in list(ds[k].xindexes)])
     elif isinstance(xr.DataArray, ds):
         dimension_coords = set(ds.xindexes)
     else:
