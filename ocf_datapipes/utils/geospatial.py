@@ -255,7 +255,7 @@ def spatial_coord_type(ds: xr.Dataset):
         dimension_coords = set(ds.xindexes)
     else:
         raise ValueError(f"Unrecognized input type: {type(ds)}")
-    
+
     if "longitude" in dimension_coords:
         return "lat_lon", "longitude", "latitude"
     elif "x_geostationary" in dimension_coords:
