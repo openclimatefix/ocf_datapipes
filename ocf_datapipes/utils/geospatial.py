@@ -238,8 +238,25 @@ def move_lon_lat_by_meters(lon, lat, meters_east, meters_north):
     return new_lon, new_lat
 
 
+def _coord_priority(available_coords):
+    if "longitude" in available_coords:
+        return "lat_lon", "longitude", "latitude"
+    elif "x_geostationary" in available_coords:
+        return "geostationary", "x_geostationary", "y_geostationary"
+    elif "x_osgb" in available_coords:
+        return "osgb", "x_osgb", "y_osgb"
+    elif "x" in available_coords:
+        return "xy", "x", "y"        
+    else:
+        return None, None, None
+
+
 def spatial_coord_type(ds: xr.Dataset):
     """Searches the dataset to determine the kind of spatial coordinates present.
+    
+    This search has a preference for the dimension coordinates of the xarray object. If none of the 
+    expected coordinates exist in the dimension coordinates, it then searches the non-dimension
+    coordinates. See https://docs.xarray.dev/en/latest/user-guide/data-structures.html#coordinates.
 
     Args:
         ds: Dataset with spatial coords
@@ -249,20 +266,21 @@ def spatial_coord_type(ds: xr.Dataset):
         x_coord: Name of the x-coordinate
         y_coord: Name of the y-coordinate
     """
-    if isinstance(xr.Dataset, ds):
-        dimension_coords = set([v for k in ds.keys() for v in list(ds[k].xindexes)])
-    elif isinstance(xr.DataArray, ds):
-        dimension_coords = set(ds.xindexes)
+    if isinstance(ds, xr.DataArray):
+        # Search dimension coords of dataarray
+        coords = _coord_priority(ds.xindexes)
+    elif isinstance(ds, xr.Dataset):
+        # Search dimension coords of all variables in dataset
+        coords = _coord_priority(
+            set([v for k in ds.keys() for v in list(ds[k].xindexes)])
+        )
     else:
         raise ValueError(f"Unrecognized input type: {type(ds)}")
+                
+    if coords==(None, None, None):
+        # If no dimension coords found, search non-dimension coords
+        coords = _coord_priority(list(ds.coords))
+            
+    return coords
+    
 
-    if "longitude" in dimension_coords:
-        return "lat_lon", "longitude", "latitude"
-    elif "x_geostationary" in dimension_coords:
-        return "geostationary", "x_geostationary", "y_geostationary"
-    elif "x_osgb" in dimension_coords:
-        return "osgb", "x_osgb", "y_osgb"
-    elif "x" in dimension_coords:
-        return "xy", "x", "y"
-    else:
-        return None, None, None
