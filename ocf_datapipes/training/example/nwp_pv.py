@@ -49,10 +49,7 @@ def nwp_pv_datapipe(
         .fork(2, buffer_size=BUFFER_SIZE)
     )
 
-    if (
-        configuration.input_data.nwp.nwp_provider == "UKMetOffice"
-        or configuration.input_data.nwp.nwp_provider == "ukv"
-    ):
+    if configuration.input_data.nwp.nwp_provider in [ "UKMetOffice", "ukv"]:
         nwp_datapipe = OpenNWPID(configuration.input_data.nwp.nwp_zarr_path)
     elif configuration.input_data.nwp.nwp_provider == "GFS":
         nwp_datapipe = OpenGFSForecast(configuration.input_data.nwp.nwp_zarr_path)
