@@ -12,6 +12,7 @@ input_data:
     nwp_image_size_pixels_height: 2
     nwp_image_size_pixels_width: 2
     nwp_zarr_path: tests/data/nwp_data/test.zarr
+    nwp_provider: "ukv"
     history_minutes: 60
     forecast_minutes: 120
     time_resolution_minutes: 60

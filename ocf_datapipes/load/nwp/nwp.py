@@ -9,6 +9,7 @@ from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
+from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
 
@@ -34,14 +35,16 @@ class OpenNWPIterDataPipe(IterDataPipe):
                 i.e. OSGB for UKV, Lat/Lon for ICON EU, Icoshedral grid for ICON Global
         """
         self.zarr_path = zarr_path
-        if provider == "ukv":
+        if provider.lower() == "ukv" or provider == "UKMetOffice":
             self.open_nwp = open_ukv
-        elif provider == "icon-eu":
+        elif provider.lower() == "icon-eu":
             self.open_nwp = open_icon_eu
-        elif provider == "icon-global":
+        elif provider.lower() == "icon-global":
             self.open_nwp = open_icon_global
-        elif provider == "ecmwf":
+        elif provider.lower() == "ecmwf":
             self.open_nwp = open_ifs
+        elif provider.lower() == "gfs":
+            self.open_nwp = open_gfs
         else:
             raise ValueError(f"Unknown provider: {provider}")
 

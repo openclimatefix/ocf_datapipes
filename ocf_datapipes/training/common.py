@@ -81,7 +81,10 @@ def open_and_return_datapipes(
     if use_nwp:
         logger.debug("Opening NWP Data")
         nwp_datapipe = (
-            OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
+            OpenNWP(
+                configuration.input_data.nwp.nwp_zarr_path,
+                provider=configuration.input_data.nwp.nwp_provider,
+            )
             .select_channels(configuration.input_data.nwp.nwp_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(hours=1),
