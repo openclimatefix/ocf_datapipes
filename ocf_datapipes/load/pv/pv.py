@@ -96,8 +96,7 @@ def load_everything_into_ram(
         estimated_capacity_percentile=estimated_capacity_percentile,
     )
 
-    # Drop systems and timestamps where all values are NaN
-    df_gen.dropna(axis="index", how="all", inplace=True)
+    # Drop systems where all values are NaN
     df_gen.dropna(axis="columns", how="all", inplace=True)
     estimated_capacities = estimated_capacities[df_gen.columns]
 
