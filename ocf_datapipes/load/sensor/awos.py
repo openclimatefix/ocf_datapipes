@@ -36,4 +36,5 @@ class OpenAWOSFromNetCDFIterDataPipe(IterDataPipe):
     def __iter__(self):
         with fsspec.open(self.filename, "rb") as f:
             ds = xr.open_dataset(f)
-        return ds
+        while True:
+            yield ds
