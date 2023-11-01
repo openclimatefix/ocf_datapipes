@@ -17,17 +17,18 @@ _log = logging.getLogger(__name__)
 
 @functional_datapipe("OpenAWOS")
 class OpenAWOSFromNetCDFIterDataPipe(IterDataPipe):
-    """OpenAWOSFromNetCDFIterDataPipe
-
-    Args:
-        filename: Path to the NetCDF file
-        tag: Tag for train or test
-    """
+    """OpenAWOSFromNetCDFIterDataPipe"""
 
     def __init__(
         self,
         sensor: Sensor,
     ):
+        """
+        Datapipe to load sensor data from AWOS network
+
+        Args:
+            sensor: Sensor configuration
+        """
         super().__init__()
         self.sensor = sensor
         self.filename = self.sensor.sensor_filename
