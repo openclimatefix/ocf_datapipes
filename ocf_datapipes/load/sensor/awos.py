@@ -11,6 +11,7 @@ import pandas as pd
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
+from ocf_datapipes.config.model import Sensor
 
 _log = logging.getLogger(__name__)
 
@@ -25,10 +26,11 @@ class OpenAWOSFromNetCDFIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        filename: Union[Path, str],
+        sensor: Sensor,
     ):
         super().__init__()
-        self.filename = filename
+        self.sensor = sensor
+        self.filename = self.sensor.sensor_filename
 
     def __iter__(self):
         with fsspec.open(self.filename, "rb") as f:

@@ -326,7 +326,7 @@ class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDime
 
     sensor_filename: str = Field(
         None,
-        description="The NetCDF files holding the solar PV power timeseries.",
+        description="The NetCDF files holding the Sensor timeseries.",
     )
 
     sensor_ml_ids: List[int] = Field(
