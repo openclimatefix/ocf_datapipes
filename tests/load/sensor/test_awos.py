@@ -7,5 +7,5 @@ def test_open_awos_from_netcdf():
     awos_datapipe = OpenAWOSFromNetCDF(sensor_config)
     data = next(iter(awos_datapipe))
     assert data is not None
-    assert len(data.station_coord) == 123
+    assert len(data.station_id) == 123
 
