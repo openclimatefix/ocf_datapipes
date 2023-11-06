@@ -8,4 +8,3 @@ def test_open_awos_from_netcdf():
     data = next(iter(awos_datapipe))
     assert data is not None
     assert len(data.station_id) == 123
-
