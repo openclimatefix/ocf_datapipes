@@ -25,6 +25,7 @@ class CheckNaNsIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
         self.dataset_name = dataset_name
         self.fill_nans = fill_nans
+        self.source_datapipe_name = source_datapipe.__repr__()
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """
@@ -36,38 +37,39 @@ class CheckNaNsIterDataPipe(IterDataPipe):
         for xr_data in self.source_datapipe:
             if self.fill_nans:
                 if self.dataset_name is None:
-                    xr_data = check_nan_and_fill_warning(data=xr_data)
+                    xr_data = self.check_nan_and_fill_warning(data=xr_data)
                 else:
-                    xr_data[self.dataset_name] = check_nan_and_fill_warning(
+                    xr_data[self.dataset_name] = self.check_nan_and_fill_warning(
                         data=xr_data[self.dataset_name]
                     )
-            check_nan_and_inf(
-                data=xr_data if self.dataset_name is None else xr_data[self.dataset_name]
+            self.check_nan_and_inf(
+                data=xr_data if self.dataset_name is None else xr_data[self.dataset_name],
             )
             yield xr_data
 
+    def check_nan_and_inf(self, data: xr.Dataset) -> None:
+        """Check that all values are non NaNs and not infinite"""
 
-def check_nan_and_inf(data: xr.Dataset):
-    """Check that all values are non NaNs and not infinite"""
+        if np.isnan(data).any():
+            if self.dataset_name is None:
+                message = f"Some data values are NaNs in datapipe {self.datapipe_name}. "
+            else:
+                message = f"Some data values are NaNs in datapipe {self.datapipe_name}, dataset {self.dataset_name}. "
 
-    if np.isnan(data).any():
-        message = "Some data values are NaNs. "
+            # find out which example has nans in it
+            for i in range(data.shape[0]):
+                if np.isnan(data[i]).any():
+                    message += f" Nans in example {i}."
+            raise Warning(message)
 
-        # find out which example has nans in it
-        for i in range(data.shape[0]):
-            if np.isnan(data[i]).any():
-                message += f" Nans in example {i}."
-        raise Exception(message)
+        if np.isinf(data).any():
+            message = f"Some data values are Infinite in datapipe {self.datapipe_name}."
+            raise Warning(message)
 
-    if np.isinf(data).any():
-        message = "Some data values are Infinite"
-        raise Exception(message)
+    def check_nan_and_fill_warning(self, data: xr.Dataset) -> xr.Dataset:
+        """Check that all values are non NaNs and not infinite"""
 
+        if np.isnan(data).any():
+            data = data.fillna(0)
 
-def check_nan_and_fill_warning(data: xr.Dataset) -> xr.Dataset:
-    """Check that all values are non NaNs and not infinite"""
-
-    if np.isnan(data).any():
-        data = data.fillna(0)
-
-    return data
+        return data
