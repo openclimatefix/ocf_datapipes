@@ -246,15 +246,15 @@ def _coord_priority(available_coords):
     elif "x_osgb" in available_coords:
         return "osgb", "x_osgb", "y_osgb"
     elif "x" in available_coords:
-        return "xy", "x", "y"        
+        return "xy", "x", "y"
     else:
         return None, None, None
 
 
 def spatial_coord_type(ds: xr.Dataset):
     """Searches the dataset to determine the kind of spatial coordinates present.
-    
-    This search has a preference for the dimension coordinates of the xarray object. If none of the 
+
+    This search has a preference for the dimension coordinates of the xarray object. If none of the
     expected coordinates exist in the dimension coordinates, it then searches the non-dimension
     coordinates. See https://docs.xarray.dev/en/latest/user-guide/data-structures.html#coordinates.
 
@@ -271,16 +271,12 @@ def spatial_coord_type(ds: xr.Dataset):
         coords = _coord_priority(ds.xindexes)
     elif isinstance(ds, xr.Dataset):
         # Search dimension coords of all variables in dataset
-        coords = _coord_priority(
-            set([v for k in ds.keys() for v in list(ds[k].xindexes)])
-        )
+        coords = _coord_priority(set([v for k in ds.keys() for v in list(ds[k].xindexes)]))
     else:
         raise ValueError(f"Unrecognized input type: {type(ds)}")
-                
-    if coords==(None, None, None):
+
+    if coords == (None, None, None):
         # If no dimension coords found, search non-dimension coords
         coords = _coord_priority(list(ds.coords))
-            
-    return coords
-    
 
+    return coords
