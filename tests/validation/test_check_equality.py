@@ -17,5 +17,5 @@ def test_check_less_than_or_equal_to(topo_datapipe):
 
 
 def test_check_greater_than_or_equal_to(topo_datapipe):
-    topo_datapipe = CheckGreaterThanOrEqualTo(topo_datapipe, 100000)
+    topo_datapipe = CheckGreaterThanOrEqualTo(topo_datapipe, -9999)
     data = next(iter(topo_datapipe))
