@@ -12,7 +12,7 @@ class CheckNaNsIterDataPipe(IterDataPipe):
     """Checks, and optionally fills, NaNs in Xarray Dataset"""
 
     def __init__(
-        self, source_datapipe: IterDataPipe, dataset_name: str = None, fill_nans: bool = False
+        self, source_datapipe: IterDataPipe, dataset_name: str = None, fill_nans: bool = False, fill_value: float = 0.0
     ):
         """
         Checks and optionally fills NaNs in the data
@@ -26,6 +26,7 @@ class CheckNaNsIterDataPipe(IterDataPipe):
         self.dataset_name = dataset_name
         self.fill_nans = fill_nans
         self.source_datapipe_name = source_datapipe.__repr__()
+        self.fill_value = fill_value
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """
@@ -37,10 +38,10 @@ class CheckNaNsIterDataPipe(IterDataPipe):
         for xr_data in self.source_datapipe:
             if self.fill_nans:
                 if self.dataset_name is None:
-                    xr_data = self.check_nan_and_fill_warning(data=xr_data)
+                    xr_data = self.fill_nan(data=xr_data, fill_value=self.fill_value)
                 else:
-                    xr_data[self.dataset_name] = self.check_nan_and_fill_warning(
-                        data=xr_data[self.dataset_name]
+                    xr_data[self.dataset_name] = self.fill_nan(
+                        data=xr_data[self.dataset_name], fill_value=self.fill_value,
                     )
             self.check_nan_and_inf(
                 data=xr_data if self.dataset_name is None else xr_data[self.dataset_name],
@@ -69,10 +70,10 @@ class CheckNaNsIterDataPipe(IterDataPipe):
             message = f"Some data values are Infinite in datapipe {self.datapipe_name}."
             raise Warning(message)
 
-    def check_nan_and_fill_warning(self, data: xr.Dataset) -> xr.Dataset:
+    def fill_nan(self, data: xr.Dataset, fill_value: float = 0.0) -> xr.Dataset:
         """Check that all values are non NaNs and not infinite"""
 
         if np.isnan(data).any():
-            data = data.fillna(0)
+            data = data.fillna(fill_value)
 
         return data
