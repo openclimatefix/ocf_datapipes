@@ -7,10 +7,9 @@ Decided to go for a 'Pydantic' data class. It's slightly more complicated that j
 
 See `model.py` for documentation of the expected configuration fields.
 
-All paths must include the protocol prefix.  For local files,
-it's sufficient to just start with a '/'.  For aws, start with 's3://',
+All paths must include the protocol prefix. For local files,
+it's sufficient to just start with a '/'. For aws, start with 's3://',
 for gcp start with 'gs://'.
-
 
 # Example
 
