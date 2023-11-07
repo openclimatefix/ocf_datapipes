@@ -54,7 +54,10 @@ class CheckNaNsIterDataPipe(IterDataPipe):
             if self.dataset_name is None:
                 message = f"Some data values are NaNs in datapipe {self.datapipe_name}. "
             else:
-                message = f"Some data values are NaNs in datapipe {self.datapipe_name}, dataset {self.dataset_name}. "
+                message = (
+                    f"Some data values are NaNs in datapipe {self.datapipe_name},"
+                    f" dataset {self.dataset_name}. "
+                )
 
             # find out which example has nans in it
             for i in range(data.shape[0]):
