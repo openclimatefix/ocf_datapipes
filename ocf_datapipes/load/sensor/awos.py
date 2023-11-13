@@ -15,6 +15,7 @@ from ocf_datapipes.config.model import Sensor
 
 _log = logging.getLogger(__name__)
 
+
 @functional_datapipe("OpenAWOS")
 class OpenAWOSFromNetCDFIterDataPipe(IterDataPipe):
     """OpenAWOSFromNetCDFIterDataPipe"""
