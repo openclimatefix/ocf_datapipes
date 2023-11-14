@@ -3,6 +3,7 @@ from ocf_datapipes.utils.utils import searchsorted
 from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
 from ocf_datapipes.training.windnet import windnet_datapipe
 from datetime import datetime
+import xarray as xr
 
 
 def test_searchsorted():
@@ -21,7 +22,8 @@ def test_combine_uncombine_from_single_dataset(configuration_filename):
         end_time=end_time,
     )
     datasets = next(iter(dp))
-    dataset = combine_to_single_dataset(datasets)
+    dataset: xr.Dataset = combine_to_single_dataset(datasets)
+    assert isinstance(dataset, xr.Dataset)
     multiple_datasets = uncombine_from_single_dataset(dataset)
     for key in multiple_datasets.keys():
         assert datasets[key].equals(multiple_datasets[key])
