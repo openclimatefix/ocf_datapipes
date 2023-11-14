@@ -23,7 +23,7 @@ from ocf_datapipes.utils.consts import (
     BatchKey,
     NumpyBatch,
 )
-from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_netcdf
+from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_datapipe")
@@ -861,5 +861,5 @@ if __name__ == "__main__":
     )
     datasets = next(iter(dp))
     dataset = combine_to_single_dataset(datasets)
-    multiple_datasets = uncombine_from_netcdf(dataset)
+    multiple_datasets = uncombine_from_single_dataset(dataset)
     print(multiple_datasets)

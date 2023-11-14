@@ -368,7 +368,7 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
     return combined_dataset
 
 
-def uncombine_from_netcdf(combined_dataset: xr.Dataset) -> dict[str, xr.DataArray]:
+def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.DataArray]:
     """
     Uncombine a combined dataset
 
