@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import xarray as xr
+
+xr.set_options(keep_attrs=True)
 from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterableWrapper, IterDataPipe
 
@@ -374,7 +376,7 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
 
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
-            yield combined_datapipe
+            yield next(iter(combined_datapipe))
 
 
 def _get_datapipes_dict(
@@ -900,7 +902,6 @@ if __name__ == "__main__":
     )
     datasets = next(iter(dp))
     dataset = combine_to_single_dataset(datasets)
-    print(dataset)
     # Need to serialize attributes to strings
     dataset.to_netcdf("test.nc", mode="w", engine="h5netcdf", compute=True)
     dp = windnet_netcdf_datapipe(

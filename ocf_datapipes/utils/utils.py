@@ -376,6 +376,7 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
         final_datasets_to_combined.append(dataset)
     # Combine all datasets, and append the list of datasets to the dataset_dict
     combined_dataset = xr.merge(final_datasets_to_combined)
+    # Print all attrbutes of the combined dataset
     return combined_dataset
 
 
@@ -398,14 +399,12 @@ def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.
         for dim in dataset_dims:
             if f"{key}__" not in dim:
                 dataset = dataset.drop(dim)
-        # print(dataset)
         dataset = dataset.rename(
             {dim: dim.split(f"{key}__")[1] for dim in dataset.dims if dim not in dataset.coords}
         )
-        # print(dataset)
         dataset: xr.Dataset = dataset.rename(
             {coord: coord.split(f"{key}__")[1] for coord in dataset.coords}
-        ).to_dataset(name=key)
+        )
         # Split the dataset by the prefix
         datasets[key] = dataset
     return datasets
