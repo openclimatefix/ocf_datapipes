@@ -336,7 +336,7 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
     Combine multiple datasets into a single dataset
 
     Args:
-        *datasets: Datasets to combine
+        dataset_dict: Dictionary of xr.Dataset objects to combine
 
     Returns:
         Combined dataset
