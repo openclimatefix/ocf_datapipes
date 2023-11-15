@@ -12,12 +12,12 @@ from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
     OpenConfiguration,
     OpenGSP,
+    OpenGSPFromDatabase,
     OpenNWP,
     OpenPVFromNetCDF,
+    OpenPVFromPVSitesDB,
     OpenSatellite,
     OpenTopography,
-    OpenPVFromPVSitesDB,
-    OpenGSPFromDatabase,
 )
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
