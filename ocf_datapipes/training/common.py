@@ -16,8 +16,9 @@ from ocf_datapipes.load import (
     OpenPVFromNetCDF,
     OpenSatellite,
     OpenTopography,
+    OpenPVFromPVSitesDB,
+    OpenGSPFromDatabase,
 )
-from ocf_datapipes.training.pvnet import logger
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 logger = logging.getLogger(__name__)
