@@ -27,4 +27,13 @@ def test_combine_uncombine_from_single_dataset(configuration_filename):
     multiple_datasets = uncombine_from_single_dataset(dataset)
     for key in multiple_datasets.keys():
         for i in range(len(multiple_datasets[key].time_utc)):
-            assert datasets[key][i].equals(multiple_datasets[key].isel(time_utc=i))
+            # Assert that coordinates are the same
+            assert (
+                datasets[key][i].coords.keys()
+                == multiple_datasets[key].isel(time_utc=i).coords.keys()
+            )
+            # Assert that data for each of the coords is the same
+            for coord_key in datasets[key][i].coords.keys():
+                assert datasets[key][i][coord_key].equals(
+                    multiple_datasets[key].isel(time_utc=i)[coord_key]
+                )
