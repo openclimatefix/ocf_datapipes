@@ -17,9 +17,8 @@ def test_windnet_datapipe(configuration_filename):
         end_time=end_time,
     )
     datasets = next(iter(dp))
-    dataset = combine_to_single_dataset(datasets)
     # Need to serialize attributes to strings
-    dataset.to_netcdf("test.nc", mode="w", engine="h5netcdf", compute=True)
+    datasets.to_netcdf("test.nc", mode="w", engine="h5netcdf", compute=True)
     dp = windnet_netcdf_datapipe(
         config_filename=configuration_filename,
         filenames=["test.nc"],

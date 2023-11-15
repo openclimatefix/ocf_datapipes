@@ -330,12 +330,6 @@ def windnet_datapipe(
 
     # Save out datapipe to NetCDF
 
-    # Convert to numpy batch
-    # datapipe = convert_to_numpy_batch(
-    #    datapipe_dict,
-    #    block_sat,
-    #    block_nwp,
-    # )
     # Merge all the datapipes into one
     return DictDatasetIterDataPipe(
         datapipe_dict["gsp"],
@@ -343,7 +337,7 @@ def windnet_datapipe(
         datapipe_dict["sat"],
         datapipe_dict["pv"],
         keys=["gsp", "nwp", "sat", "pv"],
-    )
+    ).map(combine_to_single_dataset)
 
 
 def split_dataset_dict_dp(element):
