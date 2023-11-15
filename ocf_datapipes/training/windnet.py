@@ -33,7 +33,7 @@ from ocf_datapipes.utils.consts import (
     RSS_MEAN,
     RSS_STD,
 )
-from ocf_datapipes.utils.utils import uncombine_from_single_dataset
+from ocf_datapipes.utils.utils import uncombine_from_single_dataset, combine_to_single_dataset
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("windnet_datapipe")
