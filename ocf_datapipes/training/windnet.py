@@ -1,7 +1,7 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import xarray as xr
 
@@ -14,28 +14,26 @@ from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
     OpenConfiguration,
 )
+from ocf_datapipes.training.common import (
+    AddZeroedNWPData,
+    AddZeroedSatelliteData,
+    _get_datapipes_dict,
+    check_nans_in_satellite_data,
+    concat_xr_time_utc,
+    construct_loctime_pipelines,
+    fill_nans_in_arrays,
+    fill_nans_in_pv,
+    normalize_gsp,
+    normalize_pv,
+    slice_datapipes_by_time,
+)
 from ocf_datapipes.utils.consts import (
     NEW_NWP_MEAN,
     NEW_NWP_STD,
     RSS_MEAN,
     RSS_STD,
-    BatchKey,
-    NumpyBatch,
 )
-from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
-from ocf_datapipes.training.common import (
-    normalize_gsp,
-    normalize_pv,
-    concat_xr_time_utc,
-    fill_nans_in_pv,
-    fill_nans_in_arrays,
-    AddZeroedSatelliteData,
-    AddZeroedNWPData,
-    _get_datapipes_dict,
-    construct_loctime_pipelines,
-    slice_datapipes_by_time,
-    check_nans_in_satellite_data,
-)
+from ocf_datapipes.utils.utils import uncombine_from_single_dataset
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("windnet_datapipe")

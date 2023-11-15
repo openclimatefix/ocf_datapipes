@@ -1,7 +1,7 @@
 """Common functionality for datapipes"""
 import logging
-from datetime import timedelta, datetime
-from typing import List, Union, Optional, Tuple, Dict
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import xarray as xr
@@ -17,10 +17,8 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.load.gsp.database import OpenGSPFromDatabaseIterDataPipe
-from ocf_datapipes.load.pv.database import OpenPVFromPVSitesDBIterDataPipe
 from ocf_datapipes.training.pvnet import logger
-from ocf_datapipes.utils.consts import NumpyBatch, BatchKey
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 logger = logging.getLogger(__name__)
 
