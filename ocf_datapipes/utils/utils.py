@@ -392,7 +392,9 @@ def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.
             {dim: dim.split(f"{key}__")[1] for dim in dataset.dims if dim not in dataset.coords}
         )
         # print(dataset)
-        dataset = dataset.rename({coord: coord.split(f"{key}__")[1] for coord in dataset.coords})
+        dataset: xr.Dataset = dataset.rename(
+            {coord: coord.split(f"{key}__")[1] for coord in dataset.coords}
+        ).to_dataset(name=key)
         # Split the dataset by the prefix
         datasets[key] = dataset
     return datasets

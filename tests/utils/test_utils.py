@@ -26,4 +26,5 @@ def test_combine_uncombine_from_single_dataset(configuration_filename):
     assert isinstance(dataset, xr.Dataset)
     multiple_datasets = uncombine_from_single_dataset(dataset)
     for key in multiple_datasets.keys():
-        assert datasets[key].equals(multiple_datasets[key])
+        for i in range(len(multiple_datasets[key].time_utc)):
+            assert datasets[key][i].equals(multiple_datasets[key].isel(time_utc=i))
