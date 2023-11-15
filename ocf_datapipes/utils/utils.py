@@ -380,7 +380,6 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
     for f_dset in final_datasets_to_combined:
         assert isinstance(f_dset, xr.Dataset), f"Dataset is not an xr.Dataset, {type(f_dset)}"
     combined_dataset = xr.merge(final_datasets_to_combined)
-    combined_dataset.to_netcdf("combined_dataset.nc", engine="h5netcdf")
     # Print all attrbutes of the combined dataset
     return combined_dataset
 
