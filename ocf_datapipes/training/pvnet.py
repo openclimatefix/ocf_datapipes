@@ -725,36 +725,3 @@ def pvnet_datapipe(
     )
 
     return datapipe
-
-
-def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
-    """
-    Check if there are any Nans values in the satellite data.
-    """
-    if np.any(np.isnan(batch[BatchKey.satellite_actual])):
-        logger.error("Found nans values in satellite data")
-
-        logger.error(batch[BatchKey.satellite_actual].shape)
-
-        # loop over time and channels
-        for dim in [0, 1]:
-            for t in range(batch[BatchKey.satellite_actual].shape[dim]):
-                if dim == 0:
-                    sate_data_one_step = batch[BatchKey.satellite_actual][t]
-                else:
-                    sate_data_one_step = batch[BatchKey.satellite_actual][:, t]
-                nans = np.isnan(sate_data_one_step)
-
-                if np.any(nans):
-                    percent_nans = np.sum(nans) / np.prod(sate_data_one_step.shape) * 100
-
-                    logger.error(
-                        f"Found nans values in satellite data at index {t} ({dim=}). "
-                        f"{percent_nans}% of values are nans"
-                    )
-                else:
-                    logger.error(f"Found no nans values in satellite data at index {t} {dim=}")
-
-        raise ValueError("Found nans values in satellite data")
-
-    return batch
