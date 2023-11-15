@@ -302,7 +302,7 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
         super().__init__()
         self.keys = keys
         self.filenames = filenames
-        self.configuration
+        self.configuration = configuration
 
     def __iter__(self):
         """Iter"""
@@ -316,6 +316,65 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 for k in self.keys:
                     dataset_dict[k] = datasets[k]
                 yield dataset_dict
+
+
+@functional_datapipe("convert_to_numpy_batch")
+class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
+    """ """
+
+    def __init__(
+        self,
+        dataset_dict_dp: IterDataPipe,
+        configuration: Configuration,
+        block_sat: bool = False,
+        block_nwp: bool = False,
+        check_satellite_no_zeros: bool = False,
+    ):
+        """Init"""
+        super().__init__()
+        self.dataset_dict_dp = dataset_dict_dp
+        self.configuration = configuration
+        self.block_sat = block_sat
+        self.block_nwp = block_nwp
+        self.check_satellite_no_zeros = check_satellite_no_zeros
+
+    def __iter__(self):
+        """Iter"""
+        for datapipes_dict in self.dataset_dict_dp:
+            # Spatially slice, normalize, and convert data to numpy arrays
+            numpy_modalities = []
+            # Unpack for convenience
+            conf_sat = self.configuration.input_data.satellite
+            conf_nwp = self.configuration.input_data.nwp
+            if "nwp" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["nwp"].convert_nwp_to_numpy_batch())
+            if "sat" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["sat"].convert_satellite_to_numpy_batch())
+            if "pv" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["pv"].convert_pv_to_numpy_batch())
+            numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
+
+            logger.debug("Combine all the data sources")
+            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
+                modality_name="gsp"
+            )
+
+            if self.block_sat and conf_sat != "":
+                sat_block_func = AddZeroedSatelliteData(self.configuration)
+                combined_datapipe = combined_datapipe.map(sat_block_func)
+
+            if self.block_nwp and conf_nwp != "":
+                nwp_block_func = AddZeroedNWPData(self.configuration)
+                combined_datapipe = combined_datapipe.map(nwp_block_func)
+
+            logger.info("Filtering out samples with no data")
+            if self.check_satellite_no_zeros:
+                # in production we don't want any nans in the satellite data
+                combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+
+            combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
+
+            yield combined_datapipe
 
 
 def _get_datapipes_dict(
@@ -695,55 +754,6 @@ def construct_sliced_data_pipeline(
     return finished_dataset_dict
 
 
-def convert_to_numpy_batch(
-    datapipes_dict: dict[str, Union[IterDataPipe, Configuration]],
-    block_sat: bool = False,
-    block_nwp: bool = False,
-    check_satellite_no_zeros: bool = False,
-):
-    configuration: Configuration = datapipes_dict["config"]
-    # Spatially slice, normalize, and convert data to numpy arrays
-    numpy_modalities = []
-    # Unpack for convenience
-    conf_sat = configuration.input_data.satellite
-    conf_nwp = configuration.input_data.nwp
-    if "nwp" in datapipes_dict:
-        numpy_modalities.append(datapipes_dict["nwp"].convert_nwp_to_numpy_batch())
-    if "sat" in datapipes_dict:
-        numpy_modalities.append(datapipes_dict["sat"].convert_satellite_to_numpy_batch())
-    if "pv" in datapipes_dict:
-        numpy_modalities.append(datapipes_dict["pv"].convert_pv_to_numpy_batch())
-    numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
-
-    logger.debug("Combine all the data sources")
-    combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(modality_name="gsp")
-
-    if block_sat and conf_sat != "":
-        sat_block_func = AddZeroedSatelliteData(configuration)
-        combined_datapipe = combined_datapipe.map(sat_block_func)
-
-    if block_nwp and conf_nwp != "":
-        nwp_block_func = AddZeroedNWPData(configuration)
-        combined_datapipe = combined_datapipe.map(nwp_block_func)
-
-    logger.info("Filtering out samples with no data")
-    if check_satellite_no_zeros:
-        # in production we don't want any nans in the satellite data
-        combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
-
-    combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
-
-    return combined_datapipe
-
-
-def write_to_netcdf(datapipes_dict):
-    """
-    Write the batch to a netcdf file.
-    """
-    dataset = combine_to_single_dataset(datapipes_dict)
-    print(dataset)
-
-
 def windnet_datapipe(
     config_filename: str,
     start_time: Optional[datetime] = None,
@@ -838,15 +848,9 @@ def windnet_netcdf_datapipe(
         filenames=filenames,
         keys=keys,
         configuration=configuration,
-    )
-    # Split the dataset_dict_dp into dictionary of individual datapipes
-    datapipe_dict: dict[str:IterDataPipe] = datapipe_dict_dp.map(split_dataset_dict_dp)
-
-    # Convert to numpy batch
-    datapipe = convert_to_numpy_batch(
-        datapipe_dict,
-        block_sat,
-        block_nwp,
+    ).map(split_dataset_dict_dp)
+    datapipe = datapipe_dict_dp.convert_to_numpy_batch(
+        block_nwp=block_nwp, block_sat=block_sat, configuration=configuration
     )
 
     return datapipe
@@ -896,10 +900,12 @@ if __name__ == "__main__":
     )
     datasets = next(iter(dp))
     dataset = combine_to_single_dataset(datasets)
-    dataset.to_zarr("test.nc", mode="w", compute=True)
+    print(dataset)
+    # Need to serialize attributes to strings
+    dataset.to_netcdf("test.nc", mode="w", engine="h5netcdf", compute=True)
     dp = windnet_netcdf_datapipe(
         config_filename=configuration_filename,
-        filenames=["test.zarr"],
+        filenames=["test.nc"],
         keys=["gsp", "nwp", "sat", "pv"],
     )
     datasets = next(iter(dp))

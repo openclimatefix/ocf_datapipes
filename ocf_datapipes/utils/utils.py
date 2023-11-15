@@ -345,6 +345,10 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
     for key, datasets in dataset_dict.items():
         new_datasets = []
         for dataset in datasets:
+            # Convert all coordinates float64 and int64 to float32 and int32
+            dataset = dataset.assign_attrs(
+                {key: str(value) for key, value in dataset.attrs.items()}
+            )
             if isinstance(dataset, xr.DataArray):
                 new_datasets.append(dataset.to_dataset(name=key))
             else:
@@ -361,7 +365,14 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
             dataset = dataset.rename({coord: f"{key}__{coord}" for coord in dataset.coords})
             batched_datasets.append(dataset)
         # Merge all datasets with the same key
-        dataset = xr.concat(batched_datasets, dim=f"{key}__time_utc")
+        # If NWP, then has init_time_utc and step, so do it off key__init_time_utc
+        dataset = xr.concat(
+            batched_datasets,
+            dim=f"{key}__target_time_utc"
+            if f"{key}__target_time_utc" in dataset.coords
+            else f"{key}__time_utc",
+        )
+        # Serialize attributes to be JSON-seriaizable
         final_datasets_to_combined.append(dataset)
     # Combine all datasets, and append the list of datasets to the dataset_dict
     combined_dataset = xr.merge(final_datasets_to_combined)
