@@ -342,6 +342,7 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
         Combined dataset
     """
     # Convert all data_arrays to datasets
+    new_dataset_dict = {}
     for key, datasets in dataset_dict.items():
         new_datasets = []
         for dataset in datasets:
@@ -353,10 +354,11 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
                 new_datasets.append(dataset.to_dataset(name=key))
             else:
                 new_datasets.append(dataset)
-        dataset_dict[key] = new_datasets
+            assert isinstance(new_datasets[-1], xr.Dataset)
+        new_dataset_dict[key] = new_datasets
     # Prepend all coordinates and dimensions names with the key in the dataset_dict
     final_datasets_to_combined = []
-    for key, datasets in dataset_dict.items():
+    for key, datasets in new_dataset_dict.items():
         batched_datasets = []
         for dataset in datasets:
             dataset = dataset.rename(
@@ -375,7 +377,10 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
         # Serialize attributes to be JSON-seriaizable
         final_datasets_to_combined.append(dataset)
     # Combine all datasets, and append the list of datasets to the dataset_dict
+    for f_dset in final_datasets_to_combined:
+        assert isinstance(f_dset, xr.Dataset), f"Dataset is not an xr.Dataset, {type(f_dset)}"
     combined_dataset = xr.merge(final_datasets_to_combined)
+    combined_dataset.to_netcdf("combined_dataset.nc", engine="h5netcdf")
     # Print all attrbutes of the combined dataset
     return combined_dataset
 
