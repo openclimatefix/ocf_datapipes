@@ -6,11 +6,15 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
 from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe, IterableWrapper
+from torchdata.datapipes.iter import IterableWrapper, IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenGSPFromDatabase, OpenPVFromPVSitesDB
+from ocf_datapipes.load import (
+    OpenConfiguration,
+    OpenGSPFromDatabase,
+    OpenPVFromPVSitesDB,
+)
 from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     open_and_return_datapipes,
@@ -22,9 +26,6 @@ from ocf_datapipes.utils.consts import (
     RSS_STD,
     BatchKey,
     NumpyBatch,
-)
-from ocf_datapipes.load import (
-    OpenConfiguration,
 )
 from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
 
