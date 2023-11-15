@@ -357,7 +357,7 @@ def construct_loctime_pipelines(
         shuffle=True,
         nwp_max_dropout_minutes=180,
         # Sometimes the forecast is only 4/day so 6 hour intervals - then we add 3-hour dropout
-        max_staleness_minutes=60 * 9,
+        nwp_max_staleness_minutes=60 * 9,
     )
 
     return location_pipe, t0_datapipe
