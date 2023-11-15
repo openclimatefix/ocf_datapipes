@@ -326,7 +326,7 @@ def create_t0_and_loc_datapipes(
     key_for_t0: str = "gsp",
     shuffle: bool = True,
     nwp_max_dropout_minutes: int = 0,
-    max_staleness_minutes: int = 180,
+    nwp_max_staleness_minutes: int = 180,
 ):
     """
     Takes source datapipes and returns datapipes of appropriate sample pairs of locations and times.
@@ -343,6 +343,8 @@ def create_t0_and_loc_datapipes(
         nwp_max_dropout_minutes: If using dropout on NWP, sometimes we have to go back to previous
             NWP init time. In order to accomodate for this possibility in selecting times, set
             `nwp_max_dropout_minutes` as the max NWP dropout delay you plan to use.
+        nwp_max_staleness_minutes: Sets a limit on how stale an NWP init time is allowed to be for
+            t0 to still be a valid sample time.
 
     Returns:
         location datapipe, t0 datapipe
@@ -350,7 +352,7 @@ def create_t0_and_loc_datapipes(
     """
     assert key_for_t0 in datapipes_dict
     assert key_for_t0 in ["gsp", "pv"]
-    assert max_staleness_minutes >= nwp_max_dropout_minutes
+    assert nwp_max_staleness_minutes >= nwp_max_dropout_minutes
 
     contiguous_time_datapipes = []  # Used to store contiguous time periods from each data source
 
@@ -372,7 +374,7 @@ def create_t0_and_loc_datapipes(
             # NWP is a forecast product so gets its own contiguous function
             time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
                 history_duration=timedelta(minutes=history_duration),
-                max_staleness=timedelta(minutes=max_staleness_minutes),
+                max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
                 time_dim="init_time_utc",
             )
 
