@@ -33,6 +33,7 @@ from .create_time_image import CreateTimeImageIterDataPipe as CreateTimeImage
 from .downsample import DownsampleIterDataPipe as Downsample
 from .get_contiguous_time_periods import (
     GetContiguousT0TimePeriodsIterDataPipe as GetContiguousT0TimePeriods,
+    GetContiguousT0TimePeriodsNWPIterDataPipe as GetContiguousT0TimePeriodsNWP,
 )
 from .gsp.create_gsp_image import CreateGSPImageIterDataPipe as CreateGSPImage
 from .gsp.ensure_n_gsp_per_example import (

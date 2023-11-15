@@ -60,22 +60,43 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
             logger.debug("Get contiguous time periods:done")
             yield contiguous_time_periods
 
+            
+@functional_datapipe("get_contiguous_time_periods_nwp")
+class GetContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
+    """Get contiguous NWP time periods for training"""
 
-def get_contiguous_t0_time_periods(
-    contiguous_time_periods: pd.DataFrame, history_duration: timedelta, forecast_duration: timedelta
-) -> pd.DataFrame:
-    """Get all time periods which contain valid t0 datetimes.
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        history_duration: timedelta,
+        max_staleness: timedelta = timedelta(minutes=0),
+        time_dim: str = "init_time_utc",
+    ):
+        """
+        Get contiguous time periods for use in determing t0 times for training
 
-    `t0` is the datetime of the most recent observation.
+        Args:
+            source_datapipe: Datapipe emitting a Xarray dataset
+            history_duration: Length of the historical slice used for a sample
+            max_staleness: Up to how long after an NWP forecast init_time are we willing to use the
+                forecast.
+            time_dim: time dimensions for which to find the contiguous time periods
+        """
+        self.source_datapipe = source_datapipe
+        self.history_duration = history_duration
+        self.max_staleness = max_staleness
+        self.time_dim = time_dim
 
-    Returns:
-      pd.DataFrame where each row represents a single time period.  The pd.DataFrame
-      has two columns: `start_dt` and `end_dt` (where 'dt' is short for 'datetime').
-    """
-    contiguous_time_periods["start_dt"] += history_duration
-    contiguous_time_periods["end_dt"] -= forecast_duration
-    assert (contiguous_time_periods["start_dt"] < contiguous_time_periods["end_dt"]).all()
-    return contiguous_time_periods
+    def __iter__(self) -> pd.DataFrame:
+        """Calculate contiguous time periods and return a dataframe containing them"""
+        for xr_data in self.source_datapipe:
+            logger.debug("Getting contiguous NWP t0 time periods")
+            contiguous_time_periods = get_contiguous_t0_periods_nwp(
+                datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
+                history_duration=self.history_duration, 
+                max_staleness=self.max_staleness,
+            )
+            yield contiguous_time_periods
 
 
 def get_contiguous_time_periods(
@@ -132,3 +153,73 @@ def get_contiguous_time_periods(
     )
 
     return pd.DataFrame(periods)
+
+            
+def get_contiguous_t0_time_periods(
+    contiguous_time_periods: pd.DataFrame, history_duration: timedelta, forecast_duration: timedelta
+) -> pd.DataFrame:
+    """Get all time periods which contain valid t0 datetimes.
+
+    `t0` is the datetime of the most recent observation.
+
+    Returns:
+      pd.DataFrame where each row represents a single time period.  The pd.DataFrame
+      has two columns: `start_dt` and `end_dt` (where 'dt' is short for 'datetime').
+    """
+    contiguous_time_periods["start_dt"] += history_duration
+    contiguous_time_periods["end_dt"] -= forecast_duration
+    assert (contiguous_time_periods["start_dt"] < contiguous_time_periods["end_dt"]).all()
+    return contiguous_time_periods
+
+
+def get_contiguous_t0_periods_nwp(
+    datetimes: pd.DatetimeIndex,
+    history_duration: timedelta, 
+    max_staleness: timedelta,
+) -> pd.DataFrame:
+    """Get all time periods from the NWP init times which are valid as t0 datetimes.
+      
+    Args:
+        datetimes: Sorted pd.DatetimeIndex
+        history_duration: Length of the historical slice used for a sample
+        max_staleness: Up to how long after an NWP forecast init_time are we willing to use the 
+            forecast. This must be >= forecast_duration.
+    
+    Returns:
+        pd.DataFrame where each row represents a single time period.  The pd.DataFrame
+        has two columns: `start_dt` and `end_dt` (where 'dt' is short for 'datetime').
+    """
+    # Sanity checks.
+    assert len(datetimes) > 0
+    assert datetimes.is_monotonic_increasing
+    assert datetimes.is_unique
+    assert history_duration >= timedelta(0)
+    assert max_staleness >= timedelta(0)
+
+    # Each forecast init time cover up to this time before we consider it too stale
+    stale_datetimes = datetimes + max_staleness
+    
+    # Store contiguous periods
+    contiguous_periods = []
+    
+    # dt_stale_prev: the timestamp after which the previous init time becomes "stale"
+    dt_stale_prev = stale_datetimes[0]
+    
+    # Start first period allowing for history slice
+    start_this_period = datetimes[0] + history_duration
+    
+    for dt_init, dt_stale in zip(datetimes[1:], stale_datetimes[1:]):
+        # If the previous init time becomes stale before the next init time
+        if dt_stale_prev < dt_init:
+            # Store a contiguous t0 period - allowing for forecast slice
+            if start_this_period <= dt_stale_prev:
+                contiguous_periods += [[start_this_period, dt_stale_prev]]
+            
+            # And start a new period
+            start_this_period = dt_init + history_duration
+        dt_stale_prev = dt_stale
+    
+    if start_this_period <= dt_stale_prev:
+        contiguous_periods += [[start_this_period, dt_stale_prev]]
+
+    return pd.DataFrame(contiguous_periods, columns=["start_dt", "end_dt"])
