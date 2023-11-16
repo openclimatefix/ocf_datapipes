@@ -363,18 +363,13 @@ def create_t0_and_loc_datapipes(
             continue
 
         elif key == "nwp":
-            # If using NWP dropout we need to make sure the previous forecast is available
-            # Setting the history to larger here will do the required filtering
-            history_duration = max(
-                configuration.input_data.nwp.history_minutes, nwp_max_dropout_minutes
-            )
-
             datapipes_dict["nwp"], datapipe_copy = datapipes_dict["nwp"].fork(2, buffer_size=5)
 
             # NWP is a forecast product so gets its own contiguous function
             time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
-                history_duration=timedelta(minutes=history_duration),
+                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
                 max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
+                max_dropout=timedelta(minutes=nwp_max_dropout_minutes)
                 time_dim="init_time_utc",
             )
 
