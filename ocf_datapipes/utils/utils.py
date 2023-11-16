@@ -329,3 +329,86 @@ def trigonometric_datetime_transformation(datetimes: npt.ArrayLike) -> np.ndarra
     return np.concatenate(
         [sine_month, cosine_month, sine_day, cosine_day, sine_hour, cosine_hour], axis=1
     )
+
+
+def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset:
+    """
+    Combine multiple datasets into a single dataset
+
+    Args:
+        dataset_dict: Dictionary of xr.Dataset objects to combine
+
+    Returns:
+        Combined dataset
+    """
+    # Convert all data_arrays to datasets
+    new_dataset_dict = {}
+    for key, datasets in dataset_dict.items():
+        new_datasets = []
+        for dataset in datasets:
+            # Convert all coordinates float64 and int64 to float32 and int32
+            dataset = dataset.assign_attrs(
+                {key: str(value) for key, value in dataset.attrs.items()}
+            )
+            if isinstance(dataset, xr.DataArray):
+                new_datasets.append(dataset.to_dataset(name=key))
+            else:
+                new_datasets.append(dataset)
+            assert isinstance(new_datasets[-1], xr.Dataset)
+        new_dataset_dict[key] = new_datasets
+    # Prepend all coordinates and dimensions names with the key in the dataset_dict
+    final_datasets_to_combined = []
+    for key, datasets in new_dataset_dict.items():
+        batched_datasets = []
+        for dataset in datasets:
+            dataset = dataset.rename(
+                {dim: f"{key}__{dim}" for dim in dataset.dims if dim not in dataset.coords}
+            )
+            dataset = dataset.rename({coord: f"{key}__{coord}" for coord in dataset.coords})
+            batched_datasets.append(dataset)
+        # Merge all datasets with the same key
+        # If NWP, then has init_time_utc and step, so do it off key__init_time_utc
+        dataset = xr.concat(
+            batched_datasets,
+            dim=f"{key}__target_time_utc"
+            if f"{key}__target_time_utc" in dataset.coords
+            else f"{key}__time_utc",
+        )
+        # Serialize attributes to be JSON-seriaizable
+        final_datasets_to_combined.append(dataset)
+    # Combine all datasets, and append the list of datasets to the dataset_dict
+    for f_dset in final_datasets_to_combined:
+        assert isinstance(f_dset, xr.Dataset), f"Dataset is not an xr.Dataset, {type(f_dset)}"
+    combined_dataset = xr.merge(final_datasets_to_combined)
+    # Print all attrbutes of the combined dataset
+    return combined_dataset
+
+
+def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.DataArray]:
+    """
+    Uncombine a combined dataset
+
+    Args:
+        combined_dataset: The combined NetCDF dataset
+
+    Returns:
+        The uncombined datasets as a dict of xr.Datasets
+    """
+    # Split into datasets by splitting by the prefix added in combine_to_netcdf
+    datasets = {}
+    # Go through each data variable and split it into a dataset
+    for key, dataset in combined_dataset.items():
+        # If 'key_' doesn't exist in a dim or coordinate, remove it
+        dataset_dims = list(dataset.coords)
+        for dim in dataset_dims:
+            if f"{key}__" not in dim:
+                dataset: xr.DataArray = dataset.drop(dim)
+        dataset = dataset.rename(
+            {dim: dim.split(f"{key}__")[1] for dim in dataset.dims if dim not in dataset.coords}
+        )
+        dataset: xr.Dataset = dataset.rename(
+            {coord: coord.split(f"{key}__")[1] for coord in dataset.coords}
+        )
+        # Split the dataset by the prefix
+        datasets[key] = dataset
+    return datasets

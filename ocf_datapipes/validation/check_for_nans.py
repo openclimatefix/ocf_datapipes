@@ -25,6 +25,7 @@ class CheckNaNsIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe emitting Xarray Datasets
             dataset_name: Optional name for dataset to check, if None, checks whole dataset
             fill_nans: Whether to fill NaNs with 0 or not
+            fill_value: Value to fill NaNs with
         """
         self.source_datapipe = source_datapipe
         self.dataset_name = dataset_name
