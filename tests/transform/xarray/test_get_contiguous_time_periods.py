@@ -6,20 +6,60 @@ import pandas as pd
 from torchdata.datapipes.iter import IterableWrapper
 from ocf_datapipes.transform.xarray import GetContiguousT0TimePeriods, GetContiguousT0TimePeriodsNWP
 
+def _remove_indexes(x, inds):
+    xs = []
+    i_last = -1
+    for i in np.sort(inds):
+        xs += [x[i_last + 1 : i]]
+        i_last = i
+    xs += [x[i_last + 1 :]]
+    return pd.to_datetime(np.concatenate(xs))
 
-def get_contiguous_time_periods_nwp(nwp_datapipe):
-    nwp_datapipe = GetContiguousT0TimePeriods(
-        nwp_datapipe,
-        sample_period_duration=timedelta(hours=3),
-        history_duration=timedelta(minutes=60),
-        forecast_duration=timedelta(minutes=180),
-        time_dim="init_time_utc",
+    
+def test_get_contiguous_time_periods(nwp_datapipe):
+    
+    # Create 5-minutely data timestamps
+    freq = timedelta(minutes=5)
+    history_duration=timedelta(minutes=60)
+    forecast_duration=timedelta(minutes=15)
+
+    datetimes = _remove_indexes(
+         pd.date_range("2023-01-01 12:00", "2023-01-01 17:00", freq=freq),
+        [5, 30],
+    )
+    
+    # Create initial datapipe
+    time_datapipe = IterableWrapper(
+        [pd.DataFrame(datetimes, columns=["time_utc"]).to_xarray()]
+    )
+    
+    history_duration=timedelta(minutes=60)
+    
+    contig_t0_datapipe = GetContiguousT0TimePeriods(
+        time_datapipe,
+        sample_period_duration=freq,
+        history_duration=history_duration,
+        forecast_duration=forecast_duration,
+        time_dim="time_utc",
     )
 
-    batch = next(iter(nwp_datapipe))
+    periods = next(iter(contig_t0_datapipe))
+    
+    expected_results = pd.DataFrame(
+        {
+            "start_dt":pd.to_datetime(
+                ['2023-01-01 13:30:00', '2023-01-01 15:35:00',] 
+            ),
+            "end_dt":pd.to_datetime(
+                ['2023-01-01 14:10:00', '2023-01-01 16:45:00',] 
+            )
+        }, 
+    )
+    
+    assert periods.equals(expected_results)
 
 
-def test_get_contiguous_time_periods():
+def test_get_contiguous_time_periods_nwp():
     # These are the expected results of the test
     expected_results = [
         pd.DataFrame(
@@ -96,15 +136,6 @@ def test_get_contiguous_time_periods():
         ),
     ]
 
-    def _remove_indexes(x, inds):
-        xs = []
-        i_last = -1
-        for i in np.sort(inds):
-            xs += [x[i_last + 1 : i]]
-            i_last = i
-        xs += [x[i_last + 1 :]]
-        return pd.to_datetime(np.concatenate(xs))
-
     # Create 3-hourly init times with a few time stamps missing
     freq = timedelta(minutes=180)
 
@@ -122,11 +153,11 @@ def test_get_contiguous_time_periods():
         max_staleness = timedelta(hours=max_stalenesses_hr[i])
 
         # Create initial datapipe
-        datapipe_copy = IterableWrapper(
+        time_datapipe = IterableWrapper(
             [pd.DataFrame(datetimes, columns=["init_time_utc"]).to_xarray()]
         )
 
-        time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
+        time_periods = time_datapipe.get_contiguous_time_periods_nwp(
             history_duration=history_duration,
             max_staleness=max_staleness,
             time_dim="init_time_utc",
