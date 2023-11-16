@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
 import xarray as xr
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
 
 from ocf_datapipes.batch import MergeNumpyModalities
