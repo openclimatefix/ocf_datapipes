@@ -3,7 +3,6 @@ from typing import Iterator, List, Optional, Sequence, Sized, Tuple, TypeVar
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter.combining import T_co, _ChildDataPipe, _ForkerIterDataPipe
 
-T_co = TypeVar("T_co", covariant=True)
 T = TypeVar("T")
 
 
