@@ -18,7 +18,7 @@ from nowcasting_datamodel.models.pv import (
 )
 from nowcasting_datamodel.read.read_pv import get_pv_systems, get_pv_yield
 from sqlalchemy import text
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import encode_label, put_pv_data_into_an_xr_dataarray

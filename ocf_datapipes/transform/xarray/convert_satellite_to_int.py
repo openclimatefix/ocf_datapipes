@@ -1,7 +1,7 @@
 """Converts Satellite to int8 for Power Perceiver"""
 import numpy as np
 import xarray as xr
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 
 @functional_datapipe("convert_satellite_to_int8")

@@ -1,5 +1,5 @@
 """Downsample Xarray datasets Datapipe"""
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 
 @functional_datapipe("downsample")

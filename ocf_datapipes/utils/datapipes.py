@@ -1,7 +1,7 @@
-from typing import Callable, final, Iterator, List, Optional, Sequence, TypeVar, Sized, Tuple
-from torch.utils.data.datapipes.iter.combining import T_co
-from torch.utils.data import functional_datapipe, IterDataPipe
-from torch.utils.data.datapipes.iter.combining import _ChildDataPipe, _ForkerIterDataPipe
+from typing import Iterator, List, Optional, Sequence, Sized, Tuple, TypeVar
+
+from torch.utils.data import IterDataPipe, functional_datapipe
+from torch.utils.data.datapipes.iter.combining import T_co, _ChildDataPipe, _ForkerIterDataPipe
 
 T_co = TypeVar("T_co", covariant=True)
 T = TypeVar("T")

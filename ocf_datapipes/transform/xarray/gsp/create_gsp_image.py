@@ -4,7 +4,7 @@ from typing import Union
 
 import numpy as np
 import xarray as xr
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils import Zipper
 

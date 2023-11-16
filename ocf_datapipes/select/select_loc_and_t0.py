@@ -4,7 +4,7 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils.consts import Location
 

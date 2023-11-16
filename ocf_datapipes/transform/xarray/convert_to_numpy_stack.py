@@ -2,7 +2,7 @@
 from typing import List
 
 import numpy as np
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils import Zipper
 

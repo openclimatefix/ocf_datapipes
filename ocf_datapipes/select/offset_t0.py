@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 
 @functional_datapipe("offset_t0")

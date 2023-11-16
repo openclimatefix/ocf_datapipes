@@ -3,7 +3,7 @@ import logging
 
 import fsspec
 import xarray as xr
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.config.model import Sensor
 

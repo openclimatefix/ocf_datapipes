@@ -4,7 +4,7 @@ from typing import Union
 import numpy as np
 import pvlib
 import xarray as xr
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils.consts import Location
 from ocf_datapipes.utils.geospatial import (

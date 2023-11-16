@@ -9,7 +9,7 @@ import fsspec
 import numpy as np
 import pandas as pd
 import xarray as xr
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import (

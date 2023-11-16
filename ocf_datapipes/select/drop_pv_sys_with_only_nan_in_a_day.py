@@ -4,7 +4,7 @@ Drop PV systems which has only NaN's in a single day
 import logging
 
 import xarray as xr
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils.utils import return_system_indices_which_has_contiguous_nan
 

@@ -12,7 +12,7 @@ from nowcasting_datamodel.connection import DatabaseConnection
 from nowcasting_datamodel.models.base import Base_Forecast
 from nowcasting_datamodel.models.gsp import GSPYield, GSPYieldSQL, Location
 from nowcasting_datamodel.read.read_gsp import get_gsp_yield
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.load.gsp.utils import put_gsp_data_into_an_xr_dataarray
 from ocf_datapipes.utils.geospatial import lon_lat_to_osgb

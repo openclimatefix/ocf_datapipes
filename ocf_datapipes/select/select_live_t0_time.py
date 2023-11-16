@@ -1,6 +1,6 @@
 """Select the history for the live data"""
 import pandas as pd
-from torch.utils.data import functional_datapipe, IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 
 @functional_datapipe("select_live_t0_time")
