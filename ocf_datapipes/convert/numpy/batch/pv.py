@@ -2,8 +2,8 @@
 import logging
 
 import numpy as np
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data.datapipes._decorator import functional_datapipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float

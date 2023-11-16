@@ -4,8 +4,8 @@ import warnings
 import numpy as np
 import pandas as pd
 import pvlib
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data.datapipes._decorator import functional_datapipe
 
 from ocf_datapipes.utils.consts import BatchKey
 from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
