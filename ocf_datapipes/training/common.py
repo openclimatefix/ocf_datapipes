@@ -152,6 +152,99 @@ def open_and_return_datapipes(
     return used_datapipes
 
 
+def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for_t0: str = "gsp"):
+    """
+    Takes datapipes and obtains the overlapping time periods + t0 time datapipes
+
+    Args:
+        used_datapipes: Dictionary of datapipes to compute the time intersection of
+        key_for_t0: Key to use for the t0 datapipe
+
+    Returns:
+        Dictionary of datapipes with the proper time slices selected
+    """
+    datapipes_for_time_periods = []  # Using later to compute intersections
+    datapipes_to_return = {}  # Returned along with original ones
+    t0_datapipe = None
+    configuration = used_datapipes.pop("config")
+    for key, datapipe in used_datapipes.items():
+        if "topo" in key:
+            continue
+        if key_for_t0 in key:
+            forked_datapipes = datapipe.fork(3, buffer_size=100)
+            t0_datapipe = forked_datapipes[2]
+        else:
+            forked_datapipes = datapipe.fork(2, buffer_size=100)
+        datapipes_to_return[key] = forked_datapipes[0]
+        if "nwp" == key:
+            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+                sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
+                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+                forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
+                time_dim="init_time_utc",
+            )
+            datapipes_for_time_periods.append(time_periods_datapipe)
+
+        if "sat" == key:
+            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(
+                    minutes=configuration.input_data.satellite.history_minutes
+                ),
+                forecast_duration=timedelta(minutes=0),
+            )
+            datapipes_for_time_periods.append(time_periods_datapipe)
+
+        if "hrv" == key:
+            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(
+                    minutes=configuration.input_data.hrvsatellite.history_minutes
+                ),
+                forecast_duration=timedelta(minutes=0),
+            )
+            datapipes_for_time_periods.append(time_periods_datapipe)
+
+        if "pv" == key:
+            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+                forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
+            )
+            datapipes_for_time_periods.append(time_periods_datapipe)
+        if "gsp" == key:
+            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+                sample_period_duration=timedelta(minutes=30),
+                history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+                forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
+            )
+            datapipes_for_time_periods.append(time_periods_datapipe)
+
+    # Now have the forked ones
+    # find joint overlapping timer periods
+    logger.debug("Getting joint time periods")
+    overlapping_datapipe = datapipes_for_time_periods[0].select_overlapping_time_slice(
+        secondary_datapipes=datapipes_for_time_periods[1:],
+    )
+
+    # select time periods
+    t0_datapipe = t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+
+    num_t0_datapipes = len(datapipes_to_return.keys())  # One for each input
+    t0_datapipes = t0_datapipe.select_t0_time(return_all_times=False).fork(
+        num_t0_datapipes, buffer_size=100
+    )
+
+    for i, key in enumerate(list(datapipes_to_return.keys())):
+        datapipes_to_return[key + "_t0"] = t0_datapipes[i]
+
+    # Re-add config for later
+    datapipes_to_return["config"] = configuration
+    if "topo" in used_datapipes.keys():
+        datapipes_to_return["topo"] = used_datapipes["topo"]
+    return datapipes_to_return
+
+
 def normalize_gsp(x):
     """Normalize the GSP data
 
