@@ -21,8 +21,7 @@ def test_combine_uncombine_from_single_dataset(configuration_filename):
         start_time=start_time,
         end_time=end_time,
     )
-    datasets = next(iter(dp))
-    dataset: xr.Dataset = combine_to_single_dataset(datasets)
+    dataset: xr.Dataset = next(iter(dp))
     assert isinstance(dataset, xr.Dataset)
     multiple_datasets = uncombine_from_single_dataset(dataset)
     for key in multiple_datasets.keys():
@@ -31,13 +30,9 @@ def test_combine_uncombine_from_single_dataset(configuration_filename):
         else:
             time_coord = "target_time_utc"
         for i in range(len(multiple_datasets[key][time_coord])):
-            # Assert that coordinates are the same
-            assert (
-                datasets[key][i].coords.keys()
-                == multiple_datasets[key].isel({time_coord: i}).coords.keys()
-            )
             # Assert that data for each of the coords is the same
-            for coord_key in datasets[key][i].coords.keys():
-                assert datasets[key][i][coord_key].equals(
-                    multiple_datasets[key].isel({time_coord: i})[coord_key]
+            for coord_key in multiple_datasets[key][i].coords.keys():
+                np.testing.assert_equal(
+                    multiple_datasets[key].isel({time_coord: i})[coord_key].values,
+                    dataset[key][i][f"{key}__{coord_key}"].values,
                 )

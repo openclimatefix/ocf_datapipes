@@ -402,7 +402,7 @@ def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.
         dataset_dims = list(dataset.coords)
         for dim in dataset_dims:
             if f"{key}__" not in dim:
-                dataset = dataset.drop(dim)
+                dataset: xr.DataArray = dataset.drop(dim)
         dataset = dataset.rename(
             {dim: dim.split(f"{key}__")[1] for dim in dataset.dims if dim not in dataset.coords}
         )

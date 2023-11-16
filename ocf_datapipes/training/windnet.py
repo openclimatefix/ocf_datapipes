@@ -46,7 +46,7 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     Roughly, double speed in m/s, and convert with the power scale
 
     Args:
-        x:
+        x: xr.
 
     Returns:
 
@@ -60,7 +60,7 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
 
 @functional_datapipe("dict_datasets")
 class DictDatasetIterDataPipe(IterDataPipe):
-    """ """
+    """Create a dictionary of xr.Datasets from a set of iterators"""
 
     datapipes: Tuple[IterDataPipe]
     length: Optional[int]
@@ -87,22 +87,25 @@ class DictDatasetIterDataPipe(IterDataPipe):
 
 @functional_datapipe("load_dict_datasets")
 class LoadDictDatasetIterDataPipe(IterDataPipe):
-    """ """
+    """Load NetCDF files and split them back into individual xr.Datasets"""
 
     filenames: List[str]
     keys: List[str]
-    configuration: Configuration
 
-    def __init__(self, filenames: List[str], keys: List[str], configuration: Configuration):
-        """Init"""
+    def __init__(self, filenames: List[str], keys: List[str]):
+        """
+        Load NetCDF files and split them back into individual xr.Datasets
+
+        Args:
+            filenames: List of filesnames to load
+            keys: List of keys from each file to use, each key should be a dataarray in the xr.Dataset
+        """
         super().__init__()
         self.keys = keys
         self.filenames = filenames
-        self.configuration = configuration
 
     def __iter__(self):
-        """Iter"""
-        # Iterate through each filename, loading it, uncombining it, and then yielding it
+        """Iterate through each filename, loading it, uncombining it, and then yielding it"""
         while True:
             for filename in self.filenames:
                 dataset = xr.open_dataset(filename)
@@ -375,10 +378,43 @@ def windnet_netcdf_datapipe(
     datapipe_dict_dp: IterDataPipe = LoadDictDatasetIterDataPipe(
         filenames=filenames,
         keys=keys,
-        configuration=configuration,
     ).map(split_dataset_dict_dp)
     datapipe = datapipe_dict_dp.convert_to_numpy_batch(
         block_nwp=block_nwp, block_sat=block_sat, configuration=configuration
     )
 
     return datapipe
+
+
+if __name__ == "__main__":
+    configuration_filename = "/home/jacob/Development/ocf_datapipes/tests/config/test.yaml"
+    start_time = datetime(1900, 1, 1)
+    end_time = datetime(2050, 1, 1)
+    dp = windnet_datapipe(
+        configuration_filename,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    datasets = next(iter(dp))
+    print("----------------------------------------------------------")
+    print(datasets)
+    print("----------------------------------------------------------")
+    exit()
+    assert isinstance(dataset, xr.Dataset)
+    multiple_datasets = uncombine_from_single_dataset(dataset)
+    for key in multiple_datasets.keys():
+        if "time_utc" in multiple_datasets[key].coords.keys():
+            time_coord = "time_utc"
+        else:
+            time_coord = "target_time_utc"
+        for i in range(len(multiple_datasets[key][time_coord])):
+            # Assert that coordinates are the same
+            assert (
+                datasets[key][i].coords.keys()
+                == multiple_datasets[key].isel({time_coord: i}).coords.keys()
+            )
+            # Assert that data for each of the coords is the same
+            for coord_key in datasets[key][i].coords.keys():
+                assert datasets[key][i][coord_key].equals(
+                    multiple_datasets[key].isel({time_coord: i})[coord_key]
+                )
