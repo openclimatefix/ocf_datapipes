@@ -3,10 +3,10 @@ from datetime import datetime
 from torchdata.datapipes.iter import IterableWrapper
 
 from ocf_datapipes.training.pvnet import (
-    construct_loctime_pipelines,
     construct_sliced_data_pipeline,
     pvnet_datapipe,
 )
+from ocf_datapipes.training.common import construct_loctime_pipelines
 from ocf_datapipes.utils.consts import Location
 import pytest
 
