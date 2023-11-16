@@ -326,6 +326,7 @@ def create_t0_and_loc_datapipes(
     key_for_t0: str = "gsp",
     shuffle: bool = True,
     nwp_max_dropout_minutes: int = 0,
+    nwp_max_staleness_minutes: int = 180,
 ):
     """
     Takes source datapipes and returns datapipes of appropriate sample pairs of locations and times.
@@ -342,6 +343,8 @@ def create_t0_and_loc_datapipes(
         nwp_max_dropout_minutes: If using dropout on NWP, sometimes we have to go back to previous
             NWP init time. In order to accomodate for this possibility in selecting times, set
             `nwp_max_dropout_minutes` as the max NWP dropout delay you plan to use.
+        nwp_max_staleness_minutes: Sets a limit on how stale an NWP init time is allowed to be
+            whilst still being used to costruct an example
 
     Returns:
         location datapipe, t0 datapipe
@@ -349,6 +352,7 @@ def create_t0_and_loc_datapipes(
     """
     assert key_for_t0 in datapipes_dict
     assert key_for_t0 in ["gsp", "pv"]
+    assert nwp_max_staleness_minutes >= nwp_max_dropout_minutes
 
     contiguous_time_datapipes = []  # Used to store contiguous time periods from each data source
 
@@ -359,53 +363,56 @@ def create_t0_and_loc_datapipes(
             continue
 
         elif key == "nwp":
-            sample_frequency = 180  # Init times are 3 hours apart
+            datapipes_dict["nwp"], datapipe_copy = datapipes_dict["nwp"].fork(2, buffer_size=5)
 
-            # If using NWP dropout we need to make sure the previous forecast is available
-            # Setting the history to larger here will do the required filtering
-            history_duration = max(
-                configuration.input_data.nwp.history_minutes, nwp_max_dropout_minutes
+            # NWP is a forecast product so gets its own contiguous function
+            time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
+                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
+                max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
+                max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
+                time_dim="init_time_utc",
             )
-            forecast_duration = configuration.input_data.nwp.forecast_minutes
-            time_dim = "init_time_utc"
 
-        elif key == "sat":
-            sample_frequency = 5
-            history_duration = configuration.input_data.satellite.history_minutes
-            forecast_duration = 0
-            time_dim = "time_utc"
-
-        elif key == "hrv":
-            sample_frequency = 5
-            history_duration = configuration.input_data.hrvsatellite.history_minutes
-            forecast_duration = 0
-            time_dim = "time_utc"
-
-        elif key == "pv":
-            sample_frequency = 5
-            history_duration = configuration.input_data.pv.history_minutes
-            forecast_duration = configuration.input_data.pv.forecast_minutes
-            time_dim = "time_utc"
-
-        elif key == "gsp":
-            sample_frequency = 30
-            history_duration = configuration.input_data.gsp.history_minutes
-            forecast_duration = configuration.input_data.gsp.forecast_minutes
-            time_dim = "time_utc"
+            contiguous_time_datapipes.append(time_periods)
 
         else:
-            raise ValueError(f"Unexpected key: {key}")
+            if key == "sat":
+                sample_frequency = 5
+                history_duration = configuration.input_data.satellite.history_minutes
+                forecast_duration = 0
+                time_dim = "time_utc"
 
-        datapipes_dict[key], datapipe_copy = datapipes_dict[key].fork(2, buffer_size=5)
+            elif key == "hrv":
+                sample_frequency = 5
+                history_duration = configuration.input_data.hrvsatellite.history_minutes
+                forecast_duration = 0
+                time_dim = "time_utc"
 
-        time_periods = datapipe_copy.get_contiguous_time_periods(
-            sample_period_duration=timedelta(minutes=sample_frequency),
-            history_duration=timedelta(minutes=history_duration),
-            forecast_duration=timedelta(minutes=forecast_duration),
-            time_dim=time_dim,
-        )
+            elif key == "pv":
+                sample_frequency = 5
+                history_duration = configuration.input_data.pv.history_minutes
+                forecast_duration = configuration.input_data.pv.forecast_minutes
+                time_dim = "time_utc"
 
-        contiguous_time_datapipes.append(time_periods)
+            elif key == "gsp":
+                sample_frequency = 30
+                history_duration = configuration.input_data.gsp.history_minutes
+                forecast_duration = configuration.input_data.gsp.forecast_minutes
+                time_dim = "time_utc"
+
+            else:
+                raise ValueError(f"Unexpected key: {key}")
+
+            datapipes_dict[key], datapipe_copy = datapipes_dict[key].fork(2, buffer_size=5)
+
+            time_periods = datapipe_copy.get_contiguous_time_periods(
+                sample_period_duration=timedelta(minutes=sample_frequency),
+                history_duration=timedelta(minutes=history_duration),
+                forecast_duration=timedelta(minutes=forecast_duration),
+                time_dim=time_dim,
+            )
+
+            contiguous_time_datapipes.append(time_periods)
 
     # Find joint overlapping contiguous time periods
     if len(contiguous_time_datapipes) > 1:
