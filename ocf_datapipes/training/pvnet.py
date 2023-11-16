@@ -1,16 +1,12 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from datetime import datetime
+from typing import Optional
 
-import numpy as np
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
 from torchdata.datapipes.iter import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
-from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenGSPFromDatabase, OpenPVFromPVSitesDB
 from ocf_datapipes.training.common import (
     AddZeroedNWPData,
     AddZeroedSatelliteData,
@@ -29,8 +25,6 @@ from ocf_datapipes.utils.consts import (
     NEW_NWP_STD,
     RSS_MEAN,
     RSS_STD,
-    BatchKey,
-    NumpyBatch,
 )
 
 xr.set_options(keep_attrs=True)
