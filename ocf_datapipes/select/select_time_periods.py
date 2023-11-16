@@ -3,8 +3,7 @@ import logging
 from typing import Union
 
 import xarray as xr
-from torch.utils.data.datapipes._decorator import functional_datapipe
-from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data import functional_datapipe, IterDataPipe
 
 logger = logging.getLogger(__name__)
 

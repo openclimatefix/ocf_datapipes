@@ -4,8 +4,7 @@ This is a class function that drops the pv systems with generates power over nig
 import logging
 
 import xarray as xr
-from torch.utils.data.datapipes._decorator import functional_datapipe
-from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data import functional_datapipe, IterDataPipe
 
 logger = logging.getLogger(__name__)
 

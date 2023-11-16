@@ -5,8 +5,7 @@ from typing import Union
 
 import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
-from torch.utils.data.datapipes._decorator import functional_datapipe
-from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data import functional_datapipe, IterDataPipe
 
 from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
 from ocf_datapipes.load.nwp.providers.gfs import open_gfs

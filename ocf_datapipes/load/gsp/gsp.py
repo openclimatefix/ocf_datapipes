@@ -6,8 +6,7 @@ from typing import Optional, Union
 
 import numpy as np
 import xarray as xr
-from torch.utils.data.datapipes._decorator import functional_datapipe
-from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data import functional_datapipe, IterDataPipe
 
 from ocf_datapipes.load.gsp.utils import get_gsp_id_to_shape, put_gsp_data_into_an_xr_dataarray
 

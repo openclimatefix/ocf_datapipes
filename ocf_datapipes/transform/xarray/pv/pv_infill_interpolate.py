@@ -3,8 +3,7 @@ This is a class function infills PV data via interpolation
 """
 
 import xarray as xr
-from torch.utils.data.datapipes._decorator import functional_datapipe
-from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data import functional_datapipe, IterDataPipe
 
 
 @functional_datapipe("pv_interpolate_infill")

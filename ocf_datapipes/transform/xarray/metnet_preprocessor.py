@@ -5,8 +5,7 @@ from typing import List
 import numpy as np
 import pvlib
 import xarray as xr
-from torch.utils.data.datapipes._decorator import functional_datapipe
-from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data import functional_datapipe, IterDataPipe
 
 from ocf_datapipes.select.select_spatial_slice import convert_coords_to_match_xarray
 from ocf_datapipes.utils import Zipper

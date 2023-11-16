@@ -1,7 +1,7 @@
 """Various utilites that didn't fit elsewhere"""
 import logging
 from pathlib import Path
-from typing import Iterator, Optional, Sequence, Sized, Tuple, Union
+from typing import Sequence, Tuple, Union
 
 import fsspec.asyn
 import numpy as np
@@ -10,9 +10,6 @@ import pandas as pd
 import xarray as xr
 from pandas.core.dtypes.common import is_datetime64_dtype
 from pathy import Pathy
-from torch.utils.data.datapipes._decorator import functional_datapipe
-from torch.utils.data.datapipes.datapipe import IterDataPipe
-from torch.utils.data.datapipes.iter.combining import T_co
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
@@ -236,57 +233,6 @@ def pandas_periods_to_our_periods_dt(
     for period in periods:
         new_periods.append(dict(start_dt=period.start_time, end_dt=period.end_time))
     return pd.DataFrame(new_periods)
-
-
-# https://github.com/pytorch/data/issues/865
-@functional_datapipe("zip_ocf")
-class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
-    """
-    Aggregates elements into a tuple from each of the input DataPipes (functional name: ``zip``).
-
-    The output is stopped as soon as the shortest input DataPipe is exhausted.
-
-    Args:
-        *datapipes: Iterable DataPipes being aggregated
-    Example:
-        >>> # xdoctest: +REQUIRES(module:torchdata)
-        >>> from torch.utils.data.datapipes.iter import IterableWrapper
-        >>> dp1, dp2, dp3 = IterableWrapper(range(5)), IterableWrapper(range(10, 15)),
-        >>> IterableWrapper(range(20, 25))
-        >>> list(dp1.zip(dp2, dp3))
-        [(0, 10, 20), (1, 11, 21), (2, 12, 22), (3, 13, 23), (4, 14, 24)]
-    """
-
-    datapipes: Tuple[IterDataPipe]
-    length: Optional[int]
-
-    def __init__(self, *datapipes: IterDataPipe):
-        """Init"""
-        if not all(isinstance(dp, IterDataPipe) for dp in datapipes):
-            raise TypeError(
-                "All inputs are required to be `IterDataPipe` " "for `ZipIterDataPipe`."
-            )
-        super().__init__()
-        self.datapipes = datapipes  # type: ignore[assignment]
-        self.length = None
-
-    def __iter__(self) -> Iterator[Tuple[T_co]]:
-        """Iter"""
-        iterators = [iter(datapipe) for datapipe in self.datapipes]
-        for data in zip(*iterators):
-            yield data
-
-    def __len__(self) -> int:
-        """Len"""
-        if self.length is not None:
-            if self.length == -1:
-                raise TypeError("{} instance doesn't have valid length".format(type(self).__name__))
-            return self.length
-        if all(isinstance(dp, Sized) for dp in self.datapipes):
-            self.length = min(len(dp) for dp in self.datapipes)
-        else:
-            self.length = -1
-        return len(self)
 
 
 def _trig_transform(values: np.ndarray, period: Union[float, int]) -> Tuple[np.ndarray, np.ndarray]:
