@@ -343,7 +343,7 @@ def create_t0_and_loc_datapipes(
         nwp_max_dropout_minutes: If using dropout on NWP, sometimes we have to go back to previous
             NWP init time. In order to accomodate for this possibility in selecting times, set
             `nwp_max_dropout_minutes` as the max NWP dropout delay you plan to use.
-        nwp_max_staleness_minutes: Sets a limit on how stale an NWP init time is allowed to be 
+        nwp_max_staleness_minutes: Sets a limit on how stale an NWP init time is allowed to be
             whilst still being used to costruct an example
 
     Returns:
