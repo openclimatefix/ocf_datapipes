@@ -6,8 +6,8 @@ import logging
 import numpy as np
 import pvlib
 import xarray as xr
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 logger = logging.getLogger(__name__)
 

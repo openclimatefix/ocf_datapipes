@@ -9,8 +9,8 @@ import fsspec
 import numpy as np
 import pandas as pd
 import xarray as xr
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.config.model import PV
 from ocf_datapipes.load.pv.utils import (

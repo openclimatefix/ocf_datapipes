@@ -1,7 +1,7 @@
 """Ensure there are N NWP variables by tiling the data"""
 import numpy as np
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 

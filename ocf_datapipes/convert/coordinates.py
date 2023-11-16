@@ -2,8 +2,8 @@
 from typing import Union
 
 import xarray as xr
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,

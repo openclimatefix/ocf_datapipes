@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Union
 
 import rioxarray
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 
 @functional_datapipe("open_topography")

@@ -1,8 +1,8 @@
 """Drop GSP output from xarray"""
 from typing import List
 
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 
 @functional_datapipe("drop_gsp")

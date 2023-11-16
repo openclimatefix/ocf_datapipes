@@ -2,8 +2,8 @@
 import logging
 
 import numpy as np
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 logger = logging.getLogger(__name__)
 

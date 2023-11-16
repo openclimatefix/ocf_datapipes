@@ -3,8 +3,8 @@ from typing import Optional, Union
 
 import pandas as pd
 import xarray as xr
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 
 @functional_datapipe("pv_power_rolling_window")

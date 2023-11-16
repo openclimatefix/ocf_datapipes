@@ -1,8 +1,8 @@
 """Merge individual examples into a batch"""
 import logging
 
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.utils.consts import NumpyBatch
 from ocf_datapipes.utils.utils import stack_np_examples_into_batch
