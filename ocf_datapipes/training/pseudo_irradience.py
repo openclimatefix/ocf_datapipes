@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pvlib
 import xarray
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.select import LocationPicker
 from ocf_datapipes.training.common import (

@@ -1,5 +1,5 @@
 from datetime import timedelta
-from torchdata.datapipes.iter import IterableWrapper
+from torch.utils.data.datapipes.iter import IterableWrapper
 import pandas as pd
 import numpy as np
 

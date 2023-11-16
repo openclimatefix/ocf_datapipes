@@ -64,7 +64,7 @@ class ThreadPoolMapperIterDataPipe(IterDataPipe[T_co]):
 
     Example:
     .. testsetup::
-        from torchdata.datapipes.iter import IterableWrapper
+        from torch.utils.data.datapipes.iter import IterableWrapper
         import requests
         import time
         from unittest.mock import MagicMock

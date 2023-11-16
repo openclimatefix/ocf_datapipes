@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from freezegun import freeze_time
-from torchdata.datapipes.iter import IterableWrapper
+from torch.utils.data.datapipes.iter import IterableWrapper
 
 from ocf_datapipes.training.pvnet import (
     construct_sliced_data_pipeline,

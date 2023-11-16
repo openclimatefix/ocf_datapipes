@@ -59,8 +59,8 @@ A general outline for a new DataPipe should go something
 like this:
 
 ```python
-from torchdata.datapipes.iter import IterDataPipe
-from torchdata.datapipes import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data.datapipes._decorator import functional_datapipe
 
 @functional_datapipe("<pipelet_name>")
 class <PipeletName>IterDataPipe(IterDataPipe):

@@ -1,7 +1,7 @@
 from datetime import timedelta
 import pandas as pd
 import numpy as np
-from torchdata.datapipes.iter import IterableWrapper
+from torch.utils.data.datapipes.iter import IterableWrapper
 from ocf_datapipes.select import SelectTimeSlice
 from ocf_datapipes.select.select_time_slice import fill_1d_bool_gaps
 

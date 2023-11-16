@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 import xarray
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities

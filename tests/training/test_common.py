@@ -1,9 +1,9 @@
 import pytest
-from torchdata.dataloader2 import DataLoader2
-from torchdata.datapipes.iter import IterDataPipe, Zipper
+from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data.datapipes.iter import Zipper
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils.consts import Location
-
+from torch.utils.data import DataLoader
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
@@ -94,7 +94,7 @@ def test_add_selected_time_slices_from_datapipes_fork_iterations():
             for k in ["nwp", "topo", "gsp", "gsp_future", "pv", "pv_future", "sat", "hrv"]
         ]
     )
-    dataloader = DataLoader2(zipped)
+    dataloader = DataLoader(zipped)
     for i, batch in enumerate(dataloader):
         _ = batch
         if i + 1 % 50000 == 0:

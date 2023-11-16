@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Union
 
 import xarray
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.convert import ConvertGSPToNumpy

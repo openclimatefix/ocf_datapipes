@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterableWrapper, IterDataPipe
+from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.iter import IterableWrapper, IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration

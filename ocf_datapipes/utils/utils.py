@@ -250,7 +250,7 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
         *datapipes: Iterable DataPipes being aggregated
     Example:
         >>> # xdoctest: +REQUIRES(module:torchdata)
-        >>> from torchdata.datapipes.iter import IterableWrapper
+        >>> from torch.utils.data.datapipes.iter import IterableWrapper
         >>> dp1, dp2, dp3 = IterableWrapper(range(5)), IterableWrapper(range(10, 15)),
         >>> IterableWrapper(range(20, 25))
         >>> list(dp1.zip(dp2, dp3))

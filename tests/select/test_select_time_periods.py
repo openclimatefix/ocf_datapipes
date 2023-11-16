@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.select import SelectTimePeriods
 

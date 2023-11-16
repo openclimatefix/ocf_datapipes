@@ -5,7 +5,6 @@ import fsspec
 from pyaml_env import parse_config
 from torch.utils.data.datapipes._decorator import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
-
 from ocf_datapipes.config.model import Configuration
 
 logger = logging.getLogger(__name__)
