@@ -6,6 +6,7 @@ import pandas as pd
 from torchdata.datapipes.iter import IterableWrapper
 from ocf_datapipes.transform.xarray import GetContiguousT0TimePeriods, GetContiguousT0TimePeriodsNWP
 
+
 def _remove_indexes(x, inds):
     xs = []
     i_last = -1
@@ -15,26 +16,23 @@ def _remove_indexes(x, inds):
     xs += [x[i_last + 1 :]]
     return pd.to_datetime(np.concatenate(xs))
 
-    
+
 def test_get_contiguous_time_periods(nwp_datapipe):
-    
     # Create 5-minutely data timestamps
     freq = timedelta(minutes=5)
-    history_duration=timedelta(minutes=60)
-    forecast_duration=timedelta(minutes=15)
+    history_duration = timedelta(minutes=60)
+    forecast_duration = timedelta(minutes=15)
 
     datetimes = _remove_indexes(
-         pd.date_range("2023-01-01 12:00", "2023-01-01 17:00", freq=freq),
+        pd.date_range("2023-01-01 12:00", "2023-01-01 17:00", freq=freq),
         [5, 30],
     )
-    
+
     # Create initial datapipe
-    time_datapipe = IterableWrapper(
-        [pd.DataFrame(datetimes, columns=["time_utc"]).to_xarray()]
-    )
-    
-    history_duration=timedelta(minutes=60)
-    
+    time_datapipe = IterableWrapper([pd.DataFrame(datetimes, columns=["time_utc"]).to_xarray()])
+
+    history_duration = timedelta(minutes=60)
+
     contig_t0_datapipe = GetContiguousT0TimePeriods(
         time_datapipe,
         sample_period_duration=freq,
@@ -44,18 +42,24 @@ def test_get_contiguous_time_periods(nwp_datapipe):
     )
 
     periods = next(iter(contig_t0_datapipe))
-    
+
     expected_results = pd.DataFrame(
         {
-            "start_dt":pd.to_datetime(
-                ['2023-01-01 13:30:00', '2023-01-01 15:35:00',] 
+            "start_dt": pd.to_datetime(
+                [
+                    "2023-01-01 13:30:00",
+                    "2023-01-01 15:35:00",
+                ]
             ),
-            "end_dt":pd.to_datetime(
-                ['2023-01-01 14:10:00', '2023-01-01 16:45:00',] 
-            )
-        }, 
+            "end_dt": pd.to_datetime(
+                [
+                    "2023-01-01 14:10:00",
+                    "2023-01-01 16:45:00",
+                ]
+            ),
+        },
     )
-    
+
     assert periods.equals(expected_results)
 
 
