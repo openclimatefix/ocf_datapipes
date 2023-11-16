@@ -12,7 +12,11 @@ class CheckNaNsIterDataPipe(IterDataPipe):
     """Checks, and optionally fills, NaNs in Xarray Dataset"""
 
     def __init__(
-        self, source_datapipe: IterDataPipe, dataset_name: str = None, fill_nans: bool = False, fill_value: float = 0.0
+        self,
+        source_datapipe: IterDataPipe,
+        dataset_name: str = None,
+        fill_nans: bool = False,
+        fill_value: float = 0.0,
     ):
         """
         Checks and optionally fills NaNs in the data
@@ -41,7 +45,8 @@ class CheckNaNsIterDataPipe(IterDataPipe):
                     xr_data = self.fill_nan(data=xr_data, fill_value=self.fill_value)
                 else:
                     xr_data[self.dataset_name] = self.fill_nan(
-                        data=xr_data[self.dataset_name], fill_value=self.fill_value,
+                        data=xr_data[self.dataset_name],
+                        fill_value=self.fill_value,
                     )
             self.check_nan_and_inf(
                 data=xr_data if self.dataset_name is None else xr_data[self.dataset_name],

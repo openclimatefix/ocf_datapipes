@@ -319,9 +319,9 @@ class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDime
     get_center: bool = Field(
         False,
         description="If the batches are centered on one Sensor system (or not). "
-                    "The other options is to have one GSP at the center of a batch. "
-                    "Typically, get_center would be set to true if and only if "
-                    "SensorDataSource is used to define the geospatial positions of each example.",
+        "The other options is to have one GSP at the center of a batch. "
+        "Typically, get_center would be set to true if and only if "
+        "SensorDataSource is used to define the geospatial positions of each example.",
     )
 
     sensor_filename: str = Field(
@@ -344,9 +344,10 @@ class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDime
     live_load_extra_minutes: int = Field(
         0,
         description="The number of extra minutes in the past we should load. Then the recent "
-                    "values can be interpolated, and the extra minutes removed. This is "
-                    "because some live data takes ~1 hour to come in.",
+        "values can be interpolated, and the extra minutes removed. This is "
+        "because some live data takes ~1 hour to come in.",
     )
+
 
 class Satellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model"""
