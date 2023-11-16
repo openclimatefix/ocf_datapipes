@@ -96,7 +96,8 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
         Args:
             filenames: List of filesnames to load
-            keys: List of keys from each file to use, each key should be a dataarray in the xr.Dataset
+            keys: List of keys from each file to use, each key should be a
+                dataarray in the xr.Dataset
         """
         super().__init__()
         self.keys = keys
