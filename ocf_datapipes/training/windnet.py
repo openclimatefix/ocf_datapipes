@@ -118,7 +118,7 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
 @functional_datapipe("convert_to_numpy_batch")
 class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
-    """ """
+    """Converts Xarray Dataset to Numpy Batch"""
 
     def __init__(
         self,
