@@ -343,8 +343,8 @@ def create_t0_and_loc_datapipes(
         nwp_max_dropout_minutes: If using dropout on NWP, sometimes we have to go back to previous
             NWP init time. In order to accomodate for this possibility in selecting times, set
             `nwp_max_dropout_minutes` as the max NWP dropout delay you plan to use.
-        nwp_max_staleness_minutes: Sets a limit on how stale an NWP init time is allowed to be for
-            t0 to still be a valid sample time.
+        nwp_max_staleness_minutes: Sets a limit on how stale an NWP init time is allowed to be 
+            whilst still being used to costruct an example
 
     Returns:
         location datapipe, t0 datapipe
@@ -369,7 +369,7 @@ def create_t0_and_loc_datapipes(
             time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
                 history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
                 max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
-                max_dropout=timedelta(minutes=nwp_max_dropout_minutes)
+                max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
                 time_dim="init_time_utc",
             )
 
