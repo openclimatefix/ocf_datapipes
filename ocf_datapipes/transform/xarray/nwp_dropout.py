@@ -6,8 +6,7 @@ from typing import List, Optional, Union
 import numpy as np
 import pandas as pd
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 logger = logging.getLogger(__name__)
 

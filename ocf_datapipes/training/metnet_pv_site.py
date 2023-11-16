@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import xarray
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.convert import ConvertPVToNumpy
 from ocf_datapipes.select import LocationPicker

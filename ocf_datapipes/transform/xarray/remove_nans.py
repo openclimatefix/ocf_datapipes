@@ -2,8 +2,7 @@
 import logging
 
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 logger = logging.getLogger(__name__)
 

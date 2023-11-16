@@ -2,8 +2,7 @@
 from typing import Optional
 
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 
 @functional_datapipe("convert_pressure_levels_to_separate_variables")

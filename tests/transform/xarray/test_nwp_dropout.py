@@ -1,5 +1,5 @@
 from datetime import timedelta
-from torchdata.datapipes.iter import IterableWrapper
+from torch.utils.data.datapipes.iter import IterableWrapper
 import pandas as pd
 
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTimeWithDropout

@@ -6,8 +6,7 @@ import numpy as np
 import pyproj
 import pyresample
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 try:
     import cartopy.crs as ccrs

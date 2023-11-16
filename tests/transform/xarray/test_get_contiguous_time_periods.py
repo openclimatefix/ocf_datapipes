@@ -3,7 +3,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from torchdata.datapipes.iter import IterableWrapper
+from torch.utils.data.datapipes.iter import IterableWrapper
 from ocf_datapipes.transform.xarray import GetContiguousT0TimePeriods, GetContiguousT0TimePeriodsNWP
 
 

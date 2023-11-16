@@ -1,8 +1,7 @@
 import numpy as np
 import torch
-import torchdata.datapipes as dp
 import xarray
-from torchdata.datapipes import functional_datapipe
+from torch.utils.data.datapipes._decorator import functional_datapipe
 
 xarray.set_options(keep_attrs=True)
 

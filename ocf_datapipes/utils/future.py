@@ -9,8 +9,8 @@ from concurrent import futures
 from typing import Callable, Iterator, Optional, Sized, TypeVar
 
 from torch.utils.data.datapipes.utils.common import _check_unpickable_fn, validate_input_col
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
+from torch.utils.data.datapipes._decorator import functional_datapipe
 
 T_co = TypeVar("T_co", covariant=True)
 
@@ -64,7 +64,7 @@ class ThreadPoolMapperIterDataPipe(IterDataPipe[T_co]):
 
     Example:
     .. testsetup::
-        from torchdata.datapipes.iter import IterableWrapper
+        from torch.utils.data.datapipes.iter import IterableWrapper
         import requests
         import time
         from unittest.mock import MagicMock

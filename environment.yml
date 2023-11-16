@@ -7,7 +7,6 @@ dependencies:
   - pip
   - pytorch
   - rioxarray
-  - torchdata
   - torchvision
   - xarray
   - fsspec

@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import numpy as np
 import torch
-from torchdata.datapipes.iter import IterableWrapper
+from torch.utils.data.datapipes.iter import IterableWrapper
 
 from ocf_datapipes.batch.fake.gsp import make_fake_gsp_data
 from ocf_datapipes.batch.fake.nwp import make_fake_nwp_data

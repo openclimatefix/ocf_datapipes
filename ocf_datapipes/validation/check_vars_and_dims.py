@@ -2,8 +2,7 @@
 from typing import Iterable, Optional, Union
 
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 
 @functional_datapipe("check_vars_and_dims")

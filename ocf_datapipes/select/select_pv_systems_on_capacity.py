@@ -3,8 +3,7 @@ from typing import Union
 
 import numpy as np
 import xarray as xr
-from torchdata.datapipes import functional_datapipe
-from torchdata.datapipes.iter import IterDataPipe
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 
 @functional_datapipe("select_pv_systems_on_capacity")
