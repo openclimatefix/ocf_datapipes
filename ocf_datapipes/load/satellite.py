@@ -12,6 +12,9 @@ import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
 from pathy import Pathy
 from torch.utils.data import IterDataPipe, functional_datapipe
+import xarray_tensorstore
+from .mf_tensorstore import open_mfdataset_tensorstore
+
 
 _log = logging.getLogger(__name__)
 
@@ -41,12 +44,12 @@ def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
         ).stdout.decode("utf-8")
         files = result_string.splitlines()
 
-        dataset = xr.open_mfdataset(files, **openmf_kwargs)
+        dataset = open_mfdataset_tensorstore(files, **openmf_kwargs)
 
     elif "*" in str(zarr_path):  # Multi-file dataset
-        dataset = xr.open_mfdataset(zarr_path, **openmf_kwargs)
+        dataset = open_mfdataset_tensorstore(zarr_path, **openmf_kwargs)
     else:
-        dataset = xr.open_dataset(zarr_path, engine="zarr", chunks="auto")
+        dataset = xarray_tensorstore.open_zarr(zarr_path)
     dataset = dataset.drop_duplicates("time").sortby("time")
 
     return dataset

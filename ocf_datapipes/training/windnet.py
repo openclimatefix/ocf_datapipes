@@ -32,6 +32,7 @@ from ocf_datapipes.utils.consts import (
     RSS_STD,
 )
 from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
+import xarray_tensorstore
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("windnet_datapipe")
@@ -277,13 +278,18 @@ def construct_sliced_data_pipeline(
 
     finished_dataset_dict = {"gsp": gsp_datapipe, "config": configuration}
     if "nwp" in datapipes_dict:
-        finished_dataset_dict["nwp"] = nwp_datapipe
+        finished_dataset_dict["nwp"] = nwp_datapipe.map(read_tensorstore)
     if "sat" in datapipes_dict:
-        finished_dataset_dict["sat"] = sat_datapipe
+        finished_dataset_dict["sat"] = sat_datapipe.map(read_tensorstore)
     if "pv" in datapipes_dict:
         finished_dataset_dict["pv"] = pv_datapipe
 
     return finished_dataset_dict
+
+
+def read_tensorstore(x):
+    """Read tensorstore data"""
+    return xarray_tensorstore.read(x)
 
 
 def windnet_datapipe(
