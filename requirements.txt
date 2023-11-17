@@ -24,4 +24,4 @@ fastparquet
 scipy
 pytorch_lightning
 pvlive-api
-xarray-tensorstore
+xarray-tensorstore==0.1.1

@@ -23,6 +23,7 @@ dependencies:
       - pathy
       - pyaml_env
       - nowcasting_datamodel
+      - xarray-tensorstore
       - gitpython
       - tqdm
       - bottleneck
