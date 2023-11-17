@@ -19,7 +19,9 @@ from .mf_tensorstore import open_mfdataset_tensorstore
 _log = logging.getLogger(__name__)
 
 
-def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
+def _get_single_sat_data(
+    zarr_path: Union[Path, str], use_tensorstore: bool = False
+) -> xr.DataArray:
     """Helper function to open a zarr from either local or GCP path.
 
     The local or GCP path may contain wildcard matching (*)
@@ -36,7 +38,18 @@ def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
         chunks="auto",
         join="override",
     )
-
+    if "*" in str(zarr_path):
+        # Multi-file dataset
+        if use_tensorstore:
+            open_fn = open_mfdataset_tensorstore
+        else:
+            open_fn = xr.open_mfdataset
+    else:
+        # Single-file dataset
+        if use_tensorstore:
+            open_fn = xarray_tensorstore.open_zarr
+        else:
+            open_fn = xr.open_zarr
     # Need to generate list of files if using GCP bucket storage
     if "gs://" in str(zarr_path) and "*" in str(zarr_path):
         result_string = subprocess.run(
@@ -44,12 +57,12 @@ def _get_single_sat_data(zarr_path: Union[Path, str]) -> xr.DataArray:
         ).stdout.decode("utf-8")
         files = result_string.splitlines()
 
-        dataset = open_mfdataset_tensorstore(files, **openmf_kwargs)
+        dataset = open_fn(files, **openmf_kwargs)
 
     elif "*" in str(zarr_path):  # Multi-file dataset
-        dataset = open_mfdataset_tensorstore(zarr_path, **openmf_kwargs)
+        dataset = open_fn(zarr_path, **openmf_kwargs)
     else:
-        dataset = xarray_tensorstore.open_zarr(zarr_path)
+        dataset = open_fn(zarr_path)
     dataset = dataset.drop_duplicates("time").sortby("time")
 
     return dataset
