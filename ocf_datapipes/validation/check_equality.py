@@ -9,6 +9,61 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
+@functional_datapipe("check_value_equal_to_fraction")
+class CheckValueEqualToFractionIterDataPipe(IterDataPipe):
+    """Check how much of the input is equal to a given fraction"""
+
+    def __init__(
+        self,
+        source_datapipe: IterDataPipe,
+        value: int,
+        fraction: float,
+        dataset_name: Optional[str] = None,
+    ):
+        """
+        Check how much of the input is equal to a given fraction
+
+        Args:
+            source_datapipe: Datapipe emitting Xarray object
+            value: Value to check
+            fraction: Fraction for threshold
+            dataset_name: Optional dataset name if checking a subset
+        """
+        self.source_datapipe = source_datapipe
+        self.value = value
+        self.fraction = fraction
+        self.dataset_name = dataset_name
+
+    def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
+        """Check equality"""
+        for xr_data in self.source_datapipe:
+            if self.dataset_name is not None:
+                self.check_fraction_of_dataset_equals_value(
+                    xr_data[self.dataset_name], value=self.value, fraction=self.fraction
+                )
+            else:
+                self.check_fraction_of_dataset_equals_value(
+                    xr_data, value=self.value, fraction=self.fraction
+                )
+            yield xr_data
+
+    def check_fraction_of_dataset_equals_value(self, data: xr.Dataset, value: int, fraction: float):
+        """Check data is greater than a certain value"""
+        # Get elementwise equality and fraction
+        data_equal_to_value = data == value
+        fraction_equal_to_value = data_equal_to_value.mean()
+        # Check fraction is greater than threshold
+        if fraction_equal_to_value > fraction:
+            message = (
+                f"Fraction of data equal to {value} is greater than {fraction} in "
+                f"{self.source_datapipe.__repr__()} "
+            )
+            if self.dataset_name is not None:
+                message += f"dataset {self.dataset_name}. "
+            message += f"The fraction is {fraction_equal_to_value}. "
+            raise Warning(message)
+
+
 @functional_datapipe("check_greater_than_or_equal_to")
 class CheckGreaterThanOrEqualToIterDataPipe(IterDataPipe):
     """Check greater than or equal to"""
