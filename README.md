@@ -1,27 +1,33 @@
 # OCF Datapipes
+
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 OCF's DataPipes for training and inference in Pytorch.
 
 ## Usage
 
-These datapipes are designed to be composable and modular, and follow the same setup as for the in-built Pytorch
-Datapipes. There are some great docs on how they can be composed and used [here](https://pytorch.org/data/main/examples.html).
+These datapipes are designed to be composable and modular, and follow the same
+setup as for the in-built Pytorch Datapipes. There are some great docs on how
+they can be composed and used
+[here](https://pytorch.org/data/main/examples.html).
 
-End to end examples are given in `ocf_datapipes.training` and `ocf_datapipes.production`.
-
+End to end examples are given in `ocf_datapipes.training` and
+`ocf_datapipes.production`.
 
 ## Organization
 
-This repo is organized as follows. The general flow of data loading and processing
-goes from the `ocf_datapipes.load -> .select -> .transform.xarray -> .convert` and
-then optionally `.transform.numpy`.
+This repo is organized as follows. The general flow of data loading and
+processing goes from the
+`ocf_datapipes.load -> .select -> .transform.xarray -> .convert` and then
+optionally `.transform.numpy`.
 
 `training` and `production` contain datapipes that go through all the steps of
-loading the config file, data, selecting and transforming data, and returning the
-numpy data to the PyTorch dataloader.
+loading the config file, data, selecting and transforming data, and returning
+the numpy data to the PyTorch dataloader.
 
 Modules have their own README's as well to go into further detail.
 
@@ -55,8 +61,8 @@ Modules have their own README's as well to go into further detail.
 ```
 
 ## Adding a new DataPipe
-A general outline for a new DataPipe should go something
-like this:
+
+A general outline for a new DataPipe should go something like this:
 
 ```python
 from torch.utils.data.datapipes.datapipe import IterDataPipe
@@ -74,7 +80,6 @@ class <PipeletName>IterDataPipe(IterDataPipe):
 ### Below is a little more detailed example on how to create and join multiple datapipes.
 
 ```python
-
 ## The below code snippets have been picked from ocf_datapipes\training\pv_satellite_nwp.py file
 
 
@@ -125,16 +130,25 @@ class <PipeletName>IterDataPipe(IterDataPipe):
 # 8. Finally join all the data pipes together
 
     combined_datapipe = MergeNumpyModalities([nwp_datapipe, pv_datapipe, satellite_datapipe])
-
-
 ```
+
+### Testing
+
+Ensure you have the dev requirements installed:
+
+`pip install requirements-dev.txt`
+
+Run `pytest` to run th tests
 
 ### Experimental DataPipes
 
-For new datapipes being developed for new models or input modalities, to somewhat separate the more experimental and in
-development datapipes from the ones better tested for production purposes, there is an `ocf_datapipes.experimental` namespace for
-developing these more research-y datapipes. These datapipes might not, and probably are not, tested.
-Once the model(s) using them are in production, they should be upgraded to one of the other namespaces and have tests added.
+For new datapipes being developed for new models or input modalities, to
+somewhat separate the more experimental and in development datapipes from the
+ones better tested for production purposes, there is an
+`ocf_datapipes.experimental` namespace for developing these more research-y
+datapipes. These datapipes might not, and probably are not, tested. Once the
+model(s) using them are in production, they should be upgraded to one of the
+other namespaces and have tests added.
 
 ## Citation
 
@@ -153,7 +167,8 @@ If you find this code useful, please cite the following:
 
 ## Contributors ✨
 
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+Thanks goes to these wonderful people
+([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -174,4 +189,6 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+This project follows the
+[all-contributors](https://github.com/all-contributors/all-contributors)
+specification. Contributions of any kind welcome!
