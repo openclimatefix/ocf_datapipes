@@ -37,14 +37,11 @@ class CheckValueEqualToFractionIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
         """Check equality"""
         for xr_data in self.source_datapipe:
-            if self.dataset_name is not None:
-                self.check_fraction_of_dataset_equals_value(
-                    xr_data[self.dataset_name], value=self.value, fraction=self.fraction
-                )
-            else:
-                self.check_fraction_of_dataset_equals_value(
-                    xr_data, value=self.value, fraction=self.fraction
-                )
+            self.check_fraction_of_dataset_equals_value(
+                xr_data[self.dataset_name] if self.dataset_name is not None else xr_data,
+                value=self.value,
+                fraction=self.fraction,
+            )
             yield xr_data
 
     def check_fraction_of_dataset_equals_value(self, data: xr.Dataset, value: int, fraction: float):
@@ -86,12 +83,10 @@ class CheckGreaterThanOrEqualToIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
         """Check equality"""
         for xr_data in self.source_datapipe:
-            if self.dataset_name is not None:
-                self.check_dataset_greater_than_or_equal_to(
-                    xr_data[self.dataset_name], min_value=self.min_value
-                )
-            else:
-                self.check_dataset_greater_than_or_equal_to(xr_data, min_value=self.min_value)
+            self.check_dataset_greater_than_or_equal_to(
+                xr_data[self.dataset_name] if self.dataset_name is not None else xr_data,
+                min_value=self.min_value,
+            )
             yield xr_data
 
     def check_dataset_greater_than_or_equal_to(self, data: xr.Dataset, min_value: int):
@@ -128,12 +123,10 @@ class CheckLessThanOrEqualToIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
         """Check equality"""
         for xr_data in self.source_datapipe:
-            if self.dataset_name is not None:
-                self.check_dataset_less_than_or_equal_to(
-                    xr_data[self.dataset_name], max_value=self.max_value
-                )
-            else:
-                self.check_dataset_less_than_or_equal_to(xr_data, max_value=self.max_value)
+            self.check_dataset_less_than_or_equal_to(
+                xr_data[self.dataset_name] if self.dataset_name is not None else xr_data,
+                max_value=self.max_value,
+            )
             yield xr_data
 
     def check_dataset_less_than_or_equal_to(self, data: xr.Dataset, max_value: int):
@@ -176,14 +169,11 @@ class CheckNotEqualToIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
         """Check not equal equality"""
         for xr_data in self.source_datapipe:
-            if self.dataset_name is not None:
-                self.check_dataset_not_equal(
-                    xr_data[self.dataset_name], value=self.value, raise_error=self.raise_error
-                )
-            else:
-                self.check_dataset_not_equal(
-                    xr_data, value=self.value, raise_error=self.raise_error
-                )
+            self.check_dataset_not_equal(
+                xr_data[self.dataset_name] if self.dataset_name is not None else xr_data,
+                value=self.value,
+                raise_error=self.raise_error,
+            )
             yield xr_data
 
     def check_dataset_not_equal(self, data: xr.Dataset, value: int, raise_error: bool = True):
