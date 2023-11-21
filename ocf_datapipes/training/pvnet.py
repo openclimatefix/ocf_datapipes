@@ -97,6 +97,11 @@ def construct_sliced_data_pipeline(
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
+        # Check for large amount of zeros
+        sat_datapipe = sat_datapipe.check_value_equal_to_fraction(
+            value=0.0,
+            fraction=0.9,
+        )
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
 
     if "pv" in datapipes_dict:
