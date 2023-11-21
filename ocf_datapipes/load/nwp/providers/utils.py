@@ -19,7 +19,7 @@ def open_zarr_paths(zarr_path, time_dim="init_time") -> xr.Dataset:
             engine="zarr",
             concat_dim=time_dim,
             combine="nested",
-            chunks={},
+            chunks="auto",
         ).sortby(time_dim)
     else:
         nwp = xr.open_dataset(
