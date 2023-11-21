@@ -2,6 +2,6 @@
 from .check_equality import CheckGreaterThanOrEqualToIterDataPipe as CheckGreaterThanOrEqualTo
 from .check_equality import CheckLessThanOrEqualToIterDataPipe as CheckLessThanOrEqualTo
 from .check_equality import CheckNotEqualToIterDataPipe as CheckNotEqualTo
+from .check_equality import CheckValueEqualToFractionIterDataPipe as CheckValueEqualToFraction
 from .check_for_nans import CheckNaNsIterDataPipe as CheckNaNs
 from .check_vars_and_dims import CheckVarsAndDimsIterDataPipe as CheckVarsAndDims
-from .check_equality import CheckValueEqualToFractionIterDataPipe as CheckValueEqualToFraction
