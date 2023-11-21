@@ -22,7 +22,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        zarr_path: Union[Path, str],
+        zarr_path: Union[Path, str, list[Path], list[str]],
         provider: str = "ukv",
     ):
         """
