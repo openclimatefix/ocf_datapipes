@@ -50,7 +50,7 @@ class CheckValueEqualToFractionIterDataPipe(IterDataPipe):
     def check_fraction_of_dataset_equals_value(self, data: xr.Dataset, value: int, fraction: float):
         """Check data is greater than a certain value"""
         # Get elementwise equality and fraction
-        data_equal_to_value = data == value
+        data_equal_to_value = np.isclose(data, value)
         fraction_equal_to_value = data_equal_to_value.mean()
         # Check fraction is greater than threshold
         if fraction_equal_to_value > fraction:
