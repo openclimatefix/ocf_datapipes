@@ -18,6 +18,8 @@ dependencies:
   - geopandas
   - h5netcdf
   - scipy
+  - pvlib
+  - fastparquet
   - pip:
       - einops
       - pathy
