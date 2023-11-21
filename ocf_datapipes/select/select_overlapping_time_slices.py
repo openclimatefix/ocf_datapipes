@@ -40,7 +40,7 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
                 time_periods = intersection_of_multiple_dataframes_of_periods(list(set_of_pd_datas))
 
                 logger.debug(f"Found {len(time_periods)} time periods")
-                assert len(time_periods) > 0,  "\n".join([str(df) for df in set_of_pd_datas])
+                assert len(time_periods) > 0, "\n".join([str(df) for df in set_of_pd_datas])
 
                 yield time_periods
         else:
@@ -63,7 +63,7 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
                     )
 
                     logger.debug(f"Found {len(time_periods)} time periods")
-                    assert len(time_periods) > 0,  "\n".join([str(df) for df in set_of_pd_datas])
+                    assert len(time_periods) > 0, "\n".join([str(df) for df in set_of_pd_datas])
 
                     self.time_periods_id[id] = time_periods
                     logger.debug(len(time_periods))
