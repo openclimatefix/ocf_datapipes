@@ -211,8 +211,8 @@ class LengthSetterIterDataPipe(IterDataPipe[T_co]):
 
     def __len__(self) -> int:
         return self.length
-    
-    
+
+
 @functional_datapipe("header")
 class HeaderIterDataPipe(IterDataPipe[T_co]):
     r"""
@@ -252,7 +252,9 @@ class HeaderIterDataPipe(IterDataPipe[T_co]):
             return source_len if self.limit is None else min(source_len, self.limit)
         except TypeError as error:
             if self.limit is None:
-                raise TypeError("The length of this HeaderIterDataPipe cannot be determined.") from error
+                raise TypeError(
+                    "The length of this HeaderIterDataPipe cannot be determined."
+                ) from error
 
             warn(
                 "The length of this HeaderIterDataPipe is inferred to be equal to its limit."
