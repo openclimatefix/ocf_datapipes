@@ -211,3 +211,51 @@ class LengthSetterIterDataPipe(IterDataPipe[T_co]):
 
     def __len__(self) -> int:
         return self.length
+    
+    
+@functional_datapipe("header")
+class HeaderIterDataPipe(IterDataPipe[T_co]):
+    r"""
+    Yields elements from the source DataPipe from the start, up to the specfied limit (functional name: ``header``).
+
+    If you would like to manually set the length of a DataPipe to a certain value; we recommend you to
+    use :class:`.LengthSetter`.
+
+    Args:
+        source_datapipe: the DataPipe from which elements will be yielded
+        limit: the number of elements to yield before stopping
+
+    Example:
+        >>> from torchdata.datapipes.iter import IterableWrapper
+        >>> dp = IterableWrapper(range(10))
+        >>> header_dp = dp.header(3)
+        >>> list(header_dp)
+        [0, 1, 2]
+    """
+
+    def __init__(self, source_datapipe: IterDataPipe[T_co], limit: Optional[int] = 10) -> None:
+        self.source_datapipe: IterDataPipe[T_co] = source_datapipe
+        self.limit: Optional[int] = limit
+
+    def __iter__(self) -> Iterator[T_co]:
+        i: int = 0
+        for value in self.source_datapipe:
+            i += 1
+            if self.limit is None or i <= self.limit:
+                yield value
+            else:
+                break
+
+    def __len__(self) -> int:
+        try:
+            source_len = len(self.source_datapipe)
+            return source_len if self.limit is None else min(source_len, self.limit)
+        except TypeError as error:
+            if self.limit is None:
+                raise TypeError("The length of this HeaderIterDataPipe cannot be determined.") from error
+
+            warn(
+                "The length of this HeaderIterDataPipe is inferred to be equal to its limit."
+                "The actual value may be smaller if the actual length of source_datapipe is smaller than the limit."
+            )
+            return self.limit
