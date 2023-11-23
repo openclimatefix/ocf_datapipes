@@ -150,12 +150,11 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
                 numpy_modalities.append(datapipes_dict["sat"].convert_satellite_to_numpy_batch())
             if "pv" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["pv"].convert_pv_to_numpy_batch())
-            numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
+            if "gsp" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
-            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
-                modality_name="gsp"
-            )
+            combined_datapipe = MergeNumpyModalities(numpy_modalities)
 
             if self.block_sat and conf_sat != "":
                 sat_block_func = AddZeroedSatelliteData(self.configuration)
@@ -383,3 +382,9 @@ def windnet_netcdf_datapipe(
     )
 
     return datapipe
+
+
+if __name__ == "__main__":
+    # Load the ECMWF and sensor data here
+
+    pass

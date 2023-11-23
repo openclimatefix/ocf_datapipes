@@ -18,6 +18,7 @@ from ocf_datapipes.load import (
     OpenPVFromPVSitesDB,
     OpenSatellite,
     OpenTopography,
+    OpenAWOSFromNetCDF,
 )
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
@@ -32,6 +33,7 @@ def open_and_return_datapipes(
     use_sat: bool = True,
     use_hrv: bool = True,
     use_topo: bool = True,
+    use_sensor: bool = True,
     production: bool = False,
 ) -> dict[str, IterDataPipe]:
     """
@@ -45,6 +47,7 @@ def open_and_return_datapipes(
         use_hrv: Whether to open HRV satellite data
         use_sat: Whether to open non-HRV satellite data
         use_gsp: Whether to use GSP data or not
+        use_sensor: Whether to use sensor data or not
         production: bool if this is for production or not
 
     Returns:
@@ -62,10 +65,12 @@ def open_and_return_datapipes(
     use_hrv = use_hrv and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
     use_topo = use_topo and (conf_in.topographic.topographic_filename != "")
     use_gsp = use_gsp and (conf_in.gsp.gsp_zarr_path != "")
+    use_sensor = use_sensor and (conf_in.sensor.sensor_filename != "")
 
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
         f" HRV: {use_hrv} PV: {use_pv} Topo: {use_topo}"
+        f" Sensor: {use_sensor}"
     )
 
     used_datapipes = {}
@@ -143,6 +148,17 @@ def open_and_return_datapipes(
 
         used_datapipes["pv"] = pv_datapipe
 
+    if use_sensor:
+        logger.debug("Opening Sensor Data")
+        sensor_datapipe = OpenAWOSFromNetCDF(
+            configuration.input_data.sensor
+        ).add_t0_idx_and_sample_period_duration(
+            sample_period_duration=timedelta(minutes=30),
+            history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
+        )
+
+        used_datapipes["sensor"] = sensor_datapipe
+
     if use_topo:
         logger.debug("Opening Topographic Data")
         topo_datapipe = OpenTopography(configuration.input_data.topographic.topographic_filename)
@@ -217,6 +233,16 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
                 sample_period_duration=timedelta(minutes=30),
                 history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
                 forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
+            )
+            datapipes_for_time_periods.append(time_periods_datapipe)
+
+        if "sensor" == key:
+            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+                sample_period_duration=timedelta(minutes=30),
+                history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
+                forecast_duration=timedelta(
+                    minutes=configuration.input_data.sensor.forecast_minutes
+                ),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
 
@@ -500,6 +526,7 @@ def _get_datapipes_dict(
     config_filename: str,
     block_sat: bool,
     block_nwp: bool,
+    use_sensor: bool = False,
     production: bool = False,
 ):
     # Load datasets
@@ -511,6 +538,7 @@ def _get_datapipes_dict(
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
         use_topo=False,
+        use_sensor=use_sensor,
         production=production,
     )
 
@@ -741,6 +769,45 @@ def slice_datapipes_by_time(
                 system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
             )
 
+    if "sensor" in datapipes_dict:
+        datapipes_dict["sensor"], dp = datapipes_dict["sensor"].fork(2, buffer_size=5)
+
+        datapipes_dict["sensor_future"] = dp.select_time_slice(
+            t0_datapipe=get_t0_datapipe(None),
+            sample_period_duration=minutes(30),
+            interval_start=minutes(30),
+            interval_end=minutes(conf_in.sensor.forecast_minutes),
+            fill_selection=production,
+        )
+
+        datapipes_dict["sensor"] = datapipes_dict["sensor"].select_time_slice(
+            t0_datapipe=get_t0_datapipe(None),
+            sample_period_duration=minutes(30),
+            interval_start=minutes(-conf_in.sensor.history_minutes),
+            interval_end=minutes(0),
+            fill_selection=production,
+        )
+
+        # Dropout on the sensor, but not the future sensor
+        sensor_dropout_time_datapipe = get_t0_datapipe("sensor").select_dropout_time(
+            # All sensor data could be delayed by up to 30 minutes
+            # (this does not stem from production - just setting for now)
+            dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
+            dropout_frac=0.1 if production else 1,
+        )
+
+        datapipes_dict["sensor"] = datapipes_dict["sensor"].apply_dropout_time(
+            dropout_time_datapipe=sensor_dropout_time_datapipe,
+        )
+
+        # Apply extra sensor dropout using different delays per system and droping out entire sensor systems
+        # independently
+        if not production:
+            datapipes_dict["sensor"].apply_sensor_dropout(
+                system_dropout_fractions=np.linspace(0, 0.2, 100),
+                system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
+            )
+
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
 
@@ -870,6 +937,24 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
                 sample_period_duration=timedelta(minutes=5),
             )
 
+        if "sensor" == key:
+            sensor_1, sensor_2 = used_datapipes[key + "_t0"].fork(2)
+            sensor_dp1, sensor_dp2 = datapipe.fork(2)
+            datapipes_to_return[key] = sensor_dp1.select_time_slice(
+                t0_datapipe=sensor_1,
+                history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
+                forecast_duration=timedelta(minutes=0),
+                sample_period_duration=timedelta(minutes=30),
+            )
+            datapipes_to_return[key + "_future"] = sensor_dp2.select_time_slice(
+                t0_datapipe=sensor_2,
+                history_duration=timedelta(minutes=0),
+                forecast_duration=timedelta(
+                    minutes=configuration.input_data.sensor.forecast_minutes
+                ),
+                sample_period_duration=timedelta(minutes=30),
+            )
+
         if "gsp" == key:
             gsp_1, gsp_2 = used_datapipes[key + "_t0"].fork(2)
             gsp_dp1, gsp_dp2 = datapipe.fork(2)
@@ -922,7 +1007,7 @@ def create_t0_and_loc_datapipes(
 
     """
     assert key_for_t0 in datapipes_dict
-    assert key_for_t0 in ["gsp", "pv"]
+    assert key_for_t0 in ["gsp", "pv", "sensor"]
     assert nwp_max_staleness_minutes >= nwp_max_dropout_minutes
 
     contiguous_time_datapipes = []  # Used to store contiguous time periods from each data source
@@ -963,6 +1048,12 @@ def create_t0_and_loc_datapipes(
                 sample_frequency = 5
                 history_duration = configuration.input_data.pv.history_minutes
                 forecast_duration = configuration.input_data.pv.forecast_minutes
+                time_dim = "time_utc"
+
+            elif key == "sensor":
+                sample_frequency = 30
+                history_duration = configuration.input_data.sensor.history_minutes
+                forecast_duration = configuration.input_data.sensor.forecast_minutes
                 time_dim = "time_utc"
 
             elif key == "gsp":
