@@ -417,88 +417,6 @@ def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
     return batch
 
 
-class AddZeroedSatelliteData:
-    """A callable class used to add zeroed-out satellite data to batches of data.
-
-    This is useful
-    to speed up batch loading if pre-training the output part of the network without satellite
-    inputs.
-    """
-
-    def __init__(self, configuration: Configuration, is_hrv: bool = False):
-        """A callable class used to add zeroed-out satellite data to batches of data.
-
-        Args:
-            configuration: Configuration object
-            is_hrv: If False, non-HRV data is added by called function, else HRV.
-        """
-
-        self.configuration = configuration
-        self.is_hrv = is_hrv
-
-    def __call__(self, batch: NumpyBatch) -> NumpyBatch:
-        """Add zeroed-out satellite data to batch with shape accoriding to supplied configuration.
-
-        Batch is modified in-place and returned.
-
-        Args:
-            batch: Numpy batch of input data.
-        """
-
-        variable = "hrvsatellite" if self.is_hrv else "satellite"
-
-        satellite_config = getattr(self.configuration.input_data, variable)
-
-        n_channels = len(getattr(satellite_config, f"{variable}_channels"))
-        height = getattr(satellite_config, f"{variable}_image_size_pixels_height")
-        width = getattr(satellite_config, f"{variable}_image_size_pixels_width")
-
-        sequence_len = satellite_config.history_minutes // 5 + 1 - 3
-
-        batch[getattr(BatchKey, f"{variable}_actual")] = np.zeros(
-            (sequence_len, n_channels, height, width)
-        )
-
-        return batch
-
-
-class AddZeroedNWPData:
-    """A callable class used to add zeroed-out NWP data to batches of data.
-
-    This is useful to speed up batch loading if pre-training the output part of the network without
-    NWP inputs.
-    """
-
-    def __init__(self, configuration: Configuration):
-        """A callable class used to add zeroed-out NWP data to batches of data.
-
-        Args:
-            configuration: Configuration object
-        """
-        self.configuration = configuration
-
-    def __call__(self, batch: NumpyBatch) -> NumpyBatch:
-        """Add zeroed-out NWP data to batch with shape accoriding to supplied configuration.
-
-        Batch is modified in-place and returned.
-
-        Args:
-            batch: Numpy batch of input data.
-        """
-
-        config = self.configuration.input_data.nwp
-
-        n_channels = len(config.nwp_channels)
-        height = config.nwp_image_size_pixels_height
-        width = config.nwp_image_size_pixels_width
-
-        sequence_len = config.history_minutes // 60 + config.forecast_minutes // 60 + 1
-
-        batch[BatchKey.nwp] = np.zeros((sequence_len, n_channels, height, width))
-
-        return batch
-
-
 class DatapipeKeyForker:
     """ "Internal helper function to track forking of a datapipe."""
 
@@ -540,8 +458,6 @@ class DatapipeKeyForker:
 
 def _get_datapipes_dict(
     config_filename: str,
-    block_sat: bool,
-    block_nwp: bool,
     production: bool = False,
 ):
     # Load datasets
@@ -549,9 +465,9 @@ def _get_datapipes_dict(
         configuration_filename=config_filename,
         use_gsp=(not production),
         use_pv=(not production),
-        use_sat=not block_sat,  # Only loaded if we aren't replacing them with zeros
+        use_sat=True,  # Only loaded if we aren't replacing them with zeros
         use_hrv=True,
-        use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
+        use_nwp=True,  # Only loaded if we aren't replacing them with zeros
         use_topo=True,
         use_sensor=True,
         production=production,
@@ -581,8 +497,6 @@ def construct_loctime_pipelines(
     config_filename: str,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
-    block_sat: bool = False,
-    block_nwp: bool = False,
 ) -> Tuple[IterDataPipe, IterDataPipe]:
     """Construct location and time pipelines for the input data config file.
 
@@ -590,14 +504,10 @@ def construct_loctime_pipelines(
         config_filename: Path to config file.
         start_time: Minimum time for time datapipe.
         end_time: Maximum time for time datapipe.
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
     """
 
     datapipes_dict = _get_datapipes_dict(
         config_filename,
-        block_sat=block_sat,
-        block_nwp=block_nwp,
     )
 
     # Pull out config file

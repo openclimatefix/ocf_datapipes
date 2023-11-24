@@ -13,7 +13,6 @@ from ocf_datapipes.load import (
     OpenConfiguration,
 )
 from ocf_datapipes.training.common import (
-    AddZeroedNWPData,
     _get_datapipes_dict,
     concat_xr_time_utc,
     construct_loctime_pipelines,
@@ -125,16 +124,12 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
         self,
         dataset_dict_dp: IterDataPipe,
         configuration: Configuration,
-        block_sat: bool = False,
-        block_nwp: bool = False,
         check_satellite_no_zeros: bool = False,
     ):
         """Init"""
         super().__init__()
         self.dataset_dict_dp = dataset_dict_dp
         self.configuration = configuration
-        self.block_sat = block_sat
-        self.block_nwp = block_nwp
         self.check_satellite_no_zeros = check_satellite_no_zeros
 
     def __iter__(self):
@@ -159,14 +154,6 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             logger.debug("Combine all the data sources")
             combined_datapipe = MergeNumpyModalities(numpy_modalities)
 
-            # if self.block_sat and conf_sat != "":
-            #    sat_block_func = AddZeroedSatelliteData(self.configuration)
-            #    combined_datapipe = combined_datapipe.map(sat_block_func)
-
-            if self.block_nwp and conf_nwp != "":
-                nwp_block_func = AddZeroedNWPData(self.configuration)
-                combined_datapipe = combined_datapipe.map(nwp_block_func)
-
             logger.info("Filtering out samples with no data")
             # if self.check_satellite_no_zeros:
             # in production we don't want any nans in the satellite data
@@ -190,8 +177,6 @@ def construct_sliced_data_pipeline(
     config_filename: str,
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
-    block_sat: bool = False,
-    block_nwp: bool = False,
     production: bool = False,
 ) -> dict:
     """Constructs data pipeline for the input data config file.
@@ -202,17 +187,11 @@ def construct_sliced_data_pipeline(
         config_filename: Path to config file.
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
         production: Whether constucting pipeline for production inference.
     """
 
-    assert not (production and (block_sat or block_nwp))
-
     datapipes_dict = _get_datapipes_dict(
         config_filename,
-        block_sat,
-        block_nwp,
         production=production,
     )
 
@@ -296,8 +275,6 @@ def windnet_datapipe(
     config_filename: str,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
-    block_sat: bool = False,
-    block_nwp: bool = False,
 ) -> IterDataPipe:
     """
     Construct windnet pipeline for the input data config file.
@@ -306,8 +283,6 @@ def windnet_datapipe(
         config_filename: Path to config file.
         start_time: Minimum time at which a sample can be selected.
         end_time: Maximum time at which a sample can be selected.
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
     """
     logger.info("Constructing windnet pipeline")
 
@@ -316,8 +291,6 @@ def windnet_datapipe(
         config_filename,
         start_time,
         end_time,
-        block_sat=block_sat,
-        block_nwp=block_nwp,
     )
 
     # Shard after we have the loc-times. These are already shuffled so no need to shuffle again
@@ -330,8 +303,6 @@ def windnet_datapipe(
         config_filename,
         location_pipe,
         t0_datapipe,
-        block_sat,
-        block_nwp,
     )
 
     # Save out datapipe to NetCDF
@@ -360,8 +331,6 @@ def windnet_netcdf_datapipe(
     config_filename: str,
     keys: List[str],
     filenames: List[str],
-    block_sat: bool = False,
-    block_nwp: bool = False,
 ) -> IterDataPipe:
     """
     Load the saved Datapipes from windnet, and transform to numpy batch
@@ -370,8 +339,6 @@ def windnet_netcdf_datapipe(
         config_filename: Path to config file.
         keys: List of keys to extract from the single NetCDF files
         filenames: List of NetCDF files to load
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
 
     Returns:
         Datapipe that transforms the NetCDF files to numpy batch
@@ -384,9 +351,7 @@ def windnet_netcdf_datapipe(
         filenames=filenames,
         keys=keys,
     ).map(split_dataset_dict_dp)
-    datapipe = datapipe_dict_dp.convert_to_numpy_batch(
-        block_nwp=block_nwp, block_sat=block_sat, configuration=configuration
-    )
+    datapipe = datapipe_dict_dp.convert_to_numpy_batch(configuration=configuration)
 
     return datapipe
 
@@ -395,8 +360,6 @@ if __name__ == "__main__":
     # Load the ECMWF and sensor data here
     datapipe = windnet_datapipe(
         config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        block_sat=True,
-        block_nwp=False,
         start_time=datetime(2021, 1, 1),
         end_time=datetime(2022, 1, 2),
     )
@@ -408,8 +371,6 @@ if __name__ == "__main__":
         config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
         keys=["nwp", "sensor"],
         filenames=["test.nc"],
-        block_sat=True,
-        block_nwp=False,
     )
     batch = next(iter(datapipe))
     print(batch)

@@ -8,8 +8,6 @@ from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.training.common import (
-    AddZeroedNWPData,
-    AddZeroedSatelliteData,
     _get_datapipes_dict,
     check_nans_in_satellite_data,
     concat_xr_time_utc,
@@ -35,8 +33,6 @@ def construct_sliced_data_pipeline(
     config_filename: str,
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
-    block_sat: bool = False,
-    block_nwp: bool = False,
     production: bool = False,
     check_satellite_no_zeros: bool = False,
 ) -> IterDataPipe:
@@ -48,18 +44,12 @@ def construct_sliced_data_pipeline(
         config_filename: Path to config file.
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
         production: Whether constucting pipeline for production inference.
         check_satellite_no_zeros: Whether to check that satellite data has no zeros.
     """
 
-    assert not (production and (block_sat or block_nwp))
-
     datapipes_dict = _get_datapipes_dict(
         config_filename,
-        block_sat,
-        block_nwp,
         production=production,
     )
 
@@ -141,14 +131,6 @@ def construct_sliced_data_pipeline(
     logger.debug("Combine all the data sources")
     combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(modality_name="gsp")
 
-    if block_sat and conf_sat != "":
-        sat_block_func = AddZeroedSatelliteData(configuration)
-        combined_datapipe = combined_datapipe.map(sat_block_func)
-
-    if block_nwp and conf_nwp != "":
-        nwp_block_func = AddZeroedNWPData(configuration)
-        combined_datapipe = combined_datapipe.map(nwp_block_func)
-
     logger.info("Filtering out samples with no data")
     if check_satellite_no_zeros:
         # in production we don't want any nans in the satellite data
@@ -163,8 +145,6 @@ def pvnet_datapipe(
     config_filename: str,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
-    block_sat: bool = False,
-    block_nwp: bool = False,
 ) -> IterDataPipe:
     """
     Construct pvnet pipeline for the input data config file.
@@ -173,8 +153,6 @@ def pvnet_datapipe(
         config_filename: Path to config file.
         start_time: Minimum time at which a sample can be selected.
         end_time: Maximum time at which a sample can be selected.
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
     """
     logger.info("Constructing pvnet pipeline")
 
@@ -183,8 +161,6 @@ def pvnet_datapipe(
         config_filename,
         start_time,
         end_time,
-        block_sat,
-        block_nwp,
     )
 
     # Shard after we have the loc-times. These are already shuffled so no need to shuffle again
@@ -197,8 +173,6 @@ def pvnet_datapipe(
         config_filename,
         location_pipe,
         t0_datapipe,
-        block_sat,
-        block_nwp,
     )
 
     return datapipe
