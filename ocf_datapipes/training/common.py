@@ -526,19 +526,21 @@ def _get_datapipes_dict(
     config_filename: str,
     block_sat: bool,
     block_nwp: bool,
-    use_sensor: bool = False,
+    block_sensor: bool = False,
+    block_gsp: bool = False,
+    block_pv: bool = False,
     production: bool = False,
 ):
     # Load datasets
     datapipes_dict = open_and_return_datapipes(
         configuration_filename=config_filename,
-        use_gsp=False,
-        use_pv=False,
+        use_gsp=(not production and not block_gsp),
+        use_pv=(not production and not block_pv),
         use_sat=not block_sat,  # Only loaded if we aren't replacing them with zeros
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
         use_topo=False,
-        use_sensor=use_sensor,
+        use_sensor=not block_sensor,
         production=production,
     )
 
@@ -568,6 +570,9 @@ def construct_loctime_pipelines(
     end_time: Optional[datetime] = None,
     block_sat: bool = False,
     block_nwp: bool = False,
+    block_sensor: bool = False,
+    block_gsp: bool = False,
+    block_pv: bool = False,
 ) -> Tuple[IterDataPipe, IterDataPipe]:
     """Construct location and time pipelines for the input data config file.
 
@@ -579,7 +584,14 @@ def construct_loctime_pipelines(
         block_nwp: Whether to load zeroes for NWP data.
     """
 
-    datapipes_dict = _get_datapipes_dict(config_filename, block_sat, block_nwp, use_sensor=True)
+    datapipes_dict = _get_datapipes_dict(
+        config_filename,
+        block_sat=block_sat,
+        block_nwp=block_nwp,
+        block_gsp=block_gsp,
+        block_pv=block_pv,
+        block_sensor=block_sensor,
+    )
 
     # Pull out config file
     config = datapipes_dict.pop("config")
