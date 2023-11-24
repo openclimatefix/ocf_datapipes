@@ -1,3 +1,4 @@
+"""Datapipes from TorchData that have been copied in for use with core PyTorch Datapipes"""
 from typing import Iterator, List, Optional, Sequence, Sized, Tuple, TypeVar
 
 from torch.utils.data import IterDataPipe, functional_datapipe
@@ -255,9 +256,4 @@ class HeaderIterDataPipe(IterDataPipe[T_co]):
                 raise TypeError(
                     "The length of this HeaderIterDataPipe cannot be determined."
                 ) from error
-
-            warn(
-                "The length of this HeaderIterDataPipe is inferred to be equal to its limit."
-                "The actual value may be smaller if the actual length of source_datapipe is smaller than the limit."
-            )
             return self.limit
