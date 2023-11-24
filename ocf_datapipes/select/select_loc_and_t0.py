@@ -44,8 +44,6 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
 
     def _yield_all_iter(self, xr_dataset):
         xr_coord_system, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
-        print(xr_y_dim)
-        print(xr_dataset)
         t_index, x_index = np.meshgrid(
             np.arange(len(xr_dataset[self.time_dim_name])),
             np.arange(len(xr_dataset[xr_x_dim])),
