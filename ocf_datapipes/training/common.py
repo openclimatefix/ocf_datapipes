@@ -699,7 +699,7 @@ def slice_datapipes_by_time(
             dropout_time_datapipe=pv_dropout_time_datapipe,
         )
 
-        # Apply extra PV dropout using different delays per system and droping out
+        # Apply extra PV dropout using different delays per system and dropping out
         # entire PV systems
         # independently
         if not production:
@@ -738,14 +738,6 @@ def slice_datapipes_by_time(
         datapipes_dict["sensor"] = datapipes_dict["sensor"].apply_dropout_time(
             dropout_time_datapipe=sensor_dropout_time_datapipe,
         )
-
-        # Apply extra sensor dropout using different delays per system and droping out entire sensor systems
-        # independently
-        # if not production:
-        #    datapipes_dict["sensor"].apply_sensor_dropout(
-        #        system_dropout_fractions=np.linspace(0, 0.2, 100),
-        #        system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
-        #    )
 
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
