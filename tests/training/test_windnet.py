@@ -15,6 +15,8 @@ def test_windnet_datapipe(configuration_filename):
         configuration_filename,
         start_time=start_time,
         end_time=end_time,
+        block_sensor=True,
+        block_pv=False,
     )
     datasets = next(iter(dp))
     # Need to serialize attributes to strings
@@ -22,6 +24,9 @@ def test_windnet_datapipe(configuration_filename):
     dp = windnet_netcdf_datapipe(
         config_filename=configuration_filename,
         filenames=["test.nc"],
-        keys=["gsp", "nwp", "sat", "pv"],
+        keys=[
+            "nwp",
+            "sat",
+        ],
     )
     datasets = next(iter(dp))

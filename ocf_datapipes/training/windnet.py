@@ -304,6 +304,7 @@ def windnet_datapipe(
     block_sat: bool = False,
     block_nwp: bool = False,
     block_sensor: bool = False,
+    block_pv: bool = True,
 ) -> IterDataPipe:
     """
     Construct windnet pipeline for the input data config file.
@@ -326,7 +327,7 @@ def windnet_datapipe(
         block_nwp=block_nwp,
         block_sensor=block_sensor,
         block_gsp=True,
-        block_pv=True,
+        block_pv=block_pv,
     )
 
     # Shard after we have the loc-times. These are already shuffled so no need to shuffle again

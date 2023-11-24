@@ -20,6 +20,8 @@ def test_combine_uncombine_from_single_dataset(configuration_filename):
         configuration_filename,
         start_time=start_time,
         end_time=end_time,
+        block_sensor=True,
+        block_pv=False,
     )
     dataset: xr.Dataset = next(iter(dp))
     assert isinstance(dataset, xr.Dataset)
