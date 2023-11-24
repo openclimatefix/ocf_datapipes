@@ -260,6 +260,34 @@ class BatchKey(Enum):
     satellite_time_utc_fourier = auto()
     satellite_time_utc_fourier_t0 = auto()
 
+    # -------------- Sensor ---------------------------------------------
+    sensor = auto()  # shape: (batch_size, time, n_pv_systems)
+    sensor_t0_idx = auto()  # shape: scalar
+    sensor_ml_id = auto()  # shape: (batch_size, n_pv_systems)
+    sensor_id = auto()  # shape: (batch_size, n_pv_systems)
+    sensor_observed_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
+    sensor_nominal_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
+    #: pv_mask is True for good PV systems in each example.
+    # The RawPVDataSource doesn't use pv_mask. Instead is sets missing PV systems to NaN
+    # across all PV batch keys.
+    sensor_mask = auto()  # shape: (batch_size, n_pv_systems)
+
+    # PV coordinates:
+    # Each has shape: (batch_size, n_pv_systems), will be NaN for missing PV systems.
+    sensor_latitude = auto()
+    sensor_longitude = auto()
+    sensor_time_utc = auto()  # Seconds since UNIX epoch (1970-01-01).
+
+    # PV Fourier coordinates:
+    # Each has shape: (batch_size, n_pv_systems, n_fourier_features_per_dim),
+    # and will be NaN for missing PV systems.
+    sensor_latitude_fourier = auto()
+    sensor_longitude_fourier = auto()
+    sensor_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
+    sensor_time_utc_fourier_t0 = (
+        auto()
+    )  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
+
 
 NumpyBatch = dict[BatchKey, np.ndarray]
 

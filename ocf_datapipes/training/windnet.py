@@ -22,7 +22,6 @@ from ocf_datapipes.training.common import (
     fill_nans_in_arrays,
     fill_nans_in_pv,
     normalize_gsp,
-    normalize_pv,
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
@@ -54,6 +53,10 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     # Roughly double speed to get power
     x = x * 2
     return x
+
+
+def _normalize_wind_speed(x):
+    return (x - 0.0) / 30.0
 
 
 @functional_datapipe("dict_datasets")
@@ -152,6 +155,8 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
                 numpy_modalities.append(datapipes_dict["pv"].convert_pv_to_numpy_batch())
             if "gsp" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
+            if "sensor" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["sensor"].convert_sensor_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
             combined_datapipe = MergeNumpyModalities(numpy_modalities)
@@ -210,6 +215,7 @@ def construct_sliced_data_pipeline(
         config_filename,
         block_sat,
         block_nwp,
+        use_sensor=True,
         production=production,
     )
 
@@ -244,43 +250,49 @@ def construct_sliced_data_pipeline(
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
-    if "pv" in datapipes_dict:
-        # Recombine PV arrays - see function doc for further explanation
+    if "sensor" in datapipes_dict:
+        # Recombine Sensor arrays - see function doc for further explanation
         pv_datapipe = (
-            datapipes_dict["pv"].zip_ocf(datapipes_dict["pv_future"]).map(concat_xr_time_utc)
+            datapipes_dict["sensor"]
+            .zip_ocf(datapipes_dict["sensor_future"])
+            .map(concat_xr_time_utc)
         )
-        pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
+        pv_datapipe = pv_datapipe.normalize(normalize_fn=_normalize_wind_speed)
         pv_datapipe = pv_datapipe.map(fill_nans_in_pv)
 
+    finished_dataset_dict = {"config": configuration}
     # GSP always assumed to be in data
-    location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
-    gsp_future_datapipe = datapipes_dict["gsp_future"]
-    gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
-        location_datapipe=location_pipe_copy,
-        roi_height_meters=1,
-        roi_width_meters=1,
-        dim_name="gsp_id",
-    )
+    if "gsp" in datapipes_dict:
+        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
+        gsp_future_datapipe = datapipes_dict["gsp_future"]
+        gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
+            location_datapipe=location_pipe_copy,
+            roi_height_meters=1,
+            roi_width_meters=1,
+            dim_name="gsp_id",
+        )
 
-    gsp_datapipe = datapipes_dict["gsp"]
-    gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
-        location_datapipe=location_pipe,
-        roi_height_meters=1,
-        roi_width_meters=1,
-        dim_name="gsp_id",
-    )
+        gsp_datapipe = datapipes_dict["gsp"]
+        gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
+            location_datapipe=location_pipe,
+            roi_height_meters=1,
+            roi_width_meters=1,
+            dim_name="gsp_id",
+        )
 
-    # Recombine GSP arrays - see function doc for further explanation
-    gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(concat_xr_time_utc)
-    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
+        # Recombine GSP arrays - see function doc for further explanation
+        gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(concat_xr_time_utc)
+        gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
 
-    finished_dataset_dict = {"gsp": gsp_datapipe, "config": configuration}
+        finished_dataset_dict["gsp"] = gsp_datapipe
     if "nwp" in datapipes_dict:
         finished_dataset_dict["nwp"] = nwp_datapipe
     if "sat" in datapipes_dict:
         finished_dataset_dict["sat"] = sat_datapipe
     if "pv" in datapipes_dict:
         finished_dataset_dict["pv"] = pv_datapipe
+    if "sensor" in datapipes_dict:
+        finished_dataset_dict["sensor"] = pv_datapipe
 
     return finished_dataset_dict
 
@@ -331,11 +343,9 @@ def windnet_datapipe(
 
     # Merge all the datapipes into one
     return DictDatasetIterDataPipe(
-        datapipe_dict["gsp"],
         datapipe_dict["nwp"],
-        datapipe_dict["sat"],
-        datapipe_dict["pv"],
-        keys=["gsp", "nwp", "sat", "pv"],
+        datapipe_dict["sensor"],
+        keys=["nwp", "sensor"],
     ).map(combine_to_single_dataset)
 
 
@@ -386,5 +396,12 @@ def windnet_netcdf_datapipe(
 
 if __name__ == "__main__":
     # Load the ECMWF and sensor data here
-
-    pass
+    datapipe = windnet_datapipe(
+        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
+        block_sat=True,
+        block_nwp=False,
+        start_time=datetime(2021, 1, 1),
+        end_time=datetime(2022, 1, 2),
+    )
+    batch = next(iter(datapipe))
+    print(batch)

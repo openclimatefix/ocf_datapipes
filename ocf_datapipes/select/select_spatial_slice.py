@@ -53,9 +53,7 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
             logger.debug("Selecting spatial slice with pixels")
-
             xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
-
             if self.location_idx_name is not None:
                 selected = _get_points_from_unstructured_grids(
                     xr_data=xr_data,

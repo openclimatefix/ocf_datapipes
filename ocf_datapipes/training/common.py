@@ -532,8 +532,8 @@ def _get_datapipes_dict(
     # Load datasets
     datapipes_dict = open_and_return_datapipes(
         configuration_filename=config_filename,
-        use_gsp=(not production),
-        use_pv=(not production),
+        use_gsp=False,
+        use_pv=False,
         use_sat=not block_sat,  # Only loaded if we aren't replacing them with zeros
         use_hrv=False,
         use_nwp=not block_nwp,  # Only loaded if we aren't replacing them with zeros
@@ -579,26 +579,26 @@ def construct_loctime_pipelines(
         block_nwp: Whether to load zeroes for NWP data.
     """
 
-    datapipes_dict = _get_datapipes_dict(
-        config_filename,
-        block_sat,
-        block_nwp,
-    )
+    datapipes_dict = _get_datapipes_dict(config_filename, block_sat, block_nwp, use_sensor=True)
 
     # Pull out config file
     config = datapipes_dict.pop("config")
 
     # We sample time and space of other data using GSP time and space coordinates, so filter GSP
     # data first amd this is carried through
-    datapipes_dict["gsp"] = datapipes_dict["gsp"].map(gsp_drop_national)
+    core_key = "gsp" if "gsp" in datapipes_dict else "sensor"
+    if core_key == "gsp":
+        datapipes_dict[core_key] = datapipes_dict[core_key].map(gsp_drop_national)
     if (start_time is not None) or (end_time is not None):
-        datapipes_dict["gsp"] = datapipes_dict["gsp"].select_train_test_time(start_time, end_time)
+        datapipes_dict[core_key] = datapipes_dict[core_key].select_train_test_time(
+            start_time, end_time
+        )
 
     # Get overlapping time periods
     location_pipe, t0_datapipe = create_t0_and_loc_datapipes(
         datapipes_dict,
         configuration=config,
-        key_for_t0="gsp",
+        key_for_t0=core_key,
         shuffle=True,
         nwp_max_dropout_minutes=180,
         # Sometimes the forecast is only 4/day so 6 hour intervals - then we add 3-hour dropout
@@ -660,14 +660,14 @@ def slice_datapipes_by_time(
     # Use DatapipeKeyForker to avoid forking t0_datapipe too many times, or leaving any forks unused
     fork_keys = {k for k in datapipes_dict.keys() if k not in ["topo"]}
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
+    if "sat" in datapipes_dict or "hrv" in datapipes_dict:
+        sat_and_hrv_dropout_kwargs = dict(
+            # Satellite is either 30 minutes or 60 minutes delayed in production. Match during training
+            dropout_timedeltas=[minutes(-60), minutes(-30)],
+            dropout_frac=0 if production else 1.0,
+        )
 
-    sat_and_hrv_dropout_kwargs = dict(
-        # Satellite is either 30 minutes or 60 minutes delayed in production. Match during training
-        dropout_timedeltas=[minutes(-60), minutes(-30)],
-        dropout_frac=0 if production else 1.0,
-    )
-
-    sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
+        sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
 
     if "nwp" in datapipes_dict:
         datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
@@ -802,11 +802,11 @@ def slice_datapipes_by_time(
 
         # Apply extra sensor dropout using different delays per system and droping out entire sensor systems
         # independently
-        if not production:
-            datapipes_dict["sensor"].apply_sensor_dropout(
-                system_dropout_fractions=np.linspace(0, 0.2, 100),
-                system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
-            )
+        # if not production:
+        #    datapipes_dict["sensor"].apply_sensor_dropout(
+        #        system_dropout_fractions=np.linspace(0, 0.2, 100),
+        #        system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
+        #    )
 
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)

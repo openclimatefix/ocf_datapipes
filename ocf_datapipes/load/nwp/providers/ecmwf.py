@@ -29,8 +29,6 @@ def open_ifs(zarr_path) -> xr.DataArray:
         {
             "init_time": "init_time_utc",
             "variable": "channel",
-            "latitude": "latitude",
-            "longitude": "longitude",
         }
     )
     # Sanity checks.

@@ -7,6 +7,9 @@ import pandas as pd
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils.geospatial import (
+    spatial_coord_type,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +23,6 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         source_datapipe: IterDataPipe,
         return_all: bool = False,
         shuffle: bool = False,
-        x_dim_name: Optional[str] = "x_osgb",
-        y_dim_name: Optional[str] = "y_osgb",
         time_dim_name: Optional[str] = "time_utc",
     ):
         """
@@ -33,22 +34,21 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
                 if True, also returns them in structured order
             shuffle: If `return_all` sets whether the pairs are
                 shuffled before being returned.
-            x_dim_name: x dimension name, defaulted to 'x_osgb'
-            y_dim_name: y dimension name, defaulted to 'y_osgb'
             time_dim_name: time dimension name, defaulted to 'time_utc'
         """
         super().__init__()
         self.source_datapipe = source_datapipe
         self.return_all = return_all
         self.shuffle = shuffle
-        self.x_dim_name = x_dim_name
-        self.y_dim_name = y_dim_name
         self.time_dim_name = time_dim_name
 
     def _yield_all_iter(self, xr_dataset):
+        xr_coord_system, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
+        print(xr_y_dim)
+        print(xr_dataset)
         t_index, x_index = np.meshgrid(
             np.arange(len(xr_dataset[self.time_dim_name])),
-            np.arange(len(xr_dataset[self.x_dim_name])),
+            np.arange(len(xr_dataset[xr_x_dim])),
         )
 
         index_pairs = np.stack((t_index.ravel(), x_index.ravel())).T
@@ -60,8 +60,9 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
         for t_index, loc_index in index_pairs:
             t0 = xr_dataset[self.time_dim_name][t_index].values
             location = Location(
-                x=xr_dataset[self.x_dim_name][loc_index].values,
-                y=xr_dataset[self.y_dim_name][loc_index].values,
+                coordinate_system=xr_coord_system,
+                x=xr_dataset[xr_x_dim][loc_index].values,
+                y=xr_dataset[xr_y_dim][loc_index].values,
             )
 
             # for pv
@@ -72,15 +73,21 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
             if "gsp_id" in xr_dataset.coords.keys():
                 location.id = int(xr_dataset["gsp_id"][loc_index].values)
 
+            # for sensor
+            if "station_id" in xr_dataset.coords.keys():
+                location.id = int(xr_dataset["station_id"][loc_index].values)
+
             yield location, t0
 
     def _yield_random_iter(self, xr_dataset):
+        xr_coord_system, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
         while True:
-            location_idx = np.random.randint(0, len(xr_dataset[self.x_dim_name]))
+            location_idx = np.random.randint(0, len(xr_dataset[xr_x_dim]))
 
             location = Location(
-                x=xr_dataset[self.x_dim_name][location_idx].values,
-                y=xr_dataset[self.y_dim_name][location_idx].values,
+                coordinate_system=xr_coord_system,
+                x=xr_dataset[xr_x_dim][location_idx].values,
+                y=xr_dataset[xr_y_dim][location_idx].values,
             )
             if "pv_system_id" in xr_dataset.coords.keys():
                 location.id = int(xr_dataset["pv_system_id"][location_idx].values)
@@ -88,6 +95,10 @@ class LocationT0PickerIterDataPipe(IterDataPipe):
             # for gsp
             if "gsp_id" in xr_dataset.coords.keys():
                 location.id = int(xr_dataset["gsp_id"][location_idx].values)
+
+            # for sensor
+            if "station_id" in xr_dataset.coords.keys():
+                location.id = int(xr_dataset["station_id"][location_idx].values)
 
             t0 = np.random.choice(xr_dataset[self.time_dim_name].values)
 
