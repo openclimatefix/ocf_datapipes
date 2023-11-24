@@ -144,6 +144,7 @@ class UnZipperIterDataPipe(IterDataPipe[T]):
         buffer_size: int = 1000,
         columns_to_skip: Optional[Sequence[int]] = None,
     ):
+        """Create a new instance"""
         if columns_to_skip is None:
             instance_ids = list(range(sequence_length))
         else:
@@ -172,6 +173,8 @@ class _UnZipperIterDataPipe(_ForkerIterDataPipe):
 
     def get_next_element_by_instance(self, instance_id: int):
         r"""
+        Get next element by instance
+
         Note:
             Each element returned from the source datapipe is required to be a sequnce that can
             be subscribed with a column index
