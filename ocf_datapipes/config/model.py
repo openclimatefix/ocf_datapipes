@@ -25,11 +25,11 @@ from pydantic import BaseModel, Field, root_validator, validator
 
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
+    AWOS_VARIABLE_NAMES,
     DEFAULT_N_GSP_PER_EXAMPLE,
     DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
     NWP_VARIABLE_NAMES,
     SAT_VARIABLE_NAMES,
-    AWOS_VARIABLE_NAMES,
 )
 from ocf_datapipes.utils.split import split
 
