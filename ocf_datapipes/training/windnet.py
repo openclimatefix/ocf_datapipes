@@ -161,18 +161,18 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             logger.debug("Combine all the data sources")
             combined_datapipe = MergeNumpyModalities(numpy_modalities)
 
-            if self.block_sat and conf_sat != "":
-                sat_block_func = AddZeroedSatelliteData(self.configuration)
-                combined_datapipe = combined_datapipe.map(sat_block_func)
+            # if self.block_sat and conf_sat != "":
+            #    sat_block_func = AddZeroedSatelliteData(self.configuration)
+            #    combined_datapipe = combined_datapipe.map(sat_block_func)
 
             if self.block_nwp and conf_nwp != "":
                 nwp_block_func = AddZeroedNWPData(self.configuration)
                 combined_datapipe = combined_datapipe.map(nwp_block_func)
 
             logger.info("Filtering out samples with no data")
-            if self.check_satellite_no_zeros:
-                # in production we don't want any nans in the satellite data
-                combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+            # if self.check_satellite_no_zeros:
+            # in production we don't want any nans in the satellite data
+            #    combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
 
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
@@ -215,7 +215,9 @@ def construct_sliced_data_pipeline(
         config_filename,
         block_sat,
         block_nwp,
-        use_sensor=True,
+        block_sensor=False,
+        block_gsp=True,
+        block_pv=True,
         production=production,
     )
 
@@ -303,6 +305,7 @@ def windnet_datapipe(
     end_time: Optional[datetime] = None,
     block_sat: bool = False,
     block_nwp: bool = False,
+    block_sensor: bool = False,
 ) -> IterDataPipe:
     """
     Construct windnet pipeline for the input data config file.
@@ -321,8 +324,11 @@ def windnet_datapipe(
         config_filename,
         start_time,
         end_time,
-        block_sat,
-        block_nwp,
+        block_sat=block_sat,
+        block_nwp=block_nwp,
+        block_sensor=block_sensor,
+        block_gsp=True,
+        block_pv=True,
     )
 
     # Shard after we have the loc-times. These are already shuffled so no need to shuffle again
@@ -402,6 +408,17 @@ if __name__ == "__main__":
         block_nwp=False,
         start_time=datetime(2021, 1, 1),
         end_time=datetime(2022, 1, 2),
+    )
+    batch = next(iter(datapipe))
+    print(batch)
+    batch.to_netcdf("test.nc", engine="h5netcdf")
+    # Load the saved NetCDF files here
+    datapipe = windnet_netcdf_datapipe(
+        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
+        keys=["nwp", "sensor"],
+        filenames=["test.nc"],
+        block_sat=True,
+        block_nwp=False,
     )
     batch = next(iter(datapipe))
     print(batch)
