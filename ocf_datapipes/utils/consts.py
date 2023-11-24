@@ -515,3 +515,32 @@ SAT_STD_DA = _to_data_array(SAT_STD)
 
 RSS_MEAN = _to_data_array(RSS_MEAN)
 RSS_STD = _to_data_array(RSS_STD)
+
+
+AWOS_VARIABLE_NAMES = [
+    "sky_level_4_coverage",
+    "weather_codes",
+    "sky_level_3_coverage",
+    "elevation",
+    "temperature_2m",
+    "dewpoint_2m",
+    "relative_humidity",
+    "wind_direction_deg",
+    "wind_speed_knots",
+    "precipitation_1hr",
+    "pressure_altimeter_inch",
+    "pressure_sea_level_millibar",
+    "visibility_miles",
+    "wind_gust_knots",
+    "sky_level_1_altitude_feet",
+    "sky_level_2_altitude_feet",
+    "sky_level_3_altitude_feet",
+    "sky_level_4_altitude_feet",
+    "ice_accretion_1hr",
+    "ice_accretion_3hr",
+    "ice_accretion_6hr",
+    "peak_wind_gust_knots",
+    "peak_wind_direction_deg",
+    "apparent_temperature_fahrenheit",
+    "snow_depth_inches",
+]

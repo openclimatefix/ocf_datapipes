@@ -27,6 +27,7 @@ class OpenAWOSFromNetCDFIterDataPipe(IterDataPipe):
         super().__init__()
         self.sensor = sensor
         self.filename = self.sensor.sensor_filename
+        self.variables = self.sensor.sensor_variables
 
     def __iter__(self):
         with fsspec.open(self.filename, "rb") as f:
@@ -40,6 +41,6 @@ class OpenAWOSFromNetCDFIterDataPipe(IterDataPipe):
             nan_lat_indicies = nan_lat.nonzero()[0]
             ds = ds.drop_isel(station_id=nan_lat_indicies)
             # Only keep wind speed
-            ds = ds[["wind_speed_knots"]].to_array()
+            ds = ds[self.variables].to_array()
         while True:
             yield ds
