@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, root_validator, validator
 
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
+    AWOS_VARIABLE_NAMES,
     DEFAULT_N_GSP_PER_EXAMPLE,
     DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
     NWP_VARIABLE_NAMES,
@@ -346,6 +347,9 @@ class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDime
         description="The number of extra minutes in the past we should load. Then the recent "
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
+    )
+    sensor_variables: tuple = Field(
+        AWOS_VARIABLE_NAMES, description="the sensor variables that are used"
     )
 
 

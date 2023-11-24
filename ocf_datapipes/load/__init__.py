@@ -6,6 +6,7 @@ from ocf_datapipes.load.nwp.providers.gfs import OpenGFSForecastIterDataPipe as 
 from ocf_datapipes.load.pv.database import OpenPVFromDBIterDataPipe as OpenPVFromDB
 from ocf_datapipes.load.pv.database import OpenPVFromPVSitesDBIterDataPipe as OpenPVFromPVSitesDB
 from ocf_datapipes.load.pv.pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromNetCDF
+from ocf_datapipes.load.sensor.awos import OpenAWOSFromNetCDFIterDataPipe as OpenAWOSFromNetCDF
 
 from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
 from .nwp.nwp import OpenNWPIterDataPipe as OpenNWP

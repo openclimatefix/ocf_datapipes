@@ -1,3 +1,4 @@
+"""Datapipes from TorchData that have been copied in for use with core PyTorch Datapipes"""
 from typing import Iterator, List, Optional, Sequence, Sized, Tuple, TypeVar
 
 from torch.utils.data import IterDataPipe, functional_datapipe
@@ -60,15 +61,19 @@ class ZipperIterDataPipe(IterDataPipe[Tuple[T_co]]):
 @functional_datapipe("repeat")
 class RepeaterIterDataPipe(IterDataPipe[T_co]):
     """
+    Repeater
+
     Repeatedly yield each element of source DataPipe for the specified number of times before
-    moving onto the next element (functional name: ``repeat``). Note that no copy is made in this DataPipe,
+    moving onto the next element (functional name: ``repeat``). Note that no copy is made
+    in this DataPipe,
     the same element is yielded repeatedly.
 
     If you would like to yield the whole DataPipe in order multiple times, use :class:`.Cycler`.
 
     Args:
         source_datapipe: source DataPipe that will be iterated through
-        times: the number of times an element of ``source_datapipe`` will be yielded before moving onto the next element
+        times: the number of times an element of ``source_datapipe`` will be yielded
+        before moving onto the next element
 
     Example:
         >>> from torchdata.datapipes.iter import IterableWrapper
@@ -79,25 +84,32 @@ class RepeaterIterDataPipe(IterDataPipe[T_co]):
     """
 
     def __init__(self, source_datapipe: IterDataPipe[T_co], times: int) -> None:
+        """Init"""
         self.source_datapipe: IterDataPipe[T_co] = source_datapipe
         self.times: int = times
         if times <= 1:
             raise ValueError(f"The number of repetition must be > 1, got {times}")
 
     def __iter__(self) -> Iterator[T_co]:
+        """Iter"""
         for element in self.source_datapipe:
             for _ in range(self.times):
                 yield element
 
     def __len__(self) -> int:
+        """Len"""
         return self.times * len(self.source_datapipe)
 
 
 @functional_datapipe("unzip")
 class UnZipperIterDataPipe(IterDataPipe[T]):
     r"""
-    Takes in a DataPipe of Sequences, unpacks each Sequence, and return the elements in separate DataPipes
-    based on their position in the Sequence (functional name: ``unzip``). The number of instances produced equals to
+    UnZipper Iterator DataPipe
+
+    Takes in a DataPipe of Sequences, unpacks each Sequence, and return the
+    elements in separate DataPipes
+    based on their position in the Sequence (functional name: ``unzip``).
+    The number of instances produced equals to
     the sequence length minus the number of columns to skip.
 
     Note:
@@ -106,11 +118,12 @@ class UnZipperIterDataPipe(IterDataPipe[T]):
 
     Args:
         source_datapipe: Iterable DataPipe with sequences of data
-        sequence_length: Length of the sequence within the source_datapipe. All elements should have the same length.
+        sequence_length: Length of the sequence within the source_datapipe.
+            All elements should have the same length.
         buffer_size: this restricts how far ahead the leading child DataPipe can read relative
             to the slowest child DataPipe. Use -1 for the unlimited buffer.
-        columns_to_skip: optional indices of columns that the DataPipe should skip (each index should be
-            an integer from 0 to sequence_length - 1)
+        columns_to_skip: optional indices of columns that the DataPipe should skip
+            (each index should be an integer from 0 to sequence_length - 1)
 
     Example:
         >>> from torchdata.datapipes.iter import IterableWrapper
@@ -131,6 +144,7 @@ class UnZipperIterDataPipe(IterDataPipe[T]):
         buffer_size: int = 1000,
         columns_to_skip: Optional[Sequence[int]] = None,
     ):
+        """Create a new instance"""
         if columns_to_skip is None:
             instance_ids = list(range(sequence_length))
         else:
@@ -143,18 +157,24 @@ class UnZipperIterDataPipe(IterDataPipe[T]):
                 "the input `sequence_length` and `columns_to_skip`."
             )
 
-        # The implementation basically uses Forker but only yields a specific element within the sequence
+        # The implementation basically uses Forker but only yields a
+        # specific element within the sequence
         container = _UnZipperIterDataPipe(source_datapipe, instance_ids, buffer_size)  # type: ignore[arg-type]
         return [_ChildDataPipe(container, i) for i in range(len(instance_ids))]
 
 
 class _UnZipperIterDataPipe(_ForkerIterDataPipe):
+    """Internal UnZipper"""
+
     def __init__(self, datapipe: IterDataPipe, instance_ids: List[int], buffer_size: int = 1000):
+        """Init"""
         super().__init__(datapipe, len(instance_ids), buffer_size)  # type: ignore[arg-type]
         self.instance_ids = instance_ids
 
     def get_next_element_by_instance(self, instance_id: int):
         r"""
+        Get next element by instance
+
         Note:
             Each element returned from the source datapipe is required to be a sequnce that can
             be subscribed with a column index
@@ -163,10 +183,12 @@ class _UnZipperIterDataPipe(_ForkerIterDataPipe):
             yield return_val[self.instance_ids[instance_id]]
 
     def __getstate__(self):
+        """Get state"""
         state = super().__getstate__()
         return (*state, self.instance_ids)
 
     def __setstate__(self, state):
+        """Set state"""
         super().__setstate__(state[:-1])
         self.instance_ids = state[-1]
 
@@ -174,14 +196,20 @@ class _UnZipperIterDataPipe(_ForkerIterDataPipe):
 @functional_datapipe("set_length")
 class LengthSetterIterDataPipe(IterDataPipe[T_co]):
     r"""
-    Set the length attribute of the DataPipe, which is returned by ``__len__`` (functional name: ``set_length``).
-    This can be used after DataPipes whose final length cannot be known in advance (e.g. ``filter``). If you
+    Length setter
+
+    Set the length attribute of the DataPipe, which is returned by
+    ``__len__`` (functional name: ``set_length``).
+    This can be used after DataPipes whose final length cannot be known in advance
+    (e.g. ``filter``). If you
     know the final length with certainty, you can manually set it, which can then be used by
     DataLoader or other DataPipes.
 
     Note:
-        This DataPipe differs from :class:`.Header` in that this doesn't restrict the number of elements that
-        can be yielded from the DataPipe; this is strictly used for setting an attribute so that it can be used later.
+        This DataPipe differs from :class:`.Header` in that this doesn't restrict
+        the number of elements that
+        can be yielded from the DataPipe; this is strictly used for setting an attribute
+        so that it can be used later.
 
     Args:
         source_datapipe: a DataPipe
@@ -202,23 +230,30 @@ class LengthSetterIterDataPipe(IterDataPipe[T_co]):
     """
 
     def __init__(self, source_datapipe: IterDataPipe[T_co], length: int) -> None:
+        """Init"""
         self.source_datapipe: IterDataPipe[T_co] = source_datapipe
         assert length >= 0
         self.length: int = length
 
     def __iter__(self) -> Iterator[T_co]:
+        """Iter"""
         yield from self.source_datapipe
 
     def __len__(self) -> int:
+        """Len"""
         return self.length
 
 
 @functional_datapipe("header")
 class HeaderIterDataPipe(IterDataPipe[T_co]):
     r"""
-    Yields elements from the source DataPipe from the start, up to the specfied limit (functional name: ``header``).
+    Header Iterator DataPipe
 
-    If you would like to manually set the length of a DataPipe to a certain value; we recommend you to
+    Yields elements from the source DataPipe from the start, up to the specfied
+    limit (functional name: ``header``).
+
+    If you would like to manually set the length of a DataPipe to a certain value;
+     we recommend you to
     use :class:`.LengthSetter`.
 
     Args:
@@ -234,10 +269,12 @@ class HeaderIterDataPipe(IterDataPipe[T_co]):
     """
 
     def __init__(self, source_datapipe: IterDataPipe[T_co], limit: Optional[int] = 10) -> None:
+        """Init"""
         self.source_datapipe: IterDataPipe[T_co] = source_datapipe
         self.limit: Optional[int] = limit
 
     def __iter__(self) -> Iterator[T_co]:
+        """Iter"""
         i: int = 0
         for value in self.source_datapipe:
             i += 1
@@ -247,6 +284,7 @@ class HeaderIterDataPipe(IterDataPipe[T_co]):
                 break
 
     def __len__(self) -> int:
+        """Len"""
         try:
             source_len = len(self.source_datapipe)
             return source_len if self.limit is None else min(source_len, self.limit)
@@ -255,9 +293,4 @@ class HeaderIterDataPipe(IterDataPipe[T_co]):
                 raise TypeError(
                     "The length of this HeaderIterDataPipe cannot be determined."
                 ) from error
-
-            warn(
-                "The length of this HeaderIterDataPipe is inferred to be equal to its limit."
-                "The actual value may be smaller if the actual length of source_datapipe is smaller than the limit."
-            )
             return self.limit

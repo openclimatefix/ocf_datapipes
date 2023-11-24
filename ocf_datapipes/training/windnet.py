@@ -13,16 +13,12 @@ from ocf_datapipes.load import (
     OpenConfiguration,
 )
 from ocf_datapipes.training.common import (
-    AddZeroedNWPData,
-    AddZeroedSatelliteData,
     _get_datapipes_dict,
-    check_nans_in_satellite_data,
     concat_xr_time_utc,
     construct_loctime_pipelines,
     fill_nans_in_arrays,
     fill_nans_in_pv,
     normalize_gsp,
-    normalize_pv,
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
@@ -54,6 +50,10 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     # Roughly double speed to get power
     x = x * 2
     return x
+
+
+def _normalize_wind_speed(x):
+    return (x - 0.0) / 30.0
 
 
 @functional_datapipe("dict_datasets")
@@ -124,16 +124,12 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
         self,
         dataset_dict_dp: IterDataPipe,
         configuration: Configuration,
-        block_sat: bool = False,
-        block_nwp: bool = False,
         check_satellite_no_zeros: bool = False,
     ):
         """Init"""
         super().__init__()
         self.dataset_dict_dp = dataset_dict_dp
         self.configuration = configuration
-        self.block_sat = block_sat
-        self.block_nwp = block_nwp
         self.check_satellite_no_zeros = check_satellite_no_zeros
 
     def __iter__(self):
@@ -142,33 +138,24 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             # Spatially slice, normalize, and convert data to numpy arrays
             numpy_modalities = []
             # Unpack for convenience
-            conf_sat = self.configuration.input_data.satellite
-            conf_nwp = self.configuration.input_data.nwp
             if "nwp" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["nwp"].convert_nwp_to_numpy_batch())
             if "sat" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["sat"].convert_satellite_to_numpy_batch())
             if "pv" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["pv"].convert_pv_to_numpy_batch())
-            numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
+            if "gsp" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
+            if "sensor" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["sensor"].convert_sensor_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
-            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
-                modality_name="gsp"
-            )
-
-            if self.block_sat and conf_sat != "":
-                sat_block_func = AddZeroedSatelliteData(self.configuration)
-                combined_datapipe = combined_datapipe.map(sat_block_func)
-
-            if self.block_nwp and conf_nwp != "":
-                nwp_block_func = AddZeroedNWPData(self.configuration)
-                combined_datapipe = combined_datapipe.map(nwp_block_func)
+            combined_datapipe = MergeNumpyModalities(numpy_modalities)
 
             logger.info("Filtering out samples with no data")
-            if self.check_satellite_no_zeros:
-                # in production we don't want any nans in the satellite data
-                combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+            # if self.check_satellite_no_zeros:
+            # in production we don't want any nans in the satellite data
+            #    combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
 
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
@@ -188,8 +175,6 @@ def construct_sliced_data_pipeline(
     config_filename: str,
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
-    block_sat: bool = False,
-    block_nwp: bool = False,
     production: bool = False,
 ) -> dict:
     """Constructs data pipeline for the input data config file.
@@ -200,17 +185,11 @@ def construct_sliced_data_pipeline(
         config_filename: Path to config file.
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
         production: Whether constucting pipeline for production inference.
     """
 
-    assert not (production and (block_sat or block_nwp))
-
     datapipes_dict = _get_datapipes_dict(
         config_filename,
-        block_sat,
-        block_nwp,
         production=production,
     )
 
@@ -245,43 +224,47 @@ def construct_sliced_data_pipeline(
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
-    if "pv" in datapipes_dict:
-        # Recombine PV arrays - see function doc for further explanation
-        pv_datapipe = (
-            datapipes_dict["pv"].zip_ocf(datapipes_dict["pv_future"]).map(concat_xr_time_utc)
+    if "sensor" in datapipes_dict:
+        # Recombine Sensor arrays - see function doc for further explanation
+        sensor_datapipe = (
+            datapipes_dict["sensor"]
+            .zip_ocf(datapipes_dict["sensor_future"])
+            .map(concat_xr_time_utc)
         )
-        pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
-        pv_datapipe = pv_datapipe.map(fill_nans_in_pv)
+        sensor_datapipe = sensor_datapipe.normalize(normalize_fn=_normalize_wind_speed)
+        sensor_datapipe = sensor_datapipe.map(fill_nans_in_pv)
 
+    finished_dataset_dict = {"config": configuration}
     # GSP always assumed to be in data
-    location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
-    gsp_future_datapipe = datapipes_dict["gsp_future"]
-    gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
-        location_datapipe=location_pipe_copy,
-        roi_height_meters=1,
-        roi_width_meters=1,
-        dim_name="gsp_id",
-    )
+    if "gsp" in datapipes_dict:
+        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
+        gsp_future_datapipe = datapipes_dict["gsp_future"]
+        gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
+            location_datapipe=location_pipe_copy,
+            roi_height_meters=1,
+            roi_width_meters=1,
+            dim_name="gsp_id",
+        )
 
-    gsp_datapipe = datapipes_dict["gsp"]
-    gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
-        location_datapipe=location_pipe,
-        roi_height_meters=1,
-        roi_width_meters=1,
-        dim_name="gsp_id",
-    )
+        gsp_datapipe = datapipes_dict["gsp"]
+        gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
+            location_datapipe=location_pipe,
+            roi_height_meters=1,
+            roi_width_meters=1,
+            dim_name="gsp_id",
+        )
 
-    # Recombine GSP arrays - see function doc for further explanation
-    gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(concat_xr_time_utc)
-    gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
+        # Recombine GSP arrays - see function doc for further explanation
+        gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(concat_xr_time_utc)
+        gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
 
-    finished_dataset_dict = {"gsp": gsp_datapipe, "config": configuration}
+        finished_dataset_dict["gsp"] = gsp_datapipe
     if "nwp" in datapipes_dict:
         finished_dataset_dict["nwp"] = nwp_datapipe
     if "sat" in datapipes_dict:
         finished_dataset_dict["sat"] = sat_datapipe
-    if "pv" in datapipes_dict:
-        finished_dataset_dict["pv"] = pv_datapipe
+    if "sensor" in datapipes_dict:
+        finished_dataset_dict["sensor"] = sensor_datapipe
 
     return finished_dataset_dict
 
@@ -290,8 +273,6 @@ def windnet_datapipe(
     config_filename: str,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
-    block_sat: bool = False,
-    block_nwp: bool = False,
 ) -> IterDataPipe:
     """
     Construct windnet pipeline for the input data config file.
@@ -300,8 +281,6 @@ def windnet_datapipe(
         config_filename: Path to config file.
         start_time: Minimum time at which a sample can be selected.
         end_time: Maximum time at which a sample can be selected.
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
     """
     logger.info("Constructing windnet pipeline")
 
@@ -310,8 +289,6 @@ def windnet_datapipe(
         config_filename,
         start_time,
         end_time,
-        block_sat,
-        block_nwp,
     )
 
     # Shard after we have the loc-times. These are already shuffled so no need to shuffle again
@@ -324,19 +301,17 @@ def windnet_datapipe(
         config_filename,
         location_pipe,
         t0_datapipe,
-        block_sat,
-        block_nwp,
     )
 
     # Save out datapipe to NetCDF
+    keys = list(datapipe_dict.keys())
+    # Remove config
+    keys.remove("config")
 
     # Merge all the datapipes into one
     return DictDatasetIterDataPipe(
-        datapipe_dict["gsp"],
-        datapipe_dict["nwp"],
-        datapipe_dict["sat"],
-        datapipe_dict["pv"],
-        keys=["gsp", "nwp", "sat", "pv"],
+        *[datapipe_dict[k] for k in keys],
+        keys=keys,
     ).map(combine_to_single_dataset)
 
 
@@ -354,8 +329,6 @@ def windnet_netcdf_datapipe(
     config_filename: str,
     keys: List[str],
     filenames: List[str],
-    block_sat: bool = False,
-    block_nwp: bool = False,
 ) -> IterDataPipe:
     """
     Load the saved Datapipes from windnet, and transform to numpy batch
@@ -364,8 +337,6 @@ def windnet_netcdf_datapipe(
         config_filename: Path to config file.
         keys: List of keys to extract from the single NetCDF files
         filenames: List of NetCDF files to load
-        block_sat: Whether to load zeroes for satellite data.
-        block_nwp: Whether to load zeroes for NWP data.
 
     Returns:
         Datapipe that transforms the NetCDF files to numpy batch
@@ -378,8 +349,26 @@ def windnet_netcdf_datapipe(
         filenames=filenames,
         keys=keys,
     ).map(split_dataset_dict_dp)
-    datapipe = datapipe_dict_dp.convert_to_numpy_batch(
-        block_nwp=block_nwp, block_sat=block_sat, configuration=configuration
-    )
+    datapipe = datapipe_dict_dp.convert_to_numpy_batch(configuration=configuration)
 
     return datapipe
+
+
+if __name__ == "__main__":
+    # Load the ECMWF and sensor data here
+    datapipe = windnet_datapipe(
+        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
+        start_time=datetime(2021, 1, 1),
+        end_time=datetime(2022, 1, 2),
+    )
+    batch = next(iter(datapipe))
+    print(batch)
+    batch.to_netcdf("test.nc", engine="h5netcdf")
+    # Load the saved NetCDF files here
+    datapipe = windnet_netcdf_datapipe(
+        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
+        keys=["nwp", "sensor"],
+        filenames=["test.nc"],
+    )
+    batch = next(iter(datapipe))
+    print(batch)
