@@ -344,12 +344,14 @@ def windnet_datapipe(
     )
 
     # Save out datapipe to NetCDF
+    keys = list(datapipe_dict.keys())
+    # Remove config
+    keys.remove("config")
 
     # Merge all the datapipes into one
     return DictDatasetIterDataPipe(
-        datapipe_dict["nwp"],
-        datapipe_dict["sensor"],
-        keys=["nwp", "sensor"],
+        *[datapipe_dict[k] for k in keys],
+        keys=keys,
     ).map(combine_to_single_dataset)
 
 
