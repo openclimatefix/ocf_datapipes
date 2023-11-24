@@ -14,9 +14,7 @@ from ocf_datapipes.load import (
 )
 from ocf_datapipes.training.common import (
     AddZeroedNWPData,
-    AddZeroedSatelliteData,
     _get_datapipes_dict,
-    check_nans_in_satellite_data,
     concat_xr_time_utc,
     construct_loctime_pipelines,
     fill_nans_in_arrays,
