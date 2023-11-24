@@ -10,6 +10,7 @@ from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
+    OpenAWOSFromNetCDF,
     OpenConfiguration,
     OpenGSP,
     OpenGSPFromDatabase,
@@ -18,7 +19,6 @@ from ocf_datapipes.load import (
     OpenPVFromPVSitesDB,
     OpenSatellite,
     OpenTopography,
-    OpenAWOSFromNetCDF,
 )
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
