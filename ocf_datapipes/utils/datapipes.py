@@ -80,17 +80,20 @@ class RepeaterIterDataPipe(IterDataPipe[T_co]):
     """
 
     def __init__(self, source_datapipe: IterDataPipe[T_co], times: int) -> None:
+        """Init"""
         self.source_datapipe: IterDataPipe[T_co] = source_datapipe
         self.times: int = times
         if times <= 1:
             raise ValueError(f"The number of repetition must be > 1, got {times}")
 
     def __iter__(self) -> Iterator[T_co]:
+        """Iter"""
         for element in self.source_datapipe:
             for _ in range(self.times):
                 yield element
 
     def __len__(self) -> int:
+        """Len"""
         return self.times * len(self.source_datapipe)
 
 
@@ -150,7 +153,10 @@ class UnZipperIterDataPipe(IterDataPipe[T]):
 
 
 class _UnZipperIterDataPipe(_ForkerIterDataPipe):
+    """Internal UnZipper"""
+
     def __init__(self, datapipe: IterDataPipe, instance_ids: List[int], buffer_size: int = 1000):
+        """Init"""
         super().__init__(datapipe, len(instance_ids), buffer_size)  # type: ignore[arg-type]
         self.instance_ids = instance_ids
 
@@ -164,10 +170,12 @@ class _UnZipperIterDataPipe(_ForkerIterDataPipe):
             yield return_val[self.instance_ids[instance_id]]
 
     def __getstate__(self):
+        """Get state"""
         state = super().__getstate__()
         return (*state, self.instance_ids)
 
     def __setstate__(self, state):
+        """Set state"""
         super().__setstate__(state[:-1])
         self.instance_ids = state[-1]
 
@@ -203,14 +211,17 @@ class LengthSetterIterDataPipe(IterDataPipe[T_co]):
     """
 
     def __init__(self, source_datapipe: IterDataPipe[T_co], length: int) -> None:
+        """Init"""
         self.source_datapipe: IterDataPipe[T_co] = source_datapipe
         assert length >= 0
         self.length: int = length
 
     def __iter__(self) -> Iterator[T_co]:
+        """Iter"""
         yield from self.source_datapipe
 
     def __len__(self) -> int:
+        """Len"""
         return self.length
 
 
@@ -235,10 +246,12 @@ class HeaderIterDataPipe(IterDataPipe[T_co]):
     """
 
     def __init__(self, source_datapipe: IterDataPipe[T_co], limit: Optional[int] = 10) -> None:
+        """Init"""
         self.source_datapipe: IterDataPipe[T_co] = source_datapipe
         self.limit: Optional[int] = limit
 
     def __iter__(self) -> Iterator[T_co]:
+        """Iter"""
         i: int = 0
         for value in self.source_datapipe:
             i += 1
@@ -248,6 +261,7 @@ class HeaderIterDataPipe(IterDataPipe[T_co]):
                 break
 
     def __len__(self) -> int:
+        """Len"""
         try:
             source_len = len(self.source_datapipe)
             return source_len if self.limit is None else min(source_len, self.limit)

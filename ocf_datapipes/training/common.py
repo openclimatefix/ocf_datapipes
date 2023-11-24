@@ -465,9 +465,9 @@ def _get_datapipes_dict(
         configuration_filename=config_filename,
         use_gsp=(not production),
         use_pv=(not production),
-        use_sat=True,  # Only loaded if we aren't replacing them with zeros
+        use_sat=True,
         use_hrv=True,
-        use_nwp=True,  # Only loaded if we aren't replacing them with zeros
+        use_nwp=True,
         use_topo=True,
         use_sensor=True,
         production=production,
@@ -599,7 +599,8 @@ def slice_datapipes_by_time(
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
     if "sat" in datapipes_dict or "hrv" in datapipes_dict:
         sat_and_hrv_dropout_kwargs = dict(
-            # Satellite is either 30 minutes or 60 minutes delayed in production. Match during training
+            # Satellite is either 30 minutes or 60 minutes delayed in production.
+            # Match during training
             dropout_timedeltas=[minutes(-60), minutes(-30)],
             dropout_frac=0 if production else 1.0,
         )
@@ -698,7 +699,8 @@ def slice_datapipes_by_time(
             dropout_time_datapipe=pv_dropout_time_datapipe,
         )
 
-        # Apply extra PV dropout using different delays per system and droping out entire PV systems
+        # Apply extra PV dropout using different delays per system and droping out
+        # entire PV systems
         # independently
         if not production:
             datapipes_dict["pv"].apply_pv_dropout(

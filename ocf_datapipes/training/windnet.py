@@ -138,8 +138,6 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             # Spatially slice, normalize, and convert data to numpy arrays
             numpy_modalities = []
             # Unpack for convenience
-            conf_sat = self.configuration.input_data.satellite
-            conf_nwp = self.configuration.input_data.nwp
             if "nwp" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["nwp"].convert_nwp_to_numpy_batch())
             if "sat" in datapipes_dict:
