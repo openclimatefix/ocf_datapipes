@@ -59,13 +59,29 @@ def open_and_return_datapipes(
 
     # Check which modalities to use
     conf_in = configuration.input_data
-    use_nwp = use_nwp and (conf_in.nwp.nwp_zarr_path != "")
-    use_pv = use_pv and (conf_in.pv.pv_files_groups[0].pv_filename != "")
-    use_sat = use_sat and (conf_in.satellite.satellite_zarr_path != "")
-    use_hrv = use_hrv and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
-    use_topo = use_topo and (conf_in.topographic.topographic_filename != "")
-    use_gsp = use_gsp and (conf_in.gsp.gsp_zarr_path != "")
-    use_sensor = use_sensor and (conf_in.sensor.sensor_filename != "")
+    use_nwp = use_nwp and (conf_in.nwp is not None) and (conf_in.nwp.nwp_zarr_path != "")
+    use_pv = (
+        use_pv and (conf_in.pv is not None) and (conf_in.pv.pv_files_groups[0].pv_filename != "")
+    )
+    use_sat = (
+        use_sat
+        and (conf_in.satellite is not None)
+        and (conf_in.satellite.satellite_zarr_path != "")
+    )
+    use_hrv = (
+        use_hrv
+        and (conf_in.hrvsatellite is not None)
+        and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
+    )
+    use_topo = (
+        use_topo
+        and (conf_in.topographic is not None)
+        and (conf_in.topographic.topographic_filename != "")
+    )
+    use_gsp = use_gsp and (conf_in.gsp is not None) and (conf_in.gsp.gsp_zarr_path != "")
+    use_sensor = (
+        use_sensor and (conf_in.sensor is not None) and (conf_in.sensor.sensor_filename != "")
+    )
 
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
