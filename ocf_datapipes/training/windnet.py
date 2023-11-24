@@ -213,9 +213,6 @@ def construct_sliced_data_pipeline(
         config_filename,
         block_sat,
         block_nwp,
-        block_sensor=False,
-        block_gsp=True,
-        block_pv=True,
         production=production,
     )
 
@@ -252,13 +249,13 @@ def construct_sliced_data_pipeline(
 
     if "sensor" in datapipes_dict:
         # Recombine Sensor arrays - see function doc for further explanation
-        pv_datapipe = (
+        sensor_datapipe = (
             datapipes_dict["sensor"]
             .zip_ocf(datapipes_dict["sensor_future"])
             .map(concat_xr_time_utc)
         )
-        pv_datapipe = pv_datapipe.normalize(normalize_fn=_normalize_wind_speed)
-        pv_datapipe = pv_datapipe.map(fill_nans_in_pv)
+        sensor_datapipe = sensor_datapipe.normalize(normalize_fn=_normalize_wind_speed)
+        sensor_datapipe = sensor_datapipe.map(fill_nans_in_pv)
 
     finished_dataset_dict = {"config": configuration}
     # GSP always assumed to be in data
@@ -289,10 +286,8 @@ def construct_sliced_data_pipeline(
         finished_dataset_dict["nwp"] = nwp_datapipe
     if "sat" in datapipes_dict:
         finished_dataset_dict["sat"] = sat_datapipe
-    if "pv" in datapipes_dict:
-        finished_dataset_dict["pv"] = pv_datapipe
     if "sensor" in datapipes_dict:
-        finished_dataset_dict["sensor"] = pv_datapipe
+        finished_dataset_dict["sensor"] = sensor_datapipe
 
     return finished_dataset_dict
 
@@ -303,8 +298,6 @@ def windnet_datapipe(
     end_time: Optional[datetime] = None,
     block_sat: bool = False,
     block_nwp: bool = False,
-    block_sensor: bool = False,
-    block_pv: bool = True,
 ) -> IterDataPipe:
     """
     Construct windnet pipeline for the input data config file.
@@ -325,9 +318,6 @@ def windnet_datapipe(
         end_time,
         block_sat=block_sat,
         block_nwp=block_nwp,
-        block_sensor=block_sensor,
-        block_gsp=True,
-        block_pv=block_pv,
     )
 
     # Shard after we have the loc-times. These are already shuffled so no need to shuffle again

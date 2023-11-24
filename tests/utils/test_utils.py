@@ -13,15 +13,13 @@ def test_searchsorted():
     assert searchsorted(ys_r, 2.1, assume_ascending=False) == 3
 
 
-def test_combine_uncombine_from_single_dataset(configuration_filename):
+def test_combine_uncombine_from_single_dataset(wind_configuration_filename):
     start_time = datetime(1900, 1, 1)
     end_time = datetime(2050, 1, 1)
     dp = windnet_datapipe(
-        configuration_filename,
+        wind_configuration_filename,
         start_time=start_time,
         end_time=end_time,
-        block_sensor=True,
-        block_pv=False,
     )
     dataset: xr.Dataset = next(iter(dp))
     assert isinstance(dataset, xr.Dataset)

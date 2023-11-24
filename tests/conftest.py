@@ -598,6 +598,15 @@ def configuration():
 
 
 @pytest.fixture()
+def configuration_no_gsp():
+    filename = os.path.join(
+        os.path.dirname(ocf_datapipes.__file__), "../tests/config/wind_test.yaml"
+    )
+
+    return load_yaml_configuration(filename=filename)
+
+
+@pytest.fixture()
 def configuration_with_pv_netcdf(pv_netcdf_file):
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
 
@@ -650,4 +659,12 @@ def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
 @pytest.fixture()
 def configuration_filename():
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+    yield filename
+
+
+@pytest.fixture()
+def wind_configuration_filename():
+    filename = os.path.join(
+        os.path.dirname(ocf_datapipes.__file__), "../tests/config/wind_test.yaml"
+    )
     yield filename
