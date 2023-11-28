@@ -34,7 +34,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
                 i.e. OSGB for UKV, Lat/Lon for ICON EU, Icoshedral grid for ICON Global
         """
         self.zarr_path = zarr_path
-        if provider.lower() == "ukv" or provider == "UKMetOffice":
+        if provider.lower() == "ukv":
             self.open_nwp = open_ukv
         elif provider.lower() == "icon-eu":
             self.open_nwp = open_icon_eu

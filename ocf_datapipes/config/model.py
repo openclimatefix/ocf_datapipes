@@ -14,7 +14,7 @@ are used to validate the values of the data itself.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 import git
 import numpy as np
@@ -30,6 +30,7 @@ from ocf_datapipes.utils.consts import (
     DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
     NWP_VARIABLE_NAMES,
     SAT_VARIABLE_NAMES,
+    NWP_PROVIDERS,
 )
 from ocf_datapipes.utils.split import split
 
@@ -521,12 +522,35 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
     @validator("nwp_provider")
     def validate_nwp_provider(cls, v):
         """Validate 'nwp_provider'"""
-        nwp_providers = ["UKMetOffice", "GFS"]
-        if v not in nwp_providers:
+        
+        if v not in NWP_PROVIDERS:
             message = f"NWP provider {v} is not in {nwp_providers}"
             logger.warning(message)
             assert Exception(message)
         return v
+
+    
+class MultiNWP(Base):
+    """Configuration for multiple NWPs"""
+    __root__: Dict[str, NWP]
+    
+    def __getattr__(self, item):
+        return self.__root__[item]
+    
+    def __getitem__(self, item):
+        return self.__root__[item]
+    
+    def __len__(self):
+        return len(self.__root__)
+    
+    def __iter__(self):
+        return iter(self.__root__)
+    
+    def keys(self):
+        return self.__root__.keys()
+    
+    def items(self):
+        return self.__root__.items()
 
 
 class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
@@ -609,7 +633,7 @@ class InputData(Base):
     satellite: Optional[Satellite] = None
     hrvsatellite: Optional[HRVSatellite] = None
     opticalflow: Optional[OpticalFlow] = None
-    nwp: Optional[NWP] = None
+    nwp: Optional[MultiNWP] = None
     gsp: Optional[GSP] = None
     topographic: Optional[Topographic] = None
     sun: Optional[Sun] = None
@@ -653,7 +677,7 @@ class InputData(Base):
             "pv",
             "hrvsatellite",
             "satellite",
-            "nwp",
+            #"nwp", # nwp is treated separately
             "gsp",
             "topographic",
             "sun",
@@ -672,6 +696,14 @@ class InputData(Base):
 
             if values[data_source_name].history_minutes is None:
                 values[data_source_name].history_minutes = values["default_history_minutes"]
+                
+        if values["nwp"] is not None:
+            for k in values["nwp"].keys():
+                if values["nwp"][k].forecast_minutes is None:
+                    values["nwp"][k].forecast_minutes = values["default_forecast_minutes"]
+
+                if values["nwp"][k].history_minutes is None:
+                    values["nwp"][k].history_minutes = values["default_history_minutes"]
 
         return values
 
@@ -685,7 +717,7 @@ class InputData(Base):
             pv=PV(),
             satellite=Satellite(),
             hrvsatellite=HRVSatellite(),
-            nwp=NWP(),
+            nwp=dict(UKV=NWP()),
             gsp=GSP(),
             topographic=Topographic(),
             sun=Sun(),

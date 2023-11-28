@@ -16,6 +16,8 @@ X_OSGB_STD = 622805.44
 DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE = 2048
 DEFAULT_N_GSP_PER_EXAMPLE = 32
 
+NWP_PROVIDERS = ["ukv", "gfs", "icon-eu", "icon-global", "ecmwf"]
+
 # "Safe" default NWP variable names:
 NWP_VARIABLE_NAMES = (
     "t",
