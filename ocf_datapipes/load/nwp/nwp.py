@@ -53,31 +53,3 @@ class OpenNWPIterDataPipe(IterDataPipe):
         nwp = self.open_nwp(self.zarr_path)
         while True:
             yield nwp
-
-
-@functional_datapipe("open_latest_nwp")
-class OpenLatestNWPDataPipe(IterDataPipe):
-    """Yields the most recent observation from NWP data"""
-
-    def __init__(self, base_nwp_datapipe: OpenNWPIterDataPipe) -> None:
-        """Selects most recent observation from NWP data
-
-        Args:
-            base_nwp_datapipe (OpenNWPIterDataPipe): Base DataPipe, opening zarr
-        """
-        self.base_nwp_datapipe = base_nwp_datapipe
-
-    def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        """Selects most recent entry
-
-        Returns:
-            Union[xr.DataArray, xr.Dataset]: NWP slice
-
-        Yields:
-            Iterator[Union[xr.DataArray, xr.Dataset]]: Iterator of most recent NWP data
-        """
-        for nwp_data in self.base_nwp_datapipe:
-            _nwp = nwp_data.sel(init_time_utc=nwp_data.init_time_utc.max())
-            time = _nwp.init_time_utc.values
-            _log.debug(f"Selected most recent NWP observation, at: {time}")
-            yield _nwp
