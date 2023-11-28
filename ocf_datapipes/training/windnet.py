@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
 import xarray as xr
+import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
 
@@ -45,15 +46,40 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     Returns:
         Rescaled wind speed to MWh roughly
     """
+    # m/s to kw (roughly) for each 1 m/s, starting from 0 to 30 m/s
+    wind_speed_to_power = np.array(
+        [
+            0,
+            0,
+            0,
+            0,
+            66,
+            171,
+            352,
+            623,
+            1002,
+            1497,
+            2005,
+            2246,
+            2296,
+        ]
+    )
     # Convert knots to m/s
     x = x * 0.514444
     # Roughly double speed to get power
-    x = x * 2
+    # x = x * 2
+    # convert to kw bsed on the wind_speed_to_power,
+    # Do this by interpolating between the two nearest values in the list
+    # Do this by rounding the wind speed to the nearest integer
+    x = x.round()
+    x = x.astype(int)
+    # Convert to power for each element
+    x = x.map(lambda x: wind_speed_to_power[x] if x < len(wind_speed_to_power) else 2296)
     return x
 
 
 def _normalize_wind_speed(x):
-    return (x - 0.0) / 30.0
+    return x / 2296.0
 
 
 @functional_datapipe("dict_datasets")
@@ -231,6 +257,7 @@ def construct_sliced_data_pipeline(
             .zip_ocf(datapipes_dict["sensor_future"])
             .map(concat_xr_time_utc)
         )
+        sensor_datapipe = sensor_datapipe.map(scale_wind_speed_to_power)
         sensor_datapipe = sensor_datapipe.normalize(normalize_fn=_normalize_wind_speed)
         sensor_datapipe = sensor_datapipe.map(fill_nans_in_pv)
 
