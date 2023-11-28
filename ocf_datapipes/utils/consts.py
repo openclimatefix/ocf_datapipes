@@ -144,20 +144,8 @@ class BatchKey(Enum):
     hrvsatellite_time_utc_fourier_t0 = auto()
 
     # -------------- NWP --------------------------------------------
-    nwp = auto()  # shape: (batch_size, target_time_utc, channel, y_osgb, x_osgb)
-    nwp_t0_idx = auto()  # shape: scalar
-    nwp_target_time_utc = auto()  # shape: (batch_size, target_time_utc)
-    nwp_init_time_utc = auto()  # shape: (batch_size, target_time_utc)
-    nwp_step = auto()  # Int. Number of hours. shape: (batch_size, target_time_utc)
-    nwp_y_osgb = auto()  # shape: (batch_size, y_osgb)
-    nwp_x_osgb = auto()  # shape: (batch_size, x_osgb)
-    nwp_channel_names = auto()  # shape: (channel,)
-
-    # NWP Fourier features:
-    nwp_target_time_utc_fourier = auto()
-    nwp_init_time_utc_fourier = auto()
-    nwp_y_osgb_fourier = auto()
-    nwp_x_osgb_fourier = auto()
+    nwp = auto()  # See `MultiNWPNumpyBatch`
+    
 
     # -------------- PV ---------------------------------------------
     pv = auto()  # shape: (batch_size, time, n_pv_systems)
@@ -218,8 +206,6 @@ class BatchKey(Enum):
     gsp_solar_elevation = auto()
     pv_solar_azimuth = auto()
     pv_solar_elevation = auto()
-    nwp_target_time_solar_azimuth = auto()
-    nwp_target_time_solar_elevation = auto()
 
     # Solar position at the centre of the HRV image at t0
     # (from `power_perceiver.np_batch_processor.SunPosition`)
@@ -289,9 +275,36 @@ class BatchKey(Enum):
     sensor_time_utc_fourier_t0 = (
         auto()
     )  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
+    
+    
+class NWPBatchKey(Enum):
+    """The names of the different elements of each NWP batch.
+
+    This is also where we document the exact shape of each element.
+    """
+
+    # -------------- NWP --------------------------------------------
+    nwp = auto()  # shape: (batch_size, target_time_utc, channel, y_osgb, x_osgb)
+    t0_idx = auto()  # shape: scalar
+    target_time_utc = auto()  # shape: (batch_size, target_time_utc)
+    time_utc = auto()  # shape: (batch_size, target_time_utc)
+    step = auto()  # Int. Number of hours. shape: (batch_size, target_time_utc)
+    y_osgb = auto()  # shape: (batch_size, y_osgb)
+    x_osgb = auto()  # shape: (batch_size, x_osgb)
+    channel_names = auto()  # shape: (channel,)
+
+    # NWP Fourier features:
+    target_time_utc_fourier = auto()
+    init_time_utc_fourier = auto()
+    y_osgb_fourier = auto()
+    x_osgb_fourier = auto()
+    target_time_solar_azimuth = auto()
+    target_time_solar_elevation = auto()
 
 
-NumpyBatch = dict[BatchKey, np.ndarray]
+MultiNWPNumpyBatch = dict[str, dict[NWPBatchKey, np.ndarray]]
+
+NumpyBatch = dict[BatchKey, Union[np.ndarray, MultiNWPNumpyBatch]]
 
 XarrayBatch = dict[BatchKey, Union[xr.DataArray, xr.Dataset]]
 
