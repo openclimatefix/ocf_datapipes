@@ -521,8 +521,15 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
     @validator("nwp_provider")
     def validate_nwp_provider(cls, v):
         """Validate 'nwp_provider'"""
-        nwp_providers = ["UKMetOffice", "GFS"]
-        if v not in nwp_providers:
+        nwp_providers = [
+            "ukmetoffice",
+            "gfs",
+            "ukv",
+            "icon-eu",
+            "icon-global",
+            "ecmwf",
+        ]
+        if v.lower() not in nwp_providers:
             message = f"NWP provider {v} is not in {nwp_providers}"
             logger.warning(message)
             assert Exception(message)
