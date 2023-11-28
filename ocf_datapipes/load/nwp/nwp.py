@@ -30,8 +30,6 @@ class OpenNWPIterDataPipe(IterDataPipe):
         Args:
             zarr_path: Path to the Zarr file
             provider: NWP provider
-            convert_to_lat_lon: Whether to convert to lat/lon, or leave in native format
-                i.e. OSGB for UKV, Lat/Lon for ICON EU, Icoshedral grid for ICON Global
         """
         self.zarr_path = zarr_path
         if provider.lower() == "ukv":
