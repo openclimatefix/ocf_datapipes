@@ -74,7 +74,11 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     x = x.round()
     x = x.astype(int)
     # Convert to power for each element
-    x = x.map(lambda x: wind_speed_to_power[x] if x < len(wind_speed_to_power) else 2296)
+    x = xr.apply_ufunc(
+        lambda x: wind_speed_to_power[x] if x < len(wind_speed_to_power) else 2296,
+        x,
+        vectorize=False,
+    )
     return x
 
 
