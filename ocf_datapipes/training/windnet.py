@@ -67,23 +67,23 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     # Convert knots to m/s
     x = x * 0.514444
     # Roughly double speed to get power
-    # x = x * 2
+    x = x * 2
     # convert to kw bsed on the wind_speed_to_power,
     # Do this by interpolating between the two nearest values in the list
     # Do this by rounding the wind speed to the nearest integer
-    x = x.round()
-    x = x.astype(int)
+    # x = x.round()
+    # x = x.astype(int)
     # Convert to power for each element
-    x = xr.apply_ufunc(
-        lambda x: wind_speed_to_power[x] if x < len(wind_speed_to_power) else 2296,
-        x,
-        vectorize=False,
-    )
+    # x = xr.apply_ufunc(
+    #    lambda x: wind_speed_to_power[x] if x < len(wind_speed_to_power) else 2296,
+    #    x,
+    #    vectorize=False,
+    # )
     return x
 
 
 def _normalize_wind_speed(x):
-    return x / 2296.0
+    return x / 100.0
 
 
 @functional_datapipe("dict_datasets")
