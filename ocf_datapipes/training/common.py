@@ -59,7 +59,12 @@ def open_and_return_datapipes(
 
     # Check which modalities to use
     conf_in = configuration.input_data
-    use_nwp = use_nwp and (conf_in.nwp is not None) and (conf_in.nwp.nwp_zarr_path != "")
+    use_nwp = (
+        use_nwp 
+        and (conf_in.nwp is not None) 
+        and len(conf_in.nwp)!=0 
+        and (conf_in.nwp[0].nwp_zarr_path != "")
+    )
     use_pv = (
         use_pv and (conf_in.pv is not None) and (conf_in.pv.pv_files_groups[0].pv_filename != "")
     )
@@ -108,19 +113,19 @@ def open_and_return_datapipes(
     # Load NWP data
     if use_nwp:
         logger.debug("Opening NWP Data")
-        nwp_datapipe = (
-            OpenNWP(
-                configuration.input_data.nwp.nwp_zarr_path,
-                provider=configuration.input_data.nwp.nwp_provider,
+        used_datapipes["nwp"]  = {}
+        for nwp_source, nwp_conf in conf_in.nwp.items():
+            used_datapipes["nwp"][nwp_source] = (
+                OpenNWP(
+                    nwp_conf.nwp_zarr_path,
+                    provider=nwp_conf.nwp_provider,
+                )
+                .select_channels(nwp_conf.nwp_channels)
+                .add_t0_idx_and_sample_period_duration(
+                    sample_period_duration=timedelta(hours=1),
+                    history_duration=timedelta(minutes=nwp_conf.history_minutes),
+                )
             )
-            .select_channels(configuration.input_data.nwp.nwp_channels)
-            .add_t0_idx_and_sample_period_duration(
-                sample_period_duration=timedelta(hours=1),
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-            )
-        )
-
-        used_datapipes["nwp"] = nwp_datapipe
 
     if use_sat:
         logger.debug("Opening Satellite Data")
@@ -405,15 +410,24 @@ def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
     return x.fillna(-1)
 
 
+def _fill_nans_in_arrays(batch: dict):
+    for k, v in batch.items():
+        if isinstance(v, np.ndarray):
+            np.nan_to_num(v, copy=False, nan=0.0)
+        # Recursion is included to reach NWP arrays in subdict
+        elif isinstance(v, dict):
+            _fill_nans_in_arrays(v)
+
+
 def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
     """Fills all NaN values in each np.ndarray in the batch dictionary with zeros.
 
     Operation is performed in-place on the batch.
     """
     logger.info("Filling Nans with zeros")
-    for k, v in batch.items():
-        if isinstance(v, np.ndarray):
-            np.nan_to_num(v, copy=False, nan=0.0)
+    # This function is wrapped to avoid the logger info being duplicated on recursion
+    # Filling is done in-place
+    _fill_nans_in_arrays(batch)
     return batch
 
 
@@ -954,17 +968,26 @@ def create_t0_and_loc_datapipes(
             continue
 
         elif key == "nwp":
-            datapipes_dict["nwp"], datapipe_copy = datapipes_dict["nwp"].fork(2, buffer_size=5)
+            
+            for nwp_key in datapipes_dict["nwp"].keys():
+            
+                # NWPs are nested since there can be multiple NWP sources
+                datapipes_dict["nwp"][nwp_key], datapipe_copy = (
+                    datapipes_dict["nwp"][nwp_key].fork(2, buffer_size=5)
+                )
+                
+                # Different config setting per NWP source
+                nwp_conf = configuration.input_data.nwp[nwp_key]
 
-            # NWP is a forecast product so gets its own contiguous function
-            time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-                max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
-                max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
-                time_dim="init_time_utc",
-            )
+                # NWP is a forecast product so gets its own contiguous function
+                time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
+                    history_duration=timedelta(minutes=nwp_conf.history_minutes),
+                    max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
+                    max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
+                    time_dim="init_time_utc",
+                )
 
-            contiguous_time_datapipes.append(time_periods)
+                contiguous_time_datapipes.append(time_periods)
 
         else:
             if key == "sat":

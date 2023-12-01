@@ -140,11 +140,11 @@ NWP_VARIABLE_NAMES = NWPStatDict(
     ukv=UKV_VARIABLE_NAMES,
     gfs=GFS_VARIABLE_NAMES,
 )
-NWP_STD = NWPStatDict(
+NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
     gfs=GFS_STD,
 )
-NWP_MEAN = NWPStatDict(
+NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
     gfs=GFS_MEAN
 )
