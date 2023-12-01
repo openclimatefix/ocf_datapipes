@@ -1,6 +1,6 @@
 """useful global constants"""
 from .batches import (
-    BatchKey, NWPBatchKey, NumpyBatch, XarrayBatch
+    NWPBatchKey, BatchKey, NWPNumpyBatch, NumpyBatch, XarrayBatch
 )
 from .location import Location
 from .data_vars import (
