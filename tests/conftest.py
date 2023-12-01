@@ -1,7 +1,6 @@
 import os
 import tempfile
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from datetime import datetime, timedelta
 import uuid
 
 
@@ -11,7 +10,6 @@ import pytest
 import xarray as xr
 from nowcasting_datamodel.connection import DatabaseConnection
 from nowcasting_datamodel.models import (
-    Base_Forecast,
     Base_PV,
     GSPYield,
     Location,
@@ -35,66 +33,57 @@ from ocf_datapipes.load import (
     OpenTopography,
 )
 
+_top_test_directory = os.path.dirname(os.path.realpath(__file__))
+@pytest.fixture()
+def top_test_directory():
+    return _top_test_directory
 
 @pytest.fixture()
 def sat_hrv_datapipe():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "hrv_sat_data.zarr"
+    filename = _top_test_directory + "/data/hrv_sat_data.zarr"
     return OpenSatellite(zarr_path=filename)
 
 
 @pytest.fixture()
 def sat_datapipe():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data.zarr"
+    filename = f"{_top_test_directory}/data/sat_data.zarr"
     return OpenSatellite(zarr_path=filename)
 
 
 @pytest.fixture()
 def sat_15_datapipe():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data_15.zarr"
+    filename = f"{_top_test_directory}/data/sat_data_15.zarr"
     return OpenSatellite(zarr_path=filename)
 
 
 @pytest.fixture()
 def topo_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "europe_dem_2km_osgb.tif"
-    )
+    filename = f"{_top_test_directory}/data/europe_dem_2km_osgb.tif"
     return OpenTopography(topo_filename=filename)
 
 
 @pytest.fixture()
 def nwp_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "nwp_data" / "test.zarr"
-    )
+    filename = f"{_top_test_directory}/data/nwp_data/test.zarr"
     return OpenNWP(zarr_path=filename)
 
 
 @pytest.fixture()
 def icon_eu_datapipe():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "icon_eu.zarr"
+    filename = f"{_top_test_directory}/data/icon_eu.zarr"
     return OpenNWP(zarr_path=filename, provider="icon-eu")
 
 
 @pytest.fixture()
 def icon_global_datapipe():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "icon_global.zarr"
+    filename = f"{_top_test_directory}/data/icon_global.zarr"
     return OpenNWP(zarr_path=filename, provider="icon-global")
 
 
 @pytest.fixture()
 def passiv_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "pv" / "passiv" / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "passiv"
-        / "UK_PV_metadata.csv"
-    )
+    filename = f"{_top_test_directory}/data/pv/passiv/test.nc"
+    filename_metadata = f"{_top_test_directory}/data/pv/passiv/UK_PV_metadata.csv"
 
     pv = PV(
         start_datetime=datetime(2018, 1, 1),
@@ -112,22 +101,8 @@ def passiv_datapipe():
 
 @pytest.fixture()
 def pvoutput_datapipe():
-    filename = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "pvoutput"
-        / "test.nc"
-    )
-    filename_metadata = (
-        Path(ocf_datapipes.__file__).parent.parent
-        / "tests"
-        / "data"
-        / "pv"
-        / "pvoutput"
-        / "UK_PV_metadata.csv"
-    )
+    filename = f"{_top_test_directory}/data/pv/pvoutput/test.nc"
+    filename_metadata = f"{_top_test_directory}/data/pv/pvoutput/UK_PV_metadata.csv"
 
     pv = PV(
         start_datetime=datetime(2018, 1, 1),
@@ -145,7 +120,7 @@ def pvoutput_datapipe():
 
 @pytest.fixture()
 def gsp_datapipe():
-    filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "gsp" / "test.zarr"
+    filename = f"{_top_test_directory}/data/gsp/test.zarr"
     return OpenGSP(gsp_pv_power_zarr_path=filename)
 
 
@@ -400,7 +375,7 @@ def pv_netcdf_file(pv_xarray_data):
     ds = pv_xarray_data.to_dataset(dim="pv_system_id")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = tmpdir + "/data.nc"
+        filename = "tmpdir" + "data.nc"
         ds.to_netcdf(filename, engine="h5netcdf")
         yield filename
 
@@ -423,7 +398,7 @@ def pv_parquet_file(pv_xarray_data):
     data_df = data_df.rename(dict(datetime="timestamp", pv_system_id="ss_id"), axis=1)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = tmpdir + "/data.parquet"
+        filename = "tmpdir" + "data.parquet"
         data_df.to_parquet(filename, engine="fastparquet")
         yield filename
 
@@ -482,7 +457,7 @@ def gsp_zarr_file():
     generation_mw = generation_mw.merge(installedcapacity_mwp)
     generation_mw = generation_mw.merge(capacity_mwp)
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = tmpdir + "/gsp.zarr"
+        filename = "tmpdir" + "gsp.zarr"
         generation_mw.to_zarr(filename)
 
         yield filename
@@ -530,7 +505,7 @@ def nwp_data_with_id_filename():
 
     nwp = nwp.to_dataset(name="UKV")
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = tmpdir + "/nwp.netcdf"
+        filename = "tmpdir" + "nwp.netcdf"
 
         nwp.to_netcdf(filename, engine="h5netcdf")
 
@@ -583,7 +558,7 @@ def nwp_gfs_data():
 
     nwp = xr.merge(data_arrays)
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = tmpdir + "/nwp.zarr"
+        filename = "tmpdir" + "/nwp.zarr"
 
         nwp.to_zarr(filename)
 
@@ -592,27 +567,23 @@ def nwp_gfs_data():
 
 @pytest.fixture()
 def configuration():
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
-
+    filename = f"{_top_test_directory}/data/configs/test.yaml"
     return load_yaml_configuration(filename=filename)
 
 
 @pytest.fixture()
 def configuration_no_gsp():
-    filename = os.path.join(
-        os.path.dirname(ocf_datapipes.__file__), "../tests/config/wind_test.yaml"
-    )
-
+    filename = f"{_top_test_directory}/data/configs/wind_test.yaml"
     return load_yaml_configuration(filename=filename)
 
 
 @pytest.fixture()
 def configuration_with_pv_netcdf(pv_netcdf_file):
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+    filename = f"{_top_test_directory}/data/configs/test.yaml"
 
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
-        configuration_filename = tmpdir + "/configuration.yaml"
+        configuration_filename = "tmpdir" + "/configuration.yaml"
         configuration.input_data.pv.pv_files_groups = [
             configuration.input_data.pv.pv_files_groups[0]
         ]
@@ -625,17 +596,16 @@ def configuration_with_pv_netcdf(pv_netcdf_file):
 
 @pytest.fixture()
 def configuration_with_pv_netcdf_and_nwp(pv_netcdf_file, nwp_data_with_id_filename):
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+    filename = f"{_top_test_directory}/data/configs/test.yaml"
 
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
-        configuration_filename = tmpdir + "/configuration.yaml"
+        configuration_filename = "tmpdir" + "/configuration.yaml"
         configuration.input_data.pv.pv_files_groups[0].pv_filename = pv_netcdf_file
         configuration.input_data.pv.pv_files_groups = [
             configuration.input_data.pv.pv_files_groups[0]
         ]
         configuration.input_data.nwp.nwp_zarr_path = nwp_data_with_id_filename
-        configuration.output_data.filepath = tmpdir
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
 
         yield configuration_filename
@@ -643,7 +613,7 @@ def configuration_with_pv_netcdf_and_nwp(pv_netcdf_file, nwp_data_with_id_filena
 
 @pytest.fixture()
 def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
+    filename = f"{_top_test_directory}/data/configs/test.yaml"
 
     configuration = load_yaml_configuration(filename=filename)
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -658,13 +628,9 @@ def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_data_with_id_filename):
 
 @pytest.fixture()
 def configuration_filename():
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
-    yield filename
+    return f"{_top_test_directory}/data/configs/test.yaml"
 
 
 @pytest.fixture()
 def wind_configuration_filename():
-    filename = os.path.join(
-        os.path.dirname(ocf_datapipes.__file__), "../tests/config/wind_test.yaml"
-    )
-    yield filename
+    return f"{_top_test_directory}/data/configs/wind_test.yaml"
