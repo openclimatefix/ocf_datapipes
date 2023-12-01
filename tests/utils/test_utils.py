@@ -1,6 +1,7 @@
 import numpy as np
 from ocf_datapipes.utils.utils import searchsorted
 from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
+# TODO - we should have a specific test data object instead of generating one from windnet
 from ocf_datapipes.training.windnet import windnet_datapipe
 from datetime import datetime
 import xarray as xr

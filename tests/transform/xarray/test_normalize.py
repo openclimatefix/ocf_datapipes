@@ -1,18 +1,18 @@
 import numpy as np
 
 from ocf_datapipes.transform.xarray import Normalize
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD
+from ocf_datapipes.utils.consts import NWP_MEANS, NWP_STDS, RSS_MEAN, RSS_STD
 
 
 def test_normalize_sat(sat_datapipe):
-    sat_datapipe = Normalize(sat_datapipe, mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
+    sat_datapipe = Normalize(sat_datapipe, mean=RSS_MEAN["HRV"], std=RSS_STD["HRV"])
     data = next(iter(sat_datapipe))
     assert np.all(data <= 1.0)
     assert np.all(data >= -1.0)
 
 
 def test_normalize_nwp(nwp_datapipe):
-    nwp_datapipe = Normalize(nwp_datapipe, mean=NWP_MEAN, std=NWP_STD)
+    nwp_datapipe = Normalize(nwp_datapipe, mean=NWP_MEANS["ukv"], std=NWP_STDS["ukv"])
     data = next(iter(nwp_datapipe))
     assert np.all(data.values <= 1.0)
     # TODO Check why this normalization is so negative

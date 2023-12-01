@@ -22,8 +22,8 @@ from ocf_datapipes.training.common import (
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
-    NEW_NWP_MEAN,
-    NEW_NWP_STD,
+    UKV_MEAN,
+    UKV_STD,
     RSS_MEAN,
     RSS_STD,
 )
@@ -211,7 +211,7 @@ def construct_sliced_data_pipeline(
             roi_height_pixels=conf_nwp.nwp_image_size_pixels_height,
             roi_width_pixels=conf_nwp.nwp_image_size_pixels_width,
         )
-        nwp_datapipe = nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
+        nwp_datapipe = nwp_datapipe.normalize(mean=UKV_MEAN, std=UKV_STD)
 
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]

@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field, root_validator, validator
 from ocf_datapipes.utils.consts import (
     AWOS_VARIABLE_NAMES,
     NWP_VARIABLE_NAMES,
-    SAT_VARIABLE_NAMES,
+    RSS_VARIABLE_NAMES,
     NWP_PROVIDERS,
 )
 from ocf_datapipes.utils.split import split
@@ -363,7 +363,7 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
         description="The path or list of paths which hold the satellite zarr.",
     )
     satellite_channels: tuple = Field(
-        SAT_VARIABLE_NAMES[1:], description="the satellite channels that are used"
+        RSS_VARIABLE_NAMES[1:], description="the satellite channels that are used"
     )
     satellite_image_size_pixels_height: int = Field(
         IMAGE_SIZE_PIXELS_FIELD.default // 3,
@@ -409,7 +409,7 @@ class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     )
 
     hrvsatellite_channels: tuple = Field(
-        SAT_VARIABLE_NAMES[0:1], description="the satellite channels that are used"
+        RSS_VARIABLE_NAMES[0:1], description="the satellite channels that are used"
     )
     # HRV is 3x the resolution, so to cover the same area, its 1/3 the meters per pixel and 3
     # time the number of pixels
@@ -491,7 +491,7 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
         ),
     )
     opticalflow_channels: tuple = Field(
-        SAT_VARIABLE_NAMES[1:], description="the satellite channels that are used"
+        RSS_VARIABLE_NAMES[1:], description="the satellite channels that are used"
     )
     opticalflow_source_data_source_class_name: str = Field(
         "SatelliteDataSource",
@@ -511,11 +511,11 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
         "gs://solar-pv-nowcasting-data/NWP/UK_Met_Office/UKV__2018-01_to_2019-12__chunks__variable10__init_time1__step1__x548__y704__.zarr",  # noqa: E501
         description="The path which holds the NWP zarr.",
     )
-    nwp_channels: tuple = Field(NWP_VARIABLE_NAMES, description="the channels used in the nwp data")
+    nwp_channels: tuple = Field(NWP_VARIABLE_NAMES["ukv"], description="the channels used in the nwp data")
     nwp_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
-    nwp_provider: str = Field("UKMetOffice", description="The provider of the NWP data")
+    nwp_provider: str = Field("ukv", description="The provider of the NWP data")
     index_by_id: bool = Field(
         False, description="If the NWP data has an id coordinate, not x and y."
     )
