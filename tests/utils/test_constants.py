@@ -22,8 +22,8 @@ def test_make_valid_location_object_with_osgb_coordinate_system():
     ), "location.coordinate_system value not set correctly"
 
 
-def test_make_valid_location_object_with_lat_lon_coordinate_system():
-    x, y, coordinate_system = 1.2, 1.2, "lat_lon"
+def test_make_valid_location_object_with_lon_lat_coordinate_system():
+    x, y, coordinate_system = 1.2, 1.2, "lon_lat"
     location = Location(x=x, y=y, coordinate_system=coordinate_system)
     assert location.x == x, "location.x value not set correctly"
     assert location.y == y, "location.x value not set correctly"
@@ -46,15 +46,15 @@ def test_make_invalid_location_object_with_invalid_osgb_y():
     assert err.typename == "ValidationError"
 
 
-def test_make_invalid_location_object_with_invalid_lat_lon_x():
-    x, y, coordinate_system = 200, 1.2, "lat_lon"
+def test_make_invalid_location_object_with_invalid_lon_lat_x():
+    x, y, coordinate_system = 200, 1.2, "lon_lat"
     with pytest.raises(ValueError) as err:
         location = Location(x=x, y=y, coordinate_system=coordinate_system)
     assert err.typename == "ValidationError"
 
 
-def test_make_invalid_location_object_with_invalid_lat_lon_y():
-    x, y, coordinate_system = 2.5, -200, "lat_lon"
+def test_make_invalid_location_object_with_invalid_lon_lat_y():
+    x, y, coordinate_system = 2.5, -200, "lon_lat"
     with pytest.raises(ValueError) as err:
         location = Location(x=x, y=y, coordinate_system=coordinate_system)
     assert err.typename == "ValidationError"
