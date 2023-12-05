@@ -3,12 +3,49 @@ Drop PV systems which has only NaN's in a single day
 """
 import logging
 
+import numpy as np
 import xarray as xr
+
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.utils import return_system_indices_which_has_contiguous_nan
-
 logger = logging.getLogger(__name__)
+
+
+def return_system_indices_which_has_contiguous_nan(
+    arr: np.ndarray, check_interval: int = 287
+) -> np.ndarray:
+    """This function return system indices
+
+    Returns indexes of system id's in which if they have
+    contigous 289 NaN's.
+
+    Args:
+        arr: Array of each system pvoutput values for a single day
+        check_interval: time range intervals respectively
+
+    """
+    # Checking the shape of the input array
+    # The array would be a 2d-array which consists of number of (time_utc, pv_system_id)
+    number_of_systems = arr.shape[1]
+
+    system_index_values_to_be_dropped = []
+    for i in range(0, number_of_systems):
+        # For each system id
+        single_system_single_day_pv_values = arr[:, i]
+
+        # This loop checks NaN in every element in the array and if the count of NaN
+        # is equal to defined interval, it stores the index of the pv system
+        mask = np.concatenate(([False], np.isnan(single_system_single_day_pv_values), [False]))
+        if ~mask.any():
+            continue
+        else:
+            idx = np.nonzero(mask[1:] != mask[:-1])[0]
+            max_count = (idx[1::2] - idx[::2]).max()
+
+        if max_count == check_interval:
+            system_index_values_to_be_dropped.append(i)
+
+    return system_index_values_to_be_dropped
 
 
 @functional_datapipe("drop_pv_systems_with_only_nan_in_a_day")
