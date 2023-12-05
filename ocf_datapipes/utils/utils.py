@@ -16,42 +16,6 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 logger = logging.getLogger(__name__)
 
 
-def return_system_indices_which_has_contiguous_nan(
-    arr: np.ndarray, check_interval: int = 287
-) -> np.ndarray:
-    """This function return system indices
-
-    Returns indexes of system id's in which if they have
-    contigous 289 NaN's.
-
-    Args:
-        arr: Array of each system pvoutput values for a single day
-        check_interval: time range intervals respectively
-
-    """
-    # Checking the shape of the input array
-    # The array would be a 2d-array which consists of number of (time_utc, pv_system_id)
-    number_of_systems = arr.shape[1]
-
-    system_index_values_to_be_dropped = []
-    for i in range(0, number_of_systems):
-        # For each system id
-        single_system_single_day_pv_values = arr[:, i]
-
-        # This loop checks NaN in every element in the array and if the count of NaN
-        # is equal to defined interval, it stores the index of the pv system
-        mask = np.concatenate(([False], np.isnan(single_system_single_day_pv_values), [False]))
-        if ~mask.any():
-            continue
-        else:
-            idx = np.nonzero(mask[1:] != mask[:-1])[0]
-            max_count = (idx[1::2] - idx[::2]).max()
-
-        if max_count == check_interval:
-            system_index_values_to_be_dropped.append(i)
-
-    return system_index_values_to_be_dropped
-
 
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     """
@@ -67,19 +31,6 @@ def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     nums = datetimes.astype("datetime64[s]").astype(dtype)
     mask = np.isfinite(datetimes)
     return np.where(mask, nums, np.NaN)
-
-
-def assert_num_dims(tensor, num_expected_dims: int) -> None:
-    """
-    Asserts the tensor shape is correct
-
-    Args:
-        tensor: Tensor to check
-        num_expected_dims: Number of expected dims
-    """
-    assert len(tensor.shape) == num_expected_dims, (
-        f"Expected tensor to have {num_expected_dims} dims." f" Instead, shape={tensor.shape}"
-    )
 
 
 def is_sorted(array: np.ndarray) -> bool:
@@ -135,17 +86,6 @@ def get_filesystem(path: Union[str, Path]) -> fsspec.AbstractFileSystem:
     return fsspec.open(path.parent).fs
 
 
-def sample_row_and_drop_row_from_df(
-    df: pd.DataFrame, rng: np.random.Generator
-) -> tuple[pd.Series, pd.DataFrame]:
-    """Return sampled_row, dataframe_with_row_dropped."""
-    assert not df.empty
-    row_idx = rng.integers(low=0, high=len(df))
-    row = df.iloc[row_idx]
-    df = df.drop(row.name)
-    return row, df
-
-
 def set_fsspec_for_multiprocess() -> None:
     """
     Clear reference to the loop and thread.
@@ -193,46 +133,6 @@ def stack_np_examples_into_batch(np_examples: Sequence[NumpyBatch]) -> NumpyBatc
                 logger.error(e)
                 raise e
     return np_batch
-
-
-def select_time_periods(
-    xr_data: Union[xr.DataArray, xr.Dataset], time_periods: pd.DataFrame, dim_name: str = "time_utc"
-) -> Union[xr.DataArray, xr.Dataset]:
-    """
-    Selects time periods from Xarray object
-
-    Args:
-        xr_data: Xarray object
-        time_periods: Time periods to select
-        dim_name: Dimension name for time
-
-    Returns:
-        The subselected Xarray object
-    """
-    new_xr_data = []
-    for _, row in time_periods.iterrows():
-        start_dt = row["start_dt"]
-        end_dt = row["end_dt"]
-        new_xr_data.append(xr_data.sel({dim_name: slice(start_dt, end_dt)}))
-    return xr.concat(new_xr_data, dim=dim_name)
-
-
-def pandas_periods_to_our_periods_dt(
-    periods: Union[Sequence[pd.Period], pd.PeriodIndex]
-) -> pd.DataFrame:
-    """
-    Converts Pandas periods to new periods
-
-    Args:
-        periods: Pandas periods to convert
-
-    Returns:
-        Converted pandas periods
-    """
-    new_periods = []
-    for period in periods:
-        new_periods.append(dict(start_dt=period.start_time, end_dt=period.end_time))
-    return pd.DataFrame(new_periods)
 
 
 def _trig_transform(values: np.ndarray, period: Union[float, int]) -> Tuple[np.ndarray, np.ndarray]:
