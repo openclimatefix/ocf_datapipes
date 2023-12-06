@@ -3,8 +3,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
-import xarray as xr
 import numpy as np
+import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
 
