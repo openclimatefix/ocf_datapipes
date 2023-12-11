@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
+import numpy as np
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
@@ -20,6 +21,7 @@ from ocf_datapipes.training.common import (
     fill_nans_in_pv,
     normalize_gsp,
     slice_datapipes_by_time,
+    DatapipeKeyForker,
 )
 from ocf_datapipes.utils.consts import (
     NWP_MEANS,
@@ -50,15 +52,46 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     Returns:
         Rescaled wind speed to MWh roughly
     """
+    # m/s to kw (roughly) for each 1 m/s, starting from 0 to 30 m/s
+    wind_speed_to_power = np.array(
+        [
+            0,
+            0,
+            0,
+            0,
+            66,
+            171,
+            352,
+            623,
+            1002,
+            1497,
+            2005,
+            2246,
+            2296,
+        ]
+    )
     # Convert knots to m/s
     x = x * 0.514444
+    # Minimum speed is 0
+    x = x.where(x > 0, 0)
     # Roughly double speed to get power
-    x = x * 2
+    # x = x * 2
+    # convert to kw bsed on the wind_speed_to_power,
+    # Do this by interpolating between the two nearest values in the list
+    # Do this by rounding the wind speed to the nearest integer
+    # x = x.round()
+    # x = x.astype(int)
+    # Convert to power for each element
+    # x = xr.apply_ufunc(
+    #    lambda x: wind_speed_to_power[x] if x < len(wind_speed_to_power) else 2296,
+    #    x,
+    #    vectorize=False,
+    # )
     return x
 
 
 def _normalize_wind_speed(x):
-    return (x - 0.0) / 30.0
+    return x / 30.0
 
 
 @functional_datapipe("dict_datasets")
@@ -232,6 +265,18 @@ def construct_sliced_data_pipeline(
 
     # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
+    
+    
+    # We need a copy of the location datapipe for all keys in fork_keys
+    fork_keys = set(k for k in datapipes_dict.keys())
+    if "nwp" in datapipes_dict: # NWP is nested
+        fork_keys.update(set(f"nwp/{k}" for k in datapipes_dict["nwp"].keys()))
+    
+    # We don't need somes keys even if they are in the data dictionary
+    fork_keys = fork_keys - set(["topo", "nwp", "sensor", "hrv", 'pv_future', 'pv'])
+    
+    # Set up a key-forker for all the data sources we need it for
+    get_loc_datapipe = DatapipeKeyForker(fork_keys, location_pipe)
 
     if "nwp" in datapipes_dict:
         nwp_datapipes_dict = dict()
@@ -240,7 +285,7 @@ def construct_sliced_data_pipeline(
 
             location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
             nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
-                location_pipe_copy,
+                get_loc_datapipe(f"nwp/{nwp_key}"),
                 roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
@@ -252,9 +297,8 @@ def construct_sliced_data_pipeline(
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
 
-        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
-            location_pipe_copy,
+            get_loc_datapipe("sat"),
             roi_height_pixels=conf_sat.satellite_image_size_pixels_height,
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
         )
@@ -267,16 +311,16 @@ def construct_sliced_data_pipeline(
             .zip_ocf(datapipes_dict["sensor_future"])
             .map(concat_xr_time_utc)
         )
+        sensor_datapipe = sensor_datapipe.map(scale_wind_speed_to_power)
         sensor_datapipe = sensor_datapipe.normalize(normalize_fn=_normalize_wind_speed)
         sensor_datapipe = sensor_datapipe.map(fill_nans_in_pv)
 
     finished_dataset_dict = {"config": configuration}
-    # GSP always assumed to be in data
+    
     if "gsp" in datapipes_dict:
-        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         gsp_future_datapipe = datapipes_dict["gsp_future"]
         gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
-            location_datapipe=location_pipe_copy,
+            location_datapipe=get_loc_datapipe("gsp_future"),
             roi_height_meters=1,
             roi_width_meters=1,
             dim_name="gsp_id",
@@ -284,7 +328,7 @@ def construct_sliced_data_pipeline(
 
         gsp_datapipe = datapipes_dict["gsp"]
         gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
-            location_datapipe=location_pipe,
+            location_datapipe=get_loc_datapipe("gsp"),
             roi_height_meters=1,
             roi_width_meters=1,
             dim_name="gsp_id",
@@ -295,6 +339,9 @@ def construct_sliced_data_pipeline(
         gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
 
         finished_dataset_dict["gsp"] = gsp_datapipe
+        
+    get_loc_datapipe.close()
+    
     if "nwp" in datapipes_dict:
         finished_dataset_dict["nwp"] = nwp_datapipes_dict
     if "sat" in datapipes_dict:

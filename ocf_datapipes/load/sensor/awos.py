@@ -27,7 +27,7 @@ class OpenAWOSFromNetCDFIterDataPipe(IterDataPipe):
         super().__init__()
         self.sensor = sensor
         self.filename = self.sensor.sensor_filename
-        self.variables = self.sensor.sensor_variables
+        self.variables = list(self.sensor.sensor_variables)
 
     def __iter__(self):
         with fsspec.open(self.filename, "rb") as f:

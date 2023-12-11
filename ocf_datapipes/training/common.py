@@ -475,7 +475,7 @@ class DatapipeKeyForker:
 
     def close(self):
         """Asserts that the keys have all been used."""
-        assert len(self.keys_left) == 0
+        assert len(self.keys_left) == 0, self.keys_left
 
 
 def _get_datapipes_dict(
