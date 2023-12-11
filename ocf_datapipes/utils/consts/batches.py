@@ -47,7 +47,6 @@ class BatchKey(Enum):
 
     # -------------- NWP --------------------------------------------
     nwp = auto()  # See `MultiNWPNumpyBatch`
-    
 
     # -------------- PV ---------------------------------------------
     pv = auto()  # shape: (batch_size, time, n_pv_systems)
@@ -177,8 +176,8 @@ class BatchKey(Enum):
     sensor_time_utc_fourier_t0 = (
         auto()
     )  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
-    
-    
+
+
 class NWPBatchKey(Enum):
     """The names of the different elements of each NWP batch.
 
@@ -202,6 +201,7 @@ class NWPBatchKey(Enum):
     nwp_x_osgb_fourier = auto()
     nwp_target_time_solar_azimuth = auto()
     nwp_target_time_solar_elevation = auto()
+
 
 NWPNumpyBatch = dict[NWPBatchKey, np.ndarray]
 

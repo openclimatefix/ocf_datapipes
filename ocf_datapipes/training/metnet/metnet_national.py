@@ -20,7 +20,7 @@ from ocf_datapipes.load import (
 )
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")

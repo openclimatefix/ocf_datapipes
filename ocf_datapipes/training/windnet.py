@@ -1,7 +1,7 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import xarray as xr
@@ -14,6 +14,7 @@ from ocf_datapipes.load import (
     OpenConfiguration,
 )
 from ocf_datapipes.training.common import (
+    DatapipeKeyForker,
     _get_datapipes_dict,
     concat_xr_time_utc,
     construct_loctime_pipelines,
@@ -21,7 +22,6 @@ from ocf_datapipes.training.common import (
     fill_nans_in_pv,
     normalize_gsp,
     slice_datapipes_by_time,
-    DatapipeKeyForker,
 )
 from ocf_datapipes.utils.consts import (
     NWP_MEANS,
@@ -30,10 +30,10 @@ from ocf_datapipes.utils.consts import (
     RSS_STD,
 )
 from ocf_datapipes.utils.utils import (
-    combine_to_single_dataset, 
-    uncombine_from_single_dataset,
+    combine_to_single_dataset,
     flatten_nwp_source_dict,
     nest_nwp_source_dict,
+    uncombine_from_single_dataset,
 )
 
 xr.set_options(keep_attrs=True)
@@ -108,17 +108,14 @@ class DictDatasetIterDataPipe(IterDataPipe):
         self.length = None
 
         # Run checks
-        is_okay = all(
-            [isinstance(dp, IterDataPipe) for k, dp in self.datapipes_dict.items()]
-        )
-                
+        is_okay = all([isinstance(dp, IterDataPipe) for k, dp in self.datapipes_dict.items()])
+
         if not is_okay:
             raise TypeError(
                 "All inputs are required to be `IterDataPipe` " "for `ZipIterDataPipe`."
             )
-        
-        super().__init__()
 
+        super().__init__()
 
     def __iter__(self):
         """Iter"""
@@ -127,16 +124,15 @@ class DictDatasetIterDataPipe(IterDataPipe):
         for k, dp in self.datapipes_dict.items():
             all_keys += [k]
             all_datapipes += [dp]
-        
+
         zipped_datapipes = all_datapipes[0].zip_ocf(*all_datapipes[1:])
-        
+
         for values in zipped_datapipes:
-            
-            output_dict = {key:x for key, x in zip(all_keys, values)}
-            
+            output_dict = {key: x for key, x in zip(all_keys, values)}
+
             # re-nest the nwp keys
             output_dict = nest_nwp_source_dict(output_dict)
-            
+
             yield output_dict
 
 
@@ -194,7 +190,7 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
         for datapipes_dict in self.dataset_dict_dp:
             # Spatially slice, normalize, and convert data to numpy arrays
             numpy_modalities = []
-                
+
             if "nwp" in datapipes_dict:
                 # Combine the NWPs into NumpyBatch
                 nwp_numpy_modalities = dict()
@@ -203,7 +199,7 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
 
                 nwp_numpy_modalities = MergeNWPNumpyModalities(nwp_numpy_modalities)
                 numpy_modalities.append(nwp_numpy_modalities)
-                
+
             if "sat" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["sat"].convert_satellite_to_numpy_batch())
             if "pv" in datapipes_dict:
@@ -265,24 +261,22 @@ def construct_sliced_data_pipeline(
 
     # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
-    
-    
-    # We need a copy of the location datapipe for all keys in fork_keys
+
+    # We need a copy of the location datapipe for all keys in fork_keys
     fork_keys = set(k for k in datapipes_dict.keys())
-    if "nwp" in datapipes_dict: # NWP is nested
+    if "nwp" in datapipes_dict:  # NWP is nested
         fork_keys.update(set(f"nwp/{k}" for k in datapipes_dict["nwp"].keys()))
-    
+
     # We don't need somes keys even if they are in the data dictionary
-    fork_keys = fork_keys - set(["topo", "nwp", "sensor", "hrv", 'pv_future', 'pv'])
-    
+    fork_keys = fork_keys - set(["topo", "nwp", "sensor", "hrv", "pv_future", "pv"])
+
     # Set up a key-forker for all the data sources we need it for
     get_loc_datapipe = DatapipeKeyForker(fork_keys, location_pipe)
 
     if "nwp" in datapipes_dict:
         nwp_datapipes_dict = dict()
-        
-        for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
 
+        for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
             location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
             nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
                 get_loc_datapipe(f"nwp/{nwp_key}"),
@@ -290,10 +284,10 @@ def construct_sliced_data_pipeline(
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
-                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider], 
+                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
                 std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
             )
-        
+
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
 
@@ -316,7 +310,7 @@ def construct_sliced_data_pipeline(
         sensor_datapipe = sensor_datapipe.map(fill_nans_in_pv)
 
     finished_dataset_dict = {"config": configuration}
-    
+
     if "gsp" in datapipes_dict:
         gsp_future_datapipe = datapipes_dict["gsp_future"]
         gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
@@ -339,9 +333,9 @@ def construct_sliced_data_pipeline(
         gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
 
         finished_dataset_dict["gsp"] = gsp_datapipe
-        
+
     get_loc_datapipe.close()
-    
+
     if "nwp" in datapipes_dict:
         finished_dataset_dict["nwp"] = nwp_datapipes_dict
     if "sat" in datapipes_dict:
@@ -385,10 +379,10 @@ def windnet_datapipe(
         location_pipe,
         t0_datapipe,
     )
-    
+
     # Merge all the datapipes into one
     return DictDatasetIterDataPipe(
-        {k:v for k, v in datapipe_dict.items() if k!="config"},
+        {k: v for k, v in datapipe_dict.items() if k != "config"},
     ).map(combine_to_single_dataset)
 
 
@@ -399,11 +393,11 @@ def split_dataset_dict_dp(element):
     Args:
         element: Dictionary of xarray objects
     """
-    
+
     element = flatten_nwp_source_dict(element)
     output_dict = {k: IterableWrapper([v]) for k, v in element.items() if k != "config"}
     output_dict = nest_nwp_source_dict(output_dict)
-    
+
     return output_dict
 
 

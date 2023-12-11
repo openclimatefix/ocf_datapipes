@@ -13,12 +13,10 @@ are used to validate the values of the data itself.
 """
 import logging
 from datetime import datetime
-from pathlib import Path
-from typing import List, Optional, Union, Dict
+from typing import Dict, List, Optional, Union
 
 import git
 import numpy as np
-import pandas as pd
 from nowcasting_datamodel.models.pv import providers, pv_output, solar_sheffield_passiv
 from pathy import Pathy
 from pydantic import BaseModel, Field, root_validator, validator
@@ -26,11 +24,10 @@ from pydantic import BaseModel, Field, root_validator, validator
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
     AWOS_VARIABLE_NAMES,
+    NWP_PROVIDERS,
     NWP_VARIABLE_NAMES,
     RSS_VARIABLE_NAMES,
-    NWP_PROVIDERS,
 )
-from ocf_datapipes.utils.split import split
 
 IMAGE_SIZE_PIXELS = 64
 IMAGE_SIZE_PIXELS_FIELD = Field(
@@ -511,7 +508,9 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
         "gs://solar-pv-nowcasting-data/NWP/UK_Met_Office/UKV__2018-01_to_2019-12__chunks__variable10__init_time1__step1__x548__y704__.zarr",  # noqa: E501
         description="The path which holds the NWP zarr.",
     )
-    nwp_channels: tuple = Field(NWP_VARIABLE_NAMES["ukv"], description="the channels used in the nwp data")
+    nwp_channels: tuple = Field(
+        NWP_VARIABLE_NAMES["ukv"], description="the channels used in the nwp data"
+    )
     nwp_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
@@ -529,26 +528,27 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
             assert Exception(message)
         return v
 
-    
+
 class MultiNWP(Base):
     """Configuration for multiple NWPs"""
+
     __root__: Dict[str, NWP]
-    
+
     def __getattr__(self, item):
         return self.__root__[item]
-    
+
     def __getitem__(self, item):
         return self.__root__[item]
-    
+
     def __len__(self):
         return len(self.__root__)
-    
+
     def __iter__(self):
         return iter(self.__root__)
-    
+
     def keys(self):
         return self.__root__.keys()
-    
+
     def items(self):
         return self.__root__.items()
 
@@ -677,7 +677,7 @@ class InputData(Base):
             "pv",
             "hrvsatellite",
             "satellite",
-            #"nwp", # nwp is treated separately
+            # "nwp", # nwp is treated separately
             "gsp",
             "topographic",
             "sun",
@@ -696,7 +696,7 @@ class InputData(Base):
 
             if values[data_source_name].history_minutes is None:
                 values[data_source_name].history_minutes = values["default_history_minutes"]
-                
+
         if values["nwp"] is not None:
             for k in values["nwp"].keys():
                 if values["nwp"][k].forecast_minutes is None:

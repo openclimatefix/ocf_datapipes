@@ -1,13 +1,12 @@
 """Encodes the Fourier features for space and time"""
 import logging
 import warnings
-from numbers import Number
 from typing import Union
 
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import BatchKey, NWPBatchKey, NumpyBatch, NWPNumpyBatch
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch
 
 logger = logging.getLogger(__name__)
 
@@ -50,18 +49,17 @@ def add_spatial_and_temporal_fourier_features(
         # Pop and process NWPBatch. Add back in later
         nwp_batch = np_batch.pop(BatchKey.nwp)
         for nwp_source in nwp_batch.keys():
-             _add_spatial_and_temporal_fourier_features(
-                nwp_batch[nwp_source], 
-                n_fourier_features_per_dim
+            _add_spatial_and_temporal_fourier_features(
+                nwp_batch[nwp_source], n_fourier_features_per_dim
             )
-    
+
     # Process other coords
     _add_spatial_and_temporal_fourier_features(np_batch, n_fourier_features_per_dim)
 
     # Add back in NWP maybe
     if nwp_in_batch:
         np_batch[BatchKey.nwp] = nwp_batch
-    
+
     return np_batch
 
 
@@ -78,20 +76,19 @@ def _add_spatial_and_temporal_fourier_features(
                 fourier_key = NWPBatchKey[f"{key.name}_fourier"]
             else:
                 raise ValueError(f"Unregognized key: {key}")
-            
+
             normalized_coords = normalize_coords(batch[key])
-            
+
             batch[fourier_key] = compute_fourier_features(
-                normalized_coords, 
-                n_fourier_features=n_fourier_features_per_dim
+                normalized_coords, n_fourier_features=n_fourier_features_per_dim
             )
     return
 
 
 def compute_fourier_features(
-    array: np.ndarray, 
-    n_fourier_features: int = 8, 
-    min_freq: float = 2, 
+    array: np.ndarray,
+    n_fourier_features: int = 8,
+    min_freq: float = 2,
     max_freq: float = 8,
 ) -> np.ndarray:
     """Compute Fourier features for a single dimension, across all examples in a batch.
@@ -154,29 +151,25 @@ def normalize_coords(
         coords: Array of coords
     """
     batch_size = coords.shape[0]
-    
+
     # min and max taken over these dims
     reduce_dims = tuple(range(1, len(coords.shape)))
-    
+
     with warnings.catch_warnings():
         # We expect to encounter all-NaN slices (when a whole PV example is missing,
         # for example.)
         warnings.filterwarnings("ignore", "All-NaN slice encountered")
-        
+
         min_per_example = np.nanmin(
-            coords.reshape((batch_size, -1)),
-            axis=reduce_dims, 
-            keepdims=True
+            coords.reshape((batch_size, -1)), axis=reduce_dims, keepdims=True
         )
 
         max_per_example = np.nanmax(
-            coords.reshape((batch_size, -1)),
-            axis=reduce_dims, 
-            keepdims=True
+            coords.reshape((batch_size, -1)), axis=reduce_dims, keepdims=True
         )
-    
+
     assert np.isfinite(min_per_example).all()
     assert np.isfinite(max_per_example).all()
-    
+
     normalized_coords = (coords - min_per_example) / (max_per_example - min_per_example)
     return normalized_coords

@@ -29,7 +29,7 @@ class SelectIDIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
         self.location_datapipe = location_datapipe
         self.data_source_name = data_source_name
-        
+
         assert data_source_name in ["pv"]
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:

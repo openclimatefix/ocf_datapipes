@@ -49,6 +49,5 @@ def xgnational_production(configuration_filename: Union[Path, str]) -> dict:
 
     nwp_xr = next(iter(nwp_datapipe))
     gsp_xr = next(iter(gsp_datapipe))
-    
 
     return {"nwp": nwp_xr, "gsp": gsp_xr}

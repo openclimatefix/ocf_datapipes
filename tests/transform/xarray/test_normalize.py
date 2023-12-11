@@ -4,12 +4,13 @@ from ocf_datapipes.transform.xarray import Normalize
 from ocf_datapipes.utils.consts import NWP_MEANS, NWP_STDS, RSS_MEAN, RSS_STD
 import pytest
 
+
 def test_normalize_sat(sat_datapipe):
     normed_sat_datapipe = Normalize(
         sat_datapipe,
         # HRV dosn't have channel dimension
-        mean=RSS_MEAN.sel(channel="HRV"), 
-        std=RSS_STD.sel(channel="HRV")
+        mean=RSS_MEAN.sel(channel="HRV"),
+        std=RSS_STD.sel(channel="HRV"),
     )
     data = next(iter(normed_sat_datapipe))
     assert np.all(data <= 10.0)

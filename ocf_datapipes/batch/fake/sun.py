@@ -56,16 +56,16 @@ def make_fake_sun_data(configuration: Configuration, batch_size: int = 8):
     # NWP
     if configuration.input_data.nwp is not None:
         batch[BatchKey.nwp] = {}
-        
+
         for nwp_source, nwp_config in configuration.input_data.nwp.items():
             batch[BatchKey.nwp][nwp_source] = {}
-            
+
             n_nwp_timesteps = get_n_time_steps_from_config(configuration.input_data.nwp[nwp_source])
-            batch[BatchKey.nwp][nwp_source][NWPBatchKey.nwp_target_time_solar_azimuth] = (
-                np.random.random((batch_size, n_nwp_timesteps))
-            )
-            batch[BatchKey.nwp][nwp_source][NWPBatchKey.nwp_target_time_solar_elevation] = (
-                np.random.random((batch_size, n_nwp_timesteps))
-            )
+            batch[BatchKey.nwp][nwp_source][
+                NWPBatchKey.nwp_target_time_solar_azimuth
+            ] = np.random.random((batch_size, n_nwp_timesteps))
+            batch[BatchKey.nwp][nwp_source][
+                NWPBatchKey.nwp_target_time_solar_elevation
+            ] = np.random.random((batch_size, n_nwp_timesteps))
 
     return batch

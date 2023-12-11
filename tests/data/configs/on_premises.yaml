@@ -13,23 +13,23 @@ input_data:
 
   #---------------------- NWP -------------------
   nwp:
-      ukv:
-        nwp_channels:
-          - t
-          - dswrf
-          - prate
-          - r
-          - sde
-          - si10
-          - vis
-          - lcc
-          - mcc
-          - hcc
-        nwp_image_size_pixels_height: 128
-        nwp_image_size_pixels_width: 128
-        nwp_zarr_path: /mnt/storage_ssd_8tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/NWP/UK_Met_Office/UKV/zarr/UKV_intermediate_version_3.zarr
-        forecast_minutes: 360
-        history_minutes: 60
+    ukv:
+      nwp_channels:
+        - t
+        - dswrf
+        - prate
+        - r
+        - sde
+        - si10
+        - vis
+        - lcc
+        - mcc
+        - hcc
+      nwp_image_size_pixels_height: 128
+      nwp_image_size_pixels_width: 128
+      nwp_zarr_path: /mnt/storage_ssd_8tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/NWP/UK_Met_Office/UKV/zarr/UKV_intermediate_version_3.zarr
+      forecast_minutes: 360
+      history_minutes: 60
 
   #---------------------- PV -------------------
   pv:

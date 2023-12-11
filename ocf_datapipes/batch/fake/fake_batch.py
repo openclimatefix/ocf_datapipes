@@ -17,8 +17,8 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 
 
 def make_fake_batch(
-    configuration: Configuration, 
-    batch_size: int = 8, 
+    configuration: Configuration,
+    batch_size: int = 8,
     to_torch: Optional[bool] = False,
 ) -> dict:
     """
@@ -50,10 +50,16 @@ def make_fake_batch(
 
     # make hrv and normal satellite data
     batch_satellite = make_fake_satellite_data(
-        configuration, t0_datetime_utc, is_hrv=False, batch_size=batch_size,
+        configuration,
+        t0_datetime_utc,
+        is_hrv=False,
+        batch_size=batch_size,
     )
     batch_hrv_satellite = make_fake_satellite_data(
-        configuration, t0_datetime_utc, is_hrv=True, batch_size=batch_size,
+        configuration,
+        t0_datetime_utc,
+        is_hrv=True,
+        batch_size=batch_size,
     )
 
     # make sun features

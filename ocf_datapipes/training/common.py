@@ -61,10 +61,10 @@ def open_and_return_datapipes(
     # Check which modalities to use
     conf_in = configuration.input_data
     use_nwp = (
-        use_nwp 
-        and (conf_in.nwp is not None) 
-        and len(conf_in.nwp)!=0 
-        and all(v.nwp_zarr_path!="" for _, v in conf_in.nwp.items())
+        use_nwp
+        and (conf_in.nwp is not None)
+        and len(conf_in.nwp) != 0
+        and all(v.nwp_zarr_path != "" for _, v in conf_in.nwp.items())
     )
     use_pv = (
         use_pv and (conf_in.pv is not None) and (conf_in.pv.pv_files_groups[0].pv_filename != "")
@@ -114,7 +114,7 @@ def open_and_return_datapipes(
     # Load NWP data
     if use_nwp:
         logger.debug("Opening NWP Data")
-        used_datapipes["nwp"]  = {}
+        used_datapipes["nwp"] = {}
         for nwp_source, nwp_conf in conf_in.nwp.items():
             used_datapipes["nwp"][nwp_source] = (
                 OpenNWP(
@@ -206,7 +206,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
     t0_datapipe = None
     configuration = used_datapipes.pop("config")
     used_datapipes = flatten_nwp_source_dict(used_datapipes)
-    
+
     for key, datapipe in used_datapipes.items():
         if "topo" in key:
             continue
@@ -544,10 +544,10 @@ def construct_loctime_pipelines(
     ]
 
     core_key = next(filter(lambda key: key in datapipes_dict, preferred_order_of_keys))
-    
+
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"] = datapipes_dict["gsp"].map(gsp_drop_national)
-    
+
     if (start_time is not None) or (end_time is not None):
         datapipes_dict[core_key] = datapipes_dict[core_key].select_train_test_time(
             start_time, end_time
@@ -618,11 +618,11 @@ def slice_datapipes_by_time(
 
     # Use DatapipeKeyForker to avoid forking t0_datapipe too many times, or leaving any forks unused
     fork_keys = {k for k in datapipes_dict.keys() if k not in ["topo", "nwp"]}
-    if "nwp" in datapipes_dict: # nwp is nested so treat separately
+    if "nwp" in datapipes_dict:  # nwp is nested so treat separately
         fork_keys.update({f"nwp/{k}" for k in datapipes_dict["nwp"].keys()})
 
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
-    
+
     if "sat" in datapipes_dict or "hrv" in datapipes_dict:
         sat_and_hrv_dropout_kwargs = dict(
             # Satellite is either 30 minutes or 60 minutes delayed in production.
@@ -634,7 +634,7 @@ def slice_datapipes_by_time(
         sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
 
     if "nwp" in datapipes_dict:
-        # NWP is nested in the dict
+        # NWP is nested in the dict
         for nwp_key, dp in datapipes_dict["nwp"].items():
             datapipes_dict["nwp"][nwp_key] = dp.convert_to_nwp_target_time_with_dropout(
                 t0_datapipe=get_t0_datapipe(f"nwp/{nwp_key}"),
@@ -987,14 +987,12 @@ def create_t0_and_loc_datapipes(
             continue
 
         elif key == "nwp":
-            
             for nwp_key in datapipes_dict["nwp"].keys():
-            
                 # NWPs are nested since there can be multiple NWP sources
-                datapipes_dict["nwp"][nwp_key], datapipe_copy = (
-                    datapipes_dict["nwp"][nwp_key].fork(2, buffer_size=5)
+                datapipes_dict["nwp"][nwp_key], datapipe_copy = datapipes_dict["nwp"][nwp_key].fork(
+                    2, buffer_size=5
                 )
-                
+
                 # Different config setting per NWP source
                 nwp_conf = configuration.input_data.nwp[nwp_key]
 

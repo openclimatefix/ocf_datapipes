@@ -1,12 +1,11 @@
 """Statistics and variable names."""
 
-from enum import Enum, auto
-from typing import Optional, Union
 
 import numpy as np
 import xarray as xr
 
 # --------------------------- FUNCS ----------------------------------
+
 
 def _to_data_array(d):
     return xr.DataArray(
@@ -23,6 +22,7 @@ class NWPStatDict(dict):
             raise KeyError(f"Values for {key} not yet available in ocf-datapipes")
         else:
             raise KeyError(key)
+
 
 # --------------------------- NWP ------------------------------------
 
@@ -144,10 +144,7 @@ NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
     gfs=GFS_STD,
 )
-NWP_MEANS = NWPStatDict(
-    ukv=UKV_MEAN,
-    gfs=GFS_MEAN
-)
+NWP_MEANS = NWPStatDict(ukv=UKV_MEAN, gfs=GFS_MEAN)
 
 # --------------------------- SATELLITE ------------------------------
 
