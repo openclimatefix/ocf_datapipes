@@ -159,7 +159,7 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             half_width = self.roi_width_meters // 2
 
             # Find the bounding box values for the location in either lat-lon or OSGB coord systems
-            if location.coordinate_system == "lat_lon":
+            if location.coordinate_system == "lon_lat":
                 right, top = move_lon_lat_by_meters(
                     location.x,
                     location.y,
@@ -227,24 +227,24 @@ def convert_coords_to_match_xarray(x, y, from_coords, xr_data):
 
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
 
-    assert from_coords in ["osgb", "lat_lon"]
-    assert xr_coords in ["geostationary", "osgb", "lat_lon"]
+    assert from_coords in ["osgb", "lon_lat"]
+    assert xr_coords in ["geostationary", "osgb", "lon_lat"]
 
     if xr_coords == "geostationary":
         if from_coords == "osgb":
             x, y = osgb_to_geostationary_area_coords(x, y, xr_data)
 
-        elif from_coords == "lat_lon":
+        elif from_coords == "lon_lat":
             x, y = lon_lat_to_geostationary_area_coords(x, y, xr_data)
 
-    elif xr_coords == "lat_lon":
+    elif xr_coords == "lon_lat":
         if from_coords == "osgb":
             x, y = osgb_to_lon_lat(x, y)
 
-        # else the from_coords=="lat_lon" and we don't need to convert
+        # else the from_coords=="lon_lat" and we don't need to convert
 
     elif xr_coords == "osgb":
-        if from_coords == "lat_lon":
+        if from_coords == "lon_lat":
             x, y = lon_lat_to_osgb(x, y)
 
         # else the from_coords=="osgb" and we don't need to convert
@@ -267,8 +267,8 @@ def _get_idx_of_pixel_closest_to_poi(
     """
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
 
-    if xr_coords not in ["osgb", "lat_lon"]:
-        raise NotImplementedError(f"Only 'osgb' and 'lat_lon' are supported - not '{xr_coords}'")
+    if xr_coords not in ["osgb", "lon_lat"]:
+        raise NotImplementedError(f"Only 'osgb' and 'lon_lat' are supported - not '{xr_coords}'")
 
     # Convert location coords to match xarray data
     x, y = convert_coords_to_match_xarray(
@@ -343,7 +343,7 @@ def _get_points_from_unstructured_grids(
         The closest points from the grid
     """
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
-    assert xr_coords == "lat_lon"
+    assert xr_coords == "lon_lat"
 
     # Check if need to convert from different coordinate system to lat/lon
     if location.coordinate_system == "osgb":
@@ -351,7 +351,7 @@ def _get_points_from_unstructured_grids(
         location = Location(
             x=longitude,
             y=latitude,
-            coordinate_system="lat_lon",
+            coordinate_system="lon_lat",
         )
     elif location.coordinate_system == "geostationary":
         raise NotImplementedError(

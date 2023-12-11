@@ -1,7 +1,6 @@
 import numpy as np
 from ocf_datapipes.utils.utils import searchsorted
 from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
-from datetime import datetime
 import xarray as xr
 import pytest
 
@@ -29,7 +28,10 @@ def test_searchsorted():
 
 def test_combine_to_single_dataset(xarray_dict_sample):
     ds_comb = combine_to_single_dataset(xarray_dict_sample)
+    # Expected data type
     assert isinstance(ds_comb, xr.Dataset)
+    # Expected data variables
+    assert set(ds_comb.keys())==set(xarray_dict_sample.keys()) 
 
 
 def test_uncombine_from_single_dataset(xarray_dict_sample):

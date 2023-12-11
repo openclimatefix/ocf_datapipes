@@ -20,11 +20,24 @@ from ocf_datapipes.load import (
 )
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
+from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
 logger.setLevel(logging.DEBUG)
+
+
+def normalize_gsp(x):  # So it can be pickled
+    """
+    Normalize the GSP data
+
+    Args:
+        x: Input DataArray
+
+    Returns:
+        Normalized DataArray
+    """
+    return x / x.nominal_capacity_mwp
 
 
 def _remove_nans(x):
@@ -99,15 +112,13 @@ def metnet_national_datapipe(
 
     logger.debug("Add t0 idx and normalize")
 
-    (
-        gsp_datapipe,
-        gsp_time_periods_datapipe,
-        gsp_t0_datapipe,
-    ) = gsp_datapipe.add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(minutes=30),
-        history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-    ).fork(
-        3
+    gsp_datapipe, gsp_time_periods_datapipe, gsp_t0_datapipe = (
+        gsp_datapipe.normalize(normalize_fn=normalize_gsp)
+        .add_t0_idx_and_sample_period_duration(
+            sample_period_duration=timedelta(minutes=30),
+            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+        )
+        .fork(3)
     )
     # get time periods
     # get contiguous time periods
@@ -237,7 +248,7 @@ def metnet_national_datapipe(
             sample_period_duration=timedelta(hours=1),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-        ).normalize(mean=NWP_MEAN, std=NWP_STD)
+        ).normalize(mean=UKV_MEAN, std=UKV_STD)
 
     if use_sat:
         logger.debug("Take Satellite time slices")
@@ -247,7 +258,7 @@ def metnet_national_datapipe(
             history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).normalize(mean=SAT_MEAN_DA, std=SAT_STD_DA)
+        ).normalize(mean=RSS_MEAN, std=RSS_STD)
 
     if use_hrv:
         logger.debug("Take HRV Satellite time slices")
@@ -258,7 +269,7 @@ def metnet_national_datapipe(
             ),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).normalize(mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
+        ).normalize(mean=RSS_MEAN.sel(channel="HRV"), std=RSS_STD.sel(channel="HRV"))
 
     if use_pv:
         logger.debug("Take PV Time Slices")

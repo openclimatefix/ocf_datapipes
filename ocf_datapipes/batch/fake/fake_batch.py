@@ -16,12 +16,17 @@ from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils.utils import datetime64_to_float
 
 
-def make_fake_batch(configuration: Configuration, to_torch: Optional[bool] = False) -> dict:
+def make_fake_batch(
+    configuration: Configuration, 
+    batch_size: int = 8, 
+    to_torch: Optional[bool] = False,
+) -> dict:
     """
     Make a random fake batch, this is useful for models that use this object
 
     Args:
         configuration: a configuration file
+        batch_size: the batch size
         to_torch: optional if we return the batch with torch.Tensor
 
     Returns: dictionary containing the batch
@@ -35,24 +40,24 @@ def make_fake_batch(configuration: Configuration, to_torch: Optional[bool] = Fal
     t0_datetime_utc = t0_datetime_utc.replace(microsecond=0)
 
     # make fake PV data
-    batch_pv = make_fake_pv_data(configuration=configuration, t0_datetime_utc=t0_datetime_utc)
+    batch_pv = make_fake_pv_data(configuration, t0_datetime_utc, batch_size)
 
     # make NWP data
-    batch_nwp = make_fake_nwp_data(configuration=configuration, t0_datetime_utc=t0_datetime_utc)
+    batch_nwp = make_fake_nwp_data(configuration, t0_datetime_utc, batch_size)
 
     # make GSP data
-    batch_gsp = make_fake_gsp_data(configuration=configuration, t0_datetime_utc=t0_datetime_utc)
+    batch_gsp = make_fake_gsp_data(configuration, t0_datetime_utc, batch_size)
 
     # make hrv and normal satellite data
     batch_satellite = make_fake_satellite_data(
-        configuration=configuration, t0_datetime_utc=t0_datetime_utc, is_hrv=False
+        configuration, t0_datetime_utc, is_hrv=False, batch_size=batch_size,
     )
     batch_hrv_satellite = make_fake_satellite_data(
-        configuration=configuration, t0_datetime_utc=t0_datetime_utc, is_hrv=True
+        configuration, t0_datetime_utc, is_hrv=True, batch_size=batch_size,
     )
 
     # make sun features
-    batch_sun = make_fake_sun_data(configuration=configuration)
+    batch_sun = make_fake_sun_data(configuration, batch_size)
 
     batch = {
         **batch_pv,
@@ -76,7 +81,7 @@ def make_fake_batch(configuration: Configuration, to_torch: Optional[bool] = Fal
     return batch
 
 
-def fake_data_pipeline(configuration: Union[str, Configuration]):
+def fake_data_pipeline(configuration: Union[str, Configuration], batch_size: int = 8):
     """
     Make a fake data pipeline
 
@@ -88,7 +93,7 @@ def fake_data_pipeline(configuration: Union[str, Configuration]):
     if isinstance(configuration, str):
         configuration = load_yaml_configuration(configuration)
 
-    batch = make_fake_batch(configuration=configuration, to_torch=True)
+    batch = make_fake_batch(configuration=configuration, to_torch=True, batch_size=batch_size)
 
     def fake_iter():
         while True:

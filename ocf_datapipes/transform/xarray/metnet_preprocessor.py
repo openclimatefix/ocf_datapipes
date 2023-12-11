@@ -229,8 +229,8 @@ def _get_spatial_crop(xr_data, location, roi_height_meters: int, roi_width_meter
     half_height = roi_height_meters // 2
     half_width = roi_width_meters // 2
 
-    # Find the bounding box values for the location in either lat-lon or OSGB coord systems
-    if location.coordinate_system == "lat_lon":
+    # Find the bounding box values for the location in either lon-lat or OSGB coord systems
+    if location.coordinate_system == "lon_lat":
         right, top = move_lon_lat_by_meters(
             location.x,
             location.y,

@@ -8,7 +8,10 @@ from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils.consts import BatchKey
 
 
-def make_fake_pv_data(configuration: Configuration, t0_datetime_utc: datetime):
+def make_fake_pv_data(    configuration: Configuration, 
+    t0_datetime_utc: datetime, 
+    batch_size: int = 8
+) -> dict:
     """
     Make Fake PV data ready for ML model
 
@@ -23,7 +26,6 @@ def make_fake_pv_data(configuration: Configuration, t0_datetime_utc: datetime):
     if pv_config is None:
         return {}
 
-    batch_size = configuration.process.batch_size
     n_pv_systems = pv_config.n_pv_systems_per_example
     n_fourier_features = 8
 

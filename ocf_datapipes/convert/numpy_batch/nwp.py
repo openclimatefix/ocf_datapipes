@@ -27,9 +27,9 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
                 NWPBatchKey.nwp: xr_data.values,
                 NWPBatchKey.nwp_t0_idx: xr_data.attrs["t0_idx"],
             }
-
-            target_time = xr_data.target_time_utc.values
-            example[NWPBatchKey.nwp_target_time_utc] = datetime64_to_float(target_time)
+            if "target_time_utc" in xr_data.coords:
+                target_time = xr_data.target_time_utc.values
+                example[NWPBatchKey.nwp_target_time_utc] = datetime64_to_float(target_time)
             example[NWPBatchKey.nwp_channel_names] = xr_data.channel.values
             example[NWPBatchKey.nwp_step] = (xr_data.step.values / np.timedelta64(1, "h")).astype(
                 np.int64

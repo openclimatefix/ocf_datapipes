@@ -1,7 +1,7 @@
 """Various utilites that didn't fit elsewhere"""
 import logging
 from pathlib import Path
-from typing import Sequence, Tuple, Union
+from typing import Tuple, Union
 
 import fsspec.asyn
 import numpy as np
@@ -10,8 +10,6 @@ import pandas as pd
 import xarray as xr
 from pandas.core.dtypes.common import is_datetime64_dtype
 from pathy import Pathy
-
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 logger = logging.getLogger(__name__)
 
@@ -106,35 +104,6 @@ def set_fsspec_for_multiprocess() -> None:
     fsspec.asyn._lock = None
 
 
-def stack_np_examples_into_batch(np_examples: Sequence[NumpyBatch]) -> NumpyBatch:
-    """
-    Stacks Numpy examples into a batch
-
-    Args:
-        np_examples: Numpy examples to stack
-
-    Returns:
-        The stacked NumpyBatch object
-    """
-    np_batch: NumpyBatch = {}
-    batch_keys = np_examples[0]  # Batch keys should be the same across all examples.
-    for batch_key in batch_keys:
-        if batch_key.name.endswith("t0_idx") or batch_key == BatchKey.nwp_channel_names:
-            # These are always the same for all examples.
-            np_batch[batch_key] = np_examples[0][batch_key]
-        else:
-            examples_for_key = [np_example[batch_key] for np_example in np_examples]
-            try:
-                np_batch[batch_key] = np.stack(examples_for_key)
-            except Exception as e:
-                logger.debug(f"Could not stack the following shapes together, ({batch_key})")
-                shapes = [example_for_key.shape for example_for_key in examples_for_key]
-                logger.debug(shapes)
-                logger.error(e)
-                raise e
-    return np_batch
-
-
 def _trig_transform(values: np.ndarray, period: Union[float, int]) -> Tuple[np.ndarray, np.ndarray]:
     """
     Given a list of values and an upper limit on the values, compute trig decomposition.
@@ -187,6 +156,9 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
     Returns:
         Combined dataset
     """
+    # Flatten any NWP data
+    dataset_dict = flatten_nwp_source_dict(dataset_dict, sep="-")
+    
     # Convert all data_arrays to datasets
     new_dataset_dict = {}
     for key, datasets in dataset_dict.items():
@@ -257,4 +229,29 @@ def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.
         )
         # Split the dataset by the prefix
         datasets[key] = dataset
+    
+    # Unflatten any NWP data
+    datasets = nest_nwp_source_dict(datasets, sep="-")
     return datasets
+
+
+def flatten_nwp_source_dict(d: dict, sep: str="/") -> dict:
+    """Unnest a dictionary where the NWP values are nested under the key 'nwp'."""
+    new_dict = {k:v for k, v in d.items() if k!="nwp"}
+    if "nwp" in d: 
+        if isinstance(d["nwp"], dict):
+            new_dict.update({f"nwp{sep}{k}":v for k, v in d["nwp"].items()})
+        else:
+            new_dict.update({"nwp": d["nwp"]})
+    return new_dict
+        
+
+def nest_nwp_source_dict(d: dict, sep: str="/") -> dict:
+    """Re-nest a dictionary where the NWP values are nested under keys 'nwp/<key>'."""
+    nwp_prefix = f"nwp{sep}"
+    new_dict = {k:v for k, v in d.items() if not k.startswith(nwp_prefix)}
+    nwp_keys = [k for k in d.keys() if k.startswith(nwp_prefix)]
+    if len(nwp_keys)>0:
+        nwp_subdict = {k.removeprefix(nwp_prefix):d[k] for k in nwp_keys}
+        new_dict["nwp"] = nwp_subdict
+    return new_dict

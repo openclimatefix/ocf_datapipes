@@ -5,7 +5,6 @@ from typing import Union
 
 import pandas as pd
 import xarray as xr
-from torch.utils.data import IterDataPipe, functional_datapipe
 
 _log = logging.getLogger(__name__)
 

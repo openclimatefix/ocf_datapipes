@@ -93,7 +93,7 @@ class CreatePVImageIterDataPipe(IterDataPipe):
                         y=pv_system["y_osgb"].values,
                         xr_data=image_xr,
                     )
-                elif pv_coords == "lat_lon" and image_coords == "geostationary":
+                elif pv_coords == "lon_lat" and image_coords == "geostationary":
                     pv_x, pv_y = lon_lat_to_geostationary_area_coords(
                         x=pv_system["longitude"].values,
                         y=pv_system["latitude"].values,

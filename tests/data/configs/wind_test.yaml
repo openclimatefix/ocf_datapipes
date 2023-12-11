@@ -44,14 +44,3 @@ input_data:
     hrvsatellite_zarr_path: tests/data/hrv_sat_data.zarr
     history_minutes: 30
     forecast_minutes: 60
-output_data:
-  filepath: not used by unittests!
-process:
-  batch_size: 4
-  local_temp_path: ~/temp/
-  seed: 1234
-  upload_every_n_batches: 16
-  n_train_batches: 2
-  n_validation_batches: 0
-  n_test_batches: 0
-  train_test_validation_split: [3, 0, 1]

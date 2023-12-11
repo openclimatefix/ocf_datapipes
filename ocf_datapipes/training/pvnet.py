@@ -6,7 +6,7 @@ from typing import Optional
 import xarray as xr
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
-from ocf_datapipes.batch import MergeNumpyModalities
+from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.training.common import (
     _get_datapipes_dict,
     check_nans_in_satellite_data,
@@ -77,11 +77,13 @@ def construct_sliced_data_pipeline(
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
             nwp_datapipe = nwp_datapipe.normalize(
-                mean=NWP_MEANS[conf_nwp[nwp_key].provider], 
-                std=NWP_STDS[conf_nwp[nwp_key].provider],
+                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider], 
+                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
             )
             nwp_numpy_modalities[nwp_key] = nwp_datapipe.convert_nwp_to_numpy_batch()
         
+        # Combine the NWPs into NumpyBatch
+        nwp_numpy_modalities = MergeNWPNumpyModalities(nwp_numpy_modalities)
         numpy_modalities.append(nwp_numpy_modalities)
 
     if "sat" in datapipes_dict:

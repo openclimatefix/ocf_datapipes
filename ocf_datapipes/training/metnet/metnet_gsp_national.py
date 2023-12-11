@@ -15,7 +15,7 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
 )
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
+from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -116,16 +116,18 @@ def metnet_national_datapipe(
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
         logger.debug("Take NWP time slices")
-        nwp_datapipe = used_datapipes["nwp"].normalize(mean=NWP_MEAN, std=NWP_STD)
+        nwp_datapipe = used_datapipes["nwp"].normalize(mean=UKV_MEAN, std=UKV_STD)
 
     if "sat" in used_datapipes.keys():
         logger.debug("Take Satellite time slices")
         # take sat time slices
-        sat_datapipe = used_datapipes["sat"].normalize(mean=SAT_MEAN_DA, std=SAT_STD_DA)
+        sat_datapipe = used_datapipes["sat"].normalize(mean=RSS_MEAN, std=RSS_STD)
 
     if "hrv" in used_datapipes.keys():
         logger.debug("Take HRV Satellite time slices")
-        sat_hrv_datapipe = used_datapipes["hrv"].normalize(mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
+        sat_hrv_datapipe = used_datapipes["hrv"].normalize(
+            mean=RSS_MEAN.sel(channel="HRV"), std=RSS_STD.sel(channel="HRV")
+        )
 
     if "topo" in used_datapipes.keys():
         topo_datapipe = used_datapipes["topo"].map(_remove_nans)

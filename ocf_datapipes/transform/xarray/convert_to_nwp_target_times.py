@@ -45,23 +45,25 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         """Iterate through both datapipes and convert Xarray dataset"""
         for xr_data, t0 in self.source_datapipe.zip_ocf(self.t0_datapipe):
             logger.debug("convert_to_nwp_target_time ")
+            
+            t0 = pd.Timestamp(t0)
+            start_dt = t0 - self.history_duration
+            end_dt = t0 + self.forecast_duration
 
-            t0_datetime_utc = pd.Timestamp(t0)
-            start_dt = t0_datetime_utc - self.history_duration
-            end_dt = t0_datetime_utc + self.forecast_duration
             target_times = pd.date_range(
                 start_dt.ceil(self.sample_period_duration),
                 end_dt.ceil(self.sample_period_duration),
                 freq=self.sample_period_duration,
             )
-            # Get the most recent NWP initialisation time for each target_time_hourly.
-            init_times = xr_data.sel(init_time_utc=target_times, method="pad").init_time_utc.values
-            # Find the NWP init time for just the 'future' portion of the example.
-            init_time_t0 = init_times[self.t0_idx]
+            
+            # Forecasts made up to and including t0
+            xr_available = xr_data.sel(init_time_utc=slice(None, t0))
+            
+            init_times = xr_available.sel(
+                init_time_utc=target_times,
+                method="ffill",  # forward fill from init times to target times
+            ).init_time_utc.values
 
-            # For the 'future' portion of the example, replace all the NWP
-            # init times with the NWP init time most recent to t0.
-            init_times[self.t0_idx :] = init_time_t0
 
             steps = target_times - init_times
 
@@ -73,5 +75,6 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
             coords = {"target_time_utc": target_times}
             init_time_indexer = xr.DataArray(init_times, coords=coords)
             step_indexer = xr.DataArray(steps, coords=coords)
+        
             xr_data = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
             yield xr_data

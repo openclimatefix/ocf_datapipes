@@ -8,6 +8,8 @@ from .data_vars import (
     UKV_VARIABLE_NAMES,
     UKV_STD,
     UKV_MEAN,
+    UKV_MAX, 
+    UKV_MIN,
     GFS_VARIABLE_NAMES,
     GFS_STD,
     GFS_MEAN,

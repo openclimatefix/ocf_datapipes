@@ -139,8 +139,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                         _get_azimuth_and_elevation(lon, lat, dt, must_be_finite)
                     )
             else:
-                assert lons.shape==()
-                assert lats.shape==()
+                assert (isinstance(lons, np.ndarray) and lons.shape==()) or isinstance(lons, float)
+                assert (isinstance(lats, np.ndarray) and lats.shape==()) or isinstance(lats, float)
                 
                 azimuth, elevation = (
                     _get_azimuth_and_elevation(lons, lats, times, must_be_finite)

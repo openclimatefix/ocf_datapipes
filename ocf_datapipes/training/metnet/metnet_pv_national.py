@@ -20,7 +20,7 @@ from ocf_datapipes.load import (
 )
 from ocf_datapipes.select import DropGSP, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_MEAN_DA, SAT_STD, SAT_STD_DA
+from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
 
 xarray.set_options(keep_attrs=True)
 logger = logging.getLogger("metnet_datapipe")
@@ -38,6 +38,19 @@ def normalize_gsp(x):  # So it can be pickled
         Normalized DataArray
     """
     return x / x.nominal_capacity_mwp
+
+
+def normalize_pv(x):  # So it can be pickled
+    """
+    Normalize the GSP data
+
+    Args:
+        x: Input DataArray
+
+    Returns:
+        Normalized DataArray
+    """
+    return x / x.observed_capacity_wp
 
 
 def _remove_nans(x):
@@ -99,8 +112,8 @@ def metnet_national_datapipe(
             True if configuration.input_data.topographic.topographic_filename != "" else False
         )
     print(
-        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv} "
-        f"PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
+        f"NWP: {use_nwp} Sat: {use_sat}, HRV: {use_hrv}"
+        f" PV: {use_pv} Sun: {use_sun} Topo: {use_topo}"
     )
     # Load GSP national data
     logger.debug("Opening GSP Data")
@@ -248,7 +261,7 @@ def metnet_national_datapipe(
             sample_period_duration=timedelta(hours=1),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
-        ).normalize(mean=NWP_MEAN, std=NWP_STD)
+        ).normalize(mean=UKV_MEAN, std=UKV_STD)
 
     if use_sat:
         logger.debug("Take Satellite time slices")
@@ -258,7 +271,7 @@ def metnet_national_datapipe(
             history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).normalize(mean=SAT_MEAN_DA, std=SAT_STD_DA)
+        ).normalize(mean=RSS_MEAN, std=RSS_STD)
 
     if use_hrv:
         logger.debug("Take HRV Satellite time slices")
@@ -269,31 +282,17 @@ def metnet_national_datapipe(
             ),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        ).normalize(mean=SAT_MEAN["HRV"], std=SAT_STD["HRV"])
+        ).normalize(mean=RSS_MEAN.sel(channel="HRV"), std=RSS_STD.sel(channel="HRV"))
 
     if use_pv:
         logger.debug("Take PV Time Slices")
         # take pv time slices
+        pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
         pv_datapipe = pv_datapipe.select_time_slice(
             t0_datapipe=t0_datapipes[sum([use_nwp, use_sat, use_hrv, use_pv])],
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=0),
             sample_period_duration=timedelta(minutes=5),
-        )
-
-        if use_hrv:
-            image_datapipe = OpenSatellite(
-                configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
-            )
-        elif use_sat:
-            image_datapipe = OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
-        elif use_nwp:
-            image_datapipe = OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
-
-        pv_datapipe = pv_datapipe.create_pv_image(
-            image_datapipe,
-            normalize=True,
-            max_num_pv_systems=max_num_pv_systems,
         )
 
     if use_topo:
@@ -309,8 +308,6 @@ def metnet_national_datapipe(
         modalities.append(sat_hrv_datapipe)
     if use_sat:
         modalities.append(sat_datapipe)
-    if use_pv:
-        modalities.append(pv_datapipe)
     if use_topo:
         modalities.append(topo_datapipe)
 
@@ -318,7 +315,7 @@ def metnet_national_datapipe(
 
     location_datapipe = LocationPicker(gsp_loc_datapipe)
 
-    combined_datapipe = PreProcessMetNet(
+    metnet_datapipe = PreProcessMetNet(
         modalities,
         location_datapipe=location_datapipe,
         center_width=500_000,
@@ -330,6 +327,12 @@ def metnet_national_datapipe(
         add_sun_features=use_sun,
     )
 
+    pv_datapipe = (
+        pv_datapipe.ensure_n_pv_systems_per_example(n_pv_systems_per_example=max_num_pv_systems)
+        .map(_remove_nans)
+        .convert_pv_to_numpy(return_pv_system_row=True)
+    )
+    combined_datapipe = metnet_datapipe.zip_ocf(pv_datapipe)
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
     if mode == "train":
         return combined_datapipe.zip_ocf(gsp_datapipe)  # Makes (Inputs, Label) tuples

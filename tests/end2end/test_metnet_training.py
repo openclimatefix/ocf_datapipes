@@ -25,7 +25,7 @@ from ocf_datapipes.transform.xarray import (
     ReprojectTopography,
 )
 
-from ocf_datapipes.utils.consts import NWP_MEAN, NWP_STD, SAT_MEAN, SAT_STD
+from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
 
 import pytest
 
@@ -137,14 +137,14 @@ def test_metnet_production(
     pv_datapipe = CreatePVImage(pv_datapipe, image_datapipe)
 
     sat_hrv_datapipe = Normalize(
-        sat_hrv_datapipe, mean=SAT_MEAN["HRV"] / 4, std=SAT_STD["HRV"] / 4
+        sat_hrv_datapipe, mean=RSS_MEAN.sel(channel="HRV") / 4, std=RSS_STD.sel(channel="HRV")  / 4
     ).map(
         lambda x: x.resample(time_utc="5T").interpolate("linear")
     )  # Interplate to 5 minutes incase its 15 minutes
-    sat_datapipe = Normalize(sat_datapipe, mean=SAT_MEAN["IR_016"], std=SAT_STD["IR_016"]).map(
+    sat_datapipe = Normalize(sat_datapipe, mean=RSS_MEAN, std=RSS_STD).map(
         lambda x: x.resample(time_utc="5T").interpolate("linear")
     )  # Interplate to 5 minutes incase its 15 minutes
-    nwp_datapipe = Normalize(nwp_datapipe, mean=NWP_MEAN, std=NWP_STD)
+    nwp_datapipe = Normalize(nwp_datapipe, mean=UKV_MEAN, std=UKV_STD)
     topo_datapipe = Normalize(topo_datapipe, calculate_mean_std_from_example=True)
 
     # Now combine in the MetNet format

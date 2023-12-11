@@ -7,7 +7,7 @@ from ocf_datapipes.load.pv.database import OpenPVFromPVSitesDBIterDataPipe as Op
 from ocf_datapipes.load.pv.pv import OpenPVFromNetCDFIterDataPipe as OpenPVFromNetCDF
 from ocf_datapipes.load.sensor.awos import OpenAWOSFromNetCDFIterDataPipe as OpenAWOSFromNetCDF
 
-from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
+from .configuration import load_configuration, OpenConfigurationIterDataPipe as OpenConfiguration
 from .nwp.nwp import OpenNWPIterDataPipe as OpenNWP
 from .satellite import OpenSatelliteIterDataPipe as OpenSatellite
 
