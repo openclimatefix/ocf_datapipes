@@ -1,9 +1,7 @@
 # OCF Datapipes
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 OCF's DataPipes for training and inference in Pytorch.
@@ -180,6 +178,7 @@ Thanks goes to these wonderful people
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/vrym2"><img src="https://avatars.githubusercontent.com/u/93340339?v=4?s=100" width="100px;" alt="Raj"/><br /><sub><b>Raj</b></sub></a><br /><a href="https://github.com/openclimatefix/ocf_datapipes/commits?author=vrym2" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/dfulu"><img src="https://avatars.githubusercontent.com/u/41546094?v=4?s=100" width="100px;" alt="James Fulton"/><br /><sub><b>James Fulton</b></sub></a><br /><a href="https://github.com/openclimatefix/ocf_datapipes/commits?author=dfulu" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/rjmcoder"><img src="https://avatars.githubusercontent.com/u/19336259?v=4?s=100" width="100px;" alt="Ritesh Mehta"/><br /><sub><b>Ritesh Mehta</b></sub></a><br /><a href="https://github.com/openclimatefix/ocf_datapipes/commits?author=rjmcoder" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://confusedmatrix.com"><img src="https://avatars.githubusercontent.com/u/617309?v=4?s=100" width="100px;" alt="Chris Briggs"/><br /><sub><b>Chris Briggs</b></sub></a><br /><a href="https://github.com/openclimatefix/ocf_datapipes/commits?author=confusedmatrix" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
