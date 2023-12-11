@@ -821,6 +821,7 @@ class Configuration(Base):
             "hrvsatellite.hrvsatellite_zarr_path",
             "nwp.nwp_zarr_path",
             "gsp.gsp_zarr_path",
+            "sensor.sensor_filename",
         ]
         for cls_and_attr_name in path_attrs:
             cls_name, attribute = cls_and_attr_name.split(".")

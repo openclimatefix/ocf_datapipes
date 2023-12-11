@@ -66,8 +66,10 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
     )
     # Convert knots to m/s
     x = x * 0.514444
+    # Minimum speed is 0
+    x = x.where(x > 0, 0)
     # Roughly double speed to get power
-    x = x * 2
+    # x = x * 2
     # convert to kw bsed on the wind_speed_to_power,
     # Do this by interpolating between the two nearest values in the list
     # Do this by rounding the wind speed to the nearest integer
@@ -83,7 +85,7 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
 
 
 def _normalize_wind_speed(x):
-    return x / 100.0
+    return x / 30.0
 
 
 @functional_datapipe("dict_datasets")
@@ -234,10 +236,10 @@ def construct_sliced_data_pipeline(
 
     if "nwp" in datapipes_dict:
         nwp_datapipe = datapipes_dict["nwp"]
-
-        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
+        # Only need forks for if there are multiple other soruces, can just use one for now
+        # location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
-            location_pipe_copy,
+            location_pipe,  # TODO Fix when using satellite
             roi_height_pixels=conf_nwp.nwp_image_size_pixels_height,
             roi_width_pixels=conf_nwp.nwp_image_size_pixels_width,
         )
