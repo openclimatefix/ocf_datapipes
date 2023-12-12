@@ -20,7 +20,7 @@ def stack_data_list(
     batch_key: Union[BatchKey, NWPBatchKey],
 ):
     """How to combine data entries for each key
-    
+
     See also: `extract_sample_from_batch()` for opposite
     """
     if _key_is_constant(batch_key):
@@ -37,7 +37,7 @@ def stack_data_list(
 
 
 def extract_sample_from_batch(
-    data, 
+    data,
     batch_key: Union[BatchKey, NWPBatchKey],
     index_num: int,
 ):
@@ -100,15 +100,15 @@ def stack_np_examples_into_batch(dict_list: Sequence[NumpyBatch]) -> NumpyBatch:
 
 def unstack_np_batch_into_examples(batch: NumpyBatch):
     """Splits a single batch into samples.
-    
+
     Note:
     This can be really useful when using presaved batches, so you can split the samples, reshuffle,
     and recombine into batches. This means batches can be rebatched each epoch.
-    
+
     See also: `stack_np_examples_into_batch()` for opposite
     """
     batch_keys = list(batch.keys())
-    
+
     # Look at a non-constant key and find batch_size. Trickier if key is NWP
     non_constant_key = next(filter(lambda x: not _key_is_constant(x), batch_keys))
     if non_constant_key == BatchKey.nwp:
@@ -123,7 +123,7 @@ def unstack_np_batch_into_examples(batch: NumpyBatch):
         batch_size = batch[BatchKey.nwp][nwp_source][non_constant_nwp_key].shape[0]
     else:
         batch_size = batch[non_constant_key].shape[0]
-    
+
     # Loop through and split the batch into samples
     samples = []
     for i in range(batch_size):
