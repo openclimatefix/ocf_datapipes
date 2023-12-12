@@ -80,7 +80,7 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
         nwp_time_periods_datapipes[nwp_source] = nwp_time_periods_datapipes[
             nwp_source
         ].get_contiguous_time_periods(
-            sample_period_duration=timedelta(minutes=60),
+            sample_period_duration=timedelta(hours=3),
             history_duration=timedelta(minutes=nwp_conf.history_minutes),
             forecast_duration=timedelta(minutes=nwp_conf.forecast_minutes),
             time_dim="init_time_utc",
@@ -115,7 +115,7 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
             nwp_datapipe_dict[nwp_source]
             .convert_to_nwp_target_time(
                 t0_datapipe=nwp_t0_datapipe,
-                sample_period_duration=timedelta(hours=1),
+                sample_period_duration=timedelta(hours=3),
                 history_duration=timedelta(minutes=nwp_conf.history_minutes),
                 forecast_duration=timedelta(minutes=nwp_conf.forecast_minutes),
             )
