@@ -1,4 +1,4 @@
-"""Datapipes"""
+"""OCF Datapipes"""
 import ocf_datapipes.batch
 import ocf_datapipes.convert
 import ocf_datapipes.experimental
