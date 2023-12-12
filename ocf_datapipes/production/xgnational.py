@@ -18,6 +18,7 @@ xarray.set_options(keep_attrs=True)
 
 
 def select_most_recent_init_time(ds):
+    """Select the most recent init time from the input Dataset/DataArray"""
     most_recent_init_time = ds.init_time_utc.max()
     ds = ds.sel(init_time_utc=most_recent_init_time)
     logger.debug(f"Selected most recent NWP observation: {most_recent_init_time.values}")

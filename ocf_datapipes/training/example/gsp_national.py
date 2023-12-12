@@ -97,7 +97,7 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
     )
 
     # Select t0 times
-    gsp_t0_datapipe, nwp_t0_datapipe = gsp_valid_times_datapipe.select_t0_time().fork(2)
+    gsp_t0_datapipe, nwp_t0_datapipe = valid_periods_datapipe.select_t0_time().fork(2)
 
     # Take GSP time slices and convert to NumpyBatch
     gsp_numpy_datapipe = gsp_datapipe.select_time_slice(

@@ -53,7 +53,7 @@ def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
         Rescaled wind speed to MWh roughly
     """
     # m/s to kw (roughly) for each 1 m/s, starting from 0 to 30 m/s
-    wind_speed_to_power = np.array(
+    wind_speed_to_power = np.array(  # noqa: F841
         [
             0,
             0,

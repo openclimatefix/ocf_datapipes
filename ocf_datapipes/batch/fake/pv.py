@@ -17,6 +17,7 @@ def make_fake_pv_data(
     Args:
         configuration: configuration object
         t0_datetime_utc: one datetime for when t0 is
+        batch_size: Integer batch size to create
 
     Returns: dictionary of pv items
     """

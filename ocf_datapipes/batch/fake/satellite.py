@@ -21,6 +21,7 @@ def make_fake_satellite_data(
         configuration: configuration object
         t0_datetime_utc: one datetime for when t0 is
         is_hrv: option if its hrv or not
+        batch_size: Integer batch size to create
 
     Returns: dictionary of satellite items
     """

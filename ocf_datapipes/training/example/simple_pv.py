@@ -19,9 +19,9 @@ BUFFERSIZE = 1000
 def simple_pv_datapipe(
     configuration_filename: Union[Path, str],
 ) -> IterDataPipe:
-    """
-    Create the simple datapipe which loads PV data. This could be used for training an
-    autoregressive model for site-level PV output.
+    """Create the simple datapipe which loads PV data. 
+    
+    This could be used for training an autoregressive model for site-level PV output.
 
     Args:
         configuration_filename: Name of the configuration

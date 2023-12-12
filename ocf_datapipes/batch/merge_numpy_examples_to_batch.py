@@ -59,7 +59,7 @@ def stack_np_examples_into_batch(dict_list: Sequence[NumpyBatch]) -> NumpyBatch:
     See also: `unstack_np_batch_into_examples()` for opposite
 
     Args:
-        np_examples: Numpy examples to stack
+        dict_list: A list of dict-like Numpy examples to stack
 
     Returns:
         The stacked NumpyBatch object

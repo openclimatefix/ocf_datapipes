@@ -523,7 +523,7 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
     def validate_nwp_provider(cls, v):
         """Validate 'nwp_provider'"""
         if v.lower() not in NWP_PROVIDERS:
-            message = f"NWP provider {v} is not in {nwp_providers}"
+            message = f"NWP provider {v} is not in {NWP_PROVIDERS}"
             logger.warning(message)
             assert Exception(message)
         return v
@@ -547,9 +547,11 @@ class MultiNWP(Base):
         return iter(self.__root__)
 
     def keys(self):
+        """Returns dictionary-like keys"""
         return self.__root__.keys()
 
     def items(self):
+        """Returns dictionary-like items"""
         return self.__root__.items()
 
 

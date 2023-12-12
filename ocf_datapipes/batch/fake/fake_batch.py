@@ -93,6 +93,7 @@ def fake_data_pipeline(configuration: Union[str, Configuration], batch_size: int
 
     Args:
         configuration: a configuration file
+        batch_size: Integer batch size to create
 
     """
 

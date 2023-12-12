@@ -31,14 +31,14 @@ class MergeNumpyModalitiesIterDataPipe(IterDataPipe):
 class MergeNWPNumpyModalitiesIterDataPipe(IterDataPipe):
     """Merge multiple NWPNumpyBatches into a NumpyBatch"""
 
-    def __init__(self, source_datapipes: dict[IterDataPipe]):
+    def __init__(self, datapipes_dict: dict[IterDataPipe]):
         """
         Merge multiple NWPNumpyBatches into a NumpyBatch
 
         Args:
             datapipes_dict: dict of datapipes to merge emitting NWPNumpyBatch objects
         """
-        self.datapipes_dict = source_datapipes
+        self.datapipes_dict = datapipes_dict
 
     def __iter__(self) -> NumpyBatch:
         """Merge multiple NWPNumpyBatches into a NumpyBatch"""
