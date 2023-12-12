@@ -14,7 +14,6 @@ from pathy import Pathy
 logger = logging.getLogger(__name__)
 
 
-
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     """
     Converts datetime64 to floats
@@ -158,7 +157,7 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
     """
     # Flatten any NWP data
     dataset_dict = flatten_nwp_source_dict(dataset_dict, sep="-")
-    
+
     # Convert all data_arrays to datasets
     new_dataset_dict = {}
     for key, datasets in dataset_dict.items():
@@ -229,29 +228,29 @@ def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.
         )
         # Split the dataset by the prefix
         datasets[key] = dataset
-    
+
     # Unflatten any NWP data
     datasets = nest_nwp_source_dict(datasets, sep="-")
     return datasets
 
 
-def flatten_nwp_source_dict(d: dict, sep: str="/") -> dict:
+def flatten_nwp_source_dict(d: dict, sep: str = "/") -> dict:
     """Unnest a dictionary where the NWP values are nested under the key 'nwp'."""
-    new_dict = {k:v for k, v in d.items() if k!="nwp"}
-    if "nwp" in d: 
+    new_dict = {k: v for k, v in d.items() if k != "nwp"}
+    if "nwp" in d:
         if isinstance(d["nwp"], dict):
-            new_dict.update({f"nwp{sep}{k}":v for k, v in d["nwp"].items()})
+            new_dict.update({f"nwp{sep}{k}": v for k, v in d["nwp"].items()})
         else:
             new_dict.update({"nwp": d["nwp"]})
     return new_dict
-        
 
-def nest_nwp_source_dict(d: dict, sep: str="/") -> dict:
+
+def nest_nwp_source_dict(d: dict, sep: str = "/") -> dict:
     """Re-nest a dictionary where the NWP values are nested under keys 'nwp/<key>'."""
     nwp_prefix = f"nwp{sep}"
-    new_dict = {k:v for k, v in d.items() if not k.startswith(nwp_prefix)}
+    new_dict = {k: v for k, v in d.items() if not k.startswith(nwp_prefix)}
     nwp_keys = [k for k in d.keys() if k.startswith(nwp_prefix)]
-    if len(nwp_keys)>0:
-        nwp_subdict = {k.removeprefix(nwp_prefix):d[k] for k in nwp_keys}
+    if len(nwp_keys) > 0:
+        nwp_subdict = {k.removeprefix(nwp_prefix): d[k] for k in nwp_keys}
         new_dict["nwp"] = nwp_subdict
     return new_dict

@@ -67,9 +67,8 @@ def construct_sliced_data_pipeline(
 
     if "nwp" in datapipes_dict:
         nwp_numpy_modalities = dict()
-        
-        for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
 
+        for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
             location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
             nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
                 location_pipe_copy,
@@ -77,11 +76,11 @@ def construct_sliced_data_pipeline(
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
             nwp_datapipe = nwp_datapipe.normalize(
-                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider], 
+                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
                 std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
             )
             nwp_numpy_modalities[nwp_key] = nwp_datapipe.convert_nwp_to_numpy_batch()
-        
+
         # Combine the NWPs into NumpyBatch
         nwp_numpy_modalities = MergeNWPNumpyModalities(nwp_numpy_modalities)
         numpy_modalities.append(nwp_numpy_modalities)

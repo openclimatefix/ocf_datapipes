@@ -21,11 +21,10 @@ def _get_azimuth_and_elevation(lat, lon, dt, must_be_finite):
             raise ValueError(f"Non-finite (lon, lat) = ({lon}, {lat}")
         return (
             np.full_like(dt, fill_value=np.NaN).astype(np.float32),
-            np.full_like(dt, fill_value=np.NaN).astype(np.float32)
+            np.full_like(dt, fill_value=np.NaN).astype(np.float32),
         )
-    
-    else:
 
+    else:
         solpos = pvlib.solarposition.get_solarposition(
             time=dt,
             latitude=lat,
@@ -39,7 +38,8 @@ def _get_azimuth_and_elevation(lat, lon, dt, must_be_finite):
         )
         azimuth = solpos["azimuth"]
         elevation = solpos["elevation"]
-        return azimuth, elevation 
+        return azimuth, elevation
+
 
 @functional_datapipe("add_sun_position")
 class AddSunPositionIterDataPipe(IterDataPipe):
@@ -63,22 +63,23 @@ class AddSunPositionIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         for np_batch in self.source_datapipe:
-            
             if self.modality_name == "hrvsatellite":
                 # TODO Make work with Lat/Lons instead
-                y_osgb = np_batch[BatchKey.hrvsatellite_y_osgb] # Shape: optional[example], y, x
-                x_osgb = np_batch[BatchKey.hrvsatellite_x_osgb] # Shape: optional[example], y, x
-                time_utc = np_batch[BatchKey.hrvsatellite_time_utc] # Shape: optional[example], time
+                y_osgb = np_batch[BatchKey.hrvsatellite_y_osgb]  # Shape: optional[example], y, x
+                x_osgb = np_batch[BatchKey.hrvsatellite_x_osgb]  # Shape: optional[example], y, x
+                time_utc = np_batch[
+                    BatchKey.hrvsatellite_time_utc
+                ]  # Shape: optional[example], time
 
                 # Get the time and position for the centre of the t0 frame:
                 y_centre_idx = int(y_osgb.shape[-2] // 2)
                 x_centre_idx = int(y_osgb.shape[-1] // 2)
                 y_osgb = y_osgb[..., y_centre_idx, x_centre_idx]  # Shape: optional[example]
                 x_osgb = x_osgb[..., y_centre_idx, x_centre_idx]  # Shape: optional[example]
-                                
+
             elif self.modality_name == "pv":
-                lats = np_batch[BatchKey.pv_latitude] # Shape: (optional[example], n_pvs)
-                lons = np_batch[BatchKey.pv_longitude] # Shape: (optional[example], n_pvs)
+                lats = np_batch[BatchKey.pv_latitude]  # Shape: (optional[example], n_pvs)
+                lons = np_batch[BatchKey.pv_longitude]  # Shape: (optional[example], n_pvs)
                 time_utc = np_batch[BatchKey.pv_time_utc]  # Shape: optional[example]
 
                 # If using multiple PV systems, take mean location
@@ -92,14 +93,14 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                         lats = np.nanmean(lats, axis=-1)
                         lons = np.nanmean(lons, axis=-1)
                 else:
-                        lats = lats[..., 0]
-                        lons = lons[..., 0]
-                    
+                    lats = lats[..., 0]
+                    lons = lons[..., 0]
+
             elif self.modality_name == "gsp":
                 y_osgb = np_batch[BatchKey.gsp_y_osgb]  # Shape: optional[example], n_gsps
                 x_osgb = np_batch[BatchKey.gsp_x_osgb]  # Shape: optional[example], n_gsps
-                time_utc = np_batch[BatchKey.gsp_time_utc] # Shape: optional[example],
-                
+                time_utc = np_batch[BatchKey.gsp_time_utc]  # Shape: optional[example],
+
                 # If using multiple GSPs, take mean location
                 if x_osgb.shape[-1] > 1:
                     y_osgb = np.nanmean(y_osgb, axis=-1)
@@ -107,7 +108,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 else:
                     y_osgb = y_osgb[..., 0]
                     x_osgb = x_osgb[..., 0]
-                    
+
             else:
                 raise ValueError(f"Unrecognized modality: {self.modality_name }")
 
@@ -115,37 +116,39 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             if self.modality_name not in ["pv"]:
                 # Convert to the units that pvlib expects: lon, lat
                 lons, lats = osgb_to_lon_lat(x=x_osgb, y=y_osgb)
-            
+
             # Elevations must be finite and non-nan except for PV data where values may be missing
             must_be_finite = self.modality_name != "pv"
 
             # Check if the input is batched
             # time_utc could have shape (batch_size, n_times) or (n_times,)
-            assert len(time_utc.shape) in [1,2]
-            is_batched = len(time_utc.shape)==2
-            
+            assert len(time_utc.shape) in [1, 2]
+            is_batched = len(time_utc.shape) == 2
+
             times = pd.to_datetime(time_utc, unit="s")
-            
+
             if is_batched:
-                assert lons.shape==(time_utc.shape[0],)
-                assert lats.shape==(time_utc.shape[0],)
-                
+                assert lons.shape == (time_utc.shape[0],)
+                assert lats.shape == (time_utc.shape[0],)
+
                 azimuth = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
                 elevation = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
-                
+
                 # Loop round each example to get the Sun's elevation and azimuth
                 for example_idx, (lon, lat, dt) in enumerate(zip(lons, lats, times)):
-                    azimuth[example_idx], elevation[example_idx] = (
-                        _get_azimuth_and_elevation(lon, lat, dt, must_be_finite)
+                    azimuth[example_idx], elevation[example_idx] = _get_azimuth_and_elevation(
+                        lon, lat, dt, must_be_finite
                     )
             else:
-                assert (isinstance(lons, np.ndarray) and lons.shape==()) or isinstance(lons, float)
-                assert (isinstance(lats, np.ndarray) and lats.shape==()) or isinstance(lats, float)
-                
-                azimuth, elevation = (
-                    _get_azimuth_and_elevation(lons, lats, times, must_be_finite)
+                assert (isinstance(lons, np.ndarray) and lons.shape == ()) or isinstance(
+                    lons, float
                 )
-            
+                assert (isinstance(lats, np.ndarray) and lats.shape == ()) or isinstance(
+                    lats, float
+                )
+
+                azimuth, elevation = _get_azimuth_and_elevation(lons, lats, times, must_be_finite)
+
             # Normalize
             azimuth = (azimuth - AZIMUTH_MEAN) / AZIMUTH_STD
             elevation = (elevation - ELEVATION_MEAN) / ELEVATION_STD

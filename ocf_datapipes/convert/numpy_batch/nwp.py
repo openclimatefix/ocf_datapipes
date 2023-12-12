@@ -34,7 +34,9 @@ class ConvertNWPToNumpyBatchIterDataPipe(IterDataPipe):
             example[NWPBatchKey.nwp_step] = (xr_data.step.values / np.timedelta64(1, "h")).astype(
                 np.int64
             )
-            example[NWPBatchKey.nwp_init_time_utc] = datetime64_to_float(xr_data.init_time_utc.values)
+            example[NWPBatchKey.nwp_init_time_utc] = datetime64_to_float(
+                xr_data.init_time_utc.values
+            )
 
             for batch_key, dataset_key in (
                 (NWPBatchKey.nwp_y_osgb, "y_osgb"),

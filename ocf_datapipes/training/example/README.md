@@ -26,7 +26,7 @@ These examples are then made into batches.
 ## GSP, PV, Satellite, and NWP Pipeline
 
 `gsp_pv_satellite_nwp.py` is a training pipeline for loading GSP, PV, and Satellite and NWP.
- 
+
 The location is chosen using the center of the GSP location and using GSP timestamps for forecast
 time t0. Then a time is chosen, and PV, Satellite and NWP examples are made.
 
@@ -136,5 +136,3 @@ graph TD
     G[Example]
 
 ```
-
-

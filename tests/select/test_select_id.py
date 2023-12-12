@@ -9,7 +9,7 @@ def test_select_id(configuration_with_pv_netcdf):
     configuration: Configuration = next(iter(config_datapipe))
 
     pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
-        
+
     pv_datapipe, pv_location_datapipe = pv_datapipe.fork(2)
     location_datapipe = pv_location_datapipe.location_picker()
 

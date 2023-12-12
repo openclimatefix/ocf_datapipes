@@ -45,7 +45,7 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
         """Iterate through both datapipes and convert Xarray dataset"""
         for xr_data, t0 in self.source_datapipe.zip_ocf(self.t0_datapipe):
             logger.debug("convert_to_nwp_target_time ")
-            
+
             t0 = pd.Timestamp(t0)
             start_dt = t0 - self.history_duration
             end_dt = t0 + self.forecast_duration
@@ -55,15 +55,14 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
                 end_dt.ceil(self.sample_period_duration),
                 freq=self.sample_period_duration,
             )
-            
+
             # Forecasts made up to and including t0
             xr_available = xr_data.sel(init_time_utc=slice(None, t0))
-            
+
             init_times = xr_available.sel(
                 init_time_utc=target_times,
                 method="ffill",  # forward fill from init times to target times
             ).init_time_utc.values
-
 
             steps = target_times - init_times
 
@@ -75,6 +74,6 @@ class ConvertToNWPTargetTimeIterDataPipe(IterDataPipe):
             coords = {"target_time_utc": target_times}
             init_time_indexer = xr.DataArray(init_times, coords=coords)
             step_indexer = xr.DataArray(steps, coords=coords)
-        
+
             xr_data = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
             yield xr_data

@@ -36,9 +36,11 @@ from ocf_datapipes.load import (
 xr.set_options(keep_attrs=True)
 
 # This path is used both here and in tests in deeper test directories
-# Make two ways to easily access it
+# Make two ways to easily access it
 # Weirdly using pytest.fixture(autouse=True) wasn't working - TODO?
 _top_test_directory = os.path.dirname(os.path.realpath(__file__))
+
+
 @pytest.fixture()
 def top_test_directory():
     return _top_test_directory
@@ -49,12 +51,13 @@ def sat_hrv_datapipe():
     filename = _top_test_directory + "/data/hrv_sat_data.zarr"
     return OpenSatellite(zarr_path=filename)
 
+
 @pytest.fixture()
 def sat_datapipe():
     filename = f"{_top_test_directory}/data/sat_data.zarr"
     # The saved data is scaled from 0-1024. Now we use data scaled from 0-1
     # Rescale here for subsequent tests
-    return OpenSatellite(zarr_path=filename).map(lambda da: da/1024)
+    return OpenSatellite(zarr_path=filename).map(lambda da: da / 1024)
 
 
 @pytest.fixture()
@@ -448,9 +451,9 @@ def gsp_zarr_file():
 
     capacity_mwp = xr.DataArray(
         np.random.uniform(
-                0,
-                200,
-                size=(7 * 24, len(ids)),
+            0,
+            200,
+            size=(7 * 24, len(ids)),
         ),
         coords=coords,
         name="capacity_mwp",
@@ -476,26 +479,25 @@ def nwp_data_with_id_filename():
     - variables
     - id
     """
-    
-    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60T", periods=24*7)
-    steps = [timedelta(minutes=60*i) for i in range(0, 11)]
+
+    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60T", periods=24 * 7)
+    steps = [timedelta(minutes=60 * i) for i in range(0, 11)]
     variables = ["si10", "dswrf", "t", "prate"]
     ids = np.array(range(0, 10)) + 9905
-    
+
     coords = (
         ("init_time", init_times),
         ("variable", variables),
         ("step", steps),
         ("id", ids),
     )
-    
-    nwp_array_shape = (len(init_times), len(variables), len(steps), len(ids))    
+
+    nwp_array_shape = (len(init_times), len(variables), len(steps), len(ids))
 
     nwp_data = xr.DataArray(
-            np.random.uniform(0, 200, size=nwp_array_shape),
-            coords=coords,
-    ) 
-    
+        np.random.uniform(0, 200, size=nwp_array_shape),
+        coords=coords,
+    )
 
     nwp_data = nwp_data.to_dataset(name="UKV")
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -504,8 +506,6 @@ def nwp_data_with_id_filename():
         nwp_data.to_zarr(filename, engine="h5netcdf")
 
         yield filename
-
-        
 
 
 @pytest.fixture()
@@ -519,38 +519,37 @@ def nwp_gfs_data():
     - longitude
     """
 
-    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60T", periods=24*7)
-    steps = [timedelta(minutes=60*i) for i in range(0, 11)]
+    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60T", periods=24 * 7)
+    steps = [timedelta(minutes=60 * i) for i in range(0, 11)]
     x = np.array(range(0, 10))
     y = np.array(range(0, 10))
     variables = ["si10", "dswrf", "t", "prate"]
-    
+
     coords = (
         ("time", init_times),
         ("step", steps),
         ("longitude", x),
         ("latitude", y),
     )
-    
+
     nwp_array_shape = (len(init_times), len(steps), len(x), len(y))
 
     data_arrays = []
-    
-    for variable in variables:
 
+    for variable in variables:
         data_arrays += [
             xr.DataArray(
                 np.random.uniform(0, 200, size=nwp_array_shape),
                 coords=coords,
                 name=variable,
-            ) 
+            )
         ]
 
     nwp_data = xr.merge(data_arrays)
     return nwp_data
 
 
-@pytest.fixture()   
+@pytest.fixture()
 def nwp_gfs_data_filename(nwp_gfs_data):
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = tmpdir + "/nwp.zarr"
@@ -560,18 +559,18 @@ def nwp_gfs_data_filename(nwp_gfs_data):
 
 @pytest.fixture()
 def nwp_ukv_data():
-    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="180T", periods=24*7)
-    steps = [timedelta(minutes=60*i) for i in range(0, 11)]
-    
+    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="180T", periods=24 * 7)
+    steps = [timedelta(minutes=60 * i) for i in range(0, 11)]
+
     # These are the values from the training data but it takes too long:
     # -> x = np.arange(-239_000, 857_000, 2000) # Shape:  (548,)
     # -> y = np.arange(-183_000, 1225_000, 2000)[::-1] # Shape:  (704,)
-    
-    # This is much faster:
+
+    # This is much faster:
     x = np.linspace(-239_000, 857_000, 100)
-    y = np.linspace(-183_000, 1225_000, 100)[::-1] # UKV data must run top to bottom
+    y = np.linspace(-183_000, 1225_000, 100)[::-1]  # UKV data must run top to bottom
     variables = ["si10", "dswrf", "t", "prate"]
-    
+
     coords = (
         ("init_time", init_times),
         ("variable", variables),
@@ -579,17 +578,17 @@ def nwp_ukv_data():
         ("x", x),
         ("y", y),
     )
-    
-    nwp_array_shape = (len(init_times), len(variables), len(steps), len(x), len(y))    
+
+    nwp_array_shape = (len(init_times), len(variables), len(steps), len(x), len(y))
 
     nwp_data = xr.DataArray(
-            np.random.uniform(0, 200, size=nwp_array_shape),
-            coords=coords,
+        np.random.uniform(0, 200, size=nwp_array_shape),
+        coords=coords,
     )
     return nwp_data.to_dataset(name="UKV")
-    
-    
-@pytest.fixture()   
+
+
+@pytest.fixture()
 def nwp_ukv_data_filename(nwp_ukv_data):
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = tmpdir + "/nwp.zarr"
@@ -600,7 +599,7 @@ def nwp_ukv_data_filename(nwp_ukv_data):
 @pytest.fixture()
 def configuration_filename():
     return f"{_top_test_directory}/data/configs/test.yaml"
-        
+
 
 @pytest.fixture()
 def configuration():
@@ -659,8 +658,8 @@ def configuration_with_gsp_and_nwp(gsp_zarr_file, nwp_ukv_data_filename):
         save_yaml_configuration(configuration=configuration, filename=configuration_filename)
 
         yield configuration_filename
-        
-        
+
+
 @pytest.fixture()
 def wind_configuration_filename():
     return f"{_top_test_directory}/data/configs/wind_test.yaml"

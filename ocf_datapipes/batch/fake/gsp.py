@@ -9,9 +9,7 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def make_fake_gsp_data(
-    configuration: Configuration, 
-    t0_datetime_utc: datetime, 
-    batch_size: int = 8
+    configuration: Configuration, t0_datetime_utc: datetime, batch_size: int = 8
 ) -> dict:
     """
     Make Fake GSP data ready for ML model

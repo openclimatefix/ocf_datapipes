@@ -36,7 +36,7 @@ class OpenConfigurationIterDataPipe(IterDataPipe):
     def __iter__(self):
         """Open and return configuration file"""
         logger.debug(f"Going to open {self.configuration_filename}")
-        
+
         configuration = load_configuration(self.configuration_filename)
 
         while True:

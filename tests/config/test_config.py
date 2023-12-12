@@ -54,7 +54,6 @@ def test_yaml_load_env(configuration_filename):
     Check a configuration can be loaded with an env var
     """
 
-
     os.environ["PATH"] = "example_path"
 
     # check the file can be loaded

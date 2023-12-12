@@ -7,17 +7,17 @@ input_data:
     gsp_zarr_path: tests/data/gsp/test.zarr
     history_minutes: 120
   nwp:
-      ukv:
-        nwp_channels:
-          - t
-        nwp_image_size_pixels_height: 2
-        nwp_image_size_pixels_width: 2
-        nwp_zarr_path: tests/data/nwp_data/test.zarr
-        nwp_provider: "ukv"
-        history_minutes: 60
-        forecast_minutes: 120
-        time_resolution_minutes: 60
-        index_by_id: True
+    ukv:
+      nwp_channels:
+        - t
+      nwp_image_size_pixels_height: 2
+      nwp_image_size_pixels_width: 2
+      nwp_zarr_path: tests/data/nwp_data/test.zarr
+      nwp_provider: "ukv"
+      history_minutes: 60
+      forecast_minutes: 120
+      time_resolution_minutes: 60
+      index_by_id: True
   pv:
     pv_files_groups:
       - label: solar_sheffield_passiv

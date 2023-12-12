@@ -22,9 +22,9 @@ def test_open_and_return_datapipes(configuration_filename):
     used_datapipes = open_and_return_datapipes(configuration_filename)
     expected_keys = set(["nwp", "config", "topo", "gsp", "pv", "sat", "hrv"])
     assert set(used_datapipes.keys()) == expected_keys
-    for key in (expected_keys - set(["nwp", "config"])):
+    for key in expected_keys - set(["nwp", "config"]):
         assert isinstance(used_datapipes[key], IterDataPipe)
-        
+
     for nwp_key in used_datapipes["nwp"].keys():
         assert isinstance(used_datapipes["nwp"][nwp_key], IterDataPipe)
 
@@ -32,13 +32,13 @@ def test_open_and_return_datapipes(configuration_filename):
 def test_get_and_return_overlapping_time_periods_and_t0(configuration_filename):
     used_datapipes = open_and_return_datapipes(configuration_filename)
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
-    
+
     datapipe_keys = set(["gsp", "hrv", "nwp/ukv", "pv", "sat"])
     t0_keys = set([f"{k}_t0" for k in datapipe_keys])
     extra_keys = set(["config", "topo"])
-    
-    assert set(used_datapipes.keys()) == datapipe_keys.union(t0_keys,extra_keys)
-    
+
+    assert set(used_datapipes.keys()) == datapipe_keys.union(t0_keys, extra_keys)
+
     for key in datapipe_keys.union(t0_keys):
         assert isinstance(used_datapipes[key], IterDataPipe)
 
@@ -47,19 +47,18 @@ def test_add_selected_time_slices_from_datapipes(configuration_filename):
     used_datapipes = open_and_return_datapipes(configuration_filename)
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
-    
-    datapipe_keys = set(["gsp", "gsp_future",  "pv", "pv_future",  "hrv", "nwp/ukv", "sat"])
+
+    datapipe_keys = set(["gsp", "gsp_future", "pv", "pv_future", "hrv", "nwp/ukv", "sat"])
     extra_keys = set(["config", "topo"])
-    
+
     assert set(used_datapipes.keys()) == datapipe_keys.union(extra_keys)
-    
+
     for key in datapipe_keys:
         assert isinstance(used_datapipes[key], IterDataPipe)
-        
+
     # Zip datapipes together
     zipped = Zipper(*[used_datapipes[k] for k in datapipe_keys])
     batch = next(iter(zipped))
-
 
 
 @pytest.mark.skip("Too long for GitHub CI")
@@ -67,8 +66,8 @@ def test_add_selected_time_slices_from_datapipes_fork_iterations(configuration_f
     used_datapipes = open_and_return_datapipes(configuration_filename)
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
-    
-    datapipe_keys = set(["gsp", "gsp_future",  "pv", "pv_future",  "hrv", "nwp/ukv", "sat", "topo"])
+
+    datapipe_keys = set(["gsp", "gsp_future", "pv", "pv_future", "hrv", "nwp/ukv", "sat", "topo"])
 
     # Zip datapipes together
     zipped = Zipper(*[used_datapipes[k] for k in datapipe_keys])

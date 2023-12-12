@@ -137,7 +137,7 @@ def test_metnet_production(
     pv_datapipe = CreatePVImage(pv_datapipe, image_datapipe)
 
     sat_hrv_datapipe = Normalize(
-        sat_hrv_datapipe, mean=RSS_MEAN.sel(channel="HRV") / 4, std=RSS_STD.sel(channel="HRV")  / 4
+        sat_hrv_datapipe, mean=RSS_MEAN.sel(channel="HRV") / 4, std=RSS_STD.sel(channel="HRV") / 4
     ).map(
         lambda x: x.resample(time_utc="5T").interpolate("linear")
     )  # Interplate to 5 minutes incase its 15 minutes

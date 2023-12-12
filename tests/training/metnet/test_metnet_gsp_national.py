@@ -18,6 +18,7 @@ def test_metnet_gsp_national_datapipe():
         if i + 1 % 50000 == 0:
             break
 
+
 @pytest.mark.skip("Failing at the moment")
 def test_metnet_gsp_national_image_datapipe():
     filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config/test.yaml")
