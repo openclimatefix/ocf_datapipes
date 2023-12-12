@@ -16,6 +16,7 @@ def _to_data_array(d):
 
 class NWPStatDict(dict):
     """Custom dictionary class to hold NWP normalizarion stats"""
+
     def __getitem__(self, key):
         if key in self.keys():
             return super().__getitem__(key)
