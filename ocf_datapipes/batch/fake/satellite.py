@@ -9,8 +9,11 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def make_fake_satellite_data(
-    configuration: Configuration, t0_datetime_utc: datetime, is_hrv: bool = False
-):
+    configuration: Configuration,
+    t0_datetime_utc: datetime,
+    is_hrv: bool = False,
+    batch_size: int = 8,
+) -> dict:
     """
     Make Fake Satellite data ready for ML model. This makes data across all different data inputs
 
@@ -18,6 +21,7 @@ def make_fake_satellite_data(
         configuration: configuration object
         t0_datetime_utc: one datetime for when t0 is
         is_hrv: option if its hrv or not
+        batch_size: Integer batch size to create
 
     Returns: dictionary of satellite items
     """
@@ -34,7 +38,6 @@ def make_fake_satellite_data(
     if satellite_config is None:
         return {}
 
-    batch_size = configuration.process.batch_size
     n_channels = len(getattr(satellite_config, f"{variable}_channels"))
     height = getattr(satellite_config, f"{variable}_image_size_pixels_height")
     width = getattr(satellite_config, f"{variable}_image_size_pixels_width")

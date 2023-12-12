@@ -3,22 +3,22 @@ import numpy as np
 
 from ocf_datapipes.batch.fake.utils import get_n_time_steps_from_config
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.utils.consts import BatchKey, NWPBatchKey
 
 
-def make_fake_sun_data(configuration: Configuration):
+def make_fake_sun_data(configuration: Configuration, batch_size: int = 8):
     """
     Make Fake Sun data ready for ML model. This makes data across all different data inputs
 
     Args:
         configuration: configuration object
         t0_datetime_utc: one datetime for when t0 is
+        batch_size: Integer batch size to create
 
     Returns: dictionary of pv items
     """
 
     batch = {}
-    batch_size = configuration.process.batch_size
 
     # HRV Satellite
     if configuration.input_data.hrvsatellite is not None:
@@ -56,12 +56,17 @@ def make_fake_sun_data(configuration: Configuration):
 
     # NWP
     if configuration.input_data.nwp is not None:
-        n_nwp_timesteps = get_n_time_steps_from_config(configuration.input_data.nwp)
-        batch[BatchKey.nwp_target_time_solar_azimuth] = np.random.random(
-            (batch_size, n_nwp_timesteps)
-        )
-        batch[BatchKey.nwp_target_time_solar_elevation] = np.random.random(
-            (batch_size, n_nwp_timesteps)
-        )
+        batch[BatchKey.nwp] = {}
+
+        for nwp_source, nwp_config in configuration.input_data.nwp.items():
+            batch[BatchKey.nwp][nwp_source] = {}
+
+            n_nwp_timesteps = get_n_time_steps_from_config(configuration.input_data.nwp[nwp_source])
+            batch[BatchKey.nwp][nwp_source][
+                NWPBatchKey.nwp_target_time_solar_azimuth
+            ] = np.random.random((batch_size, n_nwp_timesteps))
+            batch[BatchKey.nwp][nwp_source][
+                NWPBatchKey.nwp_target_time_solar_elevation
+            ] = np.random.random((batch_size, n_nwp_timesteps))
 
     return batch

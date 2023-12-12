@@ -21,6 +21,7 @@ from ocf_datapipes.load import (
     OpenTopography,
 )
 from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,12 @@ def open_and_return_datapipes(
 
     # Check which modalities to use
     conf_in = configuration.input_data
-    use_nwp = use_nwp and (conf_in.nwp is not None) and (conf_in.nwp.nwp_zarr_path != "")
+    use_nwp = (
+        use_nwp
+        and (conf_in.nwp is not None)
+        and len(conf_in.nwp) != 0
+        and all(v.nwp_zarr_path != "" for _, v in conf_in.nwp.items())
+    )
     use_pv = (
         use_pv and (conf_in.pv is not None) and (conf_in.pv.pv_files_groups[0].pv_filename != "")
     )
@@ -108,19 +114,19 @@ def open_and_return_datapipes(
     # Load NWP data
     if use_nwp:
         logger.debug("Opening NWP Data")
-        nwp_datapipe = (
-            OpenNWP(
-                configuration.input_data.nwp.nwp_zarr_path,
-                provider=configuration.input_data.nwp.nwp_provider,
+        used_datapipes["nwp"] = {}
+        for nwp_source, nwp_conf in conf_in.nwp.items():
+            used_datapipes["nwp"][nwp_source] = (
+                OpenNWP(
+                    nwp_conf.nwp_zarr_path,
+                    provider=nwp_conf.nwp_provider,
+                )
+                .select_channels(nwp_conf.nwp_channels)
+                .add_t0_idx_and_sample_period_duration(
+                    sample_period_duration=timedelta(hours=1),
+                    history_duration=timedelta(minutes=nwp_conf.history_minutes),
+                )
             )
-            .select_channels(configuration.input_data.nwp.nwp_channels)
-            .add_t0_idx_and_sample_period_duration(
-                sample_period_duration=timedelta(hours=1),
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-            )
-        )
-
-        used_datapipes["nwp"] = nwp_datapipe
 
     if use_sat:
         logger.debug("Opening Satellite Data")
@@ -199,6 +205,8 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
     datapipes_to_return = {}  # Returned along with original ones
     t0_datapipe = None
     configuration = used_datapipes.pop("config")
+    used_datapipes = flatten_nwp_source_dict(used_datapipes)
+
     for key, datapipe in used_datapipes.items():
         if "topo" in key:
             continue
@@ -208,11 +216,16 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
         else:
             forked_datapipes = datapipe.fork(2, buffer_size=100)
         datapipes_to_return[key] = forked_datapipes[0]
-        if "nwp" == key:
+        if key.startswith("nwp/"):
+            nwp_source = key.removeprefix("nwp/")
             time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
                 sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
+                history_duration=timedelta(
+                    minutes=configuration.input_data.nwp[nwp_source].history_minutes
+                ),
+                forecast_duration=timedelta(
+                    minutes=configuration.input_data.nwp[nwp_source].forecast_minutes
+                ),
                 time_dim="init_time_utc",
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
@@ -405,15 +418,24 @@ def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
     return x.fillna(-1)
 
 
+def _fill_nans_in_arrays(batch: dict):
+    for k, v in batch.items():
+        if isinstance(v, np.ndarray):
+            np.nan_to_num(v, copy=False, nan=0.0)
+        # Recursion is included to reach NWP arrays in subdict
+        elif isinstance(v, dict):
+            _fill_nans_in_arrays(v)
+
+
 def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
     """Fills all NaN values in each np.ndarray in the batch dictionary with zeros.
 
     Operation is performed in-place on the batch.
     """
     logger.info("Filling Nans with zeros")
-    for k, v in batch.items():
-        if isinstance(v, np.ndarray):
-            np.nan_to_num(v, copy=False, nan=0.0)
+    # This function is wrapped to avoid the logger info being duplicated on recursion
+    # Filling is done in-place
+    _fill_nans_in_arrays(batch)
     return batch
 
 
@@ -453,7 +475,7 @@ class DatapipeKeyForker:
 
     def close(self):
         """Asserts that the keys have all been used."""
-        assert len(self.keys_left) == 0
+        assert len(self.keys_left) == 0, self.keys_left
 
 
 def _get_datapipes_dict(
@@ -514,18 +536,18 @@ def construct_loctime_pipelines(
     config = datapipes_dict.pop("config")
 
     # We sample time and space of other data using GSP time and space coordinates, so filter GSP
-    # data first amd this is carried through
+    # data first and this is carried through
     preferred_order_of_keys = [
         "gsp",
         "pv",
         "sensor",
     ]
-    for key in preferred_order_of_keys:
-        if key in datapipes_dict.keys():
-            core_key = key
-            break
-    if core_key == "gsp":
-        datapipes_dict[core_key] = datapipes_dict[core_key].map(gsp_drop_national)
+
+    core_key = next(filter(lambda key: key in datapipes_dict, preferred_order_of_keys))
+
+    if "gsp" in datapipes_dict:
+        datapipes_dict["gsp"] = datapipes_dict["gsp"].map(gsp_drop_national)
+
     if (start_time is not None) or (end_time is not None):
         datapipes_dict[core_key] = datapipes_dict[core_key].select_train_test_time(
             start_time, end_time
@@ -595,8 +617,12 @@ def slice_datapipes_by_time(
     conf_in = configuration.input_data
 
     # Use DatapipeKeyForker to avoid forking t0_datapipe too many times, or leaving any forks unused
-    fork_keys = {k for k in datapipes_dict.keys() if k not in ["topo"]}
+    fork_keys = {k for k in datapipes_dict.keys() if k not in ["topo", "nwp"]}
+    if "nwp" in datapipes_dict:  # nwp is nested so treat separately
+        fork_keys.update({f"nwp/{k}" for k in datapipes_dict["nwp"].keys()})
+
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
+
     if "sat" in datapipes_dict or "hrv" in datapipes_dict:
         sat_and_hrv_dropout_kwargs = dict(
             # Satellite is either 30 minutes or 60 minutes delayed in production.
@@ -608,15 +634,17 @@ def slice_datapipes_by_time(
         sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
 
     if "nwp" in datapipes_dict:
-        datapipes_dict["nwp"] = datapipes_dict["nwp"].convert_to_nwp_target_time_with_dropout(
-            t0_datapipe=get_t0_datapipe("nwp"),
-            sample_period_duration=minutes(60),
-            history_duration=minutes(conf_in.nwp.history_minutes),
-            forecast_duration=minutes(conf_in.nwp.forecast_minutes),
-            # The NWP forecast will always be at least 180 minutes stale
-            dropout_timedeltas=[minutes(-180)],
-            dropout_frac=0 if production else 1.0,
-        )
+        # NWP is nested in the dict
+        for nwp_key, dp in datapipes_dict["nwp"].items():
+            datapipes_dict["nwp"][nwp_key] = dp.convert_to_nwp_target_time_with_dropout(
+                t0_datapipe=get_t0_datapipe(f"nwp/{nwp_key}"),
+                sample_period_duration=minutes(60),
+                history_duration=minutes(conf_in.nwp[nwp_key].history_minutes),
+                forecast_duration=minutes(conf_in.nwp[nwp_key].forecast_minutes),
+                # The NWP forecast will always be at least 180 minutes stale
+                dropout_timedeltas=[minutes(-180)],
+                dropout_frac=0 if production else 1.0,
+            )
 
     if "sat" in datapipes_dict:
         # Take time slices of sat data
@@ -824,12 +852,17 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             continue
         if "_t0" in key:
             continue
-        if "nwp" == key:
+        if key.startswith("nwp/"):
+            nwp_source = key.removeprefix("nwp/")
             datapipes_to_return[key] = datapipe.convert_to_nwp_target_time(
                 t0_datapipe=used_datapipes[key + "_t0"],
                 sample_period_duration=timedelta(hours=1),
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
+                history_duration=timedelta(
+                    minutes=configuration.input_data.nwp[nwp_source].history_minutes
+                ),
+                forecast_duration=timedelta(
+                    minutes=configuration.input_data.nwp[nwp_source].forecast_minutes
+                ),
             )
 
         if "sat" == key:
@@ -954,17 +987,24 @@ def create_t0_and_loc_datapipes(
             continue
 
         elif key == "nwp":
-            datapipes_dict["nwp"], datapipe_copy = datapipes_dict["nwp"].fork(2, buffer_size=5)
+            for nwp_key in datapipes_dict["nwp"].keys():
+                # NWPs are nested since there can be multiple NWP sources
+                datapipes_dict["nwp"][nwp_key], datapipe_copy = datapipes_dict["nwp"][nwp_key].fork(
+                    2, buffer_size=5
+                )
 
-            # NWP is a forecast product so gets its own contiguous function
-            time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
-                history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
-                max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
-                max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
-                time_dim="init_time_utc",
-            )
+                # Different config setting per NWP source
+                nwp_conf = configuration.input_data.nwp[nwp_key]
 
-            contiguous_time_datapipes.append(time_periods)
+                # NWP is a forecast product so gets its own contiguous function
+                time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
+                    history_duration=timedelta(minutes=nwp_conf.history_minutes),
+                    max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
+                    max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
+                    time_dim="init_time_utc",
+                )
+
+                contiguous_time_datapipes.append(time_periods)
 
         else:
             if key == "sat":

@@ -8,13 +8,16 @@ from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils.consts import BatchKey
 
 
-def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) -> dict:
+def make_fake_gsp_data(
+    configuration: Configuration, t0_datetime_utc: datetime, batch_size: int = 8
+) -> dict:
     """
     Make Fake GSP data ready for ML model
 
     Args:
         configuration: configuration object
         t0_datetime_utc: one datetime for when t0 is
+        batch_size: Integer batch size to create
 
     Returns: dictionary of gsp items
     """
@@ -24,7 +27,6 @@ def make_fake_gsp_data(configuration: Configuration, t0_datetime_utc: datetime) 
     if gsp_config is None:
         return {}
 
-    batch_size = configuration.process.batch_size
     n_gsps = gsp_config.n_gsp_per_example
     n_fourier_features = 8
 

@@ -15,7 +15,7 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
 )
 from ocf_datapipes.transform.xarray import PreProcessMetNet
-from ocf_datapipes.utils.consts import NEW_NWP_MEAN, NEW_NWP_STD, RSS_MEAN, RSS_STD
+from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
@@ -114,7 +114,7 @@ def metnet_site_datapipe(
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
         logger.debug("Take NWP time slices")
-        nwp_datapipe = used_datapipes["nwp"].normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
+        nwp_datapipe = used_datapipes["nwp"].normalize(mean=UKV_MEAN, std=UKV_STD)
         pv_loc_datapipe, pv_nwp_image_loc_datapipe = pv_loc_datapipe.fork(2)
         # context_size is the largest it would need
         nwp_datapipe = nwp_datapipe.select_spatial_slice_meters(

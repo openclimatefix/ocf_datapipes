@@ -1,18 +1,15 @@
 """Wrapper for Power Perceiver Production Data Pipeline"""
-import logging
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
-import ocf_datapipes  # noqa
-from ocf_datapipes.batch import MergeNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenConfiguration, OpenPVFromDB, OpenPVFromNetCDF
+from ocf_datapipes.load import OpenPVFromDB, OpenPVFromNetCDF, load_configuration
+from ocf_datapipes.training.common import normalize_pv
 
-logger = logging.getLogger(__name__)
 xarray.set_options(keep_attrs=True)
 
 # default is set to 1000
@@ -20,90 +17,77 @@ BUFFERSIZE = 1000
 
 
 def simple_pv_datapipe(
-    configuration_filename: Union[Path, str], tag: Optional[str] = "train"
+    configuration_filename: Union[Path, str],
 ) -> IterDataPipe:
-    """
-    Create the Power Perceiver production pipeline using a configuration
+    """Create the simple datapipe which loads PV data.
+
+    This could be used for training an autoregressive model for site-level PV output.
 
     Args:
         configuration_filename: Name of the configuration
-        tag: Tag for train or test
 
     Returns:
-        DataPipe ready to be put in a Dataloader for production
+        IterDataPipe yielding batches of samples
     """
-    ####################################
-    #
-    # main data pipe for loading a simple site level forecast
-    #
-    #####################################
-    # load configuration
-    config_datapipe = OpenConfiguration(configuration_filename)
-    configuration: Configuration = next(iter(config_datapipe))
 
-    logger.debug("Opening Datasets")
+    # Load configuration
+    configuration: Configuration = load_configuration(configuration_filename)
+
+    # Unpack for convenience
+    pv_config = configuration.input_data.pv
+
+    # Open dataset
     if configuration.input_data.pv.is_live:
-        pv_datapipe = OpenPVFromDB(pv_config=configuration.input_data.pv)
+        pv_datapipe = OpenPVFromDB(pv_config=pv_config)
     else:
-        pv_datapipe = OpenPVFromNetCDF(pv=configuration.input_data.pv)
-    pv_datapipe, pv_location_datapipe = pv_datapipe.fork(2, buffer_size=BUFFERSIZE)
+        pv_datapipe = OpenPVFromNetCDF(pv=pv_config)
 
-    logger.debug("Add t0 idx")
+    # Fork datapipe for raw data, time slicing, and location slicing uses
+    pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe, pv_location_datapipe = pv_datapipe.fork(
+        4, buffer_size=BUFFERSIZE
+    )
+
+    # Preprocess PV timeseries
+    pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
+
+    # Getting locations - Construct datapipe yielding the locations to be used for each sample
+    location_datapipe = pv_location_datapipe.location_picker()
+
+    # Slice systems
+    pv_datapipe = pv_datapipe.select_id(location_datapipe=location_datapipe, data_source_name="pv")
+
+    # Add t0 idx
     pv_datapipe = pv_datapipe.add_t0_idx_and_sample_period_duration(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.pv.time_resolution_minutes
-        ),
-        history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+        sample_period_duration=timedelta(minutes=pv_config.time_resolution_minutes),
+        history_duration=timedelta(minutes=pv_config.history_minutes),
     )
 
-    logger.debug("Getting locations")
-    # might have to fork this if we add NWPs
-    location_datapipe1 = pv_location_datapipe.location_picker()
-    logger.debug("Got locations")
-
-    logger.debug("Making PV space slice")
-    pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe = (
-        pv_datapipe.normalize(normalize_fn=lambda x: x / x.observed_capacity_wp)
-        .add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.pv.time_resolution_minutes
-            ),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-        )
-        .select_id(location_datapipe=location_datapipe1, data_source_name="pv")
-        .ensure_n_pv_systems_per_example(n_pv_systems_per_example=1)
-        .remove_nans()
-        .fork(3, buffer_size=BUFFERSIZE)
-    )
-
-    # get contiguous time periods
+    # Get contiguous time periods
     pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.pv.time_resolution_minutes
-        ),
-        history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-        forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
+        sample_period_duration=timedelta(minutes=pv_config.time_resolution_minutes),
+        history_duration=timedelta(minutes=pv_config.history_minutes),
+        forecast_duration=timedelta(minutes=pv_config.forecast_minutes),
     )
 
-    # select time periods
+    # Select time periods
     pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=pv_time_periods_datapipe)
     pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
 
-    # take time slices
-    pv_datapipe = (
-        pv_datapipe.select_time_slice(
-            t0_datapipe=pv_t0_datapipe,
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-            forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.pv.time_resolution_minutes
-            ),
-        )
-        .convert_pv_to_numpy_batch()
-        .merge_numpy_examples_to_batch(n_examples_per_batch=configuration.process.batch_size)
+    # Take time slices
+    pv_datapipe = pv_datapipe.select_time_slice(
+        t0_datapipe=pv_t0_datapipe,
+        history_duration=timedelta(minutes=pv_config.history_minutes),
+        forecast_duration=timedelta(minutes=pv_config.forecast_minutes),
+        sample_period_duration=timedelta(minutes=pv_config.time_resolution_minutes),
     )
 
-    logger.debug("Combine all the data sources")
-    combined_datapipe = MergeNumpyModalities([pv_datapipe]).add_sun_position(modality_name="pv")
+    # Convert to numpybatch object
+    pv_datapipe = pv_datapipe.convert_pv_to_numpy_batch()
 
-    return combined_datapipe
+    # Add solar coordinates
+    pv_datapipe = pv_datapipe.add_sun_position(modality_name="pv")
+
+    # Batch the data with batch size 4
+    pv_datapipe = pv_datapipe.batch(4).merge_numpy_batch()
+
+    return pv_datapipe

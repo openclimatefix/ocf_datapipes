@@ -1,9 +1,21 @@
 import numpy as np
 from ocf_datapipes.utils.utils import searchsorted
 from ocf_datapipes.utils.utils import combine_to_single_dataset, uncombine_from_single_dataset
-from ocf_datapipes.training.windnet import windnet_datapipe
-from datetime import datetime
 import xarray as xr
+import pytest
+
+
+@pytest.fixture()
+def xarray_dict_sample(pv_xarray_data, nwp_gfs_data):
+    # Use already created data pieces to make batch
+    da_pv = pv_xarray_data.rename(dict(datetime="time_utc"))
+    da_nwp = nwp_gfs_data.rename(dict(time="init_time_utc")).to_array()
+
+    xarray_sample = {
+        "pv": da_pv.isel(time_utc=slice(0, 2)),
+        "nwp": da_nwp.isel(init_time_utc=slice(1, 2)),
+    }
+    return xarray_sample
 
 
 def test_searchsorted():
@@ -13,26 +25,39 @@ def test_searchsorted():
     assert searchsorted(ys_r, 2.1, assume_ascending=False) == 3
 
 
-def test_combine_uncombine_from_single_dataset(wind_configuration_filename):
-    start_time = datetime(1900, 1, 1)
-    end_time = datetime(2050, 1, 1)
-    dp = windnet_datapipe(
-        wind_configuration_filename,
-        start_time=start_time,
-        end_time=end_time,
-    )
-    dataset: xr.Dataset = next(iter(dp))
-    assert isinstance(dataset, xr.Dataset)
-    multiple_datasets = uncombine_from_single_dataset(dataset)
-    for key in multiple_datasets.keys():
-        if "time_utc" in multiple_datasets[key].coords.keys():
-            time_coord = "time_utc"
-        else:
-            time_coord = "target_time_utc"
-        for i in range(len(multiple_datasets[key][time_coord])):
-            # Assert that data for each of the coords is the same
-            for coord_key in multiple_datasets[key][i].coords.keys():
-                np.testing.assert_equal(
-                    multiple_datasets[key].isel({time_coord: i})[coord_key].values,
-                    dataset[key][i][f"{key}__{coord_key}"].values,
-                )
+def test_combine_to_single_dataset(xarray_dict_sample):
+    ds_comb = combine_to_single_dataset(xarray_dict_sample)
+    # Expected data type
+    assert isinstance(ds_comb, xr.Dataset)
+    # Expected data variables
+    assert set(ds_comb.keys()) == set(xarray_dict_sample.keys())
+
+
+def test_uncombine_from_single_dataset(xarray_dict_sample):
+    ds_comb = combine_to_single_dataset(xarray_dict_sample)
+
+    recompiled_xarray_dict_sample = uncombine_from_single_dataset(ds_comb)
+
+    # Right type
+    assert isinstance(recompiled_xarray_dict_sample, type(xarray_dict_sample))
+
+    # Keys are the same
+    assert set(recompiled_xarray_dict_sample.keys()) == set(xarray_dict_sample.keys())
+
+    # xarray object under each key is the same
+    for k in xarray_dict_sample.keys():
+        # Right type
+        assert isinstance(recompiled_xarray_dict_sample[k], type(xarray_dict_sample[k]))
+
+        # Coord values are the same
+        for coord in xarray_dict_sample[k].coords:
+            coord_values_same = (
+                recompiled_xarray_dict_sample[k][coord].values
+                == xarray_dict_sample[k][coord].values
+            ).all()
+            assert coord_values_same, f"Coord values under key: {coord} are different"
+
+        # Values are the same
+        np.testing.assert_array_equal(
+            recompiled_xarray_dict_sample[k].values, xarray_dict_sample[k].values
+        )

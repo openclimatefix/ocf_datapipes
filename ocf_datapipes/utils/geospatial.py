@@ -240,7 +240,7 @@ def move_lon_lat_by_meters(lon, lat, meters_east, meters_north):
 
 def _coord_priority(available_coords):
     if "longitude" in available_coords:
-        return "lat_lon", "longitude", "latitude"
+        return "lon_lat", "longitude", "latitude"
     elif "x_geostationary" in available_coords:
         return "geostationary", "x_geostationary", "y_geostationary"
     elif "x_osgb" in available_coords:

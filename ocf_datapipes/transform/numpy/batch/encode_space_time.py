@@ -1,12 +1,12 @@
 """Encodes the Fourier features for space and time"""
 import logging
 import warnings
-from numbers import Number
+from typing import Union
 
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+from ocf_datapipes.utils.consts import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ class EncodeSpaceTimeIterDataPipe(IterDataPipe):
     def __init__(
         self,
         source_datapipe: IterDataPipe,
-        lengths: dict[str, Number] = dict(x_osgb=480_000, y_osgb=400_000, time_utc=60 * 5 * 37),
         n_fourier_features_per_dim: int = 8,
     ):
         """
@@ -26,46 +25,71 @@ class EncodeSpaceTimeIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of NumpyBatch
-            lengths: Lengths for the distance
             n_fourier_features_per_dim: Number of Fourier features per dimension
         """
         self.source_datapipe = source_datapipe
-        self.lengths = lengths
         self.n_fourier_features_per_dim = n_fourier_features_per_dim
 
     def __iter__(self):
         for np_batch in self.source_datapipe:
-            yield get_spatial_and_temporal_fourier_features(
+            yield add_spatial_and_temporal_fourier_features(
                 np_batch=np_batch,
-                lengths=self.lengths,
                 n_fourier_features_per_dim=self.n_fourier_features_per_dim,
             )
 
 
-def get_spatial_and_temporal_fourier_features(
+def add_spatial_and_temporal_fourier_features(
     np_batch: NumpyBatch,
-    lengths: dict[str, Number],
     n_fourier_features_per_dim: int = 8,
 ) -> NumpyBatch:
     """Add fourier features for x_osgb, y_osgb and time_utc."""
+    # NWP is nested so needs to be done separately
+    nwp_in_batch = BatchKey.nwp in np_batch
+    if nwp_in_batch:
+        # Pop and process NWPBatch. Add back in later
+        nwp_batch = np_batch.pop(BatchKey.nwp)
+        for nwp_source in nwp_batch.keys():
+            _add_spatial_and_temporal_fourier_features(
+                nwp_batch[nwp_source], n_fourier_features_per_dim
+            )
 
-    rescaled_coords: dict[str, np.ndarray] = _rescale_coords_for_all_dims_to_approx_0_to_1(
-        np_batch=np_batch, lengths=lengths
-    )
+    # Process other coords
+    _add_spatial_and_temporal_fourier_features(np_batch, n_fourier_features_per_dim)
 
-    for key, coords in rescaled_coords.items():
-        new_key = key.replace("rescaled", "fourier")
-        new_key = BatchKey[new_key]
-        np_batch[new_key] = compute_fourier_features(
-            coords, n_fourier_features=n_fourier_features_per_dim
-        )
-        logger.debug(f"add {new_key}")
+    # Add back in NWP maybe
+    if nwp_in_batch:
+        np_batch[BatchKey.nwp] = nwp_batch
 
     return np_batch
 
 
+def _add_spatial_and_temporal_fourier_features(
+    batch: Union[NumpyBatch, NWPNumpyBatch],
+    n_fourier_features_per_dim: int,
+) -> Union[NumpyBatch, NWPNumpyBatch]:
+    """Adds fourier encodings in place to batch dict"""
+    for key in list(batch.keys()):
+        if key.name.endswith(("x_osgb", "y_osgb", "time_utc")):
+            if isinstance(key, BatchKey):
+                fourier_key = BatchKey[f"{key.name}_fourier"]
+            elif isinstance(key, NWPBatchKey):
+                fourier_key = NWPBatchKey[f"{key.name}_fourier"]
+            else:
+                raise ValueError(f"Unregognized key: {key}")
+
+            normalized_coords = normalize_coords(batch[key])
+
+            batch[fourier_key] = compute_fourier_features(
+                normalized_coords, n_fourier_features=n_fourier_features_per_dim
+            )
+    return
+
+
 def compute_fourier_features(
-    array: np.ndarray, n_fourier_features: int = 8, min_freq: float = 2, max_freq: float = 8
+    array: np.ndarray,
+    n_fourier_features: int = 8,
+    min_freq: float = 2,
+    max_freq: float = 8,
 ) -> np.ndarray:
     """Compute Fourier features for a single dimension, across all examples in a batch.
 
@@ -118,100 +142,34 @@ def compute_fourier_features(
     return fourier_features
 
 
-def _rescale_coords_for_all_dims_to_approx_0_to_1(
-    np_batch: NumpyBatch,
-    lengths: dict[str, Number],
-) -> dict[str, np.ndarray]:
-    """Rescale coords for all dimensions, across all modalities.
-
-    Args:
-        lengths: The approximate lengths of each dimension across an example. For example,
-            if the dimension is x_osgb then the length will be the approximate distance in meters
-            from the left to the right side of an average example. If the dimension is time_utc
-            then the length is the approximate total duration in seconds of the example.
-            The keys must be x_osgb, y_osgb, or time_utc.
-            We need to use constant lengths across all examples so the spatial encoding
-            is always proportional to the "real world" length across all examples.
-            If we didn't do that, a spatial encoding of 1 would represent different "real world"
-            distances across examples. This would almost certainly be harmful, especially
-            because we're expecting the model to learn to do some basic geometry!
-        np_batch: NumpyBatch
-    """
-    rescaled_coords: dict[str, np.ndarray] = {}
-    for dim_name in ("x_osgb", "y_osgb", "time_utc"):
-        coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray] = {
-            key: value.astype(np.float32)
-            for key, value in np_batch.items()
-            if key.name.endswith(dim_name)
-        }
-        length = lengths[dim_name]
-        rescaled_coords_for_dim = _rescale_coords_for_single_dim_to_approx_0_to_1(
-            coords_for_dim_from_all_modalities=coords_for_dim_from_all_modalities, length=length
-        )
-        rescaled_coords.update(rescaled_coords_for_dim)
-    return rescaled_coords
-
-
-def _rescale_coords_for_single_dim_to_approx_0_to_1(
-    coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray],
-    length: Number,
-) -> dict[str, np.ndarray]:
+def normalize_coords(
+    coords: np.ndarray,
+) -> np.ndarray:
     """Rescale the coords for a single dimension, across all modalities.
 
     Args:
-        length: The approximate length of the dimension across an example. For example,
-            if the dimension is x_osgb then the length will be the distance in meters
-            from the left to the right side of the example. Must be positive.
-        coords_for_dim_from_all_modalities: Coordinate batch for scaling the features correctly
-
-    Returns:
-        Dictionary where the keys are "<BatchKey.name>_rescaled", and the values
-        are a numpy array of the rescaled coords. The minimum value is guaranteed to be
-        0 or larger. The maximum value will depend on the length.
+        coords: Array of coords
     """
-    length = np.float32(length)
-    assert length > 0
-    min_per_example = _get_min_per_example(coords_for_dim_from_all_modalities)
-    rescaled_arrays: dict[str, np.ndarray] = {}
-    for key, array in coords_for_dim_from_all_modalities.items():
-        if "satellite" in key.name and "time" not in key.name:
-            # Handle 2-dimensional OSGB coords on the satellite imagery
-            assert (
-                len(array.shape) == 3
-            ), f"Expected satellite coord to have 3 dims, not {len(array.shape)} {key.name=}"
-            _min_per_example = np.expand_dims(min_per_example, axis=-1)
-        else:
-            _min_per_example = min_per_example
+    batch_size = coords.shape[0]
 
-        rescaled_array = (array - _min_per_example) / length
-        rescaled_arrays[f"{key.name}_rescaled"] = rescaled_array
+    # min and max taken over these dims
+    reduce_dims = tuple(range(1, len(coords.shape)))
 
-    return rescaled_arrays
+    with warnings.catch_warnings():
+        # We expect to encounter all-NaN slices (when a whole PV example is missing,
+        # for example.)
+        warnings.filterwarnings("ignore", "All-NaN slice encountered")
 
+        min_per_example = np.nanmin(
+            coords.reshape((batch_size, -1)), axis=reduce_dims, keepdims=True
+        )
 
-def _get_min_per_example(
-    coords_for_dim_from_all_modalities: dict[BatchKey, np.ndarray]
-) -> np.ndarray:
-    n_modalities = len(coords_for_dim_from_all_modalities)
-    # print(n_modalities)
-    assert n_modalities > 0
-    batch_size = list(coords_for_dim_from_all_modalities.values())[0].shape[0]
-    # print(batch_size)
-    # for key, value in coords_for_dim_from_all_modalities.items():
-    #    print(f"{key}: {value.shape}")
+        max_per_example = np.nanmax(
+            coords.reshape((batch_size, -1)), axis=reduce_dims, keepdims=True
+        )
 
-    # Pre-allocate arrays to hold min values for each example of each modality's coordinates.
-    mins = np.full((batch_size, n_modalities), fill_value=np.NaN, dtype=np.float32)
-
-    for modality_i, coord_data_array in enumerate(coords_for_dim_from_all_modalities.values()):
-        coord_data_array = coord_data_array.reshape((batch_size, -1))
-        with warnings.catch_warnings():
-            # We expect to encounter all-NaN slices (when a whole PV example is missing,
-            # for example.)
-            warnings.filterwarnings("ignore", "All-NaN slice encountered")
-            mins[:, modality_i] = np.nanmin(coord_data_array, axis=1)
-
-    min_per_example = np.nanmin(mins, axis=1)
-    assert min_per_example.shape[0] == batch_size
     assert np.isfinite(min_per_example).all()
-    return np.expand_dims(min_per_example, axis=-1)
+    assert np.isfinite(max_per_example).all()
+
+    normalized_coords = (coords - min_per_example) / (max_per_example - min_per_example)
+    return normalized_coords

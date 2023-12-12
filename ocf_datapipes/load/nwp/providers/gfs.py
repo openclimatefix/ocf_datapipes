@@ -5,30 +5,8 @@ from typing import Union
 
 import pandas as pd
 import xarray as xr
-from torch.utils.data import IterDataPipe, functional_datapipe
 
 _log = logging.getLogger(__name__)
-
-
-@functional_datapipe("open_gfs")
-class OpenGFSForecastIterDataPipe(IterDataPipe):
-    """Open GFS Forecast data"""
-
-    def __init__(self, zarr_path: Union[Path, str]):
-        """
-        Open GFS Forecast data
-
-        Args:
-            zarr_path: Path or wildcard path to GFS Zarrs
-        """
-        self.zarr_path = zarr_path
-
-    def __iter__(self):
-        _log.debug("Opening NWP data: %s", self.zarr_path)
-        gfs = open_gfs(self.zarr_path)
-
-        while True:
-            yield gfs
 
 
 def open_gfs(zarr_path: Union[Path, str]) -> xr.Dataset:

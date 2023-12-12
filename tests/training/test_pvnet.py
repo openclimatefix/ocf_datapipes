@@ -7,8 +7,7 @@ from ocf_datapipes.training.pvnet import (
     pvnet_datapipe,
 )
 from ocf_datapipes.training.common import construct_loctime_pipelines
-from ocf_datapipes.utils.consts import Location
-import pytest
+from ocf_datapipes.utils.consts import Location, BatchKey, NWPBatchKey
 
 
 def test_construct_loctime_pipelines(configuration_filename):
@@ -38,7 +37,10 @@ def test_construct_sliced_data_pipeline(configuration_filename):
         t0_datapipe=t0_pipe,
     )
 
-    _ = next(iter(dp))
+    batch = next(iter(dp))
+    assert BatchKey.nwp in batch
+    for nwp_source in batch[BatchKey.nwp].keys():
+        assert NWPBatchKey.nwp in batch[BatchKey.nwp][nwp_source]
 
 
 def test_pvnet_datapipe(configuration_filename):
@@ -52,3 +54,6 @@ def test_pvnet_datapipe(configuration_filename):
     )
 
     batch = next(iter(dp))
+    assert BatchKey.nwp in batch
+    for nwp_source in batch[BatchKey.nwp].keys():
+        assert NWPBatchKey.nwp in batch[BatchKey.nwp][nwp_source]

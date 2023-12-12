@@ -30,16 +30,11 @@ class SelectIDIterDataPipe(IterDataPipe):
         self.location_datapipe = location_datapipe
         self.data_source_name = data_source_name
 
+        assert data_source_name in ["pv"]
+
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data, location in self.source_datapipe.zip_ocf(self.location_datapipe):
             logger.debug(f"Selecting Data on id {location.id} for {self.data_source_name}")
-
-            if self.data_source_name == "nwp":
-                try:
-                    xr_data = xr_data.sel(id=location.id)
-                except Exception as e:
-                    logger.warning(f"Could not find {location.id} in nwp {xr_data.id}")
-                    raise e
 
             if self.data_source_name == "pv":
                 try:

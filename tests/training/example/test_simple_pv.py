@@ -3,7 +3,7 @@ from ocf_datapipes.utils.consts import BatchKey
 
 
 def test_simple_pv_datapipe(configuration_with_pv_netcdf):
-    datapipe = simple_pv_datapipe(configuration_with_pv_netcdf).set_length(2)
+    datapipe = simple_pv_datapipe(configuration_with_pv_netcdf)
 
     batch = next(iter(datapipe))
 

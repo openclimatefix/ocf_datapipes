@@ -13,12 +13,10 @@ are used to validate the values of the data itself.
 """
 import logging
 from datetime import datetime
-from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import git
 import numpy as np
-import pandas as pd
 from nowcasting_datamodel.models.pv import providers, pv_output, solar_sheffield_passiv
 from pathy import Pathy
 from pydantic import BaseModel, Field, root_validator, validator
@@ -26,12 +24,10 @@ from pydantic import BaseModel, Field, root_validator, validator
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
     AWOS_VARIABLE_NAMES,
-    DEFAULT_N_GSP_PER_EXAMPLE,
-    DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
+    NWP_PROVIDERS,
     NWP_VARIABLE_NAMES,
-    SAT_VARIABLE_NAMES,
+    RSS_VARIABLE_NAMES,
 )
-from ocf_datapipes.utils.split import split
 
 IMAGE_SIZE_PIXELS = 64
 IMAGE_SIZE_PIXELS_FIELD = Field(
@@ -39,6 +35,9 @@ IMAGE_SIZE_PIXELS_FIELD = Field(
 )
 METERS_PER_PIXEL_FIELD = Field(2000, description="The number of meters per pixel.")
 METERS_PER_ROI = Field(128_000, description="The number of meters of region of interest.")
+
+DEFAULT_N_GSP_PER_EXAMPLE = 32
+DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE = 2048
 
 logger = logging.getLogger(__name__)
 
@@ -361,7 +360,7 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
         description="The path or list of paths which hold the satellite zarr.",
     )
     satellite_channels: tuple = Field(
-        SAT_VARIABLE_NAMES[1:], description="the satellite channels that are used"
+        RSS_VARIABLE_NAMES[1:], description="the satellite channels that are used"
     )
     satellite_image_size_pixels_height: int = Field(
         IMAGE_SIZE_PIXELS_FIELD.default // 3,
@@ -407,7 +406,7 @@ class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     )
 
     hrvsatellite_channels: tuple = Field(
-        SAT_VARIABLE_NAMES[0:1], description="the satellite channels that are used"
+        RSS_VARIABLE_NAMES[0:1], description="the satellite channels that are used"
     )
     # HRV is 3x the resolution, so to cover the same area, its 1/3 the meters per pixel and 3
     # time the number of pixels
@@ -489,7 +488,7 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
         ),
     )
     opticalflow_channels: tuple = Field(
-        SAT_VARIABLE_NAMES[1:], description="the satellite channels that are used"
+        RSS_VARIABLE_NAMES[1:], description="the satellite channels that are used"
     )
     opticalflow_source_data_source_class_name: str = Field(
         "SatelliteDataSource",
@@ -509,11 +508,13 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
         "gs://solar-pv-nowcasting-data/NWP/UK_Met_Office/UKV__2018-01_to_2019-12__chunks__variable10__init_time1__step1__x548__y704__.zarr",  # noqa: E501
         description="The path which holds the NWP zarr.",
     )
-    nwp_channels: tuple = Field(NWP_VARIABLE_NAMES, description="the channels used in the nwp data")
+    nwp_channels: tuple = Field(
+        NWP_VARIABLE_NAMES["ukv"], description="the channels used in the nwp data"
+    )
     nwp_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
-    nwp_provider: str = Field("UKMetOffice", description="The provider of the NWP data")
+    nwp_provider: str = Field("ukv", description="The provider of the NWP data")
     index_by_id: bool = Field(
         False, description="If the NWP data has an id coordinate, not x and y."
     )
@@ -521,19 +522,37 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
     @validator("nwp_provider")
     def validate_nwp_provider(cls, v):
         """Validate 'nwp_provider'"""
-        nwp_providers = [
-            "ukmetoffice",
-            "gfs",
-            "ukv",
-            "icon-eu",
-            "icon-global",
-            "ecmwf",
-        ]
-        if v.lower() not in nwp_providers:
-            message = f"NWP provider {v} is not in {nwp_providers}"
+        if v.lower() not in NWP_PROVIDERS:
+            message = f"NWP provider {v} is not in {NWP_PROVIDERS}"
             logger.warning(message)
             assert Exception(message)
         return v
+
+
+class MultiNWP(Base):
+    """Configuration for multiple NWPs"""
+
+    __root__: Dict[str, NWP]
+
+    def __getattr__(self, item):
+        return self.__root__[item]
+
+    def __getitem__(self, item):
+        return self.__root__[item]
+
+    def __len__(self):
+        return len(self.__root__)
+
+    def __iter__(self):
+        return iter(self.__root__)
+
+    def keys(self):
+        """Returns dictionary-like keys"""
+        return self.__root__.keys()
+
+    def items(self):
+        """Returns dictionary-like items"""
+        return self.__root__.items()
 
 
 class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
@@ -616,7 +635,7 @@ class InputData(Base):
     satellite: Optional[Satellite] = None
     hrvsatellite: Optional[HRVSatellite] = None
     opticalflow: Optional[OpticalFlow] = None
-    nwp: Optional[NWP] = None
+    nwp: Optional[MultiNWP] = None
     gsp: Optional[GSP] = None
     topographic: Optional[Topographic] = None
     sun: Optional[Sun] = None
@@ -660,7 +679,7 @@ class InputData(Base):
             "pv",
             "hrvsatellite",
             "satellite",
-            "nwp",
+            # "nwp", # nwp is treated separately
             "gsp",
             "topographic",
             "sun",
@@ -680,6 +699,14 @@ class InputData(Base):
             if values[data_source_name].history_minutes is None:
                 values[data_source_name].history_minutes = values["default_history_minutes"]
 
+        if values["nwp"] is not None:
+            for k in values["nwp"].keys():
+                if values["nwp"][k].forecast_minutes is None:
+                    values["nwp"][k].forecast_minutes = values["default_forecast_minutes"]
+
+                if values["nwp"][k].history_minutes is None:
+                    values["nwp"][k].history_minutes = values["default_history_minutes"]
+
         return values
 
     @classmethod
@@ -692,7 +719,7 @@ class InputData(Base):
             pv=PV(),
             satellite=Satellite(),
             hrvsatellite=HRVSatellite(),
-            nwp=NWP(),
+            nwp=dict(UKV=NWP()),
             gsp=GSP(),
             topographic=Topographic(),
             sun=Sun(),
@@ -701,114 +728,11 @@ class InputData(Base):
         )
 
 
-class OutputData(Base):
-    """Output data model"""
-
-    filepath: Union[str, Pathy] = Field(
-        Pathy("gs://solar-pv-nowcasting-data/prepared_ML_training_data/v7/"),
-        description=(
-            "Where the data is saved to.  If this is running on the cloud then should include"
-            " 'gs://' or 's3://'"
-        ),
-    )
-
-    @validator("filepath")
-    def filepath_pathy(cls, v):
-        """Make sure filepath is a Pathy object"""
-        return Pathy.fluid(v)
-
-
-class Process(Base):
-    """Pydantic model of how the data is processed"""
-
-    seed: int = Field(1234, description="Random seed, so experiments can be repeatable")
-    batch_size: int = Field(32, description="The number of examples per batch")
-    t0_datetime_frequency: pd.Timedelta = Field(
-        pd.Timedelta("5 minutes"),
-        description=(
-            "The temporal frequency at which t0 datetimes will be sampled."
-            "  Can be any string that `pandas.Timedelta()` understands."
-            "  For example, if this is set to '5 minutes', then, for each example, the t0 datetime"
-            " could be at 0, 5, ..., 55 minutes past the hour.  If there are DataSources with a"
-            " lower sample rate (e.g. half-hourly) then these lower-sample-rate DataSources will"
-            " still produce valid examples.  For example, if a half-hourly DataSource is asked for"
-            " an example with t0=12:05, history_minutes=60, forecast_minutes=60, then it will"
-            " return data at 11:30, 12:00, 12:30, and 13:00."
-        ),
-    )
-    split_method: split.SplitMethod = Field(
-        split.SplitMethod.DAY_RANDOM_TEST_DATE,
-        description=(
-            "The method used to split the t0 datetimes into train, validation and test sets."
-            " If the split method produces no t0 datetimes for any split_name, then"
-            " n_<split_name>_batches must also be set to 0."
-        ),
-    )
-
-    train_test_validation_split: List[int] = Field(
-        [10, 1, 1],
-        description=(
-            "The ratio of how the entire dataset is split. "
-            "Note different split methods interact different with these numbers"
-        ),
-    )
-
-    n_train_batches: int = Field(
-        250,
-        description=(
-            "Number of train batches.  Must be 0 if split_method produces no t0 datetimes for"
-            " the train split"
-        ),
-    )
-    n_validation_batches: int = Field(
-        0,  # Currently not using any validation batches!
-        description=(
-            "Number of validation batches.  Must be 0 if split_method produces no t0 datetimes for"
-            " the validation split"
-        ),
-    )
-    n_test_batches: int = Field(
-        10,
-        description=(
-            "Number of test batches.  Must be 0 if split_method produces no t0 datetimes for"
-            " the test split."
-        ),
-    )
-    upload_every_n_batches: int = Field(
-        16,
-        description=(
-            "How frequently to move batches from the local temporary directory to the cloud bucket."
-            "  If 0 then write batches directly to output_data.filepath, not to a temp directory."
-        ),
-    )
-
-    local_temp_path: Path = Field(
-        Path("~/temp/").expanduser(),
-        description=(
-            "This is only necessary if using a VM on a public cloud and when the finished batches"
-            " will be uploaded to a cloud bucket. This is the local temporary path on the VM."
-            "  This will be emptied."
-        ),
-    )
-
-    @validator("local_temp_path")
-    def local_temp_path_to_path_object_expanduser(cls, v):
-        """
-        Convert the local path to Path
-
-        Convert the path in string format to a `pathlib.PosixPath` object
-        and call `expanduser` on the latter.
-        """
-        return Path(v).expanduser()
-
-
 class Configuration(Base):
     """Configuration model for the dataset"""
 
     general: General = General()
     input_data: InputData = InputData()
-    output_data: OutputData = OutputData()
-    process: Process = Process()
     git: Optional[Git] = None
 
     def set_base_path(self, base_path: str):

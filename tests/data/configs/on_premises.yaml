@@ -13,22 +13,23 @@ input_data:
 
   #---------------------- NWP -------------------
   nwp:
-    nwp_channels:
-      - t
-      - dswrf
-      - prate
-      - r
-      - sde
-      - si10
-      - vis
-      - lcc
-      - mcc
-      - hcc
-    nwp_image_size_pixels_height: 128
-    nwp_image_size_pixels_width: 128
-    nwp_zarr_path: /mnt/storage_ssd_8tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/NWP/UK_Met_Office/UKV/zarr/UKV_intermediate_version_3.zarr
-    forecast_minutes: 360
-    history_minutes: 60
+    ukv:
+      nwp_channels:
+        - t
+        - dswrf
+        - prate
+        - r
+        - sde
+        - si10
+        - vis
+        - lcc
+        - mcc
+        - hcc
+      nwp_image_size_pixels_height: 128
+      nwp_image_size_pixels_width: 128
+      nwp_zarr_path: /mnt/storage_ssd_8tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/NWP/UK_Met_Office/UKV/zarr/UKV_intermediate_version_3.zarr
+      forecast_minutes: 360
+      history_minutes: 60
 
   #---------------------- PV -------------------
   pv:
@@ -103,13 +104,3 @@ input_data:
       - VIS008
       - WV_062
       - WV_073
-
-output_data:
-  filepath: /mnt/storage_ssd_4tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/prepared_ML_training_data/v15
-process:
-  batch_size: 32
-  seed: 1234
-  upload_every_n_batches: 0 # Write directly to output_data.filepath, not to a temp directory.
-  n_train_batches: 8000
-  n_validation_batches: 0
-  n_test_batches: 400

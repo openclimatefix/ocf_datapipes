@@ -11,6 +11,15 @@ from ocf_datapipes.config.model import Configuration
 logger = logging.getLogger(__name__)
 
 
+def load_configuration(filename):
+    """Load and return configuration file"""
+    with fsspec.open(filename, mode="r") as stream:
+        configuration = parse_config(data=stream)
+
+    configuration = Configuration(**configuration)
+    return configuration
+
+
 @functional_datapipe("open_config")
 class OpenConfigurationIterDataPipe(IterDataPipe):
     """Open and return the configuration data"""
@@ -27,11 +36,8 @@ class OpenConfigurationIterDataPipe(IterDataPipe):
     def __iter__(self):
         """Open and return configuration file"""
         logger.debug(f"Going to open {self.configuration_filename}")
-        with fsspec.open(self.configuration_filename, mode="r") as stream:
-            configuration = parse_config(data=stream)
 
-        logger.debug(f"Converting to Configuration ({configuration})")
-        configuration = Configuration(**configuration)
+        configuration = load_configuration(self.configuration_filename)
 
         while True:
             yield configuration

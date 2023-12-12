@@ -1,7 +1,7 @@
 """Various utilites that didn't fit elsewhere"""
 import logging
 from pathlib import Path
-from typing import Sequence, Tuple, Union
+from typing import Tuple, Union
 
 import fsspec.asyn
 import numpy as np
@@ -11,46 +11,7 @@ import xarray as xr
 from pandas.core.dtypes.common import is_datetime64_dtype
 from pathy import Pathy
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
-
 logger = logging.getLogger(__name__)
-
-
-def return_system_indices_which_has_contiguous_nan(
-    arr: np.ndarray, check_interval: int = 287
-) -> np.ndarray:
-    """This function return system indices
-
-    Returns indexes of system id's in which if they have
-    contigous 289 NaN's.
-
-    Args:
-        arr: Array of each system pvoutput values for a single day
-        check_interval: time range intervals respectively
-
-    """
-    # Checking the shape of the input array
-    # The array would be a 2d-array which consists of number of (time_utc, pv_system_id)
-    number_of_systems = arr.shape[1]
-
-    system_index_values_to_be_dropped = []
-    for i in range(0, number_of_systems):
-        # For each system id
-        single_system_single_day_pv_values = arr[:, i]
-
-        # This loop checks NaN in every element in the array and if the count of NaN
-        # is equal to defined interval, it stores the index of the pv system
-        mask = np.concatenate(([False], np.isnan(single_system_single_day_pv_values), [False]))
-        if ~mask.any():
-            continue
-        else:
-            idx = np.nonzero(mask[1:] != mask[:-1])[0]
-            max_count = (idx[1::2] - idx[::2]).max()
-
-        if max_count == check_interval:
-            system_index_values_to_be_dropped.append(i)
-
-    return system_index_values_to_be_dropped
 
 
 def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
@@ -67,19 +28,6 @@ def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     nums = datetimes.astype("datetime64[s]").astype(dtype)
     mask = np.isfinite(datetimes)
     return np.where(mask, nums, np.NaN)
-
-
-def assert_num_dims(tensor, num_expected_dims: int) -> None:
-    """
-    Asserts the tensor shape is correct
-
-    Args:
-        tensor: Tensor to check
-        num_expected_dims: Number of expected dims
-    """
-    assert len(tensor.shape) == num_expected_dims, (
-        f"Expected tensor to have {num_expected_dims} dims." f" Instead, shape={tensor.shape}"
-    )
 
 
 def is_sorted(array: np.ndarray) -> bool:
@@ -135,17 +83,6 @@ def get_filesystem(path: Union[str, Path]) -> fsspec.AbstractFileSystem:
     return fsspec.open(path.parent).fs
 
 
-def sample_row_and_drop_row_from_df(
-    df: pd.DataFrame, rng: np.random.Generator
-) -> tuple[pd.Series, pd.DataFrame]:
-    """Return sampled_row, dataframe_with_row_dropped."""
-    assert not df.empty
-    row_idx = rng.integers(low=0, high=len(df))
-    row = df.iloc[row_idx]
-    df = df.drop(row.name)
-    return row, df
-
-
 def set_fsspec_for_multiprocess() -> None:
     """
     Clear reference to the loop and thread.
@@ -164,75 +101,6 @@ def set_fsspec_for_multiprocess() -> None:
     fsspec.asyn.iothread[0] = None
     fsspec.asyn.loop[0] = None
     fsspec.asyn._lock = None
-
-
-def stack_np_examples_into_batch(np_examples: Sequence[NumpyBatch]) -> NumpyBatch:
-    """
-    Stacks Numpy examples into a batch
-
-    Args:
-        np_examples: Numpy examples to stack
-
-    Returns:
-        The stacked NumpyBatch object
-    """
-    np_batch: NumpyBatch = {}
-    batch_keys = np_examples[0]  # Batch keys should be the same across all examples.
-    for batch_key in batch_keys:
-        if batch_key.name.endswith("t0_idx") or batch_key == BatchKey.nwp_channel_names:
-            # These are always the same for all examples.
-            np_batch[batch_key] = np_examples[0][batch_key]
-        else:
-            examples_for_key = [np_example[batch_key] for np_example in np_examples]
-            try:
-                np_batch[batch_key] = np.stack(examples_for_key)
-            except Exception as e:
-                logger.debug(f"Could not stack the following shapes together, ({batch_key})")
-                shapes = [example_for_key.shape for example_for_key in examples_for_key]
-                logger.debug(shapes)
-                logger.error(e)
-                raise e
-    return np_batch
-
-
-def select_time_periods(
-    xr_data: Union[xr.DataArray, xr.Dataset], time_periods: pd.DataFrame, dim_name: str = "time_utc"
-) -> Union[xr.DataArray, xr.Dataset]:
-    """
-    Selects time periods from Xarray object
-
-    Args:
-        xr_data: Xarray object
-        time_periods: Time periods to select
-        dim_name: Dimension name for time
-
-    Returns:
-        The subselected Xarray object
-    """
-    new_xr_data = []
-    for _, row in time_periods.iterrows():
-        start_dt = row["start_dt"]
-        end_dt = row["end_dt"]
-        new_xr_data.append(xr_data.sel({dim_name: slice(start_dt, end_dt)}))
-    return xr.concat(new_xr_data, dim=dim_name)
-
-
-def pandas_periods_to_our_periods_dt(
-    periods: Union[Sequence[pd.Period], pd.PeriodIndex]
-) -> pd.DataFrame:
-    """
-    Converts Pandas periods to new periods
-
-    Args:
-        periods: Pandas periods to convert
-
-    Returns:
-        Converted pandas periods
-    """
-    new_periods = []
-    for period in periods:
-        new_periods.append(dict(start_dt=period.start_time, end_dt=period.end_time))
-    return pd.DataFrame(new_periods)
 
 
 def _trig_transform(values: np.ndarray, period: Union[float, int]) -> Tuple[np.ndarray, np.ndarray]:
@@ -287,6 +155,9 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
     Returns:
         Combined dataset
     """
+    # Flatten any NWP data
+    dataset_dict = flatten_nwp_source_dict(dataset_dict, sep="-")
+
     # Convert all data_arrays to datasets
     new_dataset_dict = {}
     for key, datasets in dataset_dict.items():
@@ -357,4 +228,29 @@ def uncombine_from_single_dataset(combined_dataset: xr.Dataset) -> dict[str, xr.
         )
         # Split the dataset by the prefix
         datasets[key] = dataset
+
+    # Unflatten any NWP data
+    datasets = nest_nwp_source_dict(datasets, sep="-")
     return datasets
+
+
+def flatten_nwp_source_dict(d: dict, sep: str = "/") -> dict:
+    """Unnest a dictionary where the NWP values are nested under the key 'nwp'."""
+    new_dict = {k: v for k, v in d.items() if k != "nwp"}
+    if "nwp" in d:
+        if isinstance(d["nwp"], dict):
+            new_dict.update({f"nwp{sep}{k}": v for k, v in d["nwp"].items()})
+        else:
+            new_dict.update({"nwp": d["nwp"]})
+    return new_dict
+
+
+def nest_nwp_source_dict(d: dict, sep: str = "/") -> dict:
+    """Re-nest a dictionary where the NWP values are nested under keys 'nwp/<key>'."""
+    nwp_prefix = f"nwp{sep}"
+    new_dict = {k: v for k, v in d.items() if not k.startswith(nwp_prefix)}
+    nwp_keys = [k for k in d.keys() if k.startswith(nwp_prefix)]
+    if len(nwp_keys) > 0:
+        nwp_subdict = {k.removeprefix(nwp_prefix): d[k] for k in nwp_keys}
+        new_dict["nwp"] = nwp_subdict
+    return new_dict

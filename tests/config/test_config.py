@@ -20,10 +20,10 @@ def test_default():
     _ = Configuration()
 
 
-def test_yaml_load_on_premises():
+def test_yaml_load_on_premises(top_test_directory):
     """Test that yaml loading works for 'on_premises.yaml'"""
 
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "config", "on_premises.yaml")
+    filename = f"{top_test_directory}/data/configs/on_premises.yaml"
 
     config = load_yaml_configuration(filename)
 
@@ -49,17 +49,15 @@ def test_yaml_save():
         _ = load_yaml_configuration(filename)
 
 
-def test_yaml_load_env():
+def test_yaml_load_env(configuration_filename):
     """
     Check a configuration can be loaded with an env var
     """
 
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "../tests/config", "test.yaml")
-
     os.environ["PATH"] = "example_path"
 
     # check the file can be loaded
-    config_load = load_yaml_configuration(filename)
+    config_load = load_yaml_configuration(configuration_filename)
 
     assert "example_path" in config_load.general.description
 
@@ -88,11 +86,10 @@ def test_incorrect_time_resolution():
         _ = Configuration(**configuration.dict())
 
 
-def test_config_get():
+def test_config_git(configuration_filename):
     """Test that git commit is working"""
 
-    filename = os.path.join(os.path.dirname(ocf_datapipes.__file__), "config", "on_premises.yaml")
-    config = load_yaml_configuration(filename)
+    config = load_yaml_configuration(configuration_filename)
 
     config = set_git_commit(configuration=config)
 

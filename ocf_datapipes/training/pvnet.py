@@ -6,7 +6,7 @@ from typing import Optional
 import xarray as xr
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
-from ocf_datapipes.batch import MergeNumpyModalities
+from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.training.common import (
     _get_datapipes_dict,
     check_nans_in_satellite_data,
@@ -19,8 +19,8 @@ from ocf_datapipes.training.common import (
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
-    NEW_NWP_MEAN,
-    NEW_NWP_STD,
+    NWP_MEANS,
+    NWP_STDS,
     RSS_MEAN,
     RSS_STD,
 )
@@ -66,16 +66,24 @@ def construct_sliced_data_pipeline(
     numpy_modalities = []
 
     if "nwp" in datapipes_dict:
-        nwp_datapipe = datapipes_dict["nwp"]
+        nwp_numpy_modalities = dict()
 
-        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
-        nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
-            location_pipe_copy,
-            roi_height_pixels=conf_nwp.nwp_image_size_pixels_height,
-            roi_width_pixels=conf_nwp.nwp_image_size_pixels_width,
-        )
-        nwp_datapipe = nwp_datapipe.normalize(mean=NEW_NWP_MEAN, std=NEW_NWP_STD)
-        numpy_modalities.append(nwp_datapipe.convert_nwp_to_numpy_batch())
+        for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
+            location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
+            nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
+                location_pipe_copy,
+                roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
+                roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
+            )
+            nwp_datapipe = nwp_datapipe.normalize(
+                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
+                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
+            )
+            nwp_numpy_modalities[nwp_key] = nwp_datapipe.convert_nwp_to_numpy_batch()
+
+        # Combine the NWPs into NumpyBatch
+        nwp_numpy_modalities = MergeNWPNumpyModalities(nwp_numpy_modalities)
+        numpy_modalities.append(nwp_numpy_modalities)
 
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]

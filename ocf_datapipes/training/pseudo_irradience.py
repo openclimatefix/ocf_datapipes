@@ -18,7 +18,7 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
 )
 from ocf_datapipes.transform.xarray import StackXarray
-from ocf_datapipes.utils.consts import NEW_NWP_MAX, NEW_NWP_MIN
+from ocf_datapipes.utils.consts import UKV_MAX, UKV_MIN
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
 xarray.set_options(keep_attrs=True)
@@ -52,7 +52,7 @@ def _load_xarray_values(x):
 
 
 def _normalize_nwp(x):
-    return (x - NEW_NWP_MIN) / NEW_NWP_MAX
+    return (x - UKV_MIN) / UKV_MAX
 
 
 def _resample_to_pixel_size(xr_data, height_pixels, width_pixels) -> np.ndarray:
