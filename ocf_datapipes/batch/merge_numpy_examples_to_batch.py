@@ -24,7 +24,7 @@ def stack_data_list(
 ):
     """How to combine data entries for each key
     
-    See also: `extract_data_from_batch()` for opposite
+    See also: `extract_sample_from_batch()` for opposite
     """
     if _key_is_constant(batch_key):
         # These are always the same for all examples.
@@ -39,7 +39,7 @@ def stack_data_list(
         raise e
 
 
-def extract_data_from_batch(
+def extract_sample_from_batch(
     data, 
     batch_key: Union[BatchKey, NWPBatchKey],
     index_num: int,
@@ -102,13 +102,17 @@ def stack_np_examples_into_batch(dict_list: Sequence[NumpyBatch]) -> NumpyBatch:
 
 
 def unstack_np_batch_into_examples(batch: NumpyBatch):
-    """Splits a single batch of data.
+    """Splits a single batch into samples.
+    
+    Note:
+    This can be really useful when using presaved batches, so you can split the samples, reshuffle,
+    and recombine into batches. This means batches can be rebatched each epoch.
     
     See also: `stack_np_examples_into_batch()` for opposite
     """
     batch_keys = list(batch.keys())
     
-    # Look at a non-constant key and find batch_size
+    # Look at a non-constant key and find batch_size. Trickier if key is NWP
     non_constant_key = next(filter(lambda x: not _key_is_constant(x), batch_keys))
     if non_constant_key==BatchKey.nwp:
         # NWP is nested so treat separately
@@ -123,6 +127,7 @@ def unstack_np_batch_into_examples(batch: NumpyBatch):
     else:
         batch_size = batch[non_constant_key].shape[0]
     
+    # Loop through and split the batch into samples
     samples = []
     for i in range(batch_size):
         sample: NumpyBatch = {}
@@ -134,17 +139,14 @@ def unstack_np_batch_into_examples(batch: NumpyBatch):
 
                 # Unpack keys
                 nwp_sources = list(batch[BatchKey.nwp].keys())
-                nwp_batch_keys = list(batch[BatchKey.nwp][nwp_sources[0]].keys())
+                nwp_keys = list(batch[BatchKey.nwp][nwp_sources[0]].keys())
                 for nwp_source in nwp_sources:
                     nwp_source_batch: NWPNumpyBatch = {}
 
-                    for nwp_batch_key in nwp_batch_keys:
-                        nwp_source_batch[nwp_batch_key] = (
-                            batch[BatchKey.nwp][nwp_source][nwp_batch_key][i]
-                        )
-                        nwp_source_batch[nwp_batch_key] = extract_data_from_batch(
-                            batch[BatchKey.nwp][nwp_source][nwp_batch_key],
-                            batch_key=nwp_batch_key,
+                    for nwp_key in nwp_keys:
+                        nwp_source_batch[nwp_key] = extract_sample_from_batch(
+                            batch[BatchKey.nwp][nwp_source][nwp_key],
+                            batch_key=nwp_key,
                             index_num=i,
                         )
 
@@ -153,9 +155,9 @@ def unstack_np_batch_into_examples(batch: NumpyBatch):
                 sample[BatchKey.nwp] = nwp_batch
             
             else:
-                sample[batch_key] = extract_data_from_batch(
-                    batch[batch_key],
-                    batch_key=batch_key,
+                sample[key] = extract_sample_from_batch(
+                    batch[key],
+                    batch_key=key,
                     index_num=i,
                 )
         
