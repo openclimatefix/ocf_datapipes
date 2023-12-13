@@ -2,7 +2,7 @@
 
 Configuration for the data set.
 
-Decided to go for a 'Pydantic' data class. It's slightly more complicated that just having yaml 
+Decided to go for a 'Pydantic' data class. It's slightly more complicated that just having yaml
 files, but the 'Pydantic' feature I think outweigh this. There is a load from yaml function also.
 
 See `model.py` for documentation of the expected configuration fields.
