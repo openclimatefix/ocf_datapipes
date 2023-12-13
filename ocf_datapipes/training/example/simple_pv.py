@@ -6,9 +6,9 @@ from typing import Union
 import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
+from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import OpenPVFromDB, OpenPVFromNetCDF
-from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.training.common import normalize_pv
 
 xarray.set_options(keep_attrs=True)

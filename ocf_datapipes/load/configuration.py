@@ -9,7 +9,6 @@ from ocf_datapipes.config.load import load_yaml_configuration
 logger = logging.getLogger(__name__)
 
 
-
 @functional_datapipe("open_config")
 class OpenConfigurationIterDataPipe(IterDataPipe):
     """Open and return the configuration data"""
