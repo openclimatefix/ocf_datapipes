@@ -8,7 +8,7 @@ xarray.set_options(keep_attrs=True)
 from datetime import timedelta
 
 from ocf_datapipes.select import (
-    DropGSP,
+    SelectGSPIDs,
     LocationPicker,
     SelectLiveT0Time,
     SelectLiveTimeSlice,
@@ -43,7 +43,7 @@ def test_metnet_production(
     #####################################
     # Normalize GSP and PV on whole dataset here
     pv_datapipe = passiv_datapipe
-    gsp_datapipe, gsp_loc_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0]).fork(2)
+    gsp_datapipe, gsp_loc_datapipe = SelectGSPIDs(gsp_datapipe, gsps_to_keep=[0]).fork(2)
     gsp_datapipe = Normalize(gsp_datapipe, normalize_fn=lambda x: x / x.installedcapacity_mwp)
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_hrv_datapipe = AddT0IdxAndSamplePeriodDuration(
