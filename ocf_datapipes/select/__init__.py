@@ -1,5 +1,5 @@
 """Selection datapipes"""
-from .drop_national_gsp import DropGSPIterDataPipe as DropGSP
+from .select_gsp_ids import SelectGSPIDsIterDataPipe as SelectGSPIDs
 from .drop_pv_sys_generating_overnight import (
     DropPvSysGeneratingOvernightIterDataPipe as DropPvSysGeneratingOvernight,
 )

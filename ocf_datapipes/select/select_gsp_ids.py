@@ -4,13 +4,13 @@ from typing import List
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 
-@functional_datapipe("drop_gsp")
-class DropGSPIterDataPipe(IterDataPipe):
-    """Drops GSP"""
+@functional_datapipe("select_gsp_ids")
+class SelectGSPIDsIterDataPipe(IterDataPipe):
+    """Select GSPs by ID"""
 
-    def __init__(self, source_datapipe: IterDataPipe, gsps_to_keep: List[int] = slice(1, 317)):
+    def __init__(self, source_datapipe: IterDataPipe, gsps_to_keep: List[int] = range(1, 317)):
         """
-        Drop GSP National from the dataarray
+        Select GSPs by ID
 
         Args:
             source_datapipe: Datapipe emitting GSP xarray
@@ -21,6 +21,5 @@ class DropGSPIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         for xr_data in self.source_datapipe:
-            # GSP ID 0 is national
             xr_data = xr_data.isel(gsp_id=self.gsps_to_keep)
             yield xr_data

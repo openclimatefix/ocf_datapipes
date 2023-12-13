@@ -18,7 +18,7 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.select import DropGSP, LocationPicker
+from ocf_datapipes.select import SelectGSPIDs, LocationPicker
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 
@@ -108,7 +108,7 @@ def metnet_national_datapipe(
         gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
     ).select_train_test_time(start_time, end_time)
 
-    gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
+    gsp_datapipe = SelectGSPIDs(gsp_datapipe, gsps_to_keep=[0])
 
     logger.debug("Add t0 idx and normalize")
 

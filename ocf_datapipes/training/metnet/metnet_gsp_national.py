@@ -8,7 +8,7 @@ import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.convert import ConvertGSPToNumpy
-from ocf_datapipes.select import DropGSP, LocationPicker
+from ocf_datapipes.select import SelectGSPIDs, LocationPicker
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
@@ -111,7 +111,7 @@ def metnet_national_datapipe(
     gsp_history = used_datapipes["gsp"].normalize(normalize_fn=normalize_gsp)
     gsp_datapipe = used_datapipes["gsp_future"].normalize(normalize_fn=normalize_gsp)
     # Split into GSP for target, only national, and one for history
-    gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
+    gsp_datapipe = SelectGSPIDs(gsp_datapipe, gsps_to_keep=[0])
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
@@ -136,17 +136,17 @@ def metnet_national_datapipe(
     modalities = []
     if gsp_in_image and "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+        gsp_history = gsp_history.select_gsp_ids(gsps_to_keep=[0]).create_gsp_image(
             image_datapipe=sat_gsp_datapipe
         )
     elif gsp_in_image and "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+        gsp_history = gsp_history.select_gsp_ids(gsps_to_keep=[0]).create_gsp_image(
             image_datapipe=sat_gsp_datapipe
         )
     elif gsp_in_image and "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+        gsp_history = gsp_history.select_gsp_ids(gsps_to_keep=[0]).create_gsp_image(
             image_datapipe=nwp_gsp_datapipe, image_dim="osgb"
         )
     if "nwp" in used_datapipes.keys():
