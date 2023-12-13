@@ -10,7 +10,8 @@ from torch.utils.data.datapipes.datapipe import IterDataPipe
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenNWP, OpenPVFromNetCDF, load_configuration
+from ocf_datapipes.load import OpenNWP, OpenPVFromNetCDF
+from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.training.common import normalize_pv
 from ocf_datapipes.utils.consts import NWP_MEANS, NWP_STDS
 
@@ -35,7 +36,7 @@ def pv_nwp_datapipe(
     """
 
     # Load configuration
-    configuration: Configuration = load_configuration(configuration_filename)
+    configuration: Configuration = load_yaml_configuration(configuration_filename)
 
     # Load and normalize PV data, and fill night-time NaNs
     pv_datapipe = (

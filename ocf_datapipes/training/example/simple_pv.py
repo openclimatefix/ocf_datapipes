@@ -7,7 +7,8 @@ import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenPVFromDB, OpenPVFromNetCDF, load_configuration
+from ocf_datapipes.load import OpenPVFromDB, OpenPVFromNetCDF
+from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.training.common import normalize_pv
 
 xarray.set_options(keep_attrs=True)
@@ -31,7 +32,7 @@ def simple_pv_datapipe(
     """
 
     # Load configuration
-    configuration: Configuration = load_configuration(configuration_filename)
+    configuration: Configuration = load_yaml_configuration(configuration_filename)
 
     # Unpack for convenience
     pv_config = configuration.input_data.pv
