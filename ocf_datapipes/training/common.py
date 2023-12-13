@@ -421,7 +421,7 @@ def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
 def _fill_nans_in_arrays(batch: dict):
     for k, v in batch.items():
         if isinstance(v, np.ndarray):
-            np.nan_to_num(v, copy=False, nan=0.0)
+            np.nan_to_num(v, copy=True, nan=0.0)
         # Recursion is included to reach NWP arrays in subdict
         elif isinstance(v, dict):
             _fill_nans_in_arrays(v)
@@ -434,7 +434,6 @@ def fill_nans_in_arrays(batch: NumpyBatch) -> NumpyBatch:
     """
     logger.info("Filling Nans with zeros")
     # This function is wrapped to avoid the logger info being duplicated on recursion
-    # Filling is done in-place
     _fill_nans_in_arrays(batch)
     return batch
 
