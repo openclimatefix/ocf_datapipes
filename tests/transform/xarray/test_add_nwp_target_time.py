@@ -1,11 +1,11 @@
 from datetime import timedelta
 
-from ocf_datapipes.select import SelectLiveT0Time
 from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime
+from torch.utils.data.datapipes.iter import IterableWrapper
 
 
-def test_add_nwp_target_time(nwp_datapipe):
-    t0_datapipe = SelectLiveT0Time(nwp_datapipe, dim_name="init_time_utc")
+def test_convert_to_nwp_target_time(nwp_datapipe):
+    t0_datapipe = IterableWrapper([next(iter(nwp_datapipe)).init_time_utc.values[-1]])
     nwp_datapipe = ConvertToNWPTargetTime(
         nwp_datapipe,
         t0_datapipe,

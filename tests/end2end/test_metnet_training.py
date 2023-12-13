@@ -2,6 +2,8 @@ import numpy as np
 import torch
 import xarray
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.iter import IterableWrapper
+
 
 xarray.set_options(keep_attrs=True)
 
@@ -10,8 +12,6 @@ from datetime import timedelta
 from ocf_datapipes.select import (
     SelectGSPIDs,
     LocationPicker,
-    SelectLiveT0Time,
-    SelectLiveTimeSlice,
     SelectSpatialSliceMeters,
 )
 
@@ -29,6 +29,8 @@ from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
 
 import pytest
 
+def last_time(ds, time_dim="time_utc"):
+    return ds[time_dim].values[-1]
 
 # N.B First change which broke this test was changing the NWP data in the test directory to include
 # more forecast steps
@@ -94,7 +96,7 @@ def test_metnet_production(
         2
     )  # Has to be large as test PV systems aren't in first 20 GSPs it seems
     nwp_datapipe, nwp_t0_datapipe = Downsample(nwp_datapipe, y_coarsen=16, x_coarsen=16).fork(2)
-    nwp_t0_datapipe = SelectLiveT0Time(nwp_t0_datapipe, dim_name="init_time_utc")
+    nwp_t0_datapipe = nwp_t0_datapipe.map(lambda x: last_time(x, "init_time_utc"))
     nwp_datapipe = ConvertToNWPTargetTime(
         nwp_datapipe,
         t0_datapipe=nwp_t0_datapipe,
@@ -102,25 +104,26 @@ def test_metnet_production(
         history_duration=timedelta(hours=2),
         forecast_duration=timedelta(hours=3),
     )
-    gsp_t0_datapipe = SelectLiveT0Time(gsp_t0_datapipe)
+    gsp_t0_datapipe = gsp_t0_datapipe.map(last_time)
     gsp_datapipe = SelectLiveTimeSlice(
         gsp_datapipe,
         t0_datapipe=gsp_t0_datapipe,
         history_duration=timedelta(hours=2),
     )
-    sat_t0_datapipe = SelectLiveT0Time(sat_datapipe)
+    sat_t0_datapipe = sat_datapipe.map(last_time)
     sat_datapipe, image_datapipe = SelectLiveTimeSlice(
         sat_datapipe,
         t0_datapipe=sat_t0_datapipe,
         history_duration=timedelta(hours=1),
     ).fork(2)
-    sat_hrv_t0_datapipe = SelectLiveT0Time(sat_hrv_datapipe)
+    sat_hrv_t0_datapipe = sat_hrv_datapipe.map(last_time)
     sat_hrv_datapipe = SelectLiveTimeSlice(
         sat_hrv_datapipe,
         t0_datapipe=sat_hrv_t0_datapipe,
         history_duration=timedelta(hours=1),
     )
-    passiv_t0_datapipe = SelectLiveT0Time(pv_t0_datapipe)
+    passiv_t0_datapipe = pv_t0_datapipe.map(last_time)
+    sat_hrv_t0_datapipe
     pv_datapipe = SelectLiveTimeSlice(
         pv_datapipe,
         t0_datapipe=passiv_t0_datapipe,
