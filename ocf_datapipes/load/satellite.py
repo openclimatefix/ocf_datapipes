@@ -1,16 +1,13 @@
 """Satellite loader"""
 import logging
 import subprocess
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Union
 
 import dask
-import fsspec
 import pandas as pd
 import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
-from pathy import Pathy
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 _log = logging.getLogger(__name__)
@@ -57,7 +54,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
 
     Args:
       zarr_path: Cloud URL or local path pattern, or list of these. If GCS URL, it must start with
-          'gs://'. 
+          'gs://'.
 
     Example:
         With wild cards and GCS path:
@@ -83,7 +80,6 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
     # from 8 seconds to 50 seconds!
     dask.config.set({"array.slicing.split_large_chunks": False})
-
 
     if isinstance(zarr_path, (list, tuple)):
         dataset = xr.combine_nested(
