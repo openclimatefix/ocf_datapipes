@@ -8,7 +8,7 @@ import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.convert import ConvertGSPToNumpy
-from ocf_datapipes.select import SelectGSPIDs, LocationPicker
+from ocf_datapipes.select import LocationPicker, SelectGSPIDs
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,

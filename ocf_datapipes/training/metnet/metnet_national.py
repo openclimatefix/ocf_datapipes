@@ -18,7 +18,7 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.select import SelectGSPIDs, LocationPicker
+from ocf_datapipes.select import LocationPicker, SelectGSPIDs
 from ocf_datapipes.transform.xarray import PreProcessMetNet
 from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 

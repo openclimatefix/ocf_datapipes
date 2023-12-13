@@ -1,5 +1,4 @@
 """Selection datapipes"""
-from .select_gsp_ids import SelectGSPIDsIterDataPipe as SelectGSPIDs
 from .drop_pv_sys_generating_overnight import (
     DropPvSysGeneratingOvernightIterDataPipe as DropPvSysGeneratingOvernight,
 )
@@ -9,6 +8,7 @@ from .drop_pv_sys_with_only_nan_in_a_day import (
 from .location_picker import LocationPickerIterDataPipe as LocationPicker
 from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations
 from .select_channels import SelectChannelsIterDataPipe as SelectChannels
+from .select_gsp_ids import SelectGSPIDsIterDataPipe as SelectGSPIDs
 from .select_id import SelectIDIterDataPipe as SelectID
 from .select_live_t0_time import SelectLiveT0TimeIterDataPipe as SelectLiveT0Time
 from .select_live_time_slice import SelectLiveTimeSliceIterDataPipe as SelectLiveTimeSlice
