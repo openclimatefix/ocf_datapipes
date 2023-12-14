@@ -29,8 +29,10 @@ from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
 
 import pytest
 
+
 def last_time(ds, time_dim="time_utc"):
     return ds[time_dim].values[-1]
+
 
 # N.B First change which broke this test was changing the NWP data in the test directory to include
 # more forecast steps

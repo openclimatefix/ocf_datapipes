@@ -12,9 +12,9 @@ def test_convert_nwp_to_numpy_batch(nwp_datapipe):
         sample_period_duration=timedelta(minutes=60),
         history_duration=timedelta(minutes=60),
     )
-    
+
     t0_datapipe = IterableWrapper([next(iter(nwp_datapipe)).init_time_utc.values[-1]])
-    
+
     nwp_datapipe = ConvertToNWPTargetTime(
         nwp_datapipe,
         t0_datapipe=t0_datapipe,
