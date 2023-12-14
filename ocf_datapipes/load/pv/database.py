@@ -15,7 +15,6 @@ from ocf_datapipes.load.pv.utils import put_pv_data_into_an_xr_dataarray
 logger = logging.getLogger(__name__)
 
 
-
 @functional_datapipe("open_pv_from_pvsites_db")
 class OpenPVFromPVSitesDBIterDataPipe(IterDataPipe):
     """Data pipes and utils for getting PV data from pvsites database"""
