@@ -141,7 +141,7 @@ GFS_MEAN = _to_data_array(GFS_MEAN)
 
 
 # ------ ECMWF
-# These were calculated from 100 random days of UK data from 2020-2023
+# These were calculated from 100 random init times of UK data from 2020-2023
 ECMWF_STD = {
     'dlwrf': 15855867.0,
     'dswrf': 13025427.0,
