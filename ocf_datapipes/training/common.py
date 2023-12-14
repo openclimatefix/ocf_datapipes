@@ -425,7 +425,7 @@ def _fill_nans_in_arrays(batch: dict):
         # Recursion is included to reach NWP arrays in subdict
         elif isinstance(v, dict):
             batch[k] = _fill_nans_in_arrays(v)
-             
+
     return batch
 
 
