@@ -35,7 +35,6 @@ def open_and_return_datapipes(
     use_hrv: bool = True,
     use_topo: bool = True,
     use_sensor: bool = True,
-    production: bool = False,
 ) -> dict[str, IterDataPipe]:
     """
     Open data sources given a configuration and return the list of datapipes
@@ -49,7 +48,6 @@ def open_and_return_datapipes(
         use_sat: Whether to open non-HRV satellite data
         use_gsp: Whether to use GSP data or not
         use_sensor: Whether to use sensor data or not
-        production: bool if this is for production or not
 
     Returns:
         List of datapipes corresponding to the datapipes to open
@@ -489,7 +487,6 @@ def _get_datapipes_dict(
         use_nwp=True,
         use_topo=True,
         use_sensor=True,
-        production=production,
     )
 
     config: Configuration = datapipes_dict["config"]
@@ -717,7 +714,7 @@ def slice_datapipes_by_time(
             # All PV data could be delayed by up to 30 minutes
             # (this does not stem from production - just setting for now)
             dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
-            dropout_frac=0.1 if production else 1,
+            dropout_frac=0 if production else 0.5,
         )
 
         datapipes_dict["pv"] = datapipes_dict["pv"].apply_dropout_time(
