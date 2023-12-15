@@ -1,7 +1,7 @@
 from ocf_datapipes.select import SelectGSPIDs, LocationPicker
 from ocf_datapipes.transform.xarray import CreatePVImage
 from ocf_datapipes.training.metnet.metnet_preprocessor import (
-    PreProcessMetNetIterDataPipe as PreProcessMetNet
+    PreProcessMetNetIterDataPipe as PreProcessMetNet,
 )
 
 

@@ -11,13 +11,13 @@ import pvlib
 import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
+from ocf_datapipes.convert import StackXarray
 from ocf_datapipes.select import LocationPicker
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
 )
-from ocf_datapipes.convert import StackXarray
 from ocf_datapipes.utils.consts import UKV_MAX, UKV_MIN
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 

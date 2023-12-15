@@ -15,7 +15,7 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
 )
 from ocf_datapipes.training.metnet.metnet_preprocessor import (
-    PreProcessMetNetIterDataPipe as PreProcessMetNet
+    PreProcessMetNetIterDataPipe as PreProcessMetNet,
 )
 from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 

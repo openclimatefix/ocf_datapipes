@@ -1,4 +1,10 @@
 """Various conversion datapipes"""
+from .convert_to_numpy_stack import StackXarrayIterDataPipe as StackXarray
+from .coordinates import ConvertGeostationaryToLonLatIterDataPipe as ConvertGeostationaryToLonLat
+from .coordinates import ConvertLonLatToOSGBIterDataPipe as ConvertLonLatToOSGB
+from .coordinates import ConvertOSGBToLonLatIterDataPipe as ConvertOSGBToLonLat
+from .numpy.gsp import ConvertGSPToNumpyIterDataPipe as ConvertGSPToNumpy
+from .numpy.pv import ConvertPVToNumpyIterDataPipe as ConvertPVToNumpy
 from .numpy_batch.gsp import (
     ConvertGSPToNumpyBatchIterDataPipe as ConvertGSPToNumpyBatch,
 )
@@ -14,10 +20,3 @@ from .numpy_batch.satellite import (
 from .numpy_batch.sensor import (
     ConvertSensorToNumpyBatchIterDataPipe as ConvertSensorToNumpyBatch,
 )
-from .convert_to_numpy_stack import StackXarrayIterDataPipe as StackXarray
-
-from .coordinates import ConvertGeostationaryToLonLatIterDataPipe as ConvertGeostationaryToLonLat
-from .coordinates import ConvertLonLatToOSGBIterDataPipe as ConvertLonLatToOSGB
-from .coordinates import ConvertOSGBToLonLatIterDataPipe as ConvertOSGBToLonLat
-from .numpy.gsp import ConvertGSPToNumpyIterDataPipe as ConvertGSPToNumpy
-from .numpy.pv import ConvertPVToNumpyIterDataPipe as ConvertPVToNumpy

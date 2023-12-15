@@ -50,10 +50,9 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
             assert all(
                 [t < timedelta(minutes=0) for t in dropout_timedeltas]
             ), "dropout timedeltas must be negative"
-            assert len(dropout_timedeltas)>=1
+            assert len(dropout_timedeltas) >= 1
         assert 0 <= dropout_frac <= 1
-        self._consider_dropout = (dropout_timedeltas is not None)  and dropout_frac>0
-
+        self._consider_dropout = (dropout_timedeltas is not None) and dropout_frac > 0
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
@@ -70,7 +69,7 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
                 end_dt.ceil(self.sample_period_duration),
                 freq=self.sample_period_duration,
             )
-            
+
             # Maybe apply NWP dropout
             if self._consider_dropout and (np.random.uniform() < self.dropout_frac):
                 dt = np.random.choice(self.dropout_timedeltas)

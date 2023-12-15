@@ -60,5 +60,3 @@ def test_convert_to_nwp_target_time_with_dropout(nwp_datapipe):
         assert (
             ds.init_time_utc.values == (t - timedelta(minutes=60)).floor(timedelta(hours=3))
         ).all()
-        
-
