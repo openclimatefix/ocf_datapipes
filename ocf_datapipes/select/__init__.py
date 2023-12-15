@@ -4,9 +4,6 @@ from .apply_standard_dropout import ApplyDropoutTimeIterDataPipe as ApplyDropout
 from .apply_standard_dropout import DrawDropoutTimeIterDataPipe as DrawDropoutTime
 from .filter_channels import FilterChannelsIterDataPipe as FilterChannels
 from .filter_gsp_ids import FilterGSPIDsIterDataPipe as FilterGSPIDs
-from .filter_to_overlapping_time_periods import (
-    FilterToOverlappingTimePeriodsIterDataPipe as FilterToOverlappingTimePeriods,
-)
 from .filter_pv_sys_generating_overnight import (
     FilterPvSysGeneratingOvernightIterDataPipe as FilterPvSysGeneratingOvernight,
 )
@@ -18,6 +15,9 @@ from .filter_pv_systems_by_capacity import (
 )
 from .filter_time_periods import FilterTimePeriodsIterDataPipe as FilterTimePeriods
 from .filter_times import FilterTimesIterDataPipe as SelectTrainTestTimePeriod
+from .filter_to_overlapping_time_periods import (
+    FilterToOverlappingTimePeriodsIterDataPipe as FilterToOverlappingTimePeriods,
+)
 from .find_contiguous_t0_time_periods import (
     FindContiguousT0TimePeriodsIterDataPipe as FindContiguousT0TimePeriods,
 )

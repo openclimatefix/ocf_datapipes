@@ -178,12 +178,16 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     # Satellite get contiguous time periods
     satellite_datapipe, satellite_time_periods_datapipe = satellite_datapipe.fork(2)
 
-    satellite_time_periods_datapipe = satellite_time_periods_datapipe.find_contiguous_t0_time_periods(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.satellite.time_resolution_minutes
-        ),
-        history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
-        forecast_duration=timedelta(minutes=configuration.input_data.satellite.forecast_minutes),
+    satellite_time_periods_datapipe = (
+        satellite_time_periods_datapipe.find_contiguous_t0_time_periods(
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.satellite.time_resolution_minutes
+            ),
+            history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
+            forecast_duration=timedelta(
+                minutes=configuration.input_data.satellite.forecast_minutes
+            ),
+        )
     )
 
     # NWP get contiguous time periods

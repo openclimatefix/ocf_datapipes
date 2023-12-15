@@ -18,7 +18,7 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.select import PickLocations, FilterGSPIDs
+from ocf_datapipes.select import FilterGSPIDs, PickLocations
 from ocf_datapipes.training.metnet.metnet_preprocessor import (
     PreProcessMetNetIterDataPipe as PreProcessMetNet,
 )
@@ -188,12 +188,14 @@ def metnet_national_datapipe(
             .fork(2)
         )
 
-        sat_hrv_time_periods_datapipe = sat_hrv_time_periods_datapipe.find_contiguous_t0_time_periods(
-            sample_period_duration=timedelta(minutes=5),
-            history_duration=timedelta(
-                minutes=configuration.input_data.hrvsatellite.history_minutes
-            ),
-            forecast_duration=timedelta(minutes=1),
+        sat_hrv_time_periods_datapipe = (
+            sat_hrv_time_periods_datapipe.find_contiguous_t0_time_periods(
+                sample_period_duration=timedelta(minutes=5),
+                history_duration=timedelta(
+                    minutes=configuration.input_data.hrvsatellite.history_minutes
+                ),
+                forecast_duration=timedelta(minutes=1),
+            )
         )
         secondary_datapipes.append(sat_hrv_time_periods_datapipe)
 

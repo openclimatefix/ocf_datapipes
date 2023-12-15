@@ -543,9 +543,7 @@ def construct_loctime_pipelines(
         datapipes_dict["gsp"] = datapipes_dict["gsp"].map(gsp_drop_national)
 
     if (start_time is not None) or (end_time is not None):
-        datapipes_dict[core_key] = datapipes_dict[core_key].filter_times(
-            start_time, end_time
-        )
+        datapipes_dict[core_key] = datapipes_dict[core_key].filter_times(start_time, end_time)
 
     # Get overlapping time periods
     location_pipe, t0_datapipe = create_t0_and_loc_datapipes(

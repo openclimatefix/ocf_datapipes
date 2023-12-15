@@ -1,5 +1,4 @@
 """Various conversion datapipes"""
-from .stack_xarray_to_numpy import StackXarrayIterDataPipe as StackXarray
 from .coordinates import ConvertGeostationaryToLonLatIterDataPipe as ConvertGeostationaryToLonLat
 from .coordinates import ConvertLonLatToOSGBIterDataPipe as ConvertLonLatToOSGB
 from .coordinates import ConvertOSGBToLonLatIterDataPipe as ConvertOSGBToLonLat
@@ -20,3 +19,4 @@ from .numpy_batch.satellite import (
 from .numpy_batch.sensor import (
     ConvertSensorToNumpyBatchIterDataPipe as ConvertSensorToNumpyBatch,
 )
+from .stack_xarray_to_numpy import StackXarrayIterDataPipe as StackXarray
