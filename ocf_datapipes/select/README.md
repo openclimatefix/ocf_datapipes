@@ -11,5 +11,3 @@ The following naming convention applies:
 - `select_` is reserved for sample level selection, like selecting a window in time or space for a sample
 - `filter_` is reserved for dataset level selection, like slicing out the train/test period, selecting channels, or systems by ID
 - `pick_` is reserved for functions which take a dataset and yield locations and/or t0 times
-
-
