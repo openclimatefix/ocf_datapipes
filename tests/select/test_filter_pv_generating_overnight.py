@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from ocf_datapipes.select import DropPvSysGeneratingOvernight as DropNightPV
+from ocf_datapipes.select import FilterPvSysGeneratingOvernight as DropNightPV
 from ocf_datapipes.transform.xarray import AssignDayNightStatus
 
 logger = logging.getLogger(__name__)

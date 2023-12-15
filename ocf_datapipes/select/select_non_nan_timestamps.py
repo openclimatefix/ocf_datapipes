@@ -7,9 +7,9 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("remove_nans")
-class RemoveNansIterDataPipe(IterDataPipe):
-    """Remove timestamps where any value in the dataset is NaN"""
+@functional_datapipe("select_non_nan_times")
+class SelectNonNaNTimesIterDataPipe(IterDataPipe):
+    """Remove timestamps where any value in the xarray object is NaN"""
 
     def __init__(self, source_datapipe: IterDataPipe, time_dim: str = "time_utc"):
         """

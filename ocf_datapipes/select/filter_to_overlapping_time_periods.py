@@ -8,9 +8,9 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("select_overlapping_time_slice")
-class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
-    """Source DataPipes are from the contiguous_time_period"""
+@functional_datapipe("filter_to_overlapping_time_periods")
+class FilterToOverlappingTimePeriodsIterDataPipe(IterDataPipe):
+    """Filter to overlapping time periods"""
 
     def __init__(
         self,
@@ -18,7 +18,8 @@ class SelectOverlappingTimeSliceIterDataPipe(IterDataPipe):
         secondary_datapipes: Iterable[IterDataPipe],
         location_datapipe: Optional[IterDataPipe] = None,
     ):
-        """
+        """Filter to overlapping time periods
+
         Source DataPipes are from the contiguous_time_period
 
         Args:

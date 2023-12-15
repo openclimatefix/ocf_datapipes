@@ -1,9 +1,9 @@
 import numpy as np
-from ocf_datapipes.select import LocationT0Picker
+from ocf_datapipes.select import PickLocationsAndT0s
 
 
-def test_select_loc_and_t0_return_all(gsp_datapipe):
-    loctime_datapipe = LocationT0Picker(gsp_datapipe, return_all=True)
+def test_pick_locs_and_t0s_return_all(gsp_datapipe):
+    loctime_datapipe = PickLocationsAndT0s(gsp_datapipe, return_all=True)
     locations = []
     times = []
 
@@ -28,8 +28,8 @@ def test_select_loc_and_t0_return_all(gsp_datapipe):
     assert (np.unique([loc.id for loc in locations]) == np.unique(data.gsp_id)).all()
 
 
-def test_select_loc_and_t0_random(gsp_datapipe):
-    loctime_datapipe = LocationT0Picker(gsp_datapipe, return_all=False)
+def test_pick_locs_and_t0s_random(gsp_datapipe):
+    loctime_datapipe = PickLocationsAndT0s(gsp_datapipe, return_all=False)
     locations = []
     times = []
 

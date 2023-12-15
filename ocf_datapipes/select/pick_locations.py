@@ -10,9 +10,9 @@ from ocf_datapipes.utils.geospatial import spatial_coord_type
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("location_picker")
-class LocationPickerIterDataPipe(IterDataPipe):
-    """Picks locations from a dataset and returns them"""
+@functional_datapipe("pick_locations")
+class PickLocationsIterDataPipe(IterDataPipe):
+    """Picks random locations from a dataset"""
 
     def __init__(
         self,
@@ -20,7 +20,7 @@ class LocationPickerIterDataPipe(IterDataPipe):
         return_all_locations: bool = False,
     ):
         """
-        Picks locations from a dataset and returns them
+        Picks random locations from a dataset
 
         Args:
             source_datapipe: Datapipe emitting Xarray Dataset

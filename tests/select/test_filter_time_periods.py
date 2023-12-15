@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
-from ocf_datapipes.select import SelectTimePeriods
+from ocf_datapipes.select import FilterTimePeriods
 
 
 def test_select_time_slice_gsp(gsp_datapipe):
@@ -14,7 +14,7 @@ def test_select_time_slice_gsp(gsp_datapipe):
         def __iter__(self):
             yield pd.DataFrame(columns=["start_dt", "end_dt"], data=[[start, end]])
 
-    select_timer_periods_datapipe = SelectTimePeriods(gsp_datapipe, time_periods=FakeTimePeriods())
+    select_timer_periods_datapipe = FilterTimePeriods(gsp_datapipe, time_periods=FakeTimePeriods())
 
     data = next(iter(select_timer_periods_datapipe))
 

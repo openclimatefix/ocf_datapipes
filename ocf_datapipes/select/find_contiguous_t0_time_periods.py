@@ -9,9 +9,9 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("get_contiguous_time_periods")
-class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
-    """Get contiguous time periods for training"""
+@functional_datapipe("find_contiguous_t0_time_periods")
+class FindContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
+    """Find contiguous t0 time periods"""
 
     def __init__(
         self,
@@ -23,7 +23,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         time_dim: str = "time_utc",
     ):
         """
-        Get contiguous time periods for use in determing t0 times for training
+        Find contiguous t0 time periods
 
         Args:
             source_datapipe: Datapipe emitting a Xarray dataset
@@ -45,7 +45,7 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
             logger.debug("Getting contiguous time periods")
-            contiguous_time_periods = get_contiguous_time_periods(
+            contiguous_time_periods = find_contiguous_t0_time_periods(
                 datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                 min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
                 max_gap_duration=self.sample_period_duration,
@@ -60,8 +60,8 @@ class GetContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
             yield contiguous_time_periods
 
 
-@functional_datapipe("get_contiguous_time_periods_nwp")
-class GetContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
+@functional_datapipe("find_contiguous_t0_time_periods_nwp")
+class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
     """Get contiguous NWP time periods for training"""
 
     def __init__(
@@ -104,7 +104,7 @@ class GetContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
             yield contiguous_time_periods
 
 
-def get_contiguous_time_periods(
+def find_contiguous_t0_time_periods(
     datetimes: pd.DatetimeIndex,
     min_seq_length: int,
     max_gap_duration: timedelta,

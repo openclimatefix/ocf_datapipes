@@ -12,7 +12,7 @@ import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.convert import StackXarray
-from ocf_datapipes.select import LocationPicker
+from ocf_datapipes.select import PickLocations
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
@@ -39,7 +39,7 @@ def normalize_pv(x):  # So it can be pickled
     return x / x.observed_capacity_wp
 
 
-def _remove_nans(x):
+def _select_non_nan_times(x):
     return x.fillna(0.0)
 
 
@@ -439,7 +439,7 @@ def pseudo_irradiance_datapipe(
         use_pv=use_pv,
     )
     # Load GSP national data
-    used_datapipes["pv"] = used_datapipes["pv"].select_train_test_time(start_time, end_time)
+    used_datapipes["pv"] = used_datapipes["pv"].filter_times(start_time, end_time)
 
     # Now get overlapping time periods
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(
@@ -465,7 +465,7 @@ def pseudo_irradiance_datapipe(
         pv_datapipe = pv_datapipe.map(_drop_pv_ids_in_list)
     # Split into GSP for target, only national, and one for history
     pv_datapipe, pv_loc_datapipe, pv_meta_save = pv_datapipe.fork(3)
-    pv_loc_datapipe, pv_sav_loc = LocationPicker(
+    pv_loc_datapipe, pv_sav_loc = PickLocations(
         pv_loc_datapipe,
         return_all_locations=True if is_test else False,
     ).fork(2, buffer_size=-1)
@@ -567,7 +567,7 @@ def pseudo_irradiance_datapipe(
             )
 
     if "topo" in used_datapipes.keys():
-        topo_datapipe = used_datapipes["topo"].normalize().map(_remove_nans)
+        topo_datapipe = used_datapipes["topo"].normalize().map(_select_non_nan_times)
         pv_loc_datapipe, pv_hrv_image_loc_datapipe = pv_loc_datapipe.fork(2)
         if use_meters:
             topo_datapipe = topo_datapipe.select_spatial_slice_meters(

@@ -11,8 +11,8 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("convert_to_nwp_target_time_with_dropout")
-class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
+@functional_datapipe("select_time_slice_nwp")
+class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
     """Convert NWP Xarray dataset to use target time as indexer"""
 
     def __init__(

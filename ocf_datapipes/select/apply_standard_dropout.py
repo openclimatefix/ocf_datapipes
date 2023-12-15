@@ -8,8 +8,8 @@ import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 
-@functional_datapipe("select_dropout_time")
-class SelectDropoutTimeIterDataPipe(IterDataPipe):
+@functional_datapipe("draw_dropout_time")
+class DrawDropoutTimeIterDataPipe(IterDataPipe):
     """Generates dropout times. The times are absolute values, not timedeltas."""
 
     def __init__(

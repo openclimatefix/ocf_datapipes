@@ -3,10 +3,10 @@ from torch.utils.data.datapipes.iter import IterableWrapper
 import pandas as pd
 import numpy as np
 
-from ocf_datapipes.select import SelectDropoutTime, ApplyDropoutTime
+from ocf_datapipes.select import DrawDropoutTime, ApplyDropoutTime
 
 
-def test_select_dropout_time(sat_datapipe):
+def test_draw_dropout_time(sat_datapipe):
     data = next(iter(sat_datapipe))
 
     t0_times = pd.to_datetime(data.time_utc.values)
@@ -14,7 +14,7 @@ def test_select_dropout_time(sat_datapipe):
     t0_datapipe = IterableWrapper(t0_times)
 
     # All times delayed by 5 minutes
-    dropout_time_datapipe = SelectDropoutTime(
+    dropout_time_datapipe = DrawDropoutTime(
         source_datapipe=t0_datapipe,
         dropout_timedeltas=[timedelta(minutes=-5)],
         dropout_frac=1,

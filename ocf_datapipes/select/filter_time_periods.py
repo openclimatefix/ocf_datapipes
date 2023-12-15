@@ -8,8 +8,8 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("select_time_periods")
-class SelectTimePeriodsIterDataPipe(IterDataPipe):
+@functional_datapipe("filter_time_periods")
+class FilterTimePeriodsIterDataPipe(IterDataPipe):
     """Select time periods"""
 
     def __init__(

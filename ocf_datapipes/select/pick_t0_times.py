@@ -9,9 +9,9 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("select_t0_time")
-class SelectT0TimeIterDataPipe(IterDataPipe):
-    """Select the random t0 time for the training data"""
+@functional_datapipe("pick_t0_times")
+class PickT0TimesIterDataPipe(IterDataPipe):
+    """Picks random t0 times from a dataset"""
 
     def __init__(
         self,
@@ -21,7 +21,7 @@ class SelectT0TimeIterDataPipe(IterDataPipe):
         number_locations_datapipe: Optional[IterDataPipe] = None,
     ):
         """
-        Select a random t0 time for training
+        Picks random t0 times from a dataset
 
         Args:
             source_datapipe: Datapipe emitting Xarray objects

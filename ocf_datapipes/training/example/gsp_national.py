@@ -71,7 +71,7 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
     gsp_datapipe, gsp_time_periods_datapipe, gsp_valid_times_datapipe = gsp_datapipe.fork(3)
 
     # Get contiguous time periods for each data source
-    gsp_time_periods_datapipe = gsp_time_periods_datapipe.get_contiguous_time_periods(
+    gsp_time_periods_datapipe = gsp_time_periods_datapipe.find_contiguous_t0_time_periods(
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
@@ -80,7 +80,7 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
     for nwp_source, nwp_conf in configuration.input_data.nwp.items():
         nwp_time_periods_datapipes[nwp_source] = nwp_time_periods_datapipes[
             nwp_source
-        ].get_contiguous_time_periods(
+        ].find_contiguous_t0_time_periods(
             sample_period_duration=timedelta(hours=3),
             history_duration=timedelta(minutes=nwp_conf.history_minutes),
             forecast_duration=timedelta(minutes=nwp_conf.forecast_minutes),
@@ -88,17 +88,17 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
         )
 
     # Find joint overlapping time periods
-    overlapping_datapipe = gsp_time_periods_datapipe.select_overlapping_time_slice(
+    overlapping_datapipe = gsp_time_periods_datapipe.filter_to_overlapping_time_periods(
         secondary_datapipes=[*nwp_time_periods_datapipes.values()],
     )
 
     # Filter GSP to times valid for all data sources
-    valid_periods_datapipe = gsp_valid_times_datapipe.select_time_periods(
+    valid_periods_datapipe = gsp_valid_times_datapipe.filter_time_periods(
         time_periods=overlapping_datapipe
     )
 
     # Select t0 times
-    gsp_t0_datapipe, nwp_t0_datapipe = valid_periods_datapipe.select_t0_time().fork(2)
+    gsp_t0_datapipe, nwp_t0_datapipe = valid_periods_datapipe.pick_t0_times().fork(2)
 
     # Take GSP time slices and convert to NumpyBatch
     gsp_numpy_datapipe = gsp_datapipe.select_time_slice(
@@ -114,7 +114,7 @@ def gsp_national_datapipe(configuration_filename: Union[Path, str]) -> IterDataP
     for nwp_source, nwp_conf in configuration.input_data.nwp.items():
         nwp_numpy_modalities[nwp_source] = (
             nwp_datapipe_dict[nwp_source]
-            .convert_to_nwp_target_time_with_dropout(
+            .select_time_slice_nwp(
                 t0_datapipe=nwp_t0_datapipe,
                 sample_period_duration=timedelta(hours=3),
                 history_duration=timedelta(minutes=nwp_conf.history_minutes),

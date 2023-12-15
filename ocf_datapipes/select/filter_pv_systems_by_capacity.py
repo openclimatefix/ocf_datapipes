@@ -6,8 +6,8 @@ import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 
-@functional_datapipe("select_pv_systems_on_capacity")
-class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
+@functional_datapipe("filter_pv_systems_on_capacity")
+class FilterPVSystemsOnCapacityIterDataPipe(IterDataPipe):
     """Select PV systems based off their capacity"""
 
     def __init__(
@@ -17,7 +17,7 @@ class SelectPVSystemsOnCapacityIterDataPipe(IterDataPipe):
         max_capacity_watts: Union[int, float] = np.inf,
     ):
         """
-        Select PV systems based off their capacity
+        Filter PV systems based off their capacity
 
         Args:
             source_datapipe: Datapipe of PV data

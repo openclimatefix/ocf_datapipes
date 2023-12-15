@@ -10,10 +10,10 @@ xarray.set_options(keep_attrs=True)
 from datetime import timedelta
 
 from ocf_datapipes.select import (
-    SelectGSPIDs,
-    LocationPicker,
+    FilterGSPIDs,
+    PickLocations,
     SelectSpatialSliceMeters,
-    ConvertToNWPTargetTimeWithDropout,
+    SelectTimeSliceNWP,
 )
 
 from ocf_datapipes.transform.xarray import (
@@ -49,7 +49,7 @@ def test_metnet_production(
     #####################################
     # Normalize GSP and PV on whole dataset here
     pv_datapipe = passiv_datapipe
-    gsp_datapipe, gsp_loc_datapipe = SelectGSPIDs(gsp_datapipe, gsps_to_keep=[0]).fork(2)
+    gsp_datapipe, gsp_loc_datapipe = FilterGSPIDs(gsp_datapipe, gsps_to_keep=[0]).fork(2)
     gsp_datapipe = Normalize(gsp_datapipe, normalize_fn=lambda x: x / x.installedcapacity_mwp)
     topo_datapipe = ReprojectTopography(topo_datapipe)
     sat_hrv_datapipe = AddT0IdxAndSamplePeriodDuration(
@@ -88,7 +88,7 @@ def test_metnet_production(
         location_datapipe3,
         location_datapipe4,
         location_datapipe5,
-    ) = LocationPicker(gsp_loc_datapipe, return_all_locations=True).fork(
+    ) = PickLocations(gsp_loc_datapipe, return_all_locations=True).fork(
         5
     )  # Its in order then
     pv_datapipe, pv_t0_datapipe = SelectSpatialSliceMeters(
@@ -101,7 +101,7 @@ def test_metnet_production(
     )  # Has to be large as test PV systems aren't in first 20 GSPs it seems
     nwp_datapipe, nwp_t0_datapipe = Downsample(nwp_datapipe, y_coarsen=16, x_coarsen=16).fork(2)
     nwp_t0_datapipe = nwp_t0_datapipe.map(lambda x: last_time(x, "init_time_utc"))
-    nwp_datapipe = ConvertToNWPTargetTimeWithDropout(
+    nwp_datapipe = SelectTimeSliceNWP(
         nwp_datapipe,
         t0_datapipe=nwp_t0_datapipe,
         sample_period_duration=timedelta(hours=1),

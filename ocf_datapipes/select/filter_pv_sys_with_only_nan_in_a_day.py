@@ -47,8 +47,8 @@ def return_system_indices_which_has_contiguous_nan(
     return system_index_values_to_be_dropped
 
 
-@functional_datapipe("drop_pv_systems_with_only_nan_in_a_day")
-class DropPVSystemsWithOnlyNanInADayIterDataPipe(IterDataPipe):
+@functional_datapipe("filter_pv_systems_with_only_nan_in_a_day")
+class FilterPVSystemsWithOnlyNanInADayIterDataPipe(IterDataPipe):
     """Remove any PV systems with less than 1 day of data"""
 
     def __init__(self, source_datapipe: IterDataPipe, minimum_number_data_points: int) -> None:

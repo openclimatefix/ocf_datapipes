@@ -9,8 +9,8 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("select_train_test_time")
-class SelectTrainTestTimePeriodsIterDataPipe(IterDataPipe):
+@functional_datapipe("filter_times")
+class FilterTimesIterDataPipe(IterDataPipe):
     """Select time periods"""
 
     def __init__(

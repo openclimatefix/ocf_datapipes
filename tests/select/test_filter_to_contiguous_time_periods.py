@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from torch.utils.data.datapipes.iter import IterableWrapper
-from ocf_datapipes.select import GetContiguousT0TimePeriods, GetContiguousT0TimePeriodsNWP
+from ocf_datapipes.select import FindContiguousT0TimePeriods, FindContiguousT0TimePeriodsNWP
 
 
 def _remove_indexes(x, inds):
@@ -17,7 +17,7 @@ def _remove_indexes(x, inds):
     return pd.to_datetime(np.concatenate(xs))
 
 
-def test_get_contiguous_time_periods(nwp_datapipe):
+def test_find_contiguous_t0_time_periods(nwp_datapipe):
     # Create 5-minutely data timestamps
     freq = timedelta(minutes=5)
     history_duration = timedelta(minutes=60)
@@ -33,7 +33,7 @@ def test_get_contiguous_time_periods(nwp_datapipe):
 
     history_duration = timedelta(minutes=60)
 
-    contig_t0_datapipe = GetContiguousT0TimePeriods(
+    contig_t0_datapipe = FindContiguousT0TimePeriods(
         time_datapipe,
         sample_period_duration=freq,
         history_duration=history_duration,
@@ -63,7 +63,7 @@ def test_get_contiguous_time_periods(nwp_datapipe):
     assert periods.equals(expected_results)
 
 
-def test_get_contiguous_time_periods_nwp():
+def test_find_contiguous_t0_time_periods_nwp():
     # These are the expected results of the test
     expected_results = [
         pd.DataFrame(
@@ -161,7 +161,7 @@ def test_get_contiguous_time_periods_nwp():
             [pd.DataFrame(datetimes, columns=["init_time_utc"]).to_xarray()]
         )
 
-        time_periods = time_datapipe.get_contiguous_time_periods_nwp(
+        time_periods = time_datapipe.find_contiguous_t0_time_periods_nwp(
             history_duration=history_duration,
             max_staleness=max_staleness,
             time_dim="init_time_utc",

@@ -8,9 +8,9 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("select_channels")
-class SelectChannelsIterDataPipe(IterDataPipe):
-    """Select channels"""
+@functional_datapipe("filter_channels")
+class FilterChannelsIterDataPipe(IterDataPipe):
+    """Filter channels"""
 
     def __init__(
         self,
@@ -19,7 +19,7 @@ class SelectChannelsIterDataPipe(IterDataPipe):
         dim_name: str = "channel",
     ):
         """
-        Select channels
+        Filter channels
 
         Args:
             source_datapipe: Datapipe of Xarray objects

@@ -9,8 +9,8 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("drop_night_pv")
-class DropPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
+@functional_datapipe("filter_night_pv")
+class FilterPvSysGeneratingOvernightIterDataPipe(IterDataPipe):
     """
     Drop the pv systems which generates power over night date from a timeseries xarray Dataset.
     """

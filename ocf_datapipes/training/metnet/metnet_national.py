@@ -18,7 +18,7 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.select import LocationPicker, SelectGSPIDs
+from ocf_datapipes.select import PickLocations, FilterGSPIDs
 from ocf_datapipes.training.metnet.metnet_preprocessor import (
     PreProcessMetNetIterDataPipe as PreProcessMetNet,
 )
@@ -42,7 +42,7 @@ def normalize_gsp(x):  # So it can be pickled
     return x / x.nominal_capacity_mwp
 
 
-def _remove_nans(x):
+def _select_non_nan_times(x):
     return x.fillna(0.0)
 
 
@@ -108,9 +108,9 @@ def metnet_national_datapipe(
     logger.debug("Opening GSP Data")
     gsp_datapipe = OpenGSP(
         gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
-    ).select_train_test_time(start_time, end_time)
+    ).filter_times(start_time, end_time)
 
-    gsp_datapipe = SelectGSPIDs(gsp_datapipe, gsps_to_keep=[0])
+    gsp_datapipe = FilterGSPIDs(gsp_datapipe, gsps_to_keep=[0])
 
     logger.debug("Add t0 idx and normalize")
 
@@ -125,7 +125,7 @@ def metnet_national_datapipe(
     # get time periods
     # get contiguous time periods
     logger.debug("Getting contiguous time periods")
-    gsp_time_periods_datapipe = gsp_time_periods_datapipe.get_contiguous_time_periods(
+    gsp_time_periods_datapipe = gsp_time_periods_datapipe.find_contiguous_t0_time_periods(
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
@@ -146,7 +146,7 @@ def metnet_national_datapipe(
             .fork(2)
         )
 
-        nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(
+        nwp_time_periods_datapipe = nwp_time_periods_datapipe.find_contiguous_t0_time_periods(
             sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
             forecast_duration=timedelta(minutes=configuration.input_data.nwp.forecast_minutes),
@@ -168,7 +168,7 @@ def metnet_national_datapipe(
             .fork(2)
         )
 
-        sat_time_periods_datapipe = sat_time_periods_datapipe.get_contiguous_time_periods(
+        sat_time_periods_datapipe = sat_time_periods_datapipe.find_contiguous_t0_time_periods(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
             forecast_duration=timedelta(minutes=1),
@@ -188,7 +188,7 @@ def metnet_national_datapipe(
             .fork(2)
         )
 
-        sat_hrv_time_periods_datapipe = sat_hrv_time_periods_datapipe.get_contiguous_time_periods(
+        sat_hrv_time_periods_datapipe = sat_hrv_time_periods_datapipe.find_contiguous_t0_time_periods(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(
                 minutes=configuration.input_data.hrvsatellite.history_minutes
@@ -208,7 +208,7 @@ def metnet_national_datapipe(
             .fork(2)
         )
 
-        pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
+        pv_time_periods_datapipe = pv_time_periods_datapipe.find_contiguous_t0_time_periods(
             sample_period_duration=timedelta(minutes=5),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
             forecast_duration=timedelta(minutes=1),
@@ -217,19 +217,19 @@ def metnet_national_datapipe(
 
     # find joint overlapping timer periods
     logger.debug("Getting joint time periods")
-    overlapping_datapipe = gsp_time_periods_datapipe.select_overlapping_time_slice(
+    overlapping_datapipe = gsp_time_periods_datapipe.filter_to_overlapping_time_periods(
         secondary_datapipes=secondary_datapipes,
     )
 
     # select time periods
-    gsp_t0_datapipe = gsp_t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+    gsp_t0_datapipe = gsp_t0_datapipe.filter_time_periods(time_periods=overlapping_datapipe)
 
     # select t0 periods
     logger.debug("Select t0 joint")
     num_t0_datapipes = (
         1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
     )
-    t0_datapipes = gsp_t0_datapipe.select_t0_time(
+    t0_datapipes = gsp_t0_datapipe.pick_t0_times(
         return_all_times=False  # if mode == "train" else True
     ).fork(num_t0_datapipes)
 
@@ -245,7 +245,7 @@ def metnet_national_datapipe(
     if use_nwp:
         # take nwp time slices
         logger.debug("Take NWP time slices")
-        nwp_datapipe = nwp_datapipe.convert_to_nwp_target_time_with_dropout(
+        nwp_datapipe = nwp_datapipe.select_time_slice_nwp(
             t0_datapipe=t0_datapipes[1],
             sample_period_duration=timedelta(hours=1),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
@@ -301,7 +301,7 @@ def metnet_national_datapipe(
     if use_topo:
         topo_datapipe = OpenTopography(
             configuration.input_data.topographic.topographic_filename
-        ).map(_remove_nans)
+        ).map(_select_non_nan_times)
 
     # Now combine in the MetNet format
     modalities = []
@@ -318,7 +318,7 @@ def metnet_national_datapipe(
 
     gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2)
 
-    location_datapipe = LocationPicker(gsp_loc_datapipe)
+    location_datapipe = PickLocations(gsp_loc_datapipe)
 
     combined_datapipe = PreProcessMetNet(
         modalities,

@@ -14,8 +14,8 @@ from ocf_datapipes.utils.geospatial import (
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("select_loc_and_t0")
-class LocationT0PickerIterDataPipe(IterDataPipe):
+@functional_datapipe("pick_locs_and_t0s")
+class PickLocationsAndT0sIterDataPipe(IterDataPipe):
     """Datapipe to yield location-time pairs from the input data source."""
 
     def __init__(

@@ -1,10 +1,10 @@
 from ocf_datapipes.convert import StackXarray
-from ocf_datapipes.select import LocationPicker
+from ocf_datapipes.select import PickLocations
 import numpy as np
 
 
 def test_stack_xarray(sat_hrv_datapipe, sat_datapipe, nwp_datapipe, passiv_datapipe):
-    loc1, loc2 = LocationPicker(passiv_datapipe).fork(2)
+    loc1, loc2 = PickLocations(passiv_datapipe).fork(2)
     sat_hrv_datapipe = sat_hrv_datapipe.select_spatial_slice_pixels(
         loc1,
         roi_height_pixels=32,

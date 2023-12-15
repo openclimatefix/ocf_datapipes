@@ -2,10 +2,10 @@ from datetime import timedelta
 from torch.utils.data.datapipes.iter import IterableWrapper
 import pandas as pd
 
-from ocf_datapipes.select import ConvertToNWPTargetTimeWithDropout
+from ocf_datapipes.select import SelectTimeSliceNWP
 
 
-def test_convert_to_nwp_target_time_with_dropout(nwp_datapipe):
+def test_select_time_slice_nwp(nwp_datapipe):
     data = next(iter(nwp_datapipe))
 
     t0 = pd.Timestamp(data.init_time_utc.values[3])
@@ -19,7 +19,7 @@ def test_convert_to_nwp_target_time_with_dropout(nwp_datapipe):
 
     t0_datapipe = IterableWrapper(times)
 
-    dropout_datapipe = ConvertToNWPTargetTimeWithDropout(
+    dropout_datapipe = SelectTimeSliceNWP(
         nwp_datapipe,
         t0_datapipe,
         sample_period_duration=timedelta(minutes=60),
@@ -44,7 +44,7 @@ def test_convert_to_nwp_target_time_with_dropout(nwp_datapipe):
     t0_datapipe = IterableWrapper(times)
 
     # Dropout with one hour delay
-    dropout_datapipe = ConvertToNWPTargetTimeWithDropout(
+    dropout_datapipe = SelectTimeSliceNWP(
         nwp_datapipe,
         t0_datapipe,
         sample_period_duration=timedelta(minutes=60),
