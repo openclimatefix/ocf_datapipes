@@ -851,7 +851,7 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             continue
         if key.startswith("nwp/"):
             nwp_source = key.removeprefix("nwp/")
-            datapipes_to_return[key] = datapipe.convert_to_nwp_target_time(
+            datapipes_to_return[key] = datapipe.convert_to_nwp_target_time_with_dropout(
                 t0_datapipe=used_datapipes[key + "_t0"],
                 sample_period_duration=timedelta(hours=1),
                 history_duration=timedelta(
