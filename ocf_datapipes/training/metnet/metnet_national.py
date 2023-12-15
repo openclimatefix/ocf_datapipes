@@ -138,7 +138,7 @@ def metnet_national_datapipe(
         logger.debug("Opening NWP Data")
         nwp_datapipe, nwp_time_periods_datapipe = (
             OpenNWP(configuration.input_data.nwp.nwp_zarr_path)
-            .select_channels(configuration.input_data.nwp.nwp_channels)
+            .filter_channels(configuration.input_data.nwp.nwp_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(hours=1),
                 history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),
@@ -158,7 +158,7 @@ def metnet_national_datapipe(
         logger.debug("Opening Satellite Data")
         sat_datapipe, sat_time_periods_datapipe = (
             OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
-            .select_channels(configuration.input_data.satellite.satellite_channels)
+            .filter_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(

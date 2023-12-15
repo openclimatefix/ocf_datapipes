@@ -119,7 +119,7 @@ def open_and_return_datapipes(
                     nwp_conf.nwp_zarr_path,
                     provider=nwp_conf.nwp_provider,
                 )
-                .select_channels(nwp_conf.nwp_channels)
+                .filter_channels(nwp_conf.nwp_channels)
                 .add_t0_idx_and_sample_period_duration(
                     sample_period_duration=timedelta(hours=1),
                     history_duration=timedelta(minutes=nwp_conf.history_minutes),
@@ -130,7 +130,7 @@ def open_and_return_datapipes(
         logger.debug("Opening Satellite Data")
         sat_datapipe = (
             OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
-            .select_channels(configuration.input_data.satellite.satellite_channels)
+            .filter_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(
