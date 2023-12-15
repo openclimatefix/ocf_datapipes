@@ -21,8 +21,10 @@ from ocf_datapipes.transform.xarray import (
     CreatePVImage,
     Downsample,
     Normalize,
-    PreProcessMetNet,
     ReprojectTopography,
+)
+from ocf_datapipes.training.metnet.metnet_preprocessor import (
+    PreProcessMetNetIterDataPipe as PreProcessMetNet,
 )
 
 from ocf_datapipes.utils.consts import UKV_MEAN, UKV_STD, RSS_MEAN, RSS_STD
