@@ -11,7 +11,7 @@ from ocf_datapipes.utils.consts import BatchKey, NumpyBatch, NWPBatchKey, NWPNum
 logger = logging.getLogger(__name__)
 
 
-@functional_datapipe("encode_space_time")
+@functional_datapipe("add_fourier_space_time")
 class EncodeSpaceTimeIterDataPipe(IterDataPipe):
     """Encodes the Fourier features for space and time"""
 

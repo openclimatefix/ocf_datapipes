@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from torch.utils.data.datapipes.iter import IterableWrapper
-from ocf_datapipes.transform.xarray import GetContiguousT0TimePeriods, GetContiguousT0TimePeriodsNWP
+from ocf_datapipes.select import GetContiguousT0TimePeriods, GetContiguousT0TimePeriodsNWP
 
 
 def _remove_indexes(x, inds):

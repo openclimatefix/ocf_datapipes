@@ -19,7 +19,9 @@ from ocf_datapipes.load import (
     OpenTopography,
 )
 from ocf_datapipes.select import LocationPicker, SelectGSPIDs
-from ocf_datapipes.transform.xarray import PreProcessMetNet
+from ocf_datapipes.training.metnet.metnet_preprocessor import (
+    PreProcessMetNetIterDataPipe as PreProcessMetNet
+)
 from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 
 xarray.set_options(keep_attrs=True)
@@ -243,7 +245,7 @@ def metnet_national_datapipe(
     if use_nwp:
         # take nwp time slices
         logger.debug("Take NWP time slices")
-        nwp_datapipe = nwp_datapipe.convert_to_nwp_target_time(
+        nwp_datapipe = nwp_datapipe.convert_to_nwp_target_time_with_dropout(
             t0_datapipe=t0_datapipes[1],
             sample_period_duration=timedelta(hours=1),
             history_duration=timedelta(minutes=configuration.input_data.nwp.history_minutes),

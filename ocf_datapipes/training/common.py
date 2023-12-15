@@ -131,10 +131,7 @@ def open_and_return_datapipes(
     if use_sat:
         logger.debug("Opening Satellite Data")
         sat_datapipe = (
-            OpenSatellite(
-                configuration.input_data.satellite.satellite_zarr_path,
-                use_15_minute_data_if_needed=production,
-            )
+            OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
             .select_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),

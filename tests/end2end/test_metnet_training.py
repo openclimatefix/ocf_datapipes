@@ -13,11 +13,11 @@ from ocf_datapipes.select import (
     SelectGSPIDs,
     LocationPicker,
     SelectSpatialSliceMeters,
+    ConvertToNWPTargetTimeWithDropout,
 )
 
 from ocf_datapipes.transform.xarray import (
     AddT0IdxAndSamplePeriodDuration,
-    ConvertToNWPTargetTime,
     CreatePVImage,
     Downsample,
     Normalize,
@@ -99,7 +99,7 @@ def test_metnet_production(
     )  # Has to be large as test PV systems aren't in first 20 GSPs it seems
     nwp_datapipe, nwp_t0_datapipe = Downsample(nwp_datapipe, y_coarsen=16, x_coarsen=16).fork(2)
     nwp_t0_datapipe = nwp_t0_datapipe.map(lambda x: last_time(x, "init_time_utc"))
-    nwp_datapipe = ConvertToNWPTargetTime(
+    nwp_datapipe = ConvertToNWPTargetTimeWithDropout(
         nwp_datapipe,
         t0_datapipe=nwp_t0_datapipe,
         sample_period_duration=timedelta(hours=1),

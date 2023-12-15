@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("remove_nans")
 class RemoveNansIterDataPipe(IterDataPipe):
-    """Remove nans from the dataset"""
+    """Remove timestamps where any value in the dataset is NaN"""
 
     def __init__(self, source_datapipe: IterDataPipe, time_dim: str = "time_utc"):
         """
-        Remove bad PV systems
+        Remove timestamps where any value in the dataset is NaN
 
         Args:
             source_datapipe: Datapipe of PV data

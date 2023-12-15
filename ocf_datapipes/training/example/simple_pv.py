@@ -8,7 +8,7 @@ from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenPVFromDB, OpenPVFromNetCDF
+from ocf_datapipes.load import OpenPVFromNetCDF
 from ocf_datapipes.training.common import normalize_pv
 
 xarray.set_options(keep_attrs=True)
@@ -38,10 +38,7 @@ def simple_pv_datapipe(
     pv_config = configuration.input_data.pv
 
     # Open dataset
-    if configuration.input_data.pv.is_live:
-        pv_datapipe = OpenPVFromDB(pv_config=pv_config)
-    else:
-        pv_datapipe = OpenPVFromNetCDF(pv=pv_config)
+    pv_datapipe = OpenPVFromNetCDF(pv=pv_config)
 
     # Fork datapipe for raw data, time slicing, and location slicing uses
     pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe, pv_location_datapipe = pv_datapipe.fork(

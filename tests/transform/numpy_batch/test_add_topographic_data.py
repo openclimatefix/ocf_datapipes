@@ -1,4 +1,4 @@
-from ocf_datapipes.transform.numpy import AddTopographicData
+from ocf_datapipes.transform.numpy_batch import AddTopographicData
 from ocf_datapipes.transform.xarray import ReprojectTopography
 
 

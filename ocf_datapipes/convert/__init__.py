@@ -1,19 +1,20 @@
 """Various conversion datapipes"""
-from ocf_datapipes.convert.numpy_batch.gsp import (
+from .numpy_batch.gsp import (
     ConvertGSPToNumpyBatchIterDataPipe as ConvertGSPToNumpyBatch,
 )
-from ocf_datapipes.convert.numpy_batch.nwp import (
+from .numpy_batch.nwp import (
     ConvertNWPToNumpyBatchIterDataPipe as ConvertNWPToNumpyBatch,
 )
-from ocf_datapipes.convert.numpy_batch.pv import (
+from .numpy_batch.pv import (
     ConvertPVToNumpyBatchIterDataPipe as ConvertPVToNumpyBatch,
 )
-from ocf_datapipes.convert.numpy_batch.satellite import (
+from .numpy_batch.satellite import (
     ConvertSatelliteToNumpyBatchIterDataPipe as ConvertSatelliteToNumpyBatch,
 )
-from ocf_datapipes.convert.numpy_batch.sensor import (
+from .numpy_batch.sensor import (
     ConvertSensorToNumpyBatchIterDataPipe as ConvertSensorToNumpyBatch,
 )
+from .convert_to_numpy_stack import StackXarrayIterDataPipe as StackXarray
 
 from .coordinates import ConvertGeostationaryToLonLatIterDataPipe as ConvertGeostationaryToLonLat
 from .coordinates import ConvertLonLatToOSGBIterDataPipe as ConvertLonLatToOSGB

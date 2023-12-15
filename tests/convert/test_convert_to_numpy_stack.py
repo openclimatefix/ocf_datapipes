@@ -1,4 +1,4 @@
-from ocf_datapipes.transform.xarray import StackXarray
+from ocf_datapipes.convert import StackXarray
 from ocf_datapipes.select import LocationPicker
 import numpy as np
 

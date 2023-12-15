@@ -22,8 +22,8 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
         sample_period_duration: timedelta,
         history_duration: timedelta,
         forecast_duration: timedelta,
-        dropout_timedeltas: List[timedelta],
-        dropout_frac: Optional[float] = 1,
+        dropout_timedeltas: Optional[List[timedelta]] = None,
+        dropout_frac: Optional[float] = 0,
     ):
         """Convert NWP Xarray dataset to use target time as indexer
 
@@ -46,12 +46,14 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
         self.forecast_duration = forecast_duration
         self.dropout_timedeltas = dropout_timedeltas
         self.dropout_frac = dropout_frac
-        assert len(dropout_timedeltas) >= 1, "Must include list of relative dropout timedeltas"
-        assert all(
-            [t < timedelta(minutes=0) for t in dropout_timedeltas]
-        ), "dropout timedeltas must be negative"
-
+        if dropout_timedeltas is not None:
+            assert all(
+                [t < timedelta(minutes=0) for t in dropout_timedeltas]
+            ), "dropout timedeltas must be negative"
+            assert len(dropout_timedeltas)>=1
         assert 0 <= dropout_frac <= 1
+        self._consider_dropout = (dropout_timedeltas is not None)  and dropout_frac>0
+
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
@@ -68,9 +70,9 @@ class ConvertToNWPTargetTimeWithDropoutIterDataPipe(IterDataPipe):
                 end_dt.ceil(self.sample_period_duration),
                 freq=self.sample_period_duration,
             )
-
-            # Apply NWP dropout
-            if np.random.uniform() < self.dropout_frac:
+            
+            # Maybe apply NWP dropout
+            if self._consider_dropout and (np.random.uniform() < self.dropout_frac):
                 dt = np.random.choice(self.dropout_timedeltas)
                 t0_available = t0 + dt
             else:

@@ -2,7 +2,8 @@ from datetime import timedelta
 
 from ocf_datapipes.convert import ConvertNWPToNumpyBatch
 from torch.utils.data.datapipes.iter import IterableWrapper
-from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration, ConvertToNWPTargetTime
+from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration
+from ocf_datapipes.select import ConvertToNWPTargetTimeWithDropout
 from ocf_datapipes.utils.consts import NWPBatchKey
 
 
@@ -15,7 +16,7 @@ def test_convert_nwp_to_numpy_batch(nwp_datapipe):
 
     t0_datapipe = IterableWrapper([next(iter(nwp_datapipe)).init_time_utc.values[-1]])
 
-    nwp_datapipe = ConvertToNWPTargetTime(
+    nwp_datapipe = ConvertToNWPTargetTimeWithDropout(
         nwp_datapipe,
         t0_datapipe=t0_datapipe,
         sample_period_duration=timedelta(minutes=60),

@@ -6,7 +6,6 @@
 
 """
 from ocf_datapipes.load import OpenSatellite
-from ocf_datapipes.load.satellite import load_and_check_satellite_data
 from freezegun import freeze_time
 
 

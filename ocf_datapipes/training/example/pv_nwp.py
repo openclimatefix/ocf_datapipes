@@ -137,7 +137,7 @@ def pv_nwp_datapipe(
 
         nwp_numpy_modalities[nwp_source] = (
             nwp_datapipe_dict[nwp_source]
-            .convert_to_nwp_target_time(
+            .convert_to_nwp_target_time_with_dropout(
                 t0_datapipe=nwp_t0_datapipe,
                 sample_period_duration=timedelta(hours=3),
                 history_duration=timedelta(minutes=nwp_conf.history_minutes),

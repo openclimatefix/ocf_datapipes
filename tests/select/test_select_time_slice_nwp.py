@@ -2,7 +2,7 @@ from datetime import timedelta
 from torch.utils.data.datapipes.iter import IterableWrapper
 import pandas as pd
 
-from ocf_datapipes.transform.xarray import ConvertToNWPTargetTimeWithDropout
+from ocf_datapipes.select import ConvertToNWPTargetTimeWithDropout
 
 
 def test_convert_to_nwp_target_time_with_dropout(nwp_datapipe):
@@ -56,6 +56,9 @@ def test_convert_to_nwp_target_time_with_dropout(nwp_datapipe):
 
     # The init times should be the last 3-hour mutliple before an hour before each time t
     for t, ds in zip(times, dropout_datapipe):
+        assert "target_time_utc" in ds.coords
         assert (
             ds.init_time_utc.values == (t - timedelta(minutes=60)).floor(timedelta(hours=3))
         ).all()
+        
+

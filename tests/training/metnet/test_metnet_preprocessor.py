@@ -1,5 +1,8 @@
 from ocf_datapipes.select import SelectGSPIDs, LocationPicker
-from ocf_datapipes.transform.xarray import ConvertToNWPTargetTime, CreatePVImage, PreProcessMetNet
+from ocf_datapipes.transform.xarray import CreatePVImage
+from ocf_datapipes.training.metnet.metnet_preprocessor import (
+    PreProcessMetNetIterDataPipe as PreProcessMetNet
+)
 
 
 def test_metnet_preprocess_no_sun(sat_datapipe, gsp_datapipe):

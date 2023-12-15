@@ -1,4 +1,4 @@
-from ocf_datapipes.transform.numpy import EncodeSpaceTime, SaveT0Time
+from ocf_datapipes.transform.numpy_batch import EncodeSpaceTime, SaveT0Time
 
 
 def test_save_t0_time(combined_datapipe):

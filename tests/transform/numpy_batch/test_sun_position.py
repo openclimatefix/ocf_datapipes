@@ -1,4 +1,4 @@
-from ocf_datapipes.transform.numpy import AddSunPosition
+from ocf_datapipes.transform.numpy_batch import AddSunPosition
 
 
 def test_add_sun_position_pv(combined_datapipe):

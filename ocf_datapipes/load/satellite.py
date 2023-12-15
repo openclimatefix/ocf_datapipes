@@ -74,7 +74,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
         ds = open_sat_data(zarr_paths)
         ```
     """
-    _log.info(f"Opening satellite data: %s, {use_15_minute_data_if_needed=}", zarr_path)
+    _log.info(f"Opening satellite data:", zarr_path)
 
     # Silence the warning about large chunks.
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch

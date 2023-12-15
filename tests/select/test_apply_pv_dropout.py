@@ -2,7 +2,7 @@ from datetime import timedelta
 from torch.utils.data.datapipes.iter import IterableWrapper
 import numpy as np
 
-from ocf_datapipes.transform.xarray import ApplyPVDropout
+from ocf_datapipes.select import ApplyPVDropout
 
 
 def test_apply_pv_dropout(passiv_datapipe):
