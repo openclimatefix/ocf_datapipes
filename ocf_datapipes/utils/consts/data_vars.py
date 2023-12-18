@@ -18,12 +18,14 @@ class NWPStatDict(dict):
     """Custom dictionary class to hold NWP normalizarion stats"""
 
     def __getitem__(self, key):
-        if key in self.keys():
+        if key not in NWP_PROVIDERS:
+            raise KeyError(f"{key} is not a supported NWP provider - {NWP_PROVIDERS}")
+        elif key in self.keys():
             return super().__getitem__(key)
-        elif key in NWP_PROVIDERS:
-            raise KeyError(f"Values for {key} not yet available in ocf-datapipes")
         else:
-            raise KeyError(key)
+            raise KeyError(
+                f"Values for {key} not yet available in ocf-datapipes {list(self.keys())}"
+            )
 
 
 # --------------------------- NWP ------------------------------------
@@ -136,17 +138,65 @@ GFS_VARIABLE_NAMES = tuple(GFS_MEAN.keys())
 GFS_STD = _to_data_array(GFS_STD)
 GFS_MEAN = _to_data_array(GFS_MEAN)
 
+
+# ------ ECMWF
+# These were calculated from 100 random init times of UK data from 2020-2023
+ECMWF_STD = {
+    "dlwrf": 15855867.0,
+    "dswrf": 13025427.0,
+    "duvrs": 1445635.25,
+    "hcc": 0.42244860529899597,
+    "lcc": 0.3791404366493225,
+    "mcc": 0.38039860129356384,
+    "prate": 9.81039775069803e-05,
+    "sde": 0.000913831521756947,
+    "sr": 16294988.0,
+    "t2m": 3.692270040512085,
+    "tcc": 0.37487083673477173,
+    "u10": 5.531515598297119,
+    "u100": 7.2320556640625,
+    "u200": 8.049470901489258,
+    "v10": 5.411230564117432,
+    "v100": 6.944501876831055,
+    "v200": 7.561611652374268,
+}
+ECMWF_MEAN = {
+    "dlwrf": 27187026.0,
+    "dswrf": 11458988.0,
+    "duvrs": 1305651.25,
+    "hcc": 0.3961029052734375,
+    "lcc": 0.44901806116104126,
+    "mcc": 0.3288780450820923,
+    "prate": 3.108070450252853e-05,
+    "sde": 8.107526082312688e-05,
+    "sr": 12905302.0,
+    "t2m": 283.48333740234375,
+    "tcc": 0.7049227356910706,
+    "u10": 1.7677178382873535,
+    "u100": 2.393547296524048,
+    "u200": 2.7963004112243652,
+    "v10": 0.985887885093689,
+    "v100": 1.4244288206100464,
+    "v200": 1.6010299921035767,
+}
+
+ECMWF_VARIABLE_NAMES = tuple(ECMWF_MEAN.keys())
+ECMWF_STD = _to_data_array(ECMWF_STD)
+ECMWF_MEAN = _to_data_array(ECMWF_MEAN)
+
 # ------ ALL NWPS
 # These dictionaries are for convenience
 NWP_VARIABLE_NAMES = NWPStatDict(
     ukv=UKV_VARIABLE_NAMES,
     gfs=GFS_VARIABLE_NAMES,
+    ecmwf=ECMWF_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
     gfs=GFS_STD,
+    ecmwf=ECMWF_STD,
 )
-NWP_MEANS = NWPStatDict(ukv=UKV_MEAN, gfs=GFS_MEAN)
+NWP_MEANS = NWPStatDict(ukv=UKV_MEAN, gfs=GFS_MEAN, ecmwf=ECMWF_MEAN)
 
 # --------------------------- SATELLITE ------------------------------
 
