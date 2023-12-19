@@ -45,13 +45,13 @@ class FindContiguousT0TimePeriodsIterDataPipe(IterDataPipe):
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
             logger.debug("Getting contiguous time periods")
-            contiguous_time_periods = get_contiguous_time_periods(
+            contiguous_time_periods = find_contiguous_time_periods(
                 datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                 min_seq_length=int(self.total_duration / self.sample_period_duration) + 1,
                 max_gap_duration=self.sample_period_duration,
             )
             logger.debug("Getting contiguous t0 time periods")
-            contiguous_time_periods = get_contiguous_t0_time_periods(
+            contiguous_time_periods = find_contiguous_t0_time_periods(
                 contiguous_time_periods=contiguous_time_periods,
                 history_duration=self.history_duration,
                 forecast_duration=self.forecast_duration,
@@ -95,7 +95,7 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
             logger.debug("Getting contiguous NWP t0 time periods")
-            contiguous_time_periods = get_contiguous_t0_periods_nwp(
+            contiguous_time_periods = find_contiguous_t0_periods_nwp(
                 datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                 history_duration=self.history_duration,
                 max_staleness=self.max_staleness,
@@ -104,7 +104,7 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
             yield contiguous_time_periods
 
 
-def get_contiguous_time_periods(
+def find_contiguous_time_periods(
     datetimes: pd.DatetimeIndex,
     min_seq_length: int,
     max_gap_duration: timedelta,
@@ -160,7 +160,7 @@ def get_contiguous_time_periods(
     return pd.DataFrame(periods)
 
 
-def get_contiguous_t0_time_periods(
+def find_contiguous_t0_time_periods(
     contiguous_time_periods: pd.DataFrame, history_duration: timedelta, forecast_duration: timedelta
 ) -> pd.DataFrame:
     """Get all time periods which contain valid t0 datetimes.
@@ -177,7 +177,7 @@ def get_contiguous_t0_time_periods(
     return contiguous_time_periods
 
 
-def get_contiguous_t0_periods_nwp(
+def find_contiguous_t0_periods_nwp(
     datetimes: pd.DatetimeIndex,
     history_duration: timedelta,
     max_staleness: timedelta,
