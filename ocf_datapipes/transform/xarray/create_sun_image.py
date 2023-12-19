@@ -137,33 +137,3 @@ def _create_data_array_from_image(
         ).astype(np.float32)
     data_array.attrs = image_xr.attrs
     return data_array
-
-
-def _get_idx_of_pixel_closest_to_poi_geostationary(
-    xr_data: xr.DataArray,
-    center_osgb: Location,
-    x_dim_name="x_geostationary",
-    y_dim_name="y_geostationary",
-) -> Location:
-    """
-    Return x and y index location of pixel at center of region of interest.
-
-    Args:
-        xr_data: Xarray dataset
-        center_osgb: Center in OSGB coordinates
-        x_dim_name: X dimension name
-        y_dim_name: Y dimension name
-
-    Returns:
-        Location for the center pixel in geostationary coordinates
-    """
-    x, y = osgb_to_geostationary_area_coords(center_osgb.x, center_osgb.y, xr_data)
-    center_geostationary = Location(x=x, y=y)
-
-    # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:
-    x_index_at_center = np.searchsorted(xr_data[x_dim_name].values, center_geostationary.x) - 1
-    # y_geostationary is in descending order:
-    y_index_at_center = len(xr_data[y_dim_name]) - (
-        np.searchsorted(xr_data[y_dim_name].values[::-1], center_geostationary.y) - 1
-    )
-    return Location(x=x_index_at_center, y=y_index_at_center)
