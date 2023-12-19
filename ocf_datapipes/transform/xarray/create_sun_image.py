@@ -11,11 +11,9 @@ from ocf_datapipes.utils.consts import (
     AZIMUTH_STD,
     ELEVATION_MEAN,
     ELEVATION_STD,
-    Location,
 )
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,
-    osgb_to_geostationary_area_coords,
     osgb_to_lon_lat,
 )
 
