@@ -74,7 +74,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
         ds = open_sat_data(zarr_paths)
         ```
     """
-    _log.info("Opening satellite data:", zarr_path)
+    
 
     # Silence the warning about large chunks.
     # Alternatively, we could set this to True, but that slows down loading a Satellite batch
@@ -82,6 +82,8 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
     dask.config.set({"array.slicing.split_large_chunks": False})
 
     if isinstance(zarr_path, (list, tuple)):
+        message_files_list = "\n - "+ "\n - ".join([str(s) for s in zarr_path])
+        _log.info(f"Opening satellite data: {message_files_list}")
         dataset = xr.combine_nested(
             [_get_single_sat_data(path) for path in zarr_path],
             concat_dim="time",
@@ -89,6 +91,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
             join="override",
         )
     else:
+        _log.info(f"Opening satellite data: {zarr_path}")
         dataset = _get_single_sat_data(zarr_path)
 
     # Remove data coordinate dimensions if they exist

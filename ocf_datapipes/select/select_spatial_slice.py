@@ -84,10 +84,10 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
             bottom_idx = int(center_idx.y + half_height)
 
             # Sanity check!
-            assert left_idx >= 0, f"{left_idx=} must be >= 0!"
+            assert left_idx >= 0,f"left_idx  must be >= 0. {left_idx=} for {location}"
             data_width_pixels = len(xr_data[xr_x_dim])
             assert right_idx <= data_width_pixels, f"{right_idx=} must be <= {data_width_pixels=}"
-            assert top_idx >= 0, f"{top_idx=} must be >= 0!"
+            assert top_idx >= 0, f"top_idx  must be >= 0. {top_idx=} for {location}"
             data_height_pixels = len(xr_data[xr_y_dim])
             assert (
                 bottom_idx <= data_height_pixels

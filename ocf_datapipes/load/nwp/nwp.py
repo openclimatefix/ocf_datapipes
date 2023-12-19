@@ -12,7 +12,7 @@ from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
 
-_log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("open_nwp")
@@ -32,6 +32,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
             provider: NWP provider
         """
         self.zarr_path = zarr_path
+        logger.info(f"Using {provider.lower()}")
         if provider.lower() == "ukv":
             self.open_nwp = open_ukv
         elif provider.lower() == "icon-eu":
@@ -47,7 +48,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Opens the NWP data"""
-        _log.debug("Opening NWP data: %s", self.zarr_path)
+        logger.debug("Opening NWP data: %s", self.zarr_path)
         nwp = self.open_nwp(self.zarr_path)
         while True:
             yield nwp
