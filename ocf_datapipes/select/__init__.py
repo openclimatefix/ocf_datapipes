@@ -24,7 +24,6 @@ from .find_contiguous_t0_time_periods import (
 from .find_contiguous_t0_time_periods import (
     FindContiguousT0TimePeriodsNWPIterDataPipe as FindContiguousT0TimePeriodsNWP,
 )
-from .number_of_location import NumberOfLocationsrIterDataPipe as NumberOfLocations
 from .pick_locations import PickLocationsIterDataPipe as PickLocations
 from .pick_locations_and_t0_times import PickLocationsAndT0sIterDataPipe as PickLocationsAndT0s
 from .pick_t0_times import PickT0TimesIterDataPipe as PickT0Times
