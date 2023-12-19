@@ -75,11 +75,11 @@ def stack_np_examples_into_batch(dict_list: Sequence[NumpyBatch]) -> NumpyBatch:
 
             # Unpack source keys
             nwp_sources = list(dict_list[0][BatchKey.nwp].keys())
-            
+
             for nwp_source in nwp_sources:
                 # Keys can be different for different NWPs
                 nwp_batch_keys = list(dict_list[0][BatchKey.nwp][nwp_source].keys())
-                
+
                 nwp_source_batch: NWPNumpyBatch = {}
                 for nwp_batch_key in nwp_batch_keys:
                     nwp_source_batch[nwp_batch_key] = stack_data_list(
