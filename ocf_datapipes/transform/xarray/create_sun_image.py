@@ -7,11 +7,11 @@ import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils.consts import (
-    Location,
-    ELEVATION_MEAN,
-    ELEVATION_STD,
     AZIMUTH_MEAN,
     AZIMUTH_STD,
+    ELEVATION_MEAN,
+    ELEVATION_STD,
+    Location,
 )
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,

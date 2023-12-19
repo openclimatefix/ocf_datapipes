@@ -2,6 +2,10 @@
 from .batches import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch, XarrayBatch
 from .data_vars import (
     AWOS_VARIABLE_NAMES,
+    AZIMUTH_MEAN,
+    AZIMUTH_STD,
+    ELEVATION_MEAN,
+    ELEVATION_STD,
     GFS_MEAN,
     GFS_STD,
     GFS_VARIABLE_NAMES,
@@ -17,9 +21,5 @@ from .data_vars import (
     UKV_MIN,
     UKV_STD,
     UKV_VARIABLE_NAMES,
-    ELEVATION_MEAN,
-    ELEVATION_STD,
-    AZIMUTH_MEAN,
-    AZIMUTH_STD,
 )
 from .location import Location

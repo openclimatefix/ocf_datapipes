@@ -9,6 +9,12 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.select.select_spatial_slice import convert_coords_to_match_xarray
 from ocf_datapipes.utils import Zipper
+from ocf_datapipes.utils.consts import (
+    AZIMUTH_MEAN,
+    AZIMUTH_STD,
+    ELEVATION_MEAN,
+    ELEVATION_STD,
+)
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,
     move_lon_lat_by_meters,
@@ -17,12 +23,6 @@ from ocf_datapipes.utils.geospatial import (
 )
 from ocf_datapipes.utils.parallel import run_with_threadpool
 from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
-from ocf_datapipes.utils.consts import (
-    ELEVATION_MEAN,
-    ELEVATION_STD,
-    AZIMUTH_MEAN,
-    AZIMUTH_STD,
-)
 
 
 @functional_datapipe("preprocess_metnet")
