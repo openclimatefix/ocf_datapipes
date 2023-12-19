@@ -6,13 +6,13 @@ import pandas as pd
 import pvlib
 from torch.utils.data import IterDataPipe, functional_datapipe
 
+from ocf_datapipes.batch import BatchKey
 from ocf_datapipes.utils.consts import (
     AZIMUTH_MEAN,
     AZIMUTH_STD,
     ELEVATION_MEAN,
     ELEVATION_STD,
 )
-from ocf_datapipes.batch import BatchKey
 from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 
 

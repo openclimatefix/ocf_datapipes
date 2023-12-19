@@ -10,6 +10,7 @@ from ocf_datapipes.training.common import construct_loctime_pipelines
 from ocf_datapipes.batch import BatchKey, NWPBatchKey
 from ocf_datapipes.utils import Location
 
+
 def test_construct_loctime_pipelines(configuration_filename):
     start_time = datetime(1900, 1, 1)
     end_time = datetime(2050, 1, 1)

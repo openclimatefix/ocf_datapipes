@@ -8,6 +8,7 @@ import xarray as xr
 from torch.utils.data import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
+from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
     OpenAWOSFromNetCDF,
@@ -20,7 +21,6 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
 logger = logging.getLogger(__name__)

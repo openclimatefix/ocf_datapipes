@@ -1,4 +1,5 @@
 """Datapipes for batching together data"""
+from .batches import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch, XarrayBatch
 from .merge_numpy_examples_to_batch import (
     MergeNumpyBatchIterDataPipe as MergeNumpyBatch,
 )
@@ -11,4 +12,3 @@ from .merge_numpy_examples_to_batch import (
 )
 from .merge_numpy_modalities import MergeNumpyModalitiesIterDataPipe as MergeNumpyModalities
 from .merge_numpy_modalities import MergeNWPNumpyModalitiesIterDataPipe as MergeNWPNumpyModalities
-from .batches import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch, XarrayBatch
