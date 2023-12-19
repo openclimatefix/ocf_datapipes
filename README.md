@@ -95,7 +95,7 @@ class <PipeletName>IterDataPipe(IterDataPipe):
 
 # 3. pick all or random location data based on pv data pipeline
 
-    location_datapipes = pv_location_datapipe.location_picker().fork(4, buffer_size=BUFFER_SIZE)
+    location_datapipes = pv_location_datapipe.pick_locations().fork(4, buffer_size=BUFFER_SIZE)
 
 # 4. for the above picked locations get their respective spatial space slices from all the data pipes
 
@@ -107,15 +107,15 @@ class <PipeletName>IterDataPipe(IterDataPipe):
 
 # 5. get contiguous time period data for the above picked locations
 
-    pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(...)
+    pv_time_periods_datapipe = pv_time_periods_datapipe.find_contiguous_t0_time_periods(...)
 
-    nwp_time_periods_datapipe = nwp_time_periods_datapipe.get_contiguous_time_periods(...)
+    nwp_time_periods_datapipe = nwp_time_periods_datapipe.find_contiguous_t0_time_periods(...)
 
-    satellite_time_periods_datapipe = satellite_time_periods_datapipe.get_contiguous_time_periods(...)
+    satellite_time_periods_datapipe = satellite_time_periods_datapipe.find_contiguous_t0_time_periods(...)
 
 # 6. since all the datapipes have different sampling period for their data, lets find the time that is common between all the data pipes
 
-    overlapping_datapipe = pv_time_periods_datapipe.select_overlapping_time_slice(secondary_datapipes=[nwp_time_periods_datapipe, satellite_time_periods_datapipe])
+    overlapping_datapipe = pv_time_periods_datapipe.filter_to_overlapping_time_periods(secondary_datapipes=[nwp_time_periods_datapipe, satellite_time_periods_datapipe])
 
 # 7. take time slices for the above overlapping time from all the data pipes
 

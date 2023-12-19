@@ -8,6 +8,7 @@ import xarray as xr
 from torch.utils.data import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
+from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.load import (
     OpenAWOSFromNetCDF,
@@ -20,7 +21,6 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,6 @@ def open_and_return_datapipes(
     use_hrv: bool = True,
     use_topo: bool = True,
     use_sensor: bool = True,
-    production: bool = False,
 ) -> dict[str, IterDataPipe]:
     """
     Open data sources given a configuration and return the list of datapipes
@@ -49,7 +48,6 @@ def open_and_return_datapipes(
         use_sat: Whether to open non-HRV satellite data
         use_gsp: Whether to use GSP data or not
         use_sensor: Whether to use sensor data or not
-        production: bool if this is for production or not
 
     Returns:
         List of datapipes corresponding to the datapipes to open
@@ -121,7 +119,7 @@ def open_and_return_datapipes(
                     nwp_conf.nwp_zarr_path,
                     provider=nwp_conf.nwp_provider,
                 )
-                .select_channels(nwp_conf.nwp_channels)
+                .filter_channels(nwp_conf.nwp_channels)
                 .add_t0_idx_and_sample_period_duration(
                     sample_period_duration=timedelta(hours=1),
                     history_duration=timedelta(minutes=nwp_conf.history_minutes),
@@ -131,11 +129,8 @@ def open_and_return_datapipes(
     if use_sat:
         logger.debug("Opening Satellite Data")
         sat_datapipe = (
-            OpenSatellite(
-                configuration.input_data.satellite.satellite_zarr_path,
-                use_15_minute_data_if_needed=production,
-            )
-            .select_channels(configuration.input_data.satellite.satellite_channels)
+            OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
+            .filter_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(
@@ -218,7 +213,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
         datapipes_to_return[key] = forked_datapipes[0]
         if key.startswith("nwp/"):
             nwp_source = key.removeprefix("nwp/")
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+            time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
                 history_duration=timedelta(
                     minutes=configuration.input_data.nwp[nwp_source].history_minutes
@@ -231,7 +226,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
             datapipes_for_time_periods.append(time_periods_datapipe)
 
         if "sat" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+            time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(
                     minutes=configuration.input_data.satellite.history_minutes
@@ -241,7 +236,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
             datapipes_for_time_periods.append(time_periods_datapipe)
 
         if "hrv" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+            time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(
                     minutes=configuration.input_data.hrvsatellite.history_minutes
@@ -251,14 +246,14 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
             datapipes_for_time_periods.append(time_periods_datapipe)
 
         if "pv" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+            time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(minutes=5),
                 history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
                 forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
         if "gsp" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+            time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(minutes=30),
                 history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
                 forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
@@ -266,7 +261,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
             datapipes_for_time_periods.append(time_periods_datapipe)
 
         if "sensor" == key:
-            time_periods_datapipe = forked_datapipes[1].get_contiguous_time_periods(
+            time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(minutes=30),
                 history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
                 forecast_duration=timedelta(
@@ -278,17 +273,15 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
     # Now have the forked ones
     # find joint overlapping timer periods
     logger.debug("Getting joint time periods")
-    overlapping_datapipe = datapipes_for_time_periods[0].select_overlapping_time_slice(
+    overlapping_datapipe = datapipes_for_time_periods[0].filter_to_overlapping_time_periods(
         secondary_datapipes=datapipes_for_time_periods[1:],
     )
 
     # select time periods
-    t0_datapipe = t0_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+    t0_datapipe = t0_datapipe.filter_time_periods(time_periods=overlapping_datapipe)
 
     num_t0_datapipes = len(datapipes_to_return.keys())  # One for each input
-    t0_datapipes = t0_datapipe.select_t0_time(return_all_times=False).fork(
-        num_t0_datapipes, buffer_size=100
-    )
+    t0_datapipes = t0_datapipe.pick_t0_times().fork(num_t0_datapipes, buffer_size=100)
 
     for i, key in enumerate(list(datapipes_to_return.keys())):
         datapipes_to_return[key + "_t0"] = t0_datapipes[i]
@@ -492,7 +485,6 @@ def _get_datapipes_dict(
         use_nwp=True,
         use_topo=True,
         use_sensor=True,
-        production=production,
     )
 
     config: Configuration = datapipes_dict["config"]
@@ -549,9 +541,7 @@ def construct_loctime_pipelines(
         datapipes_dict["gsp"] = datapipes_dict["gsp"].map(gsp_drop_national)
 
     if (start_time is not None) or (end_time is not None):
-        datapipes_dict[core_key] = datapipes_dict[core_key].select_train_test_time(
-            start_time, end_time
-        )
+        datapipes_dict[core_key] = datapipes_dict[core_key].filter_times(start_time, end_time)
 
     # Get overlapping time periods
     location_pipe, t0_datapipe = create_t0_and_loc_datapipes(
@@ -636,7 +626,7 @@ def slice_datapipes_by_time(
     if "nwp" in datapipes_dict:
         # NWP is nested in the dict
         for nwp_key, dp in datapipes_dict["nwp"].items():
-            datapipes_dict["nwp"][nwp_key] = dp.convert_to_nwp_target_time_with_dropout(
+            datapipes_dict["nwp"][nwp_key] = dp.select_time_slice_nwp(
                 t0_datapipe=get_t0_datapipe(f"nwp/{nwp_key}"),
                 sample_period_duration=minutes(60),
                 history_duration=minutes(conf_in.nwp[nwp_key].history_minutes),
@@ -658,7 +648,7 @@ def slice_datapipes_by_time(
         )
 
         # Generate randomly sampled dropout times
-        sat_dropout_time_datapipe = get_t0_datapipe("sat").select_dropout_time(
+        sat_dropout_time_datapipe = get_t0_datapipe("sat").draw_dropout_time(
             **sat_and_hrv_dropout_kwargs
         )
 
@@ -678,7 +668,7 @@ def slice_datapipes_by_time(
         if "sat" not in datapipes_dict:
             # Generate randomly sampled dropout times
             # This is shared with sat if sat included
-            hrv_dropout_time_datapipe = get_t0_datapipe(None).select_dropout_time(
+            hrv_dropout_time_datapipe = get_t0_datapipe(None).draw_dropout_time(
                 **sat_and_hrv_dropout_kwargs
             )
 
@@ -716,11 +706,11 @@ def slice_datapipes_by_time(
         )
 
         # Dropout on the PV, but not the future PV
-        pv_dropout_time_datapipe = get_t0_datapipe("pv").select_dropout_time(
+        pv_dropout_time_datapipe = get_t0_datapipe("pv").draw_dropout_time(
             # All PV data could be delayed by up to 30 minutes
             # (this does not stem from production - just setting for now)
             dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
-            dropout_frac=0.1 if production else 1,
+            dropout_frac=0 if production else 0.5,
         )
 
         datapipes_dict["pv"] = datapipes_dict["pv"].apply_dropout_time(
@@ -756,7 +746,7 @@ def slice_datapipes_by_time(
         )
 
         # Dropout on the sensor, but not the future sensor
-        sensor_dropout_time_datapipe = get_t0_datapipe("sensor").select_dropout_time(
+        sensor_dropout_time_datapipe = get_t0_datapipe("sensor").draw_dropout_time(
             # All sensor data could be delayed by up to 30 minutes
             # (this does not stem from production - just setting for now)
             dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
@@ -787,7 +777,7 @@ def slice_datapipes_by_time(
         )
 
         # Dropout on the GSP, but not the future GSP
-        gsp_dropout_time_datapipe = get_t0_datapipe("gsp").select_dropout_time(
+        gsp_dropout_time_datapipe = get_t0_datapipe("gsp").draw_dropout_time(
             # GSP data for time t0 may be missing. Only have value for t0-30mins
             dropout_timedeltas=[minutes(-30)],
             dropout_frac=0 if production else 0.1,
@@ -854,7 +844,7 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             continue
         if key.startswith("nwp/"):
             nwp_source = key.removeprefix("nwp/")
-            datapipes_to_return[key] = datapipe.convert_to_nwp_target_time(
+            datapipes_to_return[key] = datapipe.select_time_slice_nwp(
                 t0_datapipe=used_datapipes[key + "_t0"],
                 sample_period_duration=timedelta(hours=1),
                 history_duration=timedelta(
@@ -997,7 +987,7 @@ def create_t0_and_loc_datapipes(
                 nwp_conf = configuration.input_data.nwp[nwp_key]
 
                 # NWP is a forecast product so gets its own contiguous function
-                time_periods = datapipe_copy.get_contiguous_time_periods_nwp(
+                time_periods = datapipe_copy.find_contiguous_t0_time_periods_nwp(
                     history_duration=timedelta(minutes=nwp_conf.history_minutes),
                     max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
                     max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
@@ -1042,7 +1032,7 @@ def create_t0_and_loc_datapipes(
 
             datapipes_dict[key], datapipe_copy = datapipes_dict[key].fork(2, buffer_size=5)
 
-            time_periods = datapipe_copy.get_contiguous_time_periods(
+            time_periods = datapipe_copy.find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(minutes=sample_frequency),
                 history_duration=timedelta(minutes=history_duration),
                 forecast_duration=timedelta(minutes=forecast_duration),
@@ -1054,7 +1044,7 @@ def create_t0_and_loc_datapipes(
     # Find joint overlapping contiguous time periods
     if len(contiguous_time_datapipes) > 1:
         logger.debug("Getting joint time periods")
-        overlapping_datapipe = contiguous_time_datapipes[0].select_overlapping_time_slice(
+        overlapping_datapipe = contiguous_time_datapipes[0].filter_to_overlapping_time_periods(
             secondary_datapipes=contiguous_time_datapipes[1:],
         )
     else:
@@ -1062,9 +1052,9 @@ def create_t0_and_loc_datapipes(
         overlapping_datapipe = contiguous_time_datapipes[0]
 
     # Select time periods and set length
-    key_datapipe = key_datapipe.select_time_periods(time_periods=overlapping_datapipe)
+    key_datapipe = key_datapipe.filter_time_periods(time_periods=overlapping_datapipe)
 
-    t0_loc_datapipe = key_datapipe.select_loc_and_t0(return_all=True, shuffle=shuffle)
+    t0_loc_datapipe = key_datapipe.pick_locs_and_t0s(return_all=True, shuffle=shuffle)
 
     location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)
 

@@ -9,8 +9,9 @@ from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
+from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite, load_configuration
+from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite
 from ocf_datapipes.training.common import normalize_gsp, normalize_pv
 from ocf_datapipes.utils.consts import NWP_MEANS, NWP_STDS, RSS_MEAN, RSS_STD
 
@@ -36,7 +37,7 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     # ----- LOAD AND NORMALIZE DATA
 
     # Load configuration
-    configuration: Configuration = load_configuration(configuration)
+    configuration: Configuration = load_yaml_configuration(configuration)
 
     # Load and normalize GSP national data
     gsp_datapipe = OpenGSP(
@@ -115,7 +116,7 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     # ----- LOAD AND NORMALIZE DATA
 
     # Pick locations
-    location_datapipe = gsp_location_datapipe.location_picker()
+    location_datapipe = gsp_location_datapipe.pick_locations()
 
     # Take PV space slice
     loc_dp, location_datapipe = location_datapipe.fork(2, buffer_size=BUFFER_SIZE)
@@ -159,7 +160,7 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     # ----- SELECT TIME SLICES
 
     # GSP get contiguous time periods
-    gsp_time_periods_datapipe = gsp_time_periods_datapipe.get_contiguous_time_periods(
+    gsp_time_periods_datapipe = gsp_time_periods_datapipe.find_contiguous_t0_time_periods(
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
@@ -168,7 +169,7 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     # PV get contiguous time periods
     pv_datapipe, pv_time_periods_datapipe = pv_datapipe.fork(2)
 
-    pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
+    pv_time_periods_datapipe = pv_time_periods_datapipe.find_contiguous_t0_time_periods(
         sample_period_duration=timedelta(minutes=5),
         history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
@@ -177,19 +178,23 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     # Satellite get contiguous time periods
     satellite_datapipe, satellite_time_periods_datapipe = satellite_datapipe.fork(2)
 
-    satellite_time_periods_datapipe = satellite_time_periods_datapipe.get_contiguous_time_periods(
-        sample_period_duration=timedelta(
-            minutes=configuration.input_data.satellite.time_resolution_minutes
-        ),
-        history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
-        forecast_duration=timedelta(minutes=configuration.input_data.satellite.forecast_minutes),
+    satellite_time_periods_datapipe = (
+        satellite_time_periods_datapipe.find_contiguous_t0_time_periods(
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.satellite.time_resolution_minutes
+            ),
+            history_duration=timedelta(minutes=configuration.input_data.satellite.history_minutes),
+            forecast_duration=timedelta(
+                minutes=configuration.input_data.satellite.forecast_minutes
+            ),
+        )
     )
 
     # NWP get contiguous time periods
     for nwp_source, nwp_conf in configuration.input_data.nwp.items():
         nwp_time_periods_datapipes[nwp_source] = nwp_time_periods_datapipes[
             nwp_source
-        ].get_contiguous_time_periods(
+        ].find_contiguous_t0_time_periods(
             sample_period_duration=timedelta(hours=3),
             history_duration=timedelta(minutes=nwp_conf.history_minutes),
             forecast_duration=timedelta(minutes=nwp_conf.forecast_minutes),
@@ -197,7 +202,7 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
         )
 
     # Find joint overlapping time periods
-    overlapping_datapipe = gsp_time_periods_datapipe.select_overlapping_time_slice(
+    overlapping_datapipe = gsp_time_periods_datapipe.filter_to_overlapping_time_periods(
         secondary_datapipes=[
             pv_time_periods_datapipe,
             satellite_time_periods_datapipe,
@@ -206,12 +211,12 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     )
 
     # Filter to times valid for all data sources
-    valid_periods_datapipe = gsp_valid_times_datapipe.select_time_periods(
+    valid_periods_datapipe = gsp_valid_times_datapipe.filter_time_periods(
         time_periods=overlapping_datapipe
     )
 
     # Select t0 times
-    t0_datapipe = valid_periods_datapipe.select_t0_time()
+    t0_datapipe = valid_periods_datapipe.pick_t0_times()
 
     # Take NWP time slices and convert to NumpyBatch
     nwp_numpy_modalities = dict()
@@ -221,7 +226,7 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
 
         nwp_numpy_modalities[nwp_source] = (
             nwp_datapipe_dict[nwp_source]
-            .convert_to_nwp_target_time(
+            .select_time_slice_nwp(
                 t0_datapipe=nwp_t0_datapipe,
                 sample_period_duration=timedelta(hours=3),
                 history_duration=timedelta(minutes=nwp_conf.history_minutes),

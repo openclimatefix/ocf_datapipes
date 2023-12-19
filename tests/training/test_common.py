@@ -2,7 +2,7 @@ import pytest
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes.iter import Zipper
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils import Location
 from torch.utils.data import DataLoader
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,

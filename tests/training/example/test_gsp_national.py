@@ -1,5 +1,5 @@
 from ocf_datapipes.training.example.gsp_national import gsp_national_datapipe
-from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.batch import BatchKey
 
 
 def test_gsp_national_datapipe(configuration_with_gsp_and_nwp):

@@ -3,9 +3,9 @@ from datetime import datetime
 
 import numpy as np
 
+from ocf_datapipes.batch import BatchKey, NWPBatchKey
 from ocf_datapipes.batch.fake.utils import get_n_time_steps_from_config, make_time_utc
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.utils.consts import BatchKey, NWPBatchKey
 
 
 def make_fake_nwp_data(

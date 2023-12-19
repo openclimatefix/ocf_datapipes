@@ -7,7 +7,8 @@ from ocf_datapipes.training.pvnet import (
     pvnet_datapipe,
 )
 from ocf_datapipes.training.common import construct_loctime_pipelines
-from ocf_datapipes.utils.consts import Location, BatchKey, NWPBatchKey
+from ocf_datapipes.batch import BatchKey, NWPBatchKey
+from ocf_datapipes.utils import Location
 
 
 def test_construct_loctime_pipelines(configuration_filename):

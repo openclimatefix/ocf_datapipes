@@ -8,13 +8,15 @@ import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.convert import ConvertPVToNumpy
-from ocf_datapipes.select import LocationPicker
+from ocf_datapipes.select import PickLocations
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
 )
-from ocf_datapipes.transform.xarray import PreProcessMetNet
+from ocf_datapipes.training.metnet.metnet_preprocessor import (
+    PreProcessMetNetIterDataPipe as PreProcessMetNet,
+)
 from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 from ocf_datapipes.utils.future import ThreadPoolMapperIterDataPipe as ThreadPoolMapper
 
@@ -36,7 +38,7 @@ def normalize_pv(x):  # So it can be pickled
     return x / x.observed_capacity_wp
 
 
-def _remove_nans(x):
+def _select_non_nan_times(x):
     return x.fillna(0.0)
 
 
@@ -94,7 +96,7 @@ def metnet_site_datapipe(
     )
     # Load PV data
     used_datapipes["pv"] = (
-        used_datapipes["pv"].select_train_test_time(start_time, end_time).pv_interpolate_infill()
+        used_datapipes["pv"].filter_times(start_time, end_time).pv_interpolate_infill()
     )
 
     # Now get overlapping time periods
@@ -108,7 +110,7 @@ def metnet_site_datapipe(
     pv_datapipe = used_datapipes["pv_future"].normalize(normalize_fn=normalize_pv)
     # Split into PV for target, and one for history
     pv_datapipe, pv_loc_datapipe = pv_datapipe.fork(2)
-    pv_loc_datapipe, pv_id_datapipe = LocationPicker(pv_loc_datapipe).fork(2)
+    pv_loc_datapipe, pv_id_datapipe = PickLocations(pv_loc_datapipe).fork(2)
     pv_history = pv_history.select_id(pv_id_datapipe, data_source_name="pv")
 
     if "nwp" in used_datapipes.keys():
@@ -158,7 +160,7 @@ def metnet_site_datapipe(
         )
 
     if "topo" in used_datapipes.keys():
-        topo_datapipe = used_datapipes["topo"].map(_remove_nans)
+        topo_datapipe = used_datapipes["topo"].map(_select_non_nan_times)
 
     # Now combine in the MetNet format
     modalities = []
@@ -201,7 +203,7 @@ def metnet_site_datapipe(
     pv_datapipe = ConvertPVToNumpy(pv_datapipe)
 
     if not pv_in_image:
-        pv_history = pv_history.map(_remove_nans)
+        pv_history = pv_history.map(_select_non_nan_times)
         pv_history = ConvertPVToNumpy(pv_history, return_pv_id=True)
         return metnet_datapipe.batch(batch_size).zip_ocf(
             pv_history.batch(batch_size), pv_datapipe.batch(batch_size)

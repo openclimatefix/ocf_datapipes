@@ -25,7 +25,7 @@ class ConvertLonLatToOSGBIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-        """Convert from Lat/Lon to OSGB"""
+        """Convert from Lon/Lat to OSGB"""
         for xr_data in self.source_datapipe:
             xr_data["x_osgb"], xr_data["y_osgb"] = lon_lat_to_osgb(
                 longitude=xr_data["longitude"],

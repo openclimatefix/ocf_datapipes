@@ -1,5 +1,5 @@
 from ocf_datapipes.training.example.gsp_pv_nwp_satellite import gsp_pv_nwp_satellite_data_pipeline
-from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.batch import BatchKey
 
 
 def test_gsp_pv_nwp_satellite_datapipe(configuration_filename):

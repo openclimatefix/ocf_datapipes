@@ -6,8 +6,9 @@ from typing import Union
 import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
+from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenPVFromDB, OpenPVFromNetCDF, load_configuration
+from ocf_datapipes.load import OpenPVFromNetCDF
 from ocf_datapipes.training.common import normalize_pv
 
 xarray.set_options(keep_attrs=True)
@@ -31,16 +32,13 @@ def simple_pv_datapipe(
     """
 
     # Load configuration
-    configuration: Configuration = load_configuration(configuration_filename)
+    configuration: Configuration = load_yaml_configuration(configuration_filename)
 
     # Unpack for convenience
     pv_config = configuration.input_data.pv
 
     # Open dataset
-    if configuration.input_data.pv.is_live:
-        pv_datapipe = OpenPVFromDB(pv_config=pv_config)
-    else:
-        pv_datapipe = OpenPVFromNetCDF(pv=pv_config)
+    pv_datapipe = OpenPVFromNetCDF(pv=pv_config)
 
     # Fork datapipe for raw data, time slicing, and location slicing uses
     pv_datapipe, pv_t0_datapipe, pv_time_periods_datapipe, pv_location_datapipe = pv_datapipe.fork(
@@ -51,7 +49,7 @@ def simple_pv_datapipe(
     pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
 
     # Getting locations - Construct datapipe yielding the locations to be used for each sample
-    location_datapipe = pv_location_datapipe.location_picker()
+    location_datapipe = pv_location_datapipe.pick_locations()
 
     # Slice systems
     pv_datapipe = pv_datapipe.select_id(location_datapipe=location_datapipe, data_source_name="pv")
@@ -63,15 +61,15 @@ def simple_pv_datapipe(
     )
 
     # Get contiguous time periods
-    pv_time_periods_datapipe = pv_time_periods_datapipe.get_contiguous_time_periods(
+    pv_time_periods_datapipe = pv_time_periods_datapipe.find_contiguous_t0_time_periods(
         sample_period_duration=timedelta(minutes=pv_config.time_resolution_minutes),
         history_duration=timedelta(minutes=pv_config.history_minutes),
         forecast_duration=timedelta(minutes=pv_config.forecast_minutes),
     )
 
     # Select time periods
-    pv_t0_datapipe = pv_t0_datapipe.select_time_periods(time_periods=pv_time_periods_datapipe)
-    pv_t0_datapipe = pv_t0_datapipe.select_t0_time()
+    pv_t0_datapipe = pv_t0_datapipe.filter_time_periods(time_periods=pv_time_periods_datapipe)
+    pv_t0_datapipe = pv_t0_datapipe.pick_t0_times()
 
     # Take time slices
     pv_datapipe = pv_datapipe.select_time_slice(

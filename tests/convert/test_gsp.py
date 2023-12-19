@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from ocf_datapipes.convert import ConvertGSPToNumpyBatch
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration
-from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.batch import BatchKey
 
 
 def test_convert_gsp_to_numpy_batch(gsp_datapipe):

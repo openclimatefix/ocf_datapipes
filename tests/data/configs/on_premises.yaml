@@ -62,7 +62,6 @@ input_data:
     satellite_image_size_pixels_height: 48
     satellite_image_size_pixels_width: 96
     satellite_zarr_path: /mnt/storage_ssd_8tb/data/ocf/solar_pv_nowcasting/nowcasting_dataset_pipeline/satellite/EUMETSAT/SEVIRI_RSS/zarr/v3/eumetsat_seviri_uk.zarr
-    keep_dawn_dusk_hours: 2
 
   #---------------------- HRVSatellite -------------
   hrvsatellite:
