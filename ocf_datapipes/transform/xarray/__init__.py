@@ -5,9 +5,6 @@ from .add_t0idx_and_sample_period_duration import (
 from .convert_pressure_levels_to_separate_variables import (
     ConvertPressureLevelsToSeparateVariablesIterDataPipe as ConvertPressureLevelsToSeparateVariables,  # noqa: E501
 )
-from .convert_satellite_to_int import (
-    ConvertSatelliteToInt8IterDataPipe as ConvertSatelliteToInt8,
-)
 from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage
 from .create_time_image import CreateTimeImageIterDataPipe as CreateTimeImage
 from .downsample import DownsampleIterDataPipe as Downsample
