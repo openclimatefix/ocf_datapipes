@@ -101,8 +101,5 @@ def make_fake_satellite_data(
     batch[getattr(BatchKey, f"{variable}_time_utc_fourier")] = np.random.random(
         (batch_size, n_times, n_fourier_features)
     )
-    batch[getattr(BatchKey, f"{variable}_time_utc_fourier_t0")] = np.random.random(
-        (batch_size, n_times, n_fourier_features)
-    )
 
     return batch

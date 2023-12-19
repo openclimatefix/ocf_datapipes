@@ -60,6 +60,5 @@ def make_fake_gsp_data(
     batch[BatchKey.gsp_time_utc_fourier] = np.random.random(
         (batch_size, n_times, n_fourier_features)
     )
-    batch[BatchKey.gsp_time_utc_fourier_t0] = np.random.random((batch_size, n_fourier_features))
 
     return batch

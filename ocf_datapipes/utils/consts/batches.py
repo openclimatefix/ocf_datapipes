@@ -43,7 +43,6 @@ class BatchKey(Enum):
     hrvsatellite_x_osgb_fourier = auto()
     #: Time shape: (batch_size, n_timesteps, n_fourier_features_per_dim)
     hrvsatellite_time_utc_fourier = auto()
-    hrvsatellite_time_utc_fourier_t0 = auto()
 
     # -------------- NWP --------------------------------------------
     nwp = auto()  # See `MultiNWPNumpyBatch`
@@ -72,7 +71,6 @@ class BatchKey(Enum):
     pv_latitude_fourier = auto()
     pv_longitude_fourier = auto()
     pv_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
-    pv_time_utc_fourier_t0 = auto()  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
 
     # -------------- GSP --------------------------------------------
     gsp = auto()  # shape: (batch_size, time, 1)
@@ -93,7 +91,6 @@ class BatchKey(Enum):
     gsp_y_osgb_fourier = auto()
     gsp_x_osgb_fourier = auto()
     gsp_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
-    gsp_time_utc_fourier_t0 = auto()  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
 
     # -------------- SUN --------------------------------------------
     # Solar position at every timestep. shape = (batch_size, n_timesteps)
@@ -147,7 +144,6 @@ class BatchKey(Enum):
     satellite_x_osgb_fourier = auto()
     #: Time shape: (batch_size, n_timesteps, n_fourier_features_per_dim)
     satellite_time_utc_fourier = auto()
-    satellite_time_utc_fourier_t0 = auto()
 
     # -------------- Sensor ---------------------------------------------
     sensor = auto()  # shape: (batch_size, time, n_pv_systems)
@@ -173,9 +169,6 @@ class BatchKey(Enum):
     sensor_latitude_fourier = auto()
     sensor_longitude_fourier = auto()
     sensor_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
-    sensor_time_utc_fourier_t0 = (
-        auto()
-    )  # Added by SaveT0Time. Shape: (batch_size, n_fourier_features)
 
 
 class NWPBatchKey(Enum):
