@@ -443,7 +443,7 @@ def pseudo_irradiance_datapipe(
 
     # Now get overlapping time periods
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(
-        used_datapipes, key_for_t0="pv", return_all_times=True if is_test else False
+        used_datapipes, key_for_t0="pv",
     )
     # And now get time slices
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)

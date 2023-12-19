@@ -281,7 +281,7 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
     t0_datapipe = t0_datapipe.filter_time_periods(time_periods=overlapping_datapipe)
 
     num_t0_datapipes = len(datapipes_to_return.keys())  # One for each input
-    t0_datapipes = t0_datapipe.pick_t0_times(return_all_times=False).fork(
+    t0_datapipes = t0_datapipe.pick_t0_times().fork(
         num_t0_datapipes, buffer_size=100
     )
 

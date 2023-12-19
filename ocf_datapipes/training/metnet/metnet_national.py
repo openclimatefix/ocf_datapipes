@@ -231,9 +231,7 @@ def metnet_national_datapipe(
     num_t0_datapipes = (
         1 + len(secondary_datapipes) if mode == "train" else 2 + len(secondary_datapipes)
     )
-    t0_datapipes = gsp_t0_datapipe.pick_t0_times(
-        return_all_times=False  # if mode == "train" else True
-    ).fork(num_t0_datapipes)
+    t0_datapipes = gsp_t0_datapipe.pick_t0_times().fork(num_t0_datapipes)
 
     # take pv time slices
     logger.debug("Take GSP time slices")
