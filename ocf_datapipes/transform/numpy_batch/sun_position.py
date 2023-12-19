@@ -11,8 +11,8 @@ from ocf_datapipes.utils.consts import (
     AZIMUTH_STD,
     ELEVATION_MEAN,
     ELEVATION_STD,
-    BatchKey,
 )
+from ocf_datapipes.batch import BatchKey
 from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 
 

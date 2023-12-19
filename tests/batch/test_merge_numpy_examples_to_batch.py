@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from torch.utils.data.datapipes.iter import IterableWrapper
 
-from ocf_datapipes.utils.consts import BatchKey, NWPBatchKey, NumpyBatch, NWPNumpyBatch
+from ocf_datapipes.batch import BatchKey, NWPBatchKey, NumpyBatch, NWPNumpyBatch
 
 
 from ocf_datapipes.batch.merge_numpy_examples_to_batch import (

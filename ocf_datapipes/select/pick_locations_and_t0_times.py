@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils import Location
 from ocf_datapipes.utils.geospatial import (
     spatial_coord_type,
 )

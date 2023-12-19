@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils import Location
 from ocf_datapipes.utils.geospatial import spatial_coord_type
 
 logger = logging.getLogger(__name__)

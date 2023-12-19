@@ -1,4 +1,4 @@
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils import Location
 import pytest
 
 

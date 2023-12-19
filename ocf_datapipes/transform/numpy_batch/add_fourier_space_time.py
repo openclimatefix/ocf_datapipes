@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch
+from ocf_datapipes.batch import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch
 
 logger = logging.getLogger(__name__)
 

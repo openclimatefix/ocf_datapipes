@@ -7,7 +7,7 @@ import xarray as xr
 from scipy.spatial import KDTree
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils import Location
 from ocf_datapipes.utils.geospatial import (
     lon_lat_to_geostationary_area_coords,
     lon_lat_to_osgb,

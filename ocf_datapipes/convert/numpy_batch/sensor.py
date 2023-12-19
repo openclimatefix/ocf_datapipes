@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float
 
 logger = logging.getLogger(__name__)

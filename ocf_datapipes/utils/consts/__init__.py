@@ -1,5 +1,4 @@
 """useful global constants"""
-from .batches import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch, XarrayBatch
 from .data_vars import (
     AWOS_VARIABLE_NAMES,
     AZIMUTH_MEAN,
@@ -22,4 +21,3 @@ from .data_vars import (
     UKV_STD,
     UKV_VARIABLE_NAMES,
 )
-from .location import Location

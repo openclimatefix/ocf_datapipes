@@ -4,7 +4,7 @@ from ocf_datapipes.convert import ConvertNWPToNumpyBatch
 from torch.utils.data.datapipes.iter import IterableWrapper
 from ocf_datapipes.transform.xarray import AddT0IdxAndSamplePeriodDuration
 from ocf_datapipes.select import SelectTimeSliceNWP
-from ocf_datapipes.utils.consts import NWPBatchKey
+from ocf_datapipes.batch import NWPBatchKey
 
 
 def test_convert_nwp_to_numpy_batch(nwp_datapipe):

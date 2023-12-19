@@ -20,7 +20,7 @@ from ocf_datapipes.load import (
     OpenSatellite,
     OpenTopography,
 )
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
 logger = logging.getLogger(__name__)

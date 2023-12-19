@@ -6,7 +6,7 @@ from torch.utils.data.datapipes.iter import IterableWrapper
 from ocf_datapipes.training.pvnet import (
     construct_sliced_data_pipeline,
 )
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils import Location
 import pytest
 
 
