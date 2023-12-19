@@ -1,11 +1,15 @@
 """Statistics and variable names."""
-
-
 import numpy as np
 import xarray as xr
 
-# --------------------------- FUNCS ----------------------------------
+# --------------------------- SOLAR COORDS ---------------------------
 
+ELEVATION_MEAN = 37.4
+ELEVATION_STD = 12.7
+AZIMUTH_MEAN = 177.7
+AZIMUTH_STD = 41.7
+
+# --------------------------- FUNCS ----------------------------------
 
 def _to_data_array(d):
     return xr.DataArray(

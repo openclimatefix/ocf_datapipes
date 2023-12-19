@@ -17,11 +17,12 @@ from ocf_datapipes.utils.geospatial import (
 )
 from ocf_datapipes.utils.parallel import run_with_threadpool
 from ocf_datapipes.utils.utils import trigonometric_datetime_transformation
-
-ELEVATION_MEAN = 37.4
-ELEVATION_STD = 12.7
-AZIMUTH_MEAN = 177.7
-AZIMUTH_STD = 41.7
+from ocf_datapipes.utils.consts import (
+    ELEVATION_MEAN,
+    ELEVATION_STD,
+    AZIMUTH_MEAN,
+    AZIMUTH_STD,
+)
 
 
 @functional_datapipe("preprocess_metnet")

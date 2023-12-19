@@ -44,5 +44,4 @@ class AddT0IdxAndSamplePeriodDurationIterDataPipe(IterDataPipe):
             xr_data.attrs["t0_idx"] = self.t0_idx
             xr_data.attrs["sample_period_duration"] = self.sample_period_duration
             logger.debug("done at t0 idx")
-            assert xr_data is not None
             yield xr_data

@@ -47,7 +47,7 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
             ):
                 if dataset_key in xr_data.coords.keys():
                     values = xr_data[dataset_key].values
-                    # Expand dims so EncodeSpaceTime works!
+                    # Expand dims so AddFourierSpaceTime works!
                     example[batch_key] = values  # np.expand_dims(values, axis=1)
 
             yield example

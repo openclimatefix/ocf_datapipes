@@ -17,5 +17,9 @@ from .data_vars import (
     UKV_MIN,
     UKV_STD,
     UKV_VARIABLE_NAMES,
+    ELEVATION_MEAN,
+    ELEVATION_STD,
+    AZIMUTH_MEAN,
+    AZIMUTH_STD,
 )
 from .location import Location

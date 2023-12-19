@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 @functional_datapipe("add_fourier_space_time")
-class EncodeSpaceTimeIterDataPipe(IterDataPipe):
+class AddFourierSpaceTimeIterDataPipe(IterDataPipe):
     """Encodes the Fourier features for space and time"""
 
     def __init__(

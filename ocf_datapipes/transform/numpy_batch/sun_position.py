@@ -6,13 +6,15 @@ import pandas as pd
 import pvlib
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import BatchKey
+from ocf_datapipes.utils.consts import (
+    BatchKey,
+    ELEVATION_MEAN,
+    ELEVATION_STD,
+    AZIMUTH_MEAN,
+    AZIMUTH_STD,
+)
 from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 
-ELEVATION_MEAN = 37.4
-ELEVATION_STD = 12.7
-AZIMUTH_MEAN = 177.7
-AZIMUTH_STD = 41.7
 
 
 def _get_azimuth_and_elevation(lat, lon, dt, must_be_finite):

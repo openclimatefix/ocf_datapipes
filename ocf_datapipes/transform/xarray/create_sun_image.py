@@ -6,17 +6,18 @@ import pvlib
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils.consts import (
+    Location,
+    ELEVATION_MEAN,
+    ELEVATION_STD,
+    AZIMUTH_MEAN,
+    AZIMUTH_STD,
+)
 from ocf_datapipes.utils.geospatial import (
     geostationary_area_coords_to_lonlat,
     osgb_to_geostationary_area_coords,
     osgb_to_lon_lat,
 )
-
-ELEVATION_MEAN = 37.4
-ELEVATION_STD = 12.7
-AZIMUTH_MEAN = 177.7
-AZIMUTH_STD = 41.7
 
 
 @functional_datapipe("create_sun_image")

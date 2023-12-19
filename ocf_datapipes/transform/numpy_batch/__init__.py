@@ -1,5 +1,5 @@
 """Numpy transforms"""
-from .add_fourier_space_time import EncodeSpaceTimeIterDataPipe as EncodeSpaceTime
+from .add_fourier_space_time import AddFourierSpaceTimeIterDataPipe as AddFourierSpaceTime
 from .add_topographic_data import AddTopographicDataIterDataPipe as AddTopographicData
 from .save_t0_time import SaveT0TimeIterDataPipe as SaveT0Time
 from .sun_position import AddSunPositionIterDataPipe as AddSunPosition
