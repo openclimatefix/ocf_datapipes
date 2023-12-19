@@ -377,14 +377,6 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
         description="The number of meters per pixel for non-HRV satellite channels.",
     )
 
-    keep_dawn_dusk_hours: int = Field(
-        0,
-        description="The number hours around dawn and dusk that should be keep. "
-        "I.e 'keep_dawn_dusk_hours'=2,"
-        " then if dawn if 07.00, "
-        " then data is keep from 06.00",
-    )
-
     is_live: bool = Field(
         False,
         description="Option if to use live data from the satelite consumer. "
@@ -413,14 +405,6 @@ class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     hrvsatellite_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
     hrvsatellite_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     hrvsatellite_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
-
-    keep_dawn_dusk_hours: int = Field(
-        0,
-        description="The number hours around dawn and dusk that should be keep. "
-        "I.e 'keep_dawn_dusk_hours'=2,"
-        " then if dawn if 07.00, "
-        " then data is keep from 06.00",
-    )
 
     is_live: bool = Field(
         False,
