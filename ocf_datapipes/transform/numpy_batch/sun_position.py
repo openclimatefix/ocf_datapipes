@@ -7,14 +7,13 @@ import pvlib
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.utils.consts import (
-    BatchKey,
-    ELEVATION_MEAN,
-    ELEVATION_STD,
     AZIMUTH_MEAN,
     AZIMUTH_STD,
+    ELEVATION_MEAN,
+    ELEVATION_STD,
+    BatchKey,
 )
 from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
-
 
 
 def _get_azimuth_and_elevation(lat, lon, dt, must_be_finite):
