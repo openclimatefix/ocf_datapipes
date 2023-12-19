@@ -59,6 +59,5 @@ def make_fake_pv_data(
     batch[BatchKey.pv_time_utc_fourier] = np.random.random(
         (batch_size, n_times, n_fourier_features)
     )
-    batch[BatchKey.pv_time_utc_fourier_t0] = np.random.random((batch_size, n_fourier_features))
 
     return batch
