@@ -15,7 +15,6 @@ from ocf_datapipes.batch import MergeNumpyModalities
 
 from ocf_datapipes.transform.xarray import (
     AddT0IdxAndSamplePeriodDuration,
-    ConvertSatelliteToInt8,
 )
 
 
@@ -23,7 +22,6 @@ from ocf_datapipes.transform.xarray import (
 def sat_hrv_np_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "hrv_sat_data.zarr"
     dp = OpenSatellite(zarr_path=filename)
-    dp = ConvertSatelliteToInt8(dp)
     dp = AddT0IdxAndSamplePeriodDuration(
         dp,
         sample_period_duration=timedelta(minutes=5),
@@ -37,7 +35,6 @@ def sat_hrv_np_datapipe():
 def sat_np_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data.zarr"
     dp = OpenSatellite(zarr_path=filename)
-    dp = ConvertSatelliteToInt8(dp)
     dp = AddT0IdxAndSamplePeriodDuration(
         dp,
         sample_period_duration=timedelta(minutes=5),
