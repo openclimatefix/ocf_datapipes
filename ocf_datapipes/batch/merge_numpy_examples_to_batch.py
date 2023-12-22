@@ -138,10 +138,10 @@ def unstack_np_batch_into_examples(batch: NumpyBatch):
 
                 # Unpack keys
                 nwp_sources = list(batch[BatchKey.nwp].keys())
-                
+
                 for nwp_source in nwp_sources:
                     nwp_source_batch: NWPNumpyBatch = {}
-                    
+
                     # Keys can be different for each NWP source
                     nwp_keys = list(batch[BatchKey.nwp][nwp_source].keys())
 
