@@ -138,9 +138,12 @@ def unstack_np_batch_into_examples(batch: NumpyBatch):
 
                 # Unpack keys
                 nwp_sources = list(batch[BatchKey.nwp].keys())
-                nwp_keys = list(batch[BatchKey.nwp][nwp_sources[0]].keys())
+                
                 for nwp_source in nwp_sources:
                     nwp_source_batch: NWPNumpyBatch = {}
+                    
+                    # Keys can be different for each NWP source
+                    nwp_keys = list(batch[BatchKey.nwp][nwp_source].keys())
 
                     for nwp_key in nwp_keys:
                         nwp_source_batch[nwp_key] = extract_sample_from_batch(
