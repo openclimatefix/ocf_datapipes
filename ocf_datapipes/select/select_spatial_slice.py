@@ -21,6 +21,86 @@ from ocf_datapipes.utils.utils import searchsorted
 logger = logging.getLogger(__name__)
 
 
+
+def select_even_if_missing(xr_data, center_idx, width_pixels, height_pixels, xr_x_dim, xr_y_dim):
+    
+    half_width = width_pixels // 2
+    half_height = height_pixels // 2
+
+    left_idx = int(center_idx.x - half_width)
+    right_idx = int(center_idx.x + half_width)
+    top_idx = int(center_idx.y - half_height)
+    bottom_idx = int(center_idx.y + half_height)
+    
+    # Sanity check!
+    data_width_pixels = len(xr_data[xr_x_dim])
+    data_height_pixels = len(xr_data[xr_y_dim])
+    dx = np.median(np.diff(xr_data[xr_x_dim].values))
+    dy = np.median(np.diff(xr_data[xr_y_dim].values))
+    
+    left_pad_required = left_idx<0
+    right_pad_required = right_idx>=data_width_pixels
+    top_pad_required = top_idx<0
+    bottom_pad_required = bottom_idx>=data_height_pixels
+    
+    pad_required = any(
+        [left_pad_required, right_pad_required, top_pad_required, bottom_pad_required]
+    )
+    
+    if left_pad_required:
+        assert not right_pad_required
+        num_values_to_fill = -left_idx
+        x_sel = np.concatenate([
+            xr_data[xr_x_dim].values[0] - np.arange(1, num_values_to_fill+1)*dx, 
+            xr_data[xr_x_dim].values[0:right_idx]
+        ])
+        xr_data = xr_data.isel({xr_x_dim: slice(0, right_idx)}).reindex({xr_x_dim: x_sel})
+    
+    elif right_pad_required:
+        assert not left_pad_required
+        num_values_to_fill = right_idx - (data_width_pixels-1)
+        x_sel = np.concatenate([
+            xr_data[xr_x_dim].values[left_idx:],
+            xr_data[xr_x_dim].values[-1] + np.arange(1, num_values_to_fill+1)*dx, 
+        ])
+        xr_data = xr_data.isel({xr_x_dim: slice(left_idx, None)}).reindex({xr_x_dim: x_sel})
+        
+    else:
+        xr_data = xr_data.isel({xr_x_dim: slice(left_idx, right_idx)})
+        
+    if top_pad_required:
+        assert not bottom_pad_required
+        num_values_to_fill = -top_idx
+        y_sel = np.concatenate([
+            xr_data[xr_y_dim].values[0] - np.arange(1, num_values_to_fill+1)*dy, 
+            xr_data[xr_y_dim].values[0:bottom_idx]
+        ])
+        xr_data = xr_data.isel({xr_y_dim: slice(0, bottom_idx)}).reindex({xr_y_dim: y_sel})
+    
+    elif bottom_pad_required:
+        assert not top_pad_required
+        num_values_to_fill = bottom_idx - (data_height_pixels-1)
+        y_sel = np.concatenate([
+            xr_data[xr_y_dim].values[top_idx:],
+            xr_data[xr_y_dim].values[-1] + np.arange(1, num_values_fill+1)*dy, 
+        ])
+        xr_data = xr_data.isel({xr_y_dim: slice(top_idx, None)}).reindex({xr_x_dim: y_sel})  
+    
+    else:
+        xr_data = xr_data.isel({xr_y_dim: slice(top_idx, bottom_idx)})
+     
+    assert len(xr_data[xr_x_dim])==width_pixels, (
+        f"Expected x-dim len {width_pixels} got {len(xr_data[xr_x_dim])} "
+         f"for location {center_idx} for slice {left_idx}:{right_idx}"
+    )
+    assert len(xr_data[xr_y_dim])==height_pixels, (
+        f"Expected y-dim len {height_pixels} got {len(xr_data[xr_y_dim])} "
+        f"for location {center_idx} for slice {top_idx}:{bottom_idx}"
+    )
+    
+    return xr_data
+
+
 @functional_datapipe("select_spatial_slice_pixels")
 class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
     """Select spatial slice based off pixels from point of interest"""
@@ -74,31 +154,16 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
                     location=location,
                 )
 
-            # Compute the index for left and right:
-            half_height = self.roi_height_pixels // 2
-            half_width = self.roi_width_pixels // 2
 
-            left_idx = int(center_idx.x - half_width)
-            right_idx = int(center_idx.x + half_width)
-            top_idx = int(center_idx.y - half_height)
-            bottom_idx = int(center_idx.y + half_height)
-
-            # Sanity check!
-            assert left_idx >= 0, f"left_idx  must be >= 0. {left_idx=} for {location}"
-            data_width_pixels = len(xr_data[xr_x_dim])
-            assert right_idx <= data_width_pixels, f"{right_idx=} must be <= {data_width_pixels=}"
-            assert top_idx >= 0, f"top_idx  must be >= 0. {top_idx=} for {location}"
-            data_height_pixels = len(xr_data[xr_y_dim])
-            assert (
-                bottom_idx <= data_height_pixels
-            ), f"{bottom_idx=} must be <= {data_height_pixels=}"
-
-            selected = xr_data.isel(
-                {
-                    xr_x_dim: slice(left_idx, right_idx),
-                    xr_y_dim: slice(top_idx, bottom_idx),
-                }
+            selected = select_even_if_missing(
+                xr_data, 
+                center_idx, 
+                self.roi_width_pixels, 
+                self.roi_height_pixels, 
+                xr_x_dim, 
+                xr_y_dim
             )
+
             yield selected
 
 
@@ -317,7 +382,7 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
         xr_data[xr_y_dim].values, center_geostationary.y, assume_ascending=False
     )
 
-    return Location(x=x_index_at_center, y=y_index_at_center)
+    return Location(x=x_index_at_center, y=y_index_at_center, coordinate_system="idx")
 
 
 def _get_points_from_unstructured_grids(
