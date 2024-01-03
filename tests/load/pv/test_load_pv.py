@@ -27,6 +27,8 @@ def test_open_india_from_nc():
         label="india",
     )
     pv.pv_files_groups = [pv_file]
+    pv.start_datetime = datetime(2022, 1, 1)
+    pv.end_datetime = datetime(2023, 11, 30)
 
     pv_datapipe = OpenPVFromNetCDF(pv=pv)
     data = next(iter(pv_datapipe))
