@@ -694,6 +694,7 @@ class InputData(Base):
             "sun",
             "opticalflow",
             "sensor",
+            "wind",
         )
         enabled_data_sources = [
             data_source_name
@@ -734,6 +735,7 @@ class InputData(Base):
             sun=Sun(),
             opticalflow=OpticalFlow(),
             sensor=Sensor(),
+            wind=Wind(),
         )
 
 
@@ -755,6 +757,8 @@ class Configuration(Base):
             "nwp.nwp_zarr_path",
             "gsp.gsp_zarr_path",
             "sensor.sensor_filename",
+            "wind.wind_filename",
+            "wind.wind_metadata_filename",
         ]
         for cls_and_attr_name in path_attrs:
             cls_name, attribute = cls_and_attr_name.split(".")
