@@ -179,7 +179,7 @@ def _load_pv_generation_and_capacity(
 
         df_gen = ds_gen.to_dataframe()
 
-        if "passiv" not in str(filename) and label != "india":
+        if label == "pvoutput.org":
             _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
             try:
                 df_gen = df_gen.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
@@ -234,7 +234,7 @@ def _load_pv_metadata(
     """
     _log.info(f"Loading PV metadata from {filename}")
 
-    index_col = "ss_id" if "passiv" in str(filename) else "system_id"
+    index_col = "ss_id" if label == "solar_sheffield_passiv" else "system_id"
     df_metadata = pd.read_csv(filename, index_col=index_col)
 
     # Drop if exists
@@ -244,7 +244,7 @@ def _load_pv_metadata(
     if "ml_id" not in df_metadata.columns:
         df_metadata["ml_id"] = np.nan
 
-    if "passiv" in str(filename):
+    if label == "solar_sheffield_passiv":
         # Add capacity in watts
         df_metadata["capacity_watts"] = df_metadata.kwp * 1000
         # Maybe load inferred metadata if passiv
@@ -253,7 +253,7 @@ def _load_pv_metadata(
     elif label == "india":  # noqa: E721
         # Add capacity in watts
         df_metadata["capacity_watts"] = df_metadata.capacity_watts
-    else:
+    elif label == "pvoutput.org":
         # For PVOutput.org data
         df_metadata["capacity_watts"] = df_metadata.system_size_watts
         # Rename PVOutput.org tilt name to be simpler
@@ -276,6 +276,8 @@ def _load_pv_metadata(
 
         # Any other keys other than those in the dict above are mapped to NaN
         df_metadata["orientation"] = df_metadata.orientation.map(mapping)
+    else:
+        raise NotImplementedError(f"Provider label {label} not implemented")
 
     _log.info(f"Found {len(df_metadata)} PV systems in {filename}")
 

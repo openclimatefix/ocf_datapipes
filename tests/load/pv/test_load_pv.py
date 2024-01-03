@@ -94,6 +94,7 @@ def test_open_both_from_nc():
     pv_file_passiv = PVFiles(
         pv_filename="tests/data/pv/passiv/test.nc",
         pv_metadata_filename="tests/data/pv/passiv/UK_PV_metadata.csv",
+        label="solar_sheffield_passiv",
     )
     pv.pv_files_groups = [pv_file, pv_file_passiv]
 
