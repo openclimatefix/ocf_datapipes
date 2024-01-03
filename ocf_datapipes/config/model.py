@@ -649,6 +649,7 @@ class InputData(Base):
     topographic: Optional[Topographic] = None
     sun: Optional[Sun] = None
     sensor: Optional[Sensor] = None
+    wind: Optional[Wind] = None
 
     default_forecast_minutes: int = Field(
         60,
