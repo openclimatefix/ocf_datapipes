@@ -233,14 +233,14 @@ class PVFiles(BaseModel):
 
     label: str = Field(pv_output, description="Label of where the pv data came from")
 
-    @validator("label")
-    def v_label0(cls, v):
-        """Validate 'label'"""
-        if v not in providers:
-            message = f"provider {v} not in {providers}"
-            logger.error(message)
-            raise Exception(message)
-        return v
+    # @validator("label")
+    # def v_label0(cls, v):
+    #    """Validate 'label'"""
+    #    if v not in providers:
+    #        message = f"provider {v} not in {providers}"
+    #        logger.error(message)
+    #        raise Exception(message)
+    #    return v
 
 
 class WindFiles(BaseModel):
