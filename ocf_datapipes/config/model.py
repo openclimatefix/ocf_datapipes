@@ -259,6 +259,8 @@ class WindFiles(BaseModel):
 
 
 class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+    """Wind configuration model"""
+
     wind_files_groups: List[WindFiles] = [WindFiles()]
     wind_ml_ids: List[int] = Field(
         None,

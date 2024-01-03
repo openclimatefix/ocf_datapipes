@@ -95,6 +95,7 @@ def load_everything_into_ram(
 
     Args:
         generation_filename: Filepath to the Wind generation data
+        metadata_filename: Filepath to the Wind metadata
         start_datetime: Data will be filtered to start at this datetime
         end_datetime: Data will be filtered to end at this datetime
         estimated_capacity_percentile: Percentile used as the estimated capacity for each PV
