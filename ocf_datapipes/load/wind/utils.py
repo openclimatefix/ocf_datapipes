@@ -1,5 +1,4 @@
 """ Util functions for Wind data source"""
-from typing import Optional
 
 import numpy as np
 import pandas as pd
