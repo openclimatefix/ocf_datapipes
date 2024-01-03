@@ -266,6 +266,7 @@ class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimens
         None,
         description="List of the ML IDs of the Wind systems you'd like to filter to.",
     )
+    time_resolution_minutes: int = Field(15, description="The temporal resolution (in minutes).")
 
 
 class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
