@@ -26,13 +26,16 @@ def _single_batch_sample(fill_value):
         (8, 2, 24, 24), fill_value
     )  # shape: (time, variable, x, y)
     sample_nwp_ukv[NWPBatchKey.nwp_channel_names] = ["a", "b"]  # shape: (variable,)
-    
+
     sample_nwp_ecmwf: NWPNumpyBatch = {}
     sample_nwp_ecmwf[NWPBatchKey.nwp] = np.full(
         (8, 4, 12, 12), fill_value
     )  # shape: (time, variable, x, y)
 
-    sample[BatchKey.nwp] = {"ukv": sample_nwp_ukv, "ecmwf": sample_nwp_ecmwf,}
+    sample[BatchKey.nwp] = {
+        "ukv": sample_nwp_ukv,
+        "ecmwf": sample_nwp_ecmwf,
+    }
 
     return sample
 
