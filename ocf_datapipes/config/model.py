@@ -17,7 +17,6 @@ from typing import Dict, List, Optional, Union
 
 import git
 import numpy as np
-from nowcasting_datamodel.models.pv import providers, pv_output, solar_sheffield_passiv
 from pathy import Pathy
 from pydantic import BaseModel, Field, root_validator, validator
 
@@ -42,7 +41,7 @@ DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE = 2048
 logger = logging.getLogger(__name__)
 
 # add SV to list of providers
-providers.append("SV")
+providers = ["pvoutput.org", "solar_sheffield_passiv", "SV", "india"]
 
 
 class Base(BaseModel):
@@ -231,16 +230,16 @@ class PVFiles(BaseModel):
         description="The CSV files describing inferred PV metadata for each system.",
     )
 
-    label: str = Field(pv_output, description="Label of where the pv data came from")
+    label: str = Field(providers[0], description="Label of where the pv data came from")
 
-    # @validator("label")
-    # def v_label0(cls, v):
-    #    """Validate 'label'"""
-    #    if v not in providers:
-    #        message = f"provider {v} not in {providers}"
-    #        logger.error(message)
-    #        raise Exception(message)
-    #    return v
+    @validator("label")
+    def v_label0(cls, v):
+        """Validate 'label'"""
+        if v not in providers:
+            message = f"provider {v} not in {providers}"
+            logger.error(message)
+            raise Exception(message)
+        return v
 
 
 class WindFiles(BaseModel):
