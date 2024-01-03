@@ -325,7 +325,9 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
                 "Loading pv files the old way, and moving them the new way. "
                 "Please update configuration file"
             )
-            label = pv_output if "pvoutput" in v.pv_filename.lower() else solar_sheffield_passiv
+            label = (
+                "pv_output.org" if "pvoutput" in v.pv_filename.lower() else "solar_sheffield_passiv"
+            )
             pv_file = PVFiles(
                 pv_filename=v.pv_filename, pv_metadata_filename=v.pv_metadata_filename, label=label
             )
