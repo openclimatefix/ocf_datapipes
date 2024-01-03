@@ -695,7 +695,6 @@ class InputData(Base):
             "opticalflow",
             "sensor",
         )
-        print(values)
         enabled_data_sources = [
             data_source_name
             for data_source_name in ALL_DATA_SOURCE_NAMES
