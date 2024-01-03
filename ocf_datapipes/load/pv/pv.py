@@ -43,6 +43,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
         self.inferred_metadata_filenames = [
             pv_files_group.inferred_metadata_filename for pv_files_group in pv.pv_files_groups
         ]
+        self.labels = [pv_files_group.label for pv_files_group in pv.pv_files_groups]
         self.start_datetime = pv.start_datetime
         self.end_datetime = pv.end_datetime
 
@@ -55,6 +56,7 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
                 start_datetime=self.start_datetime,
                 end_datetime=self.end_datetime,
                 inferred_metadata_filename=self.inferred_metadata_filenames[i],
+                label=self.labels[i],
             )
             pv_array_list.append(pv_array)
 
@@ -71,6 +73,7 @@ def load_everything_into_ram(
     start_datetime: Optional[datetime] = None,
     end_datetime: Optional[datetime] = None,
     estimated_capacity_percentile: float = 100,
+    label: Optional[str] = None,
 ) -> xr.DataArray:
     """Load PV data into xarray DataArray in RAM.
 
@@ -82,10 +85,11 @@ def load_everything_into_ram(
         end_datetime: Data will be filtered to end at this datetime
         estimated_capacity_percentile: Percentile used as the estimated capacity for each PV
             system. Recommended range is 99-100.
+        label: Label of which provider the PV data came from
     """
 
     # load metadata
-    df_metadata = _load_pv_metadata(metadata_filename, inferred_metadata_filename)
+    df_metadata = _load_pv_metadata(metadata_filename, inferred_metadata_filename, label)
 
     # Load pd.DataFrame of power and pd.Series of capacities:
     df_gen, estimated_capacities = _load_pv_generation_and_capacity(
@@ -130,6 +134,7 @@ def _load_pv_generation_and_capacity(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     estimated_capacity_percentile: float = 99,
+    label: Optional[str] = None,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """Load the PV data and estimates the capacity for each PV system.
 
@@ -141,6 +146,7 @@ def _load_pv_generation_and_capacity(
         end_date: End of period to load
         estimated_capacity_percentile: Percentile used as the estimated capacity for each PV
             system. Recommended range is 99-100.
+        label: Label of which provider the PV data came from
 
     Returns:
         DataFrame of power output in watts. Columns are PV systems, rows are datetimes
@@ -173,7 +179,7 @@ def _load_pv_generation_and_capacity(
 
         df_gen = ds_gen.to_dataframe()
 
-        if "passiv" not in str(filename):
+        if "passiv" not in str(filename) and label != "india":
             _log.warning("Converting timezone. ARE YOU SURE THAT'S WHAT YOU WANT TO DO?")
             try:
                 df_gen = df_gen.tz_localize("Europe/London").tz_convert("UTC").tz_convert(None)
@@ -216,7 +222,9 @@ def _load_pv_generation_and_capacity(
 
 
 # Adapted from nowcasting_dataset.data_sources.pv.pv_data_source
-def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) -> pd.DataFrame:
+def _load_pv_metadata(
+    filename: str, inferred_filename: Optional[str] = None, label: Optional[str] = None
+) -> pd.DataFrame:
     """Return pd.DataFrame of PV metadata.
 
     Shape of the returned pd.DataFrame for Passiv PV data:
@@ -242,6 +250,9 @@ def _load_pv_metadata(filename: str, inferred_filename: Optional[str] = None) ->
         # Maybe load inferred metadata if passiv
         if inferred_filename is not None:
             df_metadata = _load_inferred_metadata(filename, df_metadata)
+    elif label == "india":  # noqa: E721
+        # Add capacity in watts
+        df_metadata["capacity_watts"] = df_metadata.capacity_watts
     else:
         # For PVOutput.org data
         df_metadata["capacity_watts"] = df_metadata.system_size_watts

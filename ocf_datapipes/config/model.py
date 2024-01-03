@@ -228,19 +228,45 @@ class PVFiles(BaseModel):
     )
     inferred_metadata_filename: str = Field(
         None,
-        description="Tthe CSV files describing inferred PV metadata for each system.",
+        description="The CSV files describing inferred PV metadata for each system.",
     )
 
     label: str = Field(pv_output, description="Label of where the pv data came from")
 
-    @validator("label")
-    def v_label0(cls, v):
-        """Validate 'label'"""
-        if v not in providers:
-            message = f"provider {v} not in {providers}"
-            logger.error(message)
-            raise Exception(message)
-        return v
+    # @validator("label")
+    # def v_label0(cls, v):
+    #    """Validate 'label'"""
+    #    if v not in providers:
+    #        message = f"provider {v} not in {providers}"
+    #        logger.error(message)
+    #        raise Exception(message)
+    #    return v
+
+
+class WindFiles(BaseModel):
+    """Model to hold pv file and metadata file"""
+
+    wind_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/Wind/India/India_Wind_timeseries_batch.nc",
+        description="The NetCDF files holding the wind power timeseries.",
+    )
+    wind_metadata_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/Wind/India/India_Wind_metadata.csv",
+        description="The CSV files describing each wind system.",
+    )
+
+    label: str = Field(str, description="Label of where the wind data came from")
+
+
+class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+    """Wind configuration model"""
+
+    wind_files_groups: List[WindFiles] = [WindFiles()]
+    wind_ml_ids: List[int] = Field(
+        None,
+        description="List of the ML IDs of the Wind systems you'd like to filter to.",
+    )
+    time_resolution_minutes: int = Field(15, description="The temporal resolution (in minutes).")
 
 
 class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
@@ -624,6 +650,7 @@ class InputData(Base):
     topographic: Optional[Topographic] = None
     sun: Optional[Sun] = None
     sensor: Optional[Sensor] = None
+    wind: Optional[Wind] = None
 
     default_forecast_minutes: int = Field(
         60,
@@ -669,6 +696,7 @@ class InputData(Base):
             "sun",
             "opticalflow",
             "sensor",
+            "wind",
         )
         enabled_data_sources = [
             data_source_name
@@ -709,6 +737,7 @@ class InputData(Base):
             sun=Sun(),
             opticalflow=OpticalFlow(),
             sensor=Sensor(),
+            wind=Wind(),
         )
 
 
@@ -730,6 +759,8 @@ class Configuration(Base):
             "nwp.nwp_zarr_path",
             "gsp.gsp_zarr_path",
             "sensor.sensor_filename",
+            "wind.wind_filename",
+            "wind.wind_metadata_filename",
         ]
         for cls_and_attr_name in path_attrs:
             cls_name, attribute = cls_and_attr_name.split(".")
