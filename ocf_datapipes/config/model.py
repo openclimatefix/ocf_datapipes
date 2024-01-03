@@ -228,7 +228,7 @@ class PVFiles(BaseModel):
     )
     inferred_metadata_filename: str = Field(
         None,
-        description="Tthe CSV files describing inferred PV metadata for each system.",
+        description="The CSV files describing inferred PV metadata for each system.",
     )
 
     label: str = Field(pv_output, description="Label of where the pv data came from")
@@ -241,6 +241,29 @@ class PVFiles(BaseModel):
             logger.error(message)
             raise Exception(message)
         return v
+
+
+class WindFiles(BaseModel):
+    """Model to hold pv file and metadata file"""
+
+    wind_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/Wind/India/India_Wind_timeseries_batch.nc",
+        description="The NetCDF files holding the wind power timeseries.",
+    )
+    wind_metadata_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/Wind/India/India_Wind_metadata.csv",
+        description="The CSV files describing each wind system.",
+    )
+
+    label: str = Field(str, description="Label of where the wind data came from")
+
+
+class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+    wind_files_groups: List[WindFiles] = [WindFiles()]
+    wind_ml_ids: List[int] = Field(
+        None,
+        description="List of the ML IDs of the Wind systems you'd like to filter to.",
+    )
 
 
 class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
@@ -670,6 +693,7 @@ class InputData(Base):
             "opticalflow",
             "sensor",
         )
+        print(values)
         enabled_data_sources = [
             data_source_name
             for data_source_name in ALL_DATA_SOURCE_NAMES
