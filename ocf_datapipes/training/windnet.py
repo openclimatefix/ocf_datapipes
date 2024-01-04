@@ -1,9 +1,8 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional, Union
+from typing import List, Optional
 
-import numpy as np
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
