@@ -385,8 +385,8 @@ if __name__ == "__main__":
     # Load the ECMWF and sensor data here
     datapipe = windnet_datapipe(
         config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        start_time=datetime(2021, 1, 1),
-        end_time=datetime(2022, 1, 2),
+        start_time=datetime(2023, 1, 1),
+        end_time=datetime(2023, 11, 2),
     )
     batch = next(iter(datapipe))
     print(batch)
