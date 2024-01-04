@@ -72,6 +72,31 @@ class BatchKey(Enum):
     pv_longitude_fourier = auto()
     pv_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
 
+    # -------------- Wind ---------------------------------------------
+    wind = auto()  # shape: (batch_size, time, n_pv_systems)
+    wind_t0_idx = auto()  # shape: scalar
+    wind_ml_id = auto()  # shape: (batch_size, n_pv_systems)
+    wind_id = auto()  # shape: (batch_size, n_pv_systems)
+    wind_observed_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
+    wind_nominal_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
+    #: pv_mask is True for good PV systems in each example.
+    # The RawPVDataSource doesn't use pv_mask. Instead is sets missing PV systems to NaN
+    # across all PV batch keys.
+    wind_mask = auto()  # shape: (batch_size, n_pv_systems)
+
+    # PV coordinates:
+    # Each has shape: (batch_size, n_pv_systems), will be NaN for missing PV systems.
+    wind_latitude = auto()
+    wind_longitude = auto()
+    wind_time_utc = auto()  # Seconds since UNIX epoch (1970-01-01).
+
+    # PV Fourier coordinates:
+    # Each has shape: (batch_size, n_pv_systems, n_fourier_features_per_dim),
+    # and will be NaN for missing PV systems.
+    wind_latitude_fourier = auto()
+    wind_longitude_fourier = auto()
+    wind_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
+
     # -------------- GSP --------------------------------------------
     gsp = auto()  # shape: (batch_size, time, 1)
     gsp_t0_idx = auto()  # shape: scalar

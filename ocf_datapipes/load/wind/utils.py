@@ -49,8 +49,8 @@ def put_wind_data_into_an_xr_dataarray(
     ).astype(np.float32)
 
     data_array = data_array.assign_coords(
-        observed_capacity_wp=("wind_system_id", observed_system_capacities),
-        nominal_capacity_wp=("wind_system_id", nominal_system_capacities),
+        observed_capacity_mwp=("wind_system_id", observed_system_capacities),
+        nominal_capacity_mwp=("wind_system_id", nominal_system_capacities),
         ml_id=("wind_system_id", ml_id),
         longitude=("wind_system_id", longitude),
         latitude=("wind_system_id", latitude),

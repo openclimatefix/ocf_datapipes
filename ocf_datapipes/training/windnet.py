@@ -21,6 +21,7 @@ from ocf_datapipes.training.common import (
     fill_nans_in_arrays,
     fill_nans_in_pv,
     normalize_gsp,
+    normalize_wind,
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
@@ -40,58 +41,8 @@ xr.set_options(keep_attrs=True)
 logger = logging.getLogger("windnet_datapipe")
 
 
-def scale_wind_speed_to_power(x: Union[xr.DataArray, xr.Dataset]):
-    """
-    Scale wind speed to power to estimate the generation of wind power from ground sensors
-
-    Roughly, double speed in m/s, and convert with the power scale
-
-    Args:
-        x: xr.DataArray or xr.Dataset containing wind speed
-
-    Returns:
-        Rescaled wind speed to MWh roughly
-    """
-    # m/s to kw (roughly) for each 1 m/s, starting from 0 to 30 m/s
-    wind_speed_to_power = np.array(  # noqa: F841
-        [
-            0,
-            0,
-            0,
-            0,
-            66,
-            171,
-            352,
-            623,
-            1002,
-            1497,
-            2005,
-            2246,
-            2296,
-        ]
-    )
-    # Convert knots to m/s
-    x = x * 0.514444
-    # Minimum speed is 0
-    x = x.where(x > 0, 0)
-    # Roughly double speed to get power
-    # x = x * 2
-    # convert to kw bsed on the wind_speed_to_power,
-    # Do this by interpolating between the two nearest values in the list
-    # Do this by rounding the wind speed to the nearest integer
-    # x = x.round()
-    # x = x.astype(int)
-    # Convert to power for each element
-    # x = xr.apply_ufunc(
-    #    lambda x: wind_speed_to_power[x] if x < len(wind_speed_to_power) else 2296,
-    #    x,
-    #    vectorize=False,
-    # )
-    return x
-
-
-def _normalize_wind_speed(x):
-    return x / 30.0
+def _normalize_wind_power(x):
+    return x / 3381.0
 
 
 @functional_datapipe("dict_datasets")
@@ -208,6 +159,8 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
                 numpy_modalities.append(datapipes_dict["gsp"].convert_gsp_to_numpy_batch())
             if "sensor" in datapipes_dict:
                 numpy_modalities.append(datapipes_dict["sensor"].convert_sensor_to_numpy_batch())
+            if "wind" in datapipes_dict:
+                numpy_modalities.append(datapipes_dict["wind"].convert_wind_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
             combined_datapipe = MergeNumpyModalities(numpy_modalities)
@@ -268,7 +221,9 @@ def construct_sliced_data_pipeline(
         fork_keys.update(set(f"nwp/{k}" for k in datapipes_dict["nwp"].keys()))
 
     # We don't need somes keys even if they are in the data dictionary
-    fork_keys = fork_keys - set(["topo", "nwp", "sensor", "hrv", "pv_future", "pv"])
+    fork_keys = fork_keys - set(
+        ["topo", "nwp", "wind", "wind_future", "sensor", "hrv", "pv_future", "pv"]
+    )
 
     # Set up a key-forker for all the data sources we need it for
     get_loc_datapipe = DatapipeKeyForker(fork_keys, location_pipe)
@@ -298,16 +253,13 @@ def construct_sliced_data_pipeline(
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
-    if "sensor" in datapipes_dict:
+    if "wind" in datapipes_dict:
         # Recombine Sensor arrays - see function doc for further explanation
-        sensor_datapipe = (
-            datapipes_dict["sensor"]
-            .zip_ocf(datapipes_dict["sensor_future"])
-            .map(concat_xr_time_utc)
+        wind_datapipe = (
+            datapipes_dict["wind"].zip_ocf(datapipes_dict["wind_future"]).map(concat_xr_time_utc)
         )
-        sensor_datapipe = sensor_datapipe.map(scale_wind_speed_to_power)
-        sensor_datapipe = sensor_datapipe.normalize(normalize_fn=_normalize_wind_speed)
-        sensor_datapipe = sensor_datapipe.map(fill_nans_in_pv)
+        wind_datapipe = wind_datapipe.normalize(normalize_fn=normalize_wind)
+        wind_datapipe = wind_datapipe.map(fill_nans_in_pv)
 
     finished_dataset_dict = {"config": configuration}
 
@@ -340,8 +292,8 @@ def construct_sliced_data_pipeline(
         finished_dataset_dict["nwp"] = nwp_datapipes_dict
     if "sat" in datapipes_dict:
         finished_dataset_dict["sat"] = sat_datapipe
-    if "sensor" in datapipes_dict:
-        finished_dataset_dict["sensor"] = sensor_datapipe
+    if "wind" in datapipes_dict:
+        finished_dataset_dict["wind"] = wind_datapipe
 
     return finished_dataset_dict
 
