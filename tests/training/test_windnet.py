@@ -25,6 +25,7 @@ def test_windnet_datapipe(configuration_filename):
         keys=[
             "nwp",
             "sat",
+            "wind",
         ],
     )
     datasets = next(iter(dp))

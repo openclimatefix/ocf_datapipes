@@ -266,6 +266,34 @@ class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimens
         description="List of the ML IDs of the Wind systems you'd like to filter to.",
     )
     time_resolution_minutes: int = Field(15, description="The temporal resolution (in minutes).")
+    wind_image_size_meters_height: int = METERS_PER_ROI
+    wind_image_size_meters_width: int = METERS_PER_ROI
+    n_wind_systems_per_example: int = Field(
+        DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
+        description="The number of Wind systems samples per example. "
+        "If there are less in the ROI then the data is padded with zeros. ",
+    )
+
+    is_live: bool = Field(
+        False, description="Option if to use live data from the nowcasting pv database"
+    )
+
+    live_interpolate_minutes: int = Field(
+        30, description="The number of minutes we allow PV data to interpolate"
+    )
+    live_load_extra_minutes: int = Field(
+        0,
+        description="The number of extra minutes in the past we should load. Then the recent "
+        "values can be interpolated, and the extra minutes removed. This is "
+        "because some live data takes ~1 hour to come in.",
+    )
+    get_center: bool = Field(
+        False,
+        description="If the batches are centered on one Wind system (or not). "
+        "The other options is to have one GSP at the center of a batch. "
+        "Typically, get_center would be set to true if and only if "
+        "WindDataSource is used to define the geospatial positions of each example.",
+    )
 
 
 class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
