@@ -22,16 +22,10 @@ logger = logging.getLogger(__name__)
 
 
 def select_spatial_slice_pixels(
-    xr_data, 
-    center_idx, 
-    width_pixels, 
-    height_pixels, 
-    xr_x_dim, 
-    xr_y_dim,
-    allow_partial_slice
+    xr_data, center_idx, width_pixels, height_pixels, xr_x_dim, xr_y_dim, allow_partial_slice
 ):
     """Select a spatial slice from an xarray object
-    
+
     Args:
         xr_data: Xarray object
         center_idx: Location object describing the centre of the window
@@ -48,39 +42,39 @@ def select_spatial_slice_pixels(
     right_idx = int(center_idx.x + half_width)
     top_idx = int(center_idx.y - half_height)
     bottom_idx = int(center_idx.y + half_height)
-    
+
     data_width_pixels = len(xr_data[xr_x_dim])
     data_height_pixels = len(xr_data[xr_y_dim])
 
-    left_pad_required = left_idx<0
-    right_pad_required = right_idx>=data_width_pixels
-    top_pad_required = top_idx<0
-    bottom_pad_required = bottom_idx>=data_height_pixels
-    
+    left_pad_required = left_idx < 0
+    right_pad_required = right_idx >= data_width_pixels
+    top_pad_required = top_idx < 0
+    bottom_pad_required = bottom_idx >= data_height_pixels
+
     pad_required = any(
         [left_pad_required, right_pad_required, top_pad_required, bottom_pad_required]
     )
-    
+
     if pad_required:
-        
         if allow_partial_slice:
-            
-            left_pad_pixels = (-left_idx) if left_pad_required else 0 
-            right_pad_pixels = (right_idx - (data_width_pixels-1)) if right_pad_required else 0 
-            top_pad_pixels = (-top_idx) if top_pad_required else 0 
-            bottom_pad_pixels = (bottom_idx - (data_height_pixels-1))  if bottom_pad_required else 0 
+            left_pad_pixels = (-left_idx) if left_pad_required else 0
+            right_pad_pixels = (right_idx - (data_width_pixels - 1)) if right_pad_required else 0
+            top_pad_pixels = (-top_idx) if top_pad_required else 0
+            bottom_pad_pixels = (
+                (bottom_idx - (data_height_pixels - 1)) if bottom_pad_required else 0
+            )
 
             xr_data = select_partial_spatial_slice_pixels(
-                xr_data, 
+                xr_data,
                 left_idx,
                 right_idx,
                 top_idx,
                 bottom_idx,
-                left_pad_pixels, 
-                right_pad_pixels, 
-                top_pad_pixels, 
-                bottom_pad_pixels, 
-                xr_x_dim, 
+                left_pad_pixels,
+                right_pad_pixels,
+                top_pad_pixels,
+                bottom_pad_pixels,
+                xr_x_dim,
                 xr_y_dim,
             )
         else:
@@ -89,7 +83,7 @@ def select_spatial_slice_pixels(
                 f"bottom) pixels  = ({left_pad_pixels}, {right_pad_pixels}, {top_pad_pixels}, "
                 f"{bottom_pad_pixels}). You may wish to set `allow_partial_slice=True`"
             )
-        
+
     else:
         xr_data = xr_data.isel(
             {
@@ -97,76 +91,83 @@ def select_spatial_slice_pixels(
                 xr_y_dim: slice(top_idx, bottom_idx),
             }
         )
-        
-        
-    assert len(xr_data[xr_x_dim])==width_pixels, (
+
+    assert len(xr_data[xr_x_dim]) == width_pixels, (
         f"Expected x-dim len {width_pixels} got {len(xr_data[xr_x_dim])} "
-         f"for location {center_idx} for slice {left_idx}:{right_idx}"
+        f"for location {center_idx} for slice {left_idx}:{right_idx}"
     )
-    assert len(xr_data[xr_y_dim])==height_pixels, (
+    assert len(xr_data[xr_y_dim]) == height_pixels, (
         f"Expected y-dim len {height_pixels} got {len(xr_data[xr_y_dim])} "
         f"for location {center_idx} for slice {top_idx}:{bottom_idx}"
     )
-    
+
     return xr_data
 
 
 def select_partial_spatial_slice_pixels(
-    xr_data, 
+    xr_data,
     left_idx,
     right_idx,
     top_idx,
     bottom_idx,
-    left_pad_pixels, 
-    right_pad_pixels, 
-    top_pad_pixels, 
-    bottom_pad_pixels, 
-    xr_x_dim, 
+    left_pad_pixels,
+    right_pad_pixels,
+    top_pad_pixels,
+    bottom_pad_pixels,
+    xr_x_dim,
     xr_y_dim,
 ):
     """Return spatial window of given pixel size when window partially overlaps input data"""
 
     dx = np.median(np.diff(xr_data[xr_x_dim].values))
     dy = np.median(np.diff(xr_data[xr_y_dim].values))
-    
-    if left_pad_pixels>0:
-        assert right_pad_pixels==0
-        x_sel = np.concatenate([
-            xr_data[xr_x_dim].values[0] - np.arange(left_pad_pixels, 0, -1)*dx, 
-            xr_data[xr_x_dim].values[0:right_idx]
-        ])
+
+    if left_pad_pixels > 0:
+        assert right_pad_pixels == 0
+        x_sel = np.concatenate(
+            [
+                xr_data[xr_x_dim].values[0] - np.arange(left_pad_pixels, 0, -1) * dx,
+                xr_data[xr_x_dim].values[0:right_idx],
+            ]
+        )
         xr_data = xr_data.isel({xr_x_dim: slice(0, right_idx)}).reindex({xr_x_dim: x_sel})
-    
-    elif right_pad_pixels>0:
-        assert left_pad_pixels==0
-        x_sel = np.concatenate([
-            xr_data[xr_x_dim].values[left_idx:],
-            xr_data[xr_x_dim].values[-1] + np.arange(1, right_pad_pixels+1)*dx, 
-        ])
+
+    elif right_pad_pixels > 0:
+        assert left_pad_pixels == 0
+        x_sel = np.concatenate(
+            [
+                xr_data[xr_x_dim].values[left_idx:],
+                xr_data[xr_x_dim].values[-1] + np.arange(1, right_pad_pixels + 1) * dx,
+            ]
+        )
         xr_data = xr_data.isel({xr_x_dim: slice(left_idx, None)}).reindex({xr_x_dim: x_sel})
-        
+
     else:
         xr_data = xr_data.isel({xr_x_dim: slice(left_idx, right_idx)})
-        
-    if top_pad_pixels>0:
-        assert bottom_pad_pixels==0
-        y_sel = np.concatenate([
-            xr_data[xr_y_dim].values[0] - np.arange(top_pad_pixels, 0, -1)*dy, 
-            xr_data[xr_y_dim].values[0:bottom_idx]
-        ])
+
+    if top_pad_pixels > 0:
+        assert bottom_pad_pixels == 0
+        y_sel = np.concatenate(
+            [
+                xr_data[xr_y_dim].values[0] - np.arange(top_pad_pixels, 0, -1) * dy,
+                xr_data[xr_y_dim].values[0:bottom_idx],
+            ]
+        )
         xr_data = xr_data.isel({xr_y_dim: slice(0, bottom_idx)}).reindex({xr_y_dim: y_sel})
-    
-    elif bottom_pad_pixels>0:
-        assert top_pad_pixels==0
-        y_sel = np.concatenate([
-            xr_data[xr_y_dim].values[top_idx:],
-            xr_data[xr_y_dim].values[-1] + np.arange(1, bottom_pad_pixels+1)*dy, 
-        ])
-        xr_data = xr_data.isel({xr_y_dim: slice(top_idx, None)}).reindex({xr_x_dim: y_sel})  
-    
+
+    elif bottom_pad_pixels > 0:
+        assert top_pad_pixels == 0
+        y_sel = np.concatenate(
+            [
+                xr_data[xr_y_dim].values[top_idx:],
+                xr_data[xr_y_dim].values[-1] + np.arange(1, bottom_pad_pixels + 1) * dy,
+            ]
+        )
+        xr_data = xr_data.isel({xr_y_dim: slice(top_idx, None)}).reindex({xr_x_dim: y_sel})
+
     else:
         xr_data = xr_data.isel({xr_y_dim: slice(top_idx, bottom_idx)})
-    
+
     return xr_data
 
 
@@ -185,11 +186,11 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
     ):
         """
         Select spatial slice based off pixels from point of interest
-        
+
         If `allow_partial_slice` is set to True, then slices may be made which intersect the border
-        of the input data. The additional x and y cordinates that would be required for this slice 
+        of the input data. The additional x and y cordinates that would be required for this slice
         are extrapolated based on the average spacing of these coordinates in the input data.
-        However, currently slices cannot be made where the centre of the window is outside of the 
+        However, currently slices cannot be made where the centre of the window is outside of the
         input data.
 
         Args:
@@ -233,11 +234,11 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
                 )
 
             selected = select_spatial_slice_pixels(
-                xr_data, 
-                center_idx, 
-                self.roi_width_pixels, 
-                self.roi_height_pixels, 
-                xr_x_dim, 
+                xr_data,
+                center_idx,
+                self.roi_width_pixels,
+                self.roi_height_pixels,
+                xr_x_dim,
                 xr_y_dim,
                 allow_partial_slice=self.allow_partial_slice,
             )
@@ -420,7 +421,7 @@ def _get_idx_of_pixel_closest_to_poi(
         from_coords=location.coordinate_system,
         xr_data=xr_data,
     )
-    
+
     # Check that the requested point lies within the data
     assert xr_data[xr_x_dim].min() < x < xr_data[xr_x_dim].max()
     assert xr_data[xr_y_dim].min() < y < xr_data[xr_y_dim].max()
@@ -457,7 +458,7 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     # Check that the requested point lies within the data
     assert xr_data[xr_x_dim].min() < x < xr_data[xr_x_dim].max()
     assert xr_data[xr_y_dim].min() < y < xr_data[xr_y_dim].max()
-    
+
     # Get the index into x and y nearest to x_center_geostationary and y_center_geostationary:
     x_index_at_center = searchsorted(
         xr_data[xr_x_dim].values, center_geostationary.x, assume_ascending=True
