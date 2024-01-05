@@ -132,7 +132,7 @@ def select_partial_spatial_slice_pixels(
     if left_pad_pixels>0:
         assert right_pad_pixels==0
         x_sel = np.concatenate([
-            xr_data[xr_x_dim].values[0] - np.arange(1, left_pad_pixels+1)*dx, 
+            xr_data[xr_x_dim].values[0] - np.arange(left_pad_pixels, 0, -1)*dx, 
             xr_data[xr_x_dim].values[0:right_idx]
         ])
         xr_data = xr_data.isel({xr_x_dim: slice(0, right_idx)}).reindex({xr_x_dim: x_sel})
@@ -151,7 +151,7 @@ def select_partial_spatial_slice_pixels(
     if top_pad_pixels>0:
         assert bottom_pad_pixels==0
         y_sel = np.concatenate([
-            xr_data[xr_y_dim].values[0] - np.arange(1, top_pad_pixels+1)*dy, 
+            xr_data[xr_y_dim].values[0] - np.arange(top_pad_pixels, 0, -1)*dy, 
             xr_data[xr_y_dim].values[0:bottom_idx]
         ])
         xr_data = xr_data.isel({xr_y_dim: slice(0, bottom_idx)}).reindex({xr_y_dim: y_sel})
