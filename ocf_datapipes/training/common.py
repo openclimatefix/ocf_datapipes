@@ -421,14 +421,13 @@ def fill_nans_in_arrays(batch: NumpyBatch, alert=True, _filled_keys=set()) -> Nu
             if np.isnan(v).any():
                 _filled_keys.update({k})
                 np.nan_to_num(v, copy=False, nan=0.0)
-                
+
         # Recursion is included to reach NWP arrays in subdict
         elif isinstance(v, dict):
             fill_nans_in_arrays(v, alert=False, _filled_keys=_filled_keys)
     if alert:
         logger.info(f"Filled NaNs with zeros - {_filled_keys}")
     return batch
-    
 
 
 class DatapipeKeyForker:

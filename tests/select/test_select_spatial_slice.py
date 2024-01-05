@@ -12,7 +12,6 @@ from ocf_datapipes.select.select_spatial_slice import select_spatial_slice_pixel
 
 
 def test_select_spatial_slice_pixels_function():
-    
     # Create dummy data
     x = np.arange(100)
     y = np.arange(100)[::-1]
@@ -28,16 +27,16 @@ def test_select_spatial_slice_pixels_function():
     )
 
     center_idx = Location(x=10, y=10, coordinate_system="idx")
-    
+
     # Select window which lies within data
     xr_selected = select_spatial_slice_pixels(
-        xr_data, 
-        center_idx, 
-        width_pixels=10, 
-        height_pixels=10, 
-        xr_x_dim="x", 
+        xr_data,
+        center_idx,
+        width_pixels=10,
+        height_pixels=10,
+        xr_x_dim="x",
         xr_y_dim="y",
-        allow_partial_slice=True
+        allow_partial_slice=True,
     )
 
     assert (xr_selected.x.values == np.arange(5, 15)).all()
@@ -46,13 +45,13 @@ def test_select_spatial_slice_pixels_function():
 
     # Select window where the edge of the window lies at the edge of the data
     xr_selected = select_spatial_slice_pixels(
-        xr_data, 
-        center_idx, 
-        width_pixels=20, 
-        height_pixels=20, 
-        xr_x_dim="x", 
+        xr_data,
+        center_idx,
+        width_pixels=20,
+        height_pixels=20,
+        xr_x_dim="x",
         xr_y_dim="y",
-        allow_partial_slice=True
+        allow_partial_slice=True,
     )
 
     assert (xr_selected.x.values == np.arange(0, 20)).all()
@@ -61,18 +60,19 @@ def test_select_spatial_slice_pixels_function():
 
     # Select window which is partially outside the boundary of the data
     xr_selected = select_spatial_slice_pixels(
-        xr_data, 
-        center_idx, 
-        width_pixels=30, 
-        height_pixels=30, 
-        xr_x_dim="x", 
+        xr_data,
+        center_idx,
+        width_pixels=30,
+        height_pixels=30,
+        xr_x_dim="x",
         xr_y_dim="y",
-        allow_partial_slice=True
+        allow_partial_slice=True,
     )
 
     assert (xr_selected.x.values == np.arange(-5, 25)).all(), xr_selected.x.values
-    assert (xr_selected.y.values == np.arange(75, 105)[::-1]).all(), xr_selected.y.values 
+    assert (xr_selected.y.values == np.arange(75, 105)[::-1]).all(), xr_selected.y.values
     assert xr_selected.data.isnull().sum() == 275
+
 
 def test_select_spatial_slice_meters_passiv(passiv_datapipe):
     loc_datapipe = PickLocations(passiv_datapipe)
