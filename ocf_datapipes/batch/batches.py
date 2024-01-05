@@ -77,8 +77,8 @@ class BatchKey(Enum):
     wind_t0_idx = auto()  # shape: scalar
     wind_ml_id = auto()  # shape: (batch_size, n_pv_systems)
     wind_id = auto()  # shape: (batch_size, n_pv_systems)
-    wind_observed_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
-    wind_nominal_capacity_wp = auto()  # shape: (batch_size, n_pv_systems)
+    wind_observed_capacity_mwp = auto()  # shape: (batch_size, n_pv_systems)
+    wind_nominal_capacity_mwp = auto()  # shape: (batch_size, n_pv_systems)
     #: pv_mask is True for good PV systems in each example.
     # The RawPVDataSource doesn't use pv_mask. Instead is sets missing PV systems to NaN
     # across all PV batch keys.
