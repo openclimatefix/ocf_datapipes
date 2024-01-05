@@ -1,6 +1,6 @@
 import numpy as np
-import pandas as pd
 import xarray as xr
+from ocf_datapipes.utils import Location
 
 from ocf_datapipes.select import (
     PickLocations,
