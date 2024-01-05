@@ -411,7 +411,12 @@ def fill_nans_in_pv(x: Union[xr.DataArray, xr.Dataset]):
     return x.fillna(-1)
 
 
-def fill_nans_in_arrays(batch: NumpyBatch, alert=True, _filled_keys=set()) -> NumpyBatch:
+def fill_nans_in_arrays(
+    batch: NumpyBatch, 
+    alert=True, 
+    _filled_keys=set(), 
+    _key_prefix=''
+) -> NumpyBatch:
     """Fills all NaN values in each np.ndarray in the batch dictionary with zeros.
 
     Operation is performed in-place on the batch.
@@ -419,13 +424,19 @@ def fill_nans_in_arrays(batch: NumpyBatch, alert=True, _filled_keys=set()) -> Nu
     for k, v in batch.items():
         if isinstance(v, np.ndarray) and np.issubdtype(v.dtype, np.number):
             if np.isnan(v).any():
-                _filled_keys.update({k})
+                _filled_keys.update({f"{_key_prefix}{k}"})
                 np.nan_to_num(v, copy=False, nan=0.0)
                 
         # Recursion is included to reach NWP arrays in subdict
         elif isinstance(v, dict):
-            fill_nans_in_arrays(v, alert=False, _filled_keys=_filled_keys)
-    if alert:
+            fill_nans_in_arrays(
+                v, 
+                alert=False, 
+                _filled_keys=_filled_keys, 
+                _key_prefix=f"{_key_prefix}{k}/"
+            )
+    
+    if alert and len(_filled_keys)>0:
         logger.info(f"Filled NaNs with zeros - {_filled_keys}")
     return batch
     
