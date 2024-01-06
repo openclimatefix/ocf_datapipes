@@ -157,7 +157,7 @@ class XYDimensionalNames(Base):
         description="The y dimension name. Should be either y_osgb or latitude",
     )
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_x_y_dimension_names(cls, values):
         """Check that the x and y dimeision pair up correctly"""
 
@@ -193,7 +193,7 @@ class StartEndDatetimeMixin(Base):
         "If None, this will get overwritten by InputData.start_date. ",
     )
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_start_and_end_datetime(cls, values):
         """
         Make sure start datetime is before end datetime
@@ -705,7 +705,7 @@ class InputData(Base):
         """How many steps are there in 5 minute datasets"""
         return int((self.default_history_minutes + self.default_forecast_minutes) / 5 + 1)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def set_forecast_and_history_minutes(cls, values):
         """
         Set default history and forecast values, if needed.
