@@ -866,7 +866,7 @@ def slice_datapipes_by_time(
 
         datapipes_dict["gsp"] = datapipes_dict["gsp"].select_time_slice(
             t0_datapipe=get_t0_datapipe(None),
-            sample_period_duration=minutes(conf_in.input_data.gsp.time_resolution_minutes),
+            sample_period_duration=minutes(conf_in.gsp.time_resolution_minutes),
             interval_start=-minutes(conf_in.gsp.history_minutes),
             interval_end=minutes(0),
             fill_selection=production,
