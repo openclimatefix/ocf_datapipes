@@ -111,7 +111,9 @@ def open_and_return_datapipes(
         gsp_datapipe = OpenGSP(
             gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=30),
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.gsp.time_resolution_minutes
+            ),
             history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
         )
 
@@ -140,7 +142,9 @@ def open_and_return_datapipes(
             OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
             .filter_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
-                sample_period_duration=timedelta(minutes=5),
+                sample_period_duration=timedelta(
+                    minutes=configuration.input_data.satellite.time_resolution_minutes
+                ),
                 history_duration=timedelta(
                     minutes=configuration.input_data.satellite.history_minutes
                 ),
@@ -154,7 +158,9 @@ def open_and_return_datapipes(
         sat_hrv_datapipe = OpenSatellite(
             configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.hrvsatellite.time_resolution_minutes
+            ),
             history_duration=timedelta(
                 minutes=configuration.input_data.hrvsatellite.history_minutes
             ),
@@ -167,7 +173,9 @@ def open_and_return_datapipes(
         pv_datapipe = OpenPVFromNetCDF(
             pv=configuration.input_data.pv
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=5),  # TODO Fix as India is 15 minutely
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.pv.time_resolution_minutes
+            ),
             history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
         )
 
@@ -178,7 +186,9 @@ def open_and_return_datapipes(
         wind_datapipe = OpenWindFromNetCDF(
             wind=configuration.input_data.wind
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=15),
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.wind.time_resolution_minutes
+            ),
             history_duration=timedelta(minutes=configuration.input_data.wind.history_minutes),
         )
 
@@ -189,7 +199,9 @@ def open_and_return_datapipes(
         sensor_datapipe = OpenAWOSFromNetCDF(
             configuration.input_data.sensor
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=30),
+            sample_period_duration=timedelta(
+                minutes=configuration.input_data.sensor.time_resolution_minutes
+            ),
             history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
         )
 
@@ -246,7 +258,9 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
 
         if "sat" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(minutes=5),
+                sample_period_duration=timedelta(
+                    minutes=configuration.input_data.satellite.time_resolution_minutes
+                ),
                 history_duration=timedelta(
                     minutes=configuration.input_data.satellite.history_minutes
                 ),
@@ -256,7 +270,9 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
 
         if "hrv" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(minutes=5),
+                sample_period_duration=timedelta(
+                    minutes=configuration.input_data.hrvsatellite.time_resolution_minutes
+                ),
                 history_duration=timedelta(
                     minutes=configuration.input_data.hrvsatellite.history_minutes
                 ),
@@ -266,21 +282,27 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
 
         if "pv" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(minutes=5),
+                sample_period_duration=timedelta(
+                    minutes=configuration.input_data.pv.time_resolution_minutes
+                ),
                 history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
                 forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
         if "wind" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(minutes=15),
+                sample_period_duration=timedelta(
+                    minutes=configuration.input_data.wind.time_resolution_minutes
+                ),
                 history_duration=timedelta(minutes=configuration.input_data.wind.history_minutes),
                 forecast_duration=timedelta(minutes=configuration.input_data.wind.forecast_minutes),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
         if "gsp" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(minutes=30),
+                sample_period_duration=timedelta(
+                    minutes=configuration.input_data.gsp.time_resolution_minutes
+                ),
                 history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
                 forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
             )
@@ -288,7 +310,9 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
 
         if "sensor" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(minutes=30),
+                sample_period_duration=timedelta(
+                    minutes=configuration.input_data.sensor.time_resolution_minutes
+                ),
                 history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
                 forecast_duration=timedelta(
                     minutes=configuration.input_data.sensor.forecast_minutes
@@ -408,7 +432,7 @@ class PVNetSelectPVbyMLIDIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe emitting PV xarray data
             ml_ids: List-like of ML IDs to select
 
-        Returns:
+        Returns:model_validator
             Filtered data source
         """
         self.source_datapipe = source_datapipe
@@ -786,9 +810,9 @@ def slice_datapipes_by_time(
             fill_selection=production,
         )
 
-        # Dropout on the PV, but not the future PV
+        # Dropout on the Wind, but not the future Wind
         wind_dropout_time_datapipe = get_t0_datapipe("wind").draw_dropout_time(
-            # All PV data could be delayed by up to 30 minutes
+            # All Wind data could be delayed by up to 30 minutes
             # (this does not stem from production - just setting for now)
             dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
             dropout_frac=0 if production else 0.5,
