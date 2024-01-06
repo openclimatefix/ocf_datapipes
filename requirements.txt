@@ -24,3 +24,4 @@ fastparquet
 scipy
 pytorch_lightning
 pvlive-api
+pydantic==1.*
