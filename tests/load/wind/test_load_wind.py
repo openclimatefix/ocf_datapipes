@@ -11,8 +11,6 @@ def test_open_wind_from_nc():
         label="india",
     )
     wind.wind_files_groups = [wind_file]
-    wind.start_datetime = datetime(2022, 1, 1)
-    wind.end_datetime = datetime(2023, 11, 30)
     wind_datapipe = OpenWindFromNetCDF(wind=wind)
     data = next(iter(wind_datapipe))
     assert data is not None

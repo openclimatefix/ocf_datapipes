@@ -157,7 +157,7 @@ class XYDimensionalNames(Base):
         description="The y dimension name. Should be either y_osgb or latitude",
     )
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_x_y_dimension_names(cls, values):
         """Check that the x and y dimeision pair up correctly"""
 
@@ -193,7 +193,7 @@ class StartEndDatetimeMixin(Base):
         "If None, this will get overwritten by InputData.start_date. ",
     )
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_start_and_end_datetime(cls, values):
         """
         Make sure start datetime is before end datetime
@@ -266,6 +266,40 @@ class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimens
         description="List of the ML IDs of the Wind systems you'd like to filter to.",
     )
     time_resolution_minutes: int = Field(15, description="The temporal resolution (in minutes).")
+    wind_image_size_meters_height: int = METERS_PER_ROI
+    wind_image_size_meters_width: int = METERS_PER_ROI
+    n_wind_systems_per_example: int = Field(
+        DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
+        description="The number of Wind systems samples per example. "
+        "If there are less in the ROI then the data is padded with zeros. ",
+    )
+
+    is_live: bool = Field(
+        False, description="Option if to use live data from the nowcasting pv database"
+    )
+
+    live_interpolate_minutes: int = Field(
+        30, description="The number of minutes we allow PV data to interpolate"
+    )
+    live_load_extra_minutes: int = Field(
+        0,
+        description="The number of extra minutes in the past we should load. Then the recent "
+        "values can be interpolated, and the extra minutes removed. This is "
+        "because some live data takes ~1 hour to come in.",
+    )
+    get_center: bool = Field(
+        False,
+        description="If the batches are centered on one Wind system (or not). "
+        "The other options is to have one GSP at the center of a batch. "
+        "Typically, get_center would be set to true if and only if "
+        "WindDataSource is used to define the geospatial positions of each example.",
+    )
+
+    time_resolution_minutes: int = Field(
+        15,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
 
 
 class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
@@ -314,6 +348,12 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
         description="The number of extra minutes in the past we should load. Then the recent "
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
+    )
+
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
     )
 
     @classmethod
@@ -378,6 +418,12 @@ class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDime
         AWOS_VARIABLE_NAMES, description="the sensor variables that are used"
     )
 
+    time_resolution_minutes: int = Field(
+        30,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
+
 
 class Satellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model"""
@@ -415,6 +461,12 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
         30, description="The expected delay in minutes of the satellite data"
     )
 
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
+
 
 class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model for HRV data"""
@@ -442,6 +494,12 @@ class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
 
     live_delay_minutes: int = Field(
         30, description="The expected delay in minutes of the satellite data"
+    )
+
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
     )
 
 
@@ -593,6 +651,11 @@ class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
     )
+    time_resolution_minutes: int = Field(
+        30,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
 
     @validator("history_minutes")
     def history_minutes_divide_by_30(cls, v):
@@ -677,7 +740,7 @@ class InputData(Base):
         """How many steps are there in 5 minute datasets"""
         return int((self.default_history_minutes + self.default_forecast_minutes) / 5 + 1)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def set_forecast_and_history_minutes(cls, values):
         """
         Set default history and forecast values, if needed.

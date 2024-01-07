@@ -19,4 +19,7 @@ from .numpy_batch.satellite import (
 from .numpy_batch.sensor import (
     ConvertSensorToNumpyBatchIterDataPipe as ConvertSensorToNumpyBatch,
 )
+from .numpy_batch.wind import (
+    ConvertWindToNumpyBatchIterDataPipe as ConvertWindToNumpyBatch,
+)
 from .stack_xarray_to_numpy import StackXarrayIterDataPipe as StackXarray
