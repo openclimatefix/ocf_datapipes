@@ -295,6 +295,12 @@ class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimens
         "WindDataSource is used to define the geospatial positions of each example.",
     )
 
+    time_resolution_minutes: int = Field(
+        15,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
+
 
 class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
     """PV configuration model"""
@@ -342,6 +348,12 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
         description="The number of extra minutes in the past we should load. Then the recent "
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
+    )
+
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
     )
 
     @classmethod
@@ -406,6 +418,12 @@ class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDime
         AWOS_VARIABLE_NAMES, description="the sensor variables that are used"
     )
 
+    time_resolution_minutes: int = Field(
+        30,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
+
 
 class Satellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model"""
@@ -443,6 +461,12 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
         30, description="The expected delay in minutes of the satellite data"
     )
 
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
+
 
 class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     """Satellite configuration model for HRV data"""
@@ -470,6 +494,12 @@ class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
 
     live_delay_minutes: int = Field(
         30, description="The expected delay in minutes of the satellite data"
+    )
+
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
     )
 
 
@@ -620,6 +650,11 @@ class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
         description="The number of extra minutes in the past we should load. Then the recent "
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
+    )
+    time_resolution_minutes: int = Field(
+        30,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
     )
 
     @validator("history_minutes")
