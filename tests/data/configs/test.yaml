@@ -27,8 +27,6 @@ input_data:
     wind_image_size_meters_height: 10000000
     wind_image_size_meters_width: 10000000
     n_wind_systems_per_example: 1
-    start_datetime: "2010-01-01 00:00:00"
-    end_datetime: "2030-01-01 00:00:00"
     wind_ml_ids: []
   pv:
     pv_files_groups:
@@ -42,8 +40,6 @@ input_data:
     pv_image_size_meters_height: 10000000
     pv_image_size_meters_width: 10000000
     n_pv_systems_per_example: 32
-    start_datetime: "2010-01-01 00:00:00"
-    end_datetime: "2030-01-01 00:00:00"
     pv_ml_ids: []
   satellite:
     satellite_channels:

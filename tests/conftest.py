@@ -97,10 +97,7 @@ def passiv_datapipe():
     filename = f"{_top_test_directory}/data/pv/passiv/test.nc"
     filename_metadata = f"{_top_test_directory}/data/pv/passiv/UK_PV_metadata.csv"
 
-    pv = PV(
-        start_datetime=datetime(2018, 1, 1),
-        end_datetime=datetime(2023, 1, 1),
-    )
+    pv = PV()
     pv_file = PVFiles(
         pv_filename=str(filename),
         pv_metadata_filename=str(filename_metadata),
@@ -116,10 +113,7 @@ def pvoutput_datapipe():
     filename = f"{_top_test_directory}/data/pv/pvoutput/test.nc"
     filename_metadata = f"{_top_test_directory}/data/pv/pvoutput/UK_PV_metadata.csv"
 
-    pv = PV(
-        start_datetime=datetime(2018, 1, 1),
-        end_datetime=datetime(2023, 1, 1),
-    )
+    pv = PV()
     pv_file = PVFiles(
         pv_filename=str(filename),
         pv_metadata_filename=str(filename_metadata),

@@ -44,8 +44,6 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
             pv_files_group.inferred_metadata_filename for pv_files_group in pv.pv_files_groups
         ]
         self.labels = [pv_files_group.label for pv_files_group in pv.pv_files_groups]
-        self.start_datetime = pv.start_datetime
-        self.end_datetime = pv.end_datetime
 
     def __iter__(self):
         pv_array_list = []
@@ -53,8 +51,6 @@ class OpenPVFromNetCDFIterDataPipe(IterDataPipe):
             pv_array: xr.DataArray = load_everything_into_ram(
                 self.pv_power_filenames[i],
                 self.pv_metadata_filenames[i],
-                start_datetime=self.start_datetime,
-                end_datetime=self.end_datetime,
                 inferred_metadata_filename=self.inferred_metadata_filenames[i],
                 label=self.labels[i],
             )
@@ -70,8 +66,6 @@ def load_everything_into_ram(
     generation_filename,
     metadata_filename,
     inferred_metadata_filename: Optional[Union[str, Path]] = None,
-    start_datetime: Optional[datetime] = None,
-    end_datetime: Optional[datetime] = None,
     estimated_capacity_percentile: float = 100,
     label: Optional[str] = None,
 ) -> xr.DataArray:
@@ -81,8 +75,6 @@ def load_everything_into_ram(
         generation_filename: Filepath to the PV generation data
         metadata_filename: Filepath to the PV metadata
         inferred_metadata_filename: Filepath to inferred metadata
-        start_datetime: Data will be filtered to start at this datetime
-        end_datetime: Data will be filtered to end at this datetime
         estimated_capacity_percentile: Percentile used as the estimated capacity for each PV
             system. Recommended range is 99-100.
         label: Label of which provider the PV data came from
@@ -94,8 +86,6 @@ def load_everything_into_ram(
     # Load pd.DataFrame of power and pd.Series of capacities:
     df_gen, estimated_capacities = _load_pv_generation_and_capacity(
         generation_filename,
-        start_date=start_datetime,
-        end_date=end_datetime,
         estimated_capacity_percentile=estimated_capacity_percentile,
     )
 
@@ -131,8 +121,6 @@ def load_everything_into_ram(
 
 def _load_pv_generation_and_capacity(
     filename: Union[str, Path],
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
     estimated_capacity_percentile: float = 99,
     label: Optional[str] = None,
 ) -> tuple[pd.DataFrame, pd.Series]:
@@ -142,8 +130,6 @@ def _load_pv_generation_and_capacity(
 
     Args:
         filename: The filename (netcdf) of the PV data to load
-        start_date: Start date to load from
-        end_date: End of period to load
         estimated_capacity_percentile: Percentile used as the estimated capacity for each PV
             system. Recommended range is 99-100.
         label: Label of which provider the PV data came from
@@ -153,7 +139,7 @@ def _load_pv_generation_and_capacity(
         Series of PV system estimated capacities in watts
     """
 
-    _log.info(f"Loading solar PV power data from {filename} from {start_date=} to {end_date=}.")
+    _log.info(f"Loading solar PV power data from {filename}.")
 
     # Load data in a way that will work in the cloud and locally:
     if ".parquet" in str(filename):
@@ -196,9 +182,6 @@ def _load_pv_generation_and_capacity(
 
     _log.info("Loaded solar PV power data and converting to pandas.")
     estimated_capacities = df_gen.quantile(estimated_capacity_percentile / 100)
-
-    # Filter to given time
-    df_gen = df_gen.loc[slice(start_date, end_date)]
 
     # Remove systems with no generation data
     mask = estimated_capacities > 0
