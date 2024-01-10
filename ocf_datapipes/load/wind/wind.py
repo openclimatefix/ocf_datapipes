@@ -1,9 +1,8 @@
 """Datapipe and utils to load PV data from NetCDF for training"""
 import io
 import logging
-from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import fsspec
 import numpy as np
@@ -40,8 +39,6 @@ class OpenWindFromNetCDFIterDataPipe(IterDataPipe):
         self.wind_metadata_filenames = [
             wind_files_group.wind_metadata_filename for wind_files_group in wind.wind_files_groups
         ]
-        self.start_datetime = wind.start_datetime
-        self.end_datetime = wind.end_datetime
 
     def __iter__(self):
         wind_array_list = []
@@ -49,8 +46,6 @@ class OpenWindFromNetCDFIterDataPipe(IterDataPipe):
             wind_array: xr.DataArray = load_everything_into_ram(
                 self.wind_power_filenames[i],
                 self.wind_metadata_filenames[i],
-                start_datetime=self.start_datetime,
-                end_datetime=self.end_datetime,
             )
             wind_array_list.append(wind_array)
 
@@ -87,8 +82,6 @@ def _load_wind_metadata(filename: str) -> pd.DataFrame:
 def load_everything_into_ram(
     generation_filename,
     metadata_filename,
-    start_datetime: Optional[datetime] = None,
-    end_datetime: Optional[datetime] = None,
     estimated_capacity_percentile: float = 100,
 ) -> xr.DataArray:
     """Load Wind data into xarray DataArray in RAM.
@@ -96,8 +89,6 @@ def load_everything_into_ram(
     Args:
         generation_filename: Filepath to the Wind generation data
         metadata_filename: Filepath to the Wind metadata
-        start_datetime: Data will be filtered to start at this datetime
-        end_datetime: Data will be filtered to end at this datetime
         estimated_capacity_percentile: Percentile used as the estimated capacity for each PV
             system. Recommended range is 99-100.
     """
@@ -107,8 +98,6 @@ def load_everything_into_ram(
     # Load pd.DataFrame of power and pd.Series of capacities:
     df_gen, estimated_capacities = _load_wind_generation_and_capacity(
         generation_filename,
-        start_date=start_datetime,
-        end_date=end_datetime,
         estimated_capacity_percentile=estimated_capacity_percentile,
     )
     # Drop systems where all values are NaN
@@ -139,8 +128,6 @@ def load_everything_into_ram(
 
 def _load_wind_generation_and_capacity(
     filename: Union[str, Path],
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
     estimated_capacity_percentile: float = 99,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """Load the PV data and estimates the capacity for each PV system.
@@ -149,8 +136,6 @@ def _load_wind_generation_and_capacity(
 
     Args:
         filename: The filename (netcdf) of the wind data to load
-        start_date: Start date to load from
-        end_date: End of period to load
         estimated_capacity_percentile: Percentile used as the estimated capacity for each PV
             system. Recommended range is 99-100.
 
@@ -159,7 +144,7 @@ def _load_wind_generation_and_capacity(
         Series of PV system estimated capacities in watts
     """
 
-    _log.info(f"Loading wind power data from {filename} from {start_date=} to {end_date=}.")
+    _log.info(f"Loading wind power data from {filename}.")
 
     with fsspec.open(filename, mode="rb") as file:
         file_bytes = file.read()
@@ -175,8 +160,7 @@ def _load_wind_generation_and_capacity(
 
     _log.info("Loaded wind PV power data and converting to pandas.")
     estimated_capacities = df_gen.quantile(estimated_capacity_percentile / 100)
-    # Filter to given time
-    df_gen = df_gen.loc[slice(start_date, end_date)]
+
     # Remove systems with no generation data
     mask = estimated_capacities > 0
     estimated_capacities = estimated_capacities[mask]

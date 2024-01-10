@@ -179,41 +179,6 @@ class XYDimensionalNames(Base):
         return values
 
 
-class StartEndDatetimeMixin(Base):
-    """Mixin class to add start and end date"""
-
-    start_datetime: datetime = Field(
-        datetime(2020, 1, 1),
-        description="Load date from data sources from this date. "
-        "If None, this will get overwritten by InputData.start_date. ",
-    )
-    end_datetime: datetime = Field(
-        datetime(2021, 9, 1),
-        description="Load date from data sources up to this date. "
-        "If None, this will get overwritten by InputData.start_date. ",
-    )
-
-    @root_validator(skip_on_failure=True)
-    def check_start_and_end_datetime(cls, values):
-        """
-        Make sure start datetime is before end datetime
-        """
-
-        start_datetime = values["start_datetime"]
-        end_datetime = values["end_datetime"]
-
-        # check start datetime is less than end datetime
-        if start_datetime >= end_datetime:
-            message = (
-                f"Start datetime ({start_datetime}) "
-                f"should be less than end datetime ({end_datetime})"
-            )
-            logger.error(message)
-            assert Exception(message)
-
-        return values
-
-
 class PVFiles(BaseModel):
     """Model to hold pv file and metadata file"""
 
@@ -257,7 +222,7 @@ class WindFiles(BaseModel):
     label: str = Field(str, description="Label of where the wind data came from")
 
 
-class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     """Wind configuration model"""
 
     wind_files_groups: List[WindFiles] = [WindFiles()]
@@ -302,7 +267,7 @@ class Wind(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimens
     )
 
 
-class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+class PV(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]
@@ -378,7 +343,7 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
         return v
 
 
-class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+class Sensor(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     """PV configuration model"""
 
     sensor_image_size_meters_height: int = METERS_PER_ROI
@@ -568,7 +533,7 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     """NWP configuration model"""
 
     # TODO change to nwp_path, as it could be a netcdf now.
@@ -624,7 +589,7 @@ class MultiNWP(Base):
         return self.__root__.items()
 
 
-class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
+class GSP(DataSourceMixin, TimeResolutionMixin):
     """GSP configuration model"""
 
     gsp_zarr_path: str = Field("gs://solar-pv-nowcasting-data/PV/GSP/v2/pv_gsp.zarr")

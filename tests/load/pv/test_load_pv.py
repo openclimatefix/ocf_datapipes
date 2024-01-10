@@ -35,10 +35,7 @@ def test_open_india_from_nc():
 
 
 def test_open_passiv_from_parquet(pv_parquet_file):
-    pv = PV(
-        start_datetime=datetime(2018, 1, 1),
-        end_datetime=datetime(2023, 1, 1),
-    )
+    pv = PV()
     pv_file = PVFiles(
         pv_filename=pv_parquet_file,
         pv_metadata_filename="tests/data/pv/passiv/UK_PV_metadata.csv",
