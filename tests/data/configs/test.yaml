@@ -6,7 +6,7 @@ input_data:
   gsp:
     gsp_zarr_path: tests/data/gsp/test.zarr
     history_minutes: 120
-    dropout_timedeltas_minutes: [-30,]
+    dropout_timedeltas_minutes: [-30]
     dropout_fraction: 0.1
   nwp:
     ukv:

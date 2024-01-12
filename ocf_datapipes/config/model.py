@@ -136,10 +136,7 @@ class DropoutMixin(Base):
         "negative or zero.",
     )
 
-    dropout_fraction: int = Field(
-        0,
-        description="Chance of dropout being applied to each sample"
-    )
+    dropout_fraction: int = Field(0, description="Chance of dropout being applied to each sample")
 
     @validator("dropout_timedeltas_minutes")
     def dropout_timedeltas_minutes_negative(cls, v):
@@ -148,13 +145,13 @@ class DropoutMixin(Base):
             for m in v:
                 assert m <= 0
         return v
-    
+
     @validator("dropout_fraction")
     def dropout_fraction_valid(cls, v):
         """Validate 'dropout_fraction'"""
-        assert 0<=v<=1
+        assert 0 <= v <= 1
         return v
-    
+
 
 class SystemDropoutMixin(Base):
     """Mixin class, to add independent system dropout"""
@@ -166,16 +163,10 @@ class SystemDropoutMixin(Base):
         "values randomly selected from this list.",
     )
 
-    # The degree of system dropout for each returned sample will be randomly drawn from 
+    # The degree of system dropout for each returned sample will be randomly drawn from
     # the range [system_dropout_fraction_min, system_dropout_fraction_max]
-    system_dropout_fraction_min: int = Field(
-        0,
-        description="Min chance of system dropout"
-    )
-    system_dropout_fraction_max: int = Field(
-        0,
-        description="Max chance of system dropout"
-    )
+    system_dropout_fraction_min: int = Field(0, description="Min chance of system dropout")
+    system_dropout_fraction_max: int = Field(0, description="Max chance of system dropout")
 
 
 class TimeResolutionMixin(Base):

@@ -106,15 +106,15 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
                 pd.Timedelta(xr_data["step"].max().item()) - self.forecast_duration
             )
 
-            # If max_staleness is set to None we set it based on the max step ahead of the input 
+            # If max_staleness is set to None we set it based on the max step ahead of the input
             # forecast data
             if self.max_staleness is None:
                 max_staleness = possible_max_staleness
             else:
-                # Make sure the max acceptable staleness isn't longer than the max possible
+                # Make sure the max acceptable staleness isn't longer than the max possible
                 assert self.max_staleness <= possible_max_staleness
                 max_staleness = self.max_staleness
-            
+
             contiguous_time_periods = find_contiguous_t0_periods_nwp(
                 datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                 history_duration=self.history_duration,

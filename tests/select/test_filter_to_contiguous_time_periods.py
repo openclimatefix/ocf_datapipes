@@ -160,7 +160,7 @@ def test_find_contiguous_t0_time_periods_nwp():
 
         # Create initial datapipe
         xr_data = pd.DataFrame(datetimes, columns=["init_time_utc"]).to_xarray()
-        xr_data = xr_data.assign_coords({"step":steps})
+        xr_data = xr_data.assign_coords({"step": steps})
         time_datapipe = IterableWrapper([xr_data])
 
         time_periods = time_datapipe.find_contiguous_t0_time_periods_nwp(

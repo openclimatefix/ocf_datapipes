@@ -30,9 +30,7 @@ class DrawDropoutTimeIterDataPipe(IterDataPipe):
         self.dropout_timedeltas = dropout_timedeltas
         self.dropout_frac = dropout_frac
         if dropout_timedeltas is not None:
-            assert len(dropout_timedeltas) >= 1, (
-                "Must include list of relative dropout timedeltas"
-            )
+            assert len(dropout_timedeltas) >= 1, "Must include list of relative dropout timedeltas"
             assert all(
                 [t < timedelta(minutes=0) for t in dropout_timedeltas]
             ), "dropout timedeltas must be negative"

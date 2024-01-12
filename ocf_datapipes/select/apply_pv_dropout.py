@@ -1,7 +1,7 @@
 """Convert NWP data to the target time with dropout"""
 import logging
 from datetime import timedelta
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -28,10 +28,10 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
     ):
         """Apply PV system dropout to mimic production
 
-        Systems have independent delay times. Systems may also completely drop out. 
-        
-        For each yielded sample, a dropout fraction will be randomly chosen from the range 
-        [min_frac, max_frac]. This random fraction will be used as the chance of dropout for each 
+        Systems have independent delay times. Systems may also completely drop out.
+
+        For each yielded sample, a dropout fraction will be randomly chosen from the range
+        [min_frac, max_frac]. This random fraction will be used as the chance of dropout for each
         PV system in the sample. Using a list instead of a single value allows us to avoid
         overfitting to the fraction of dropped out systems.
 
@@ -47,7 +47,7 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
         self.min_frac = min_frac
         self.max_frac = max_frac
         self.system_dropout_timedeltas = system_dropout_timedeltas
-    
+
         if system_dropout_timedeltas is not None:
             assert (
                 len(system_dropout_timedeltas) >= 1
@@ -60,19 +60,18 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
         assert all(
             [0 <= f <= 1 for f in [min_frac, max_frac]]
         ), "The min and max dropout fractions must be in open range (0, 1)"
-        
-        assert min_frac<=max_frac, "Min dropout fraction <= maximum dropout fraction"
+
+        assert min_frac <= max_frac, "Min dropout fraction <= maximum dropout fraction"
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through Xarray dataset using dropout"""
 
         for xr_data in self.source_datapipe:
-            
             # Assign these values for convenience
             t0 = pd.Timestamp(xr_data.time_utc.values[-1])
             n_systems = len(xr_data.pv_system_id)
-            
-            if not (self.min_frac==self.max_frac==0):
+
+            if not (self.min_frac == self.max_frac == 0):
                 # Apply PV system dropout - individual systems are dropped out
 
                 # Don't want fraction of dropped out system to be the same in each sample
@@ -83,15 +82,13 @@ class ApplyPVDropoutIterDataPipe(IterDataPipe):
                 system_mask.values[:] = np.random.uniform(size=n_systems) >= dropout_p
 
                 xr_data = xr_data.where(system_mask)
-            
-            if self.system_dropout_timedeltas is not None:
 
+            if self.system_dropout_timedeltas is not None:
                 # Apply independent delay to each PV system
                 delay_mask = xr.zeros_like(xr_data, dtype=bool)
 
                 last_available_times = xr.zeros_like(
-                    xr_data.pv_system_id, 
-                    dtype=xr_data.time_utc.dtype
+                    xr_data.pv_system_id, dtype=xr_data.time_utc.dtype
                 )
                 last_available_times.values[:] = t0 + np.random.choice(
                     self.system_dropout_timedeltas, size=n_systems

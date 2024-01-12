@@ -29,7 +29,7 @@ def test_apply_pv_dropout(passiv_datapipe):
     # No dropout should have been applied
     for pv_data in pv_dropout_datapipe:
         assert not np.isnan(pv_data.values).any()
-        
+
     # ----------------
     # Also apply no dropout
     pv_dropout_datapipe = ApplyPVDropout(
