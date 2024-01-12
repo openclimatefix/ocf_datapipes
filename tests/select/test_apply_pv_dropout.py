@@ -21,7 +21,21 @@ def test_apply_pv_dropout(passiv_datapipe):
     # Apply no dropout
     pv_dropout_datapipe = ApplyPVDropout(
         pv_datapipe,
-        system_dropout_fractions=[0],
+        min_frac=0,
+        max_frac=0,
+        system_dropout_timedeltas=None,
+    )
+
+    # No dropout should have been applied
+    for pv_data in pv_dropout_datapipe:
+        assert not np.isnan(pv_data.values).any()
+        
+    # ----------------
+    # Also apply no dropout
+    pv_dropout_datapipe = ApplyPVDropout(
+        pv_datapipe,
+        min_frac=0,
+        max_frac=0,
         system_dropout_timedeltas=[timedelta(minutes=0)],
     )
 
@@ -33,7 +47,8 @@ def test_apply_pv_dropout(passiv_datapipe):
     # Apply only system dropout
     pv_dropout_datapipe = ApplyPVDropout(
         pv_datapipe,
-        system_dropout_fractions=[0.5],
+        min_frac=0.4,
+        max_frac=0.6,
         system_dropout_timedeltas=[timedelta(minutes=0)],
     )
 
@@ -47,7 +62,8 @@ def test_apply_pv_dropout(passiv_datapipe):
     # Apply only delay dropout
     pv_dropout_datapipe = ApplyPVDropout(
         pv_datapipe,
-        system_dropout_fractions=[0.0],
+        min_frac=0,
+        max_frac=0,
         system_dropout_timedeltas=[timedelta(minutes=-5)],
     )
 
@@ -59,7 +75,8 @@ def test_apply_pv_dropout(passiv_datapipe):
     # Apply combo dropout
     pv_dropout_datapipe = ApplyPVDropout(
         pv_datapipe,
-        system_dropout_fractions=[0.5],
+        min_frac=0.4,
+        max_frac=0.6,
         system_dropout_timedeltas=[timedelta(minutes=-5)],
     )
 

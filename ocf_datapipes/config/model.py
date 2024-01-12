@@ -152,8 +152,31 @@ class DropoutMixin(Base):
     @validator("dropout_fraction")
     def dropout_fraction_valid(cls, v):
         """Validate 'dropout_fraction'"""
-        assert 0<= v <= 1
+        assert 0<=v<=1
         return v
+    
+
+class SystemDropoutMixin(Base):
+    """Mixin class, to add independent system dropout"""
+
+    system_dropout_timedeltas_minutes: List[int] = Field(
+        None,
+        description="List of possible minutes before t0 where data availability may start. Must be "
+        "negative or zero. Each system in a sample is delayed independently from the other by "
+        "values randomly selected from this list.",
+    )
+
+    # The degree of system dropout for each returned sample will be randomly drawn from 
+    # the range [system_dropout_fraction_min, system_dropout_fraction_max]
+    system_dropout_fraction_min: int = Field(
+        0,
+        description="Min chance of system dropout"
+    )
+    system_dropout_fraction_max: int = Field(
+        0,
+        description="Max chance of system dropout"
+    )
+
 
 class TimeResolutionMixin(Base):
     """Time resolution mix in"""
@@ -205,34 +228,6 @@ class XYDimensionalNames(Base):
             assert y_dim_name == "latitude"
 
         return values
-
-
-class PVFiles(BaseModel):
-    """Model to hold pv file and metadata file"""
-
-    pv_filename: str = Field(
-        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_timeseries_batch.nc",
-        description="The NetCDF files holding the solar PV power timeseries.",
-    )
-    pv_metadata_filename: str = Field(
-        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_metadata.csv",
-        description="Tthe CSV files describing each PV system.",
-    )
-    inferred_metadata_filename: str = Field(
-        None,
-        description="The CSV files describing inferred PV metadata for each system.",
-    )
-
-    label: str = Field(providers[0], description="Label of where the pv data came from")
-
-    @validator("label")
-    def v_label0(cls, v):
-        """Validate 'label'"""
-        if v not in providers:
-            message = f"provider {v} not in {providers}"
-            logger.error(message)
-            raise Exception(message)
-        return v
 
 
 class WindFiles(BaseModel):
@@ -295,7 +290,37 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixi
     )
 
 
-class PV(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
+class PVFiles(BaseModel):
+    """Model to hold pv file and metadata file"""
+
+    pv_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_timeseries_batch.nc",
+        description="The NetCDF files holding the solar PV power timeseries.",
+    )
+    pv_metadata_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_metadata.csv",
+        description="Tthe CSV files describing each PV system.",
+    )
+    inferred_metadata_filename: str = Field(
+        None,
+        description="The CSV files describing inferred PV metadata for each system.",
+    )
+
+    label: str = Field(providers[0], description="Label of where the pv data came from")
+
+    @validator("label")
+    def v_label0(cls, v):
+        """Validate 'label'"""
+        if v not in providers:
+            message = f"provider {v} not in {providers}"
+            logger.error(message)
+            raise Exception(message)
+        return v
+
+
+class PV(
+    DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin, SystemDropoutMixin
+):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]

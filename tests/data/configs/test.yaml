@@ -45,6 +45,9 @@ input_data:
     pv_image_size_meters_width: 10000000
     n_pv_systems_per_example: 32
     pv_ml_ids: []
+    system_dropout_timedeltas_minutes: [-15, -10, -5, 0]
+    system_dropout_fraction_min: 0
+    system_dropout_fraction_max: 0.2
   satellite:
     satellite_channels:
       - IR_016

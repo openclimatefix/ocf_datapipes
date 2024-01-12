@@ -691,6 +691,13 @@ def slice_datapipes_by_time(
 
     # Satelite and HRV satellite should drop out simultaneously when they dropout
     if "sat" in datapipes_dict or "hrv" in datapipes_dict:
+        
+        if "sat" in datapipes_dict and "hrv" in datapipes_dict:
+            logger.warn(
+                "Both sat and hrv in data sources. But dropout values will only be taken from sat "
+                "and apllied to both"
+            )
+        
         if "sat" in datapipes_dict:
             conf_sathrv = conf_in.satellite
         else:
@@ -809,9 +816,14 @@ def slice_datapipes_by_time(
         # Apply extra PV dropout using different delays per system and dropping out
         # entire PV systems independently
         if not production:
+            system_dropout_timedeltas = minutes_list_to_timedeltas(
+                conf_in.pv.system_dropout_timedeltas_minutes
+            )
+                        
             datapipes_dict["pv"].apply_pv_dropout(
-                system_dropout_fractions=np.linspace(0, 0.2, 100),
-                system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
+                min_frac=conf_in.pv.system_dropout_fraction_min,
+                max_frac=conf_in.pv.system_dropout_fraction_max,
+                system_dropout_timedeltas=system_dropout_timedeltas,
             )
 
     if "wind" in datapipes_dict:
