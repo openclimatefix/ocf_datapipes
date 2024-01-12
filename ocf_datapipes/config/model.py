@@ -127,6 +127,34 @@ class DataSourceMixin(Base):
         return int(np.ceil(self.history_minutes / 60))
 
 
+class DropoutMixin(Base):
+    """Mixin class, to add dropout minutes"""
+
+    dropout_timedeltas_minutes: List[int] = Field(
+        None,
+        description="List of possible minutes before t0 where data availability may start. Must be "
+        "negative or zero.",
+    )
+
+    dropout_fraction: int = Field(
+        0,
+        description="Chance of dropout being applied to each sample"
+    )
+
+    @validator("dropout_timedeltas_minutes")
+    def dropout_timedeltas_minutes_negative(cls, v):
+        """Validate 'dropout_timedeltas_minutes'"""
+        if v is not None:
+            for m in v:
+                assert m <= 0
+        return v
+    
+    @validator("dropout_fraction")
+    def dropout_fraction_valid(cls, v):
+        """Validate 'dropout_fraction'"""
+        assert 0<= v <= 1
+        return v
+
 class TimeResolutionMixin(Base):
     """Time resolution mix in"""
 
@@ -222,7 +250,7 @@ class WindFiles(BaseModel):
     label: str = Field(str, description="Label of where the wind data came from")
 
 
-class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
+class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
     """Wind configuration model"""
 
     wind_files_groups: List[WindFiles] = [WindFiles()]
@@ -390,7 +418,7 @@ class Sensor(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     )
 
 
-class Satellite(DataSourceMixin, TimeResolutionMixin):
+class Satellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """Satellite configuration model"""
 
     satellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
@@ -433,7 +461,7 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
+class HRVSatellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """Satellite configuration model for HRV data"""
 
     hrvsatellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
@@ -533,11 +561,9 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
+class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
     """NWP configuration model"""
 
-    # TODO change to nwp_path, as it could be a netcdf now.
-    # https://github.com/openclimatefix/nowcasting_dataset/issues/582
     nwp_zarr_path: Union[str, tuple[str], list[str]] = Field(
         "gs://solar-pv-nowcasting-data/NWP/UK_Met_Office/UKV__2018-01_to_2019-12__chunks__variable10__init_time1__step1__x548__y704__.zarr",  # noqa: E501
         description="The path which holds the NWP zarr.",
@@ -551,6 +577,12 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     nwp_provider: str = Field("ukv", description="The provider of the NWP data")
     index_by_id: bool = Field(
         False, description="If the NWP data has an id coordinate, not x and y."
+    )
+
+    max_staleness_minutes: int = Field(
+        None,
+        description="Sets a limit on how stale an NWP init time is allowed to be whilst still being"
+        " used to construct an example",
     )
 
     @validator("nwp_provider")
@@ -589,7 +621,7 @@ class MultiNWP(Base):
         return self.__root__.items()
 
 
-class GSP(DataSourceMixin, TimeResolutionMixin):
+class GSP(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """GSP configuration model"""
 
     gsp_zarr_path: str = Field("gs://solar-pv-nowcasting-data/PV/GSP/v2/pv_gsp.zarr")
