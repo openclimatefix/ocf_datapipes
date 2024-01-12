@@ -1141,7 +1141,7 @@ def create_t0_and_loc_datapipes(
                 if nwp_conf.dropout_timedeltas_minutes is None:
                     max_dropout = minutes(0)
                 else:
-                    max_dropout = minutes(np.max(np.abs(nwp_conf.dropout_timedeltas_minutes)))
+                    max_dropout = minutes(int(np.max(np.abs(nwp_conf.dropout_timedeltas_minutes))))
 
                 if nwp_conf.max_staleness_minutes is None:
                     max_staleness = None
