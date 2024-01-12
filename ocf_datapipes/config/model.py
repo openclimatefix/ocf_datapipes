@@ -295,7 +295,7 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixi
     )
 
 
-class PV(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
+class PV(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]
@@ -582,7 +582,8 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin
     max_staleness_minutes: int = Field(
         None,
         description="Sets a limit on how stale an NWP init time is allowed to be whilst still being"
-        " used to construct an example",
+        " used to construct an example. If set to None, then the max staleness is set according to"
+        " the maximum forecast horizon of the NWP and the requested forecast length.",
     )
 
     @validator("nwp_provider")

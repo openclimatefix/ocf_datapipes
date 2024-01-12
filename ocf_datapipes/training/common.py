@@ -647,26 +647,29 @@ def slice_datapipes_by_time(
 ) -> None:
     """
     Modifies a dictionary of datapipes in-place to yield samples for given times t0.
+    
+    Note that where dropout is mentioned here, this is only applied if production=False.
 
-    The NWP data* will be at least 90 minutes stale (i.e. as if it takes 90 minutes for the foreast
-    to become available).
+    The NWP data* will may include dropout to a earlier init time depending on the config.
 
-    The satellite data* is shaped so that the most recent can be 15 minutes before t0. However, 50%
-    of the time dropout is applied so that the most recent field is between 45 and 20 minutes before
-    t0. When dropped out like this, the values after this selected dropout time are set to NaN.
+    The satellite data* may also include dropout where some timestamps are missing and replaced with
+    all NaNs, depending on the dropout settings in the config.
 
     The HRV data* is similar to the satellite data and if both are included they drop out
     simulataneously.
 
-    The GSP data is split into "gsp" and "gsp_future" keys. 10% of the time the gsp value for time
-    t0, which occurs under the "gsp" key, is set to NaN
+    The GSP data is split into "gsp" and "gsp_future" keys. Depending on the config, the most recent
+    data may be dropped out and replaced with NaNs
 
-    The PV data* is also split it "pv" and "pv_future" keys.
+    The PV data* is also split it "pv" and "pv_future" keys. Depending on the config, the most 
+    recent data may be dropped out and replaced with NaNs. Additionally, the PV systems may be 
+    independenly dropped out rather than a constant dropout time being used across all systems.
 
     * if included
 
-    n.b. PV and HRV are included in this function, but not yet in the rest of the pvnet pipeline.
-    This is mostly for demonstratio purposes of how the dropout might be applied.
+    n.b. HRV is included in this function, but is not yet in the rest of the pvnet pipeline.
+    This is mostly for demonstration purposes of how concurrent dropout might be applied to HRV and
+    non-HRV satellite.
 
     Args:
         datapipes_dict: Dictionary of used datapipes and t0 ones
@@ -702,7 +705,7 @@ def slice_datapipes_by_time(
             dropout_frac=0 if production else conf_sathrv.dropout_fraction,
         )
 
-        sat_delay = minutes(-conf_sathrv.satellite.live_delay_minutes)
+        sat_delay = minutes(-conf_sathrv.live_delay_minutes)
 
     if "nwp" in datapipes_dict:
         # NWP is nested in the dict
@@ -1148,7 +1151,7 @@ def create_t0_and_loc_datapipes(
                  # NWP is a forecast product so gets its own contiguous function
                 time_periods = datapipe_copy.find_contiguous_t0_time_periods_nwp(
                     history_duration=minutes(nwp_conf.history_minutes),
-                    forecast_duration=minutes(nwp_conf.forecast_duration),
+                    forecast_duration=minutes(nwp_conf.forecast_minutes),
                     max_staleness=max_staleness,
                     max_dropout=max_dropout,
                     time_dim="init_time_utc",

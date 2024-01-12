@@ -99,7 +99,7 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
             logger.debug("Getting contiguous NWP t0 time periods")
-            assert "step" in xr_data
+            assert "step" in xr_data.coords
             # It is possible to use up to this amount of max staleness for the dataset and slice
             # Required
             possible_max_staleness = (

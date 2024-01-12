@@ -29,22 +29,23 @@ class DrawDropoutTimeIterDataPipe(IterDataPipe):
         self.source_datapipe = source_datapipe
         self.dropout_timedeltas = dropout_timedeltas
         self.dropout_frac = dropout_frac
-        assert len(dropout_timedeltas) >= 1, "Must include list of relative dropout timedeltas"
-        assert all(
-            [t < timedelta(minutes=0) for t in dropout_timedeltas]
-        ), "dropout timedeltas must be negative"
+        if dropout_timedeltas is not None:
+            assert len(dropout_timedeltas) >= 1, (
+                "Must include list of relative dropout timedeltas"
+            )
+            assert all(
+                [t < timedelta(minutes=0) for t in dropout_timedeltas]
+            ), "dropout timedeltas must be negative"
         assert 0 <= dropout_frac <= 1
 
     def __iter__(self):
         for t0 in self.source_datapipe:
-            t0_datetime_utc = pd.Timestamp(t0)
-
-            if np.random.uniform() < self.dropout_frac:
+            if (self.dropout_timedeltas is None) or (np.random.uniform() >= self.dropout_frac):
+                dropout_time = None
+            else:
+                t0_datetime_utc = pd.Timestamp(t0)
                 dt = np.random.choice(self.dropout_timedeltas)
                 dropout_time = t0_datetime_utc + dt
-
-            else:
-                dropout_time = None
 
             yield dropout_time
 
