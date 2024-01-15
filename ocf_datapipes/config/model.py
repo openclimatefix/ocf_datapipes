@@ -170,11 +170,13 @@ class SystemDropoutMixin(Base):
 
     @validator("system_dropout_fraction_min", "system_dropout_fraction_max")
     def validate_system_dropout_fractions(cls, v):
+        """Validate dropout fraction values"""
         assert 0 <= v <= 1
         return v
 
     @root_validator()
     def validate_system_dropout_fraction_range(cls, values):
+        """Ensure positive dropout fraction range"""
         assert values["system_dropout_fraction_min"] <= values["system_dropout_fraction_max"]
         return values
 
