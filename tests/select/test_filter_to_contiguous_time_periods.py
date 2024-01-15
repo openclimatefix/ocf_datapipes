@@ -147,6 +147,7 @@ def test_find_contiguous_t0_time_periods_nwp():
         pd.date_range("2023-01-01 03:00", "2023-01-02 21:00", freq=freq),
         [1, 4, 5, 6, 7, 9, 10],
     )
+    steps = [timedelta(hours=i) for i in range(24)]
 
     # Choose some history durations and max stalenesses
     history_durations_hr = [0, 2, 2, 2]
@@ -154,15 +155,17 @@ def test_find_contiguous_t0_time_periods_nwp():
 
     for i in range(len(expected_results)):
         history_duration = timedelta(hours=history_durations_hr[i])
+        forecast_duration = timedelta(hours=3)
         max_staleness = timedelta(hours=max_stalenesses_hr[i])
 
         # Create initial datapipe
-        time_datapipe = IterableWrapper(
-            [pd.DataFrame(datetimes, columns=["init_time_utc"]).to_xarray()]
-        )
+        xr_data = pd.DataFrame(datetimes, columns=["init_time_utc"]).to_xarray()
+        xr_data = xr_data.assign_coords({"step": steps})
+        time_datapipe = IterableWrapper([xr_data])
 
         time_periods = time_datapipe.find_contiguous_t0_time_periods_nwp(
             history_duration=history_duration,
+            forecast_duration=forecast_duration,
             max_staleness=max_staleness,
             time_dim="init_time_utc",
         )

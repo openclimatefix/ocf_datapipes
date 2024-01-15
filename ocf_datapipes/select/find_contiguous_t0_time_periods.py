@@ -1,6 +1,7 @@
 """Get contiguous time periods for training"""
 import logging
 from datetime import timedelta
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -68,9 +69,10 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         self,
         source_datapipe: IterDataPipe,
         history_duration: timedelta,
-        max_staleness: timedelta = timedelta(minutes=0),
-        max_dropout: timedelta = timedelta(minutes=0),
-        time_dim: str = "init_time_utc",
+        forecast_duration: timedelta,
+        max_staleness: Optional[timedelta] = None,
+        max_dropout: Optional[timedelta] = timedelta(minutes=0),
+        time_dim: Optional[str] = "init_time_utc",
     ):
         """
         Get contiguous time periods for use in determing t0 times for training
@@ -78,6 +80,7 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         Args:
             source_datapipe: Datapipe emitting a Xarray dataset
             history_duration: Length of the historical slice used for a sample
+            forecast_duration: Length of the forecast slice used for a sample
             max_staleness: Up to how long after an NWP forecast init_time are we willing to use the
                 forecast. Each init time will only be used up to this t0 time regardless of the
                 forecast valid time.
@@ -87,6 +90,7 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         """
         self.source_datapipe = source_datapipe
         self.history_duration = history_duration
+        self.forecast_duration = forecast_duration
         self.max_staleness = max_staleness
         self.max_dropout = max_dropout
         self.time_dim = time_dim
@@ -95,10 +99,26 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         """Calculate contiguous time periods and return a dataframe containing them"""
         for xr_data in self.source_datapipe:
             logger.debug("Getting contiguous NWP t0 time periods")
+            assert "step" in xr_data.coords
+            # It is possible to use up to this amount of max staleness for the dataset and slice
+            # Required
+            possible_max_staleness = (
+                pd.Timedelta(xr_data["step"].max().item()) - self.forecast_duration
+            )
+
+            # If max_staleness is set to None we set it based on the max step ahead of the input
+            # forecast data
+            if self.max_staleness is None:
+                max_staleness = possible_max_staleness
+            else:
+                # Make sure the max acceptable staleness isn't longer than the max possible
+                assert self.max_staleness <= possible_max_staleness
+                max_staleness = self.max_staleness
+
             contiguous_time_periods = find_contiguous_t0_periods_nwp(
                 datetimes=pd.DatetimeIndex(xr_data[self.time_dim]),
                 history_duration=self.history_duration,
-                max_staleness=self.max_staleness,
+                max_staleness=max_staleness,
                 max_dropout=self.max_dropout,
             )
             yield contiguous_time_periods

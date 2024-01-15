@@ -127,6 +127,60 @@ class DataSourceMixin(Base):
         return int(np.ceil(self.history_minutes / 60))
 
 
+class DropoutMixin(Base):
+    """Mixin class, to add dropout minutes"""
+
+    dropout_timedeltas_minutes: List[int] = Field(
+        None,
+        description="List of possible minutes before t0 where data availability may start. Must be "
+        "negative or zero.",
+    )
+
+    dropout_fraction: float = Field(0, description="Chance of dropout being applied to each sample")
+
+    @validator("dropout_timedeltas_minutes")
+    def dropout_timedeltas_minutes_negative(cls, v):
+        """Validate 'dropout_timedeltas_minutes'"""
+        if v is not None:
+            for m in v:
+                assert m <= 0
+        return v
+
+    @validator("dropout_fraction")
+    def dropout_fraction_valid(cls, v):
+        """Validate 'dropout_fraction'"""
+        assert 0 <= v <= 1
+        return v
+
+
+class SystemDropoutMixin(Base):
+    """Mixin class, to add independent system dropout"""
+
+    system_dropout_timedeltas_minutes: List[int] = Field(
+        None,
+        description="List of possible minutes before t0 where data availability may start. Must be "
+        "negative or zero. Each system in a sample is delayed independently from the other by "
+        "values randomly selected from this list.",
+    )
+
+    # The degree of system dropout for each returned sample will be randomly drawn from
+    # the range [system_dropout_fraction_min, system_dropout_fraction_max]
+    system_dropout_fraction_min: float = Field(0, description="Min chance of system dropout")
+    system_dropout_fraction_max: float = Field(0, description="Max chance of system dropout")
+
+    @validator("system_dropout_fraction_min", "system_dropout_fraction_max")
+    def validate_system_dropout_fractions(cls, v):
+        """Validate dropout fraction values"""
+        assert 0 <= v <= 1
+        return v
+
+    @root_validator()
+    def validate_system_dropout_fraction_range(cls, values):
+        """Ensure positive dropout fraction range"""
+        assert values["system_dropout_fraction_min"] <= values["system_dropout_fraction_max"]
+        return values
+
+
 class TimeResolutionMixin(Base):
     """Time resolution mix in"""
 
@@ -179,34 +233,6 @@ class XYDimensionalNames(Base):
         return values
 
 
-class PVFiles(BaseModel):
-    """Model to hold pv file and metadata file"""
-
-    pv_filename: str = Field(
-        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_timeseries_batch.nc",
-        description="The NetCDF files holding the solar PV power timeseries.",
-    )
-    pv_metadata_filename: str = Field(
-        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_metadata.csv",
-        description="Tthe CSV files describing each PV system.",
-    )
-    inferred_metadata_filename: str = Field(
-        None,
-        description="The CSV files describing inferred PV metadata for each system.",
-    )
-
-    label: str = Field(providers[0], description="Label of where the pv data came from")
-
-    @validator("label")
-    def v_label0(cls, v):
-        """Validate 'label'"""
-        if v not in providers:
-            message = f"provider {v} not in {providers}"
-            logger.error(message)
-            raise Exception(message)
-        return v
-
-
 class WindFiles(BaseModel):
     """Model to hold pv file and metadata file"""
 
@@ -222,7 +248,7 @@ class WindFiles(BaseModel):
     label: str = Field(str, description="Label of where the wind data came from")
 
 
-class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
+class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
     """Wind configuration model"""
 
     wind_files_groups: List[WindFiles] = [WindFiles()]
@@ -267,7 +293,37 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     )
 
 
-class PV(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
+class PVFiles(BaseModel):
+    """Model to hold pv file and metadata file"""
+
+    pv_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_timeseries_batch.nc",
+        description="The NetCDF files holding the solar PV power timeseries.",
+    )
+    pv_metadata_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_metadata.csv",
+        description="Tthe CSV files describing each PV system.",
+    )
+    inferred_metadata_filename: str = Field(
+        None,
+        description="The CSV files describing inferred PV metadata for each system.",
+    )
+
+    label: str = Field(providers[0], description="Label of where the pv data came from")
+
+    @validator("label")
+    def v_label0(cls, v):
+        """Validate 'label'"""
+        if v not in providers:
+            message = f"provider {v} not in {providers}"
+            logger.error(message)
+            raise Exception(message)
+        return v
+
+
+class PV(
+    DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin, SystemDropoutMixin
+):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]
@@ -390,7 +446,7 @@ class Sensor(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     )
 
 
-class Satellite(DataSourceMixin, TimeResolutionMixin):
+class Satellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """Satellite configuration model"""
 
     satellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
@@ -433,7 +489,7 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
+class HRVSatellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """Satellite configuration model for HRV data"""
 
     hrvsatellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
@@ -533,11 +589,9 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
+class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
     """NWP configuration model"""
 
-    # TODO change to nwp_path, as it could be a netcdf now.
-    # https://github.com/openclimatefix/nowcasting_dataset/issues/582
     nwp_zarr_path: Union[str, tuple[str], list[str]] = Field(
         "gs://solar-pv-nowcasting-data/NWP/UK_Met_Office/UKV__2018-01_to_2019-12__chunks__variable10__init_time1__step1__x548__y704__.zarr",  # noqa: E501
         description="The path which holds the NWP zarr.",
@@ -551,6 +605,13 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     nwp_provider: str = Field("ukv", description="The provider of the NWP data")
     index_by_id: bool = Field(
         False, description="If the NWP data has an id coordinate, not x and y."
+    )
+
+    max_staleness_minutes: int = Field(
+        None,
+        description="Sets a limit on how stale an NWP init time is allowed to be whilst still being"
+        " used to construct an example. If set to None, then the max staleness is set according to"
+        " the maximum forecast horizon of the NWP and the requested forecast length.",
     )
 
     @validator("nwp_provider")
@@ -589,7 +650,7 @@ class MultiNWP(Base):
         return self.__root__.items()
 
 
-class GSP(DataSourceMixin, TimeResolutionMixin):
+class GSP(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """GSP configuration model"""
 
     gsp_zarr_path: str = Field("gs://solar-pv-nowcasting-data/PV/GSP/v2/pv_gsp.zarr")

@@ -111,10 +111,8 @@ def open_and_return_datapipes(
         gsp_datapipe = OpenGSP(
             gsp_pv_power_zarr_path=configuration.input_data.gsp.gsp_zarr_path
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.gsp.time_resolution_minutes
-            ),
-            history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
+            sample_period_duration=minutes(configuration.input_data.gsp.time_resolution_minutes),
+            history_duration=minutes(configuration.input_data.gsp.history_minutes),
         )
 
         used_datapipes["gsp"] = gsp_datapipe
@@ -132,7 +130,7 @@ def open_and_return_datapipes(
                 .filter_channels(nwp_conf.nwp_channels)
                 .add_t0_idx_and_sample_period_duration(
                     sample_period_duration=timedelta(hours=1),
-                    history_duration=timedelta(minutes=nwp_conf.history_minutes),
+                    history_duration=minutes(nwp_conf.history_minutes),
                 )
             )
 
@@ -142,12 +140,10 @@ def open_and_return_datapipes(
             OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
             .filter_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.satellite.time_resolution_minutes
+                sample_period_duration=minutes(
+                    configuration.input_data.satellite.time_resolution_minutes
                 ),
-                history_duration=timedelta(
-                    minutes=configuration.input_data.satellite.history_minutes
-                ),
+                history_duration=minutes(configuration.input_data.satellite.history_minutes),
             )
         )
 
@@ -158,12 +154,10 @@ def open_and_return_datapipes(
         sat_hrv_datapipe = OpenSatellite(
             configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.hrvsatellite.time_resolution_minutes
+            sample_period_duration=minutes(
+                configuration.input_data.hrvsatellite.time_resolution_minutes
             ),
-            history_duration=timedelta(
-                minutes=configuration.input_data.hrvsatellite.history_minutes
-            ),
+            history_duration=minutes(configuration.input_data.hrvsatellite.history_minutes),
         )
 
         used_datapipes["hrv"] = sat_hrv_datapipe
@@ -173,10 +167,8 @@ def open_and_return_datapipes(
         pv_datapipe = OpenPVFromNetCDF(
             pv=configuration.input_data.pv
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.pv.time_resolution_minutes
-            ),
-            history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
+            sample_period_duration=minutes(configuration.input_data.pv.time_resolution_minutes),
+            history_duration=minutes(configuration.input_data.pv.history_minutes),
         )
 
         used_datapipes["pv"] = pv_datapipe
@@ -186,10 +178,8 @@ def open_and_return_datapipes(
         wind_datapipe = OpenWindFromNetCDF(
             wind=configuration.input_data.wind
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.wind.time_resolution_minutes
-            ),
-            history_duration=timedelta(minutes=configuration.input_data.wind.history_minutes),
+            sample_period_duration=minutes(configuration.input_data.wind.time_resolution_minutes),
+            history_duration=minutes(configuration.input_data.wind.history_minutes),
         )
 
         used_datapipes["wind"] = wind_datapipe
@@ -199,10 +189,8 @@ def open_and_return_datapipes(
         sensor_datapipe = OpenAWOSFromNetCDF(
             configuration.input_data.sensor
         ).add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(
-                minutes=configuration.input_data.sensor.time_resolution_minutes
-            ),
-            history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
+            sample_period_duration=minutes(configuration.input_data.sensor.time_resolution_minutes),
+            history_duration=minutes(configuration.input_data.sensor.history_minutes),
         )
 
         used_datapipes["sensor"] = sensor_datapipe
@@ -246,11 +234,9 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
             nwp_source = key.removeprefix("nwp/")
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
                 sample_period_duration=timedelta(hours=3),  # Init times are 3 hours apart
-                history_duration=timedelta(
-                    minutes=configuration.input_data.nwp[nwp_source].history_minutes
-                ),
-                forecast_duration=timedelta(
-                    minutes=configuration.input_data.nwp[nwp_source].forecast_minutes
+                history_duration=minutes(configuration.input_data.nwp[nwp_source].history_minutes),
+                forecast_duration=minutes(
+                    configuration.input_data.nwp[nwp_source].forecast_minutes
                 ),
                 time_dim="init_time_utc",
             )
@@ -258,65 +244,57 @@ def get_and_return_overlapping_time_periods_and_t0(used_datapipes: dict, key_for
 
         if "sat" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.satellite.time_resolution_minutes
+                sample_period_duration=minutes(
+                    configuration.input_data.satellite.time_resolution_minutes
                 ),
-                history_duration=timedelta(
-                    minutes=configuration.input_data.satellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
+                history_duration=minutes(configuration.input_data.satellite.history_minutes),
+                forecast_duration=minutes(0),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
 
         if "hrv" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.hrvsatellite.time_resolution_minutes
+                sample_period_duration=minutes(
+                    configuration.input_data.hrvsatellite.time_resolution_minutes
                 ),
-                history_duration=timedelta(
-                    minutes=configuration.input_data.hrvsatellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
+                history_duration=minutes(configuration.input_data.hrvsatellite.history_minutes),
+                forecast_duration=minutes(0),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
 
         if "pv" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.pv.time_resolution_minutes
-                ),
-                history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
+                sample_period_duration=minutes(configuration.input_data.pv.time_resolution_minutes),
+                history_duration=minutes(configuration.input_data.pv.history_minutes),
+                forecast_duration=minutes(configuration.input_data.pv.forecast_minutes),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
         if "wind" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.wind.time_resolution_minutes
+                sample_period_duration=minutes(
+                    configuration.input_data.wind.time_resolution_minutes
                 ),
-                history_duration=timedelta(minutes=configuration.input_data.wind.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.wind.forecast_minutes),
+                history_duration=minutes(configuration.input_data.wind.history_minutes),
+                forecast_duration=minutes(configuration.input_data.wind.forecast_minutes),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
         if "gsp" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.gsp.time_resolution_minutes
+                sample_period_duration=minutes(
+                    configuration.input_data.gsp.time_resolution_minutes
                 ),
-                history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-                forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
+                history_duration=minutes(configuration.input_data.gsp.history_minutes),
+                forecast_duration=minutes(configuration.input_data.gsp.forecast_minutes),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
 
         if "sensor" == key:
             time_periods_datapipe = forked_datapipes[1].find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.sensor.time_resolution_minutes
+                sample_period_duration=minutes(
+                    configuration.input_data.sensor.time_resolution_minutes
                 ),
-                history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
-                forecast_duration=timedelta(
-                    minutes=configuration.input_data.sensor.forecast_minutes
-                ),
+                history_duration=minutes(configuration.input_data.sensor.history_minutes),
+                forecast_duration=minutes(configuration.input_data.sensor.forecast_minutes),
             )
             datapipes_for_time_periods.append(time_periods_datapipe)
 
@@ -558,8 +536,8 @@ def _get_datapipes_dict(
 
     if production:
         datapipes_dict["gsp"] = OpenGSPFromDatabase().add_t0_idx_and_sample_period_duration(
-            sample_period_duration=timedelta(minutes=config.input_data.gsp.time_resolution_minutes),
-            history_duration=timedelta(minutes=config.input_data.gsp.history_minutes),
+            sample_period_duration=minutes(config.input_data.gsp.time_resolution_minutes),
+            history_duration=minutes(config.input_data.gsp.history_minutes),
         )
         if "sat" in datapipes_dict:
             datapipes_dict["sat"] = datapipes_dict["sat"].map(production_sat_scale)
@@ -617,9 +595,6 @@ def construct_loctime_pipelines(
         configuration=config,
         key_for_t0=core_key,
         shuffle=True,
-        nwp_max_dropout_minutes=180,
-        # Sometimes the forecast is only 4/day so 6 hour intervals - then we add 3-hour dropout
-        nwp_max_staleness_minutes=60 * 9,
     )
 
     return location_pipe, t0_datapipe
@@ -634,6 +609,14 @@ def minutes(num_mins: int):
     return timedelta(minutes=num_mins)
 
 
+def minutes_list_to_timedeltas(list_ints):
+    """Utility function to convert list of dropout timedelta minutes ints to list of timedeltas"""
+    if list_ints is None:
+        return list_ints
+    else:
+        return [minutes(m) for m in list_ints]
+
+
 def slice_datapipes_by_time(
     datapipes_dict: Dict,
     t0_datapipe: IterDataPipe,
@@ -643,25 +626,28 @@ def slice_datapipes_by_time(
     """
     Modifies a dictionary of datapipes in-place to yield samples for given times t0.
 
-    The NWP data* will be at least 90 minutes stale (i.e. as if it takes 90 minutes for the foreast
-    to become available).
+    Note that where dropout is mentioned here, this is only applied if production=False.
 
-    The satellite data* is shaped so that the most recent can be 15 minutes before t0. However, 50%
-    of the time dropout is applied so that the most recent field is between 45 and 20 minutes before
-    t0. When dropped out like this, the values after this selected dropout time are set to NaN.
+    The NWP data* will may include dropout to a earlier init time depending on the config.
+
+    The satellite data* may also include dropout where some timestamps are missing and replaced with
+    all NaNs, depending on the dropout settings in the config.
 
     The HRV data* is similar to the satellite data and if both are included they drop out
     simulataneously.
 
-    The GSP data is split into "gsp" and "gsp_future" keys. 10% of the time the gsp value for time
-    t0, which occurs under the "gsp" key, is set to NaN
+    The GSP data is split into "gsp" and "gsp_future" keys. Depending on the config, the most recent
+    data may be dropped out and replaced with NaNs
 
-    The PV data* is also split it "pv" and "pv_future" keys.
+    The PV data* is also split it "pv" and "pv_future" keys. Depending on the config, the most
+    recent data may be dropped out and replaced with NaNs. Additionally, the PV systems may be
+    independenly dropped out rather than a constant dropout time being used across all systems.
 
     * if included
 
-    n.b. PV and HRV are included in this function, but not yet in the rest of the pvnet pipeline.
-    This is mostly for demonstratio purposes of how the dropout might be applied.
+    n.b. HRV is included in this function, but is not yet in the rest of the pvnet pipeline.
+    This is mostly for demonstration purposes of how concurrent dropout might be applied to HRV and
+    non-HRV satellite.
 
     Args:
         datapipes_dict: Dictionary of used datapipes and t0 ones
@@ -681,27 +667,44 @@ def slice_datapipes_by_time(
 
     get_t0_datapipe = DatapipeKeyForker(fork_keys, t0_datapipe)
 
+    # Satelite and HRV satellite should drop out simultaneously when they dropout
     if "sat" in datapipes_dict or "hrv" in datapipes_dict:
+        if "sat" in datapipes_dict and "hrv" in datapipes_dict:
+            logger.warn(
+                "Both sat and hrv in data sources. But dropout values will only be taken from sat "
+                "and apllied to both"
+            )
+
+        if "sat" in datapipes_dict:
+            conf_sathrv = conf_in.satellite
+        else:
+            conf_sathrv = conf_in.hrvsatellite
+
+        dropout_timedeltas = minutes_list_to_timedeltas(conf_sathrv.dropout_timedeltas_minutes)
+
         sat_and_hrv_dropout_kwargs = dict(
             # Satellite is either 30 minutes or 60 minutes delayed in production.
             # Match during training
-            dropout_timedeltas=[minutes(-60), minutes(-30)],
-            dropout_frac=0 if production else 1.0,
+            dropout_timedeltas=dropout_timedeltas,
+            dropout_frac=0 if production else conf_sathrv.dropout_fraction,
         )
 
-        sat_delay = minutes(-configuration.input_data.satellite.live_delay_minutes)
+        sat_delay = minutes(-conf_sathrv.live_delay_minutes)
 
     if "nwp" in datapipes_dict:
         # NWP is nested in the dict
         for nwp_key, dp in datapipes_dict["nwp"].items():
+            dropout_timedeltas = minutes_list_to_timedeltas(
+                conf_in.nwp[nwp_key].dropout_timedeltas_minutes
+            )
+
             datapipes_dict["nwp"][nwp_key] = dp.select_time_slice_nwp(
                 t0_datapipe=get_t0_datapipe(f"nwp/{nwp_key}"),
                 sample_period_duration=minutes(60),
                 history_duration=minutes(conf_in.nwp[nwp_key].history_minutes),
                 forecast_duration=minutes(conf_in.nwp[nwp_key].forecast_minutes),
-                # The NWP forecast will always be at least 180 minutes stale
-                dropout_timedeltas=[minutes(-180)],
-                dropout_frac=0 if production else 1.0,
+                dropout_timedeltas=dropout_timedeltas,
+                dropout_frac=0 if production else conf_in.nwp[nwp_key].dropout_fraction,
             )
 
     if "sat" in datapipes_dict:
@@ -774,11 +777,12 @@ def slice_datapipes_by_time(
         )
 
         # Dropout on the PV, but not the future PV
+
+        dropout_timedeltas = minutes_list_to_timedeltas(conf_in.pv.dropout_timedeltas_minutes)
+
         pv_dropout_time_datapipe = get_t0_datapipe("pv").draw_dropout_time(
-            # All PV data could be delayed by up to 30 minutes
-            # (this does not stem from production - just setting for now)
-            dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
-            dropout_frac=0 if production else 0.5,
+            dropout_timedeltas=dropout_timedeltas,
+            dropout_frac=0 if production else conf_in.pv.dropout_fraction,
         )
 
         datapipes_dict["pv"] = datapipes_dict["pv"].apply_dropout_time(
@@ -786,12 +790,16 @@ def slice_datapipes_by_time(
         )
 
         # Apply extra PV dropout using different delays per system and dropping out
-        # entire PV systems
-        # independently
+        # entire PV systems independently
         if not production:
+            system_dropout_timedeltas = minutes_list_to_timedeltas(
+                conf_in.pv.system_dropout_timedeltas_minutes
+            )
+
             datapipes_dict["pv"].apply_pv_dropout(
-                system_dropout_fractions=np.linspace(0, 0.2, 100),
-                system_dropout_timedeltas=[minutes(m) for m in [-15, -10, -5, 0]],
+                min_frac=conf_in.pv.system_dropout_fraction_min,
+                max_frac=conf_in.pv.system_dropout_fraction_max,
+                system_dropout_timedeltas=system_dropout_timedeltas,
             )
 
     if "wind" in datapipes_dict:
@@ -813,12 +821,14 @@ def slice_datapipes_by_time(
             fill_selection=production,
         )
 
+        dropout_timedeltas = minutes_list_to_timedeltas(conf_in.wind.dropout_timedeltas_minutes)
+
         # Dropout on the Wind, but not the future Wind
         wind_dropout_time_datapipe = get_t0_datapipe("wind").draw_dropout_time(
             # All Wind data could be delayed by up to 30 minutes
             # (this does not stem from production - just setting for now)
-            dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
-            dropout_frac=0 if production else 0.5,
+            dropout_timedeltas=dropout_timedeltas,
+            dropout_frac=0 if production else conf_in.wind.dropout_fraction,
         )
 
         datapipes_dict["wind"] = datapipes_dict["wind"].apply_dropout_time(
@@ -845,11 +855,13 @@ def slice_datapipes_by_time(
         )
 
         # Dropout on the sensor, but not the future sensor
+        dropout_timedeltas = minutes_list_to_timedeltas(conf_in.sensor.dropout_timedeltas_minutes)
+
         sensor_dropout_time_datapipe = get_t0_datapipe("sensor").draw_dropout_time(
             # All sensor data could be delayed by up to 30 minutes
             # (this does not stem from production - just setting for now)
-            dropout_timedeltas=[minutes(m) for m in range(-30, 0, 5)],
-            dropout_frac=0.1 if production else 1,
+            dropout_timedeltas=dropout_timedeltas,
+            dropout_frac=0 if production else conf_in.sensor.dropout_fraction,
         )
 
         datapipes_dict["sensor"] = datapipes_dict["sensor"].apply_dropout_time(
@@ -876,10 +888,11 @@ def slice_datapipes_by_time(
         )
 
         # Dropout on the GSP, but not the future GSP
+        dropout_timedeltas = minutes_list_to_timedeltas(conf_in.gsp.dropout_timedeltas_minutes)
+
         gsp_dropout_time_datapipe = get_t0_datapipe("gsp").draw_dropout_time(
-            # GSP data for time t0 may be missing. Only have value for t0-30mins
-            dropout_timedeltas=[minutes(-30)],
-            dropout_frac=0 if production else 0.1,
+            dropout_timedeltas=dropout_timedeltas,
+            dropout_frac=0 if production else conf_in.gsp.dropout_fraction,
         )
 
         datapipes_dict["gsp"] = datapipes_dict["gsp"].apply_dropout_time(
@@ -946,35 +959,29 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             datapipes_to_return[key] = datapipe.select_time_slice_nwp(
                 t0_datapipe=used_datapipes[key + "_t0"],
                 sample_period_duration=timedelta(hours=1),
-                history_duration=timedelta(
-                    minutes=configuration.input_data.nwp[nwp_source].history_minutes
-                ),
-                forecast_duration=timedelta(
-                    minutes=configuration.input_data.nwp[nwp_source].forecast_minutes
+                history_duration=minutes(configuration.input_data.nwp[nwp_source].history_minutes),
+                forecast_duration=minutes(
+                    configuration.input_data.nwp[nwp_source].forecast_minutes
                 ),
             )
 
         if "sat" == key:
             datapipes_to_return[key] = datapipe.select_time_slice(
                 t0_datapipe=used_datapipes[key + "_t0"],
-                history_duration=timedelta(
-                    minutes=configuration.input_data.satellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.satellite.time_resolution_minutes
+                history_duration=minutes(configuration.input_data.satellite.history_minutes),
+                forecast_duration=minutes(0),
+                sample_period_duration=minutes(
+                    configuration.input_data.satellite.time_resolution_minutes
                 ),
             )
 
         if "hrv" == key:
             datapipes_to_return[key] = datapipe.select_time_slice(
                 t0_datapipe=used_datapipes[key + "_t0"],
-                history_duration=timedelta(
-                    minutes=configuration.input_data.hrvsatellite.history_minutes
-                ),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.hrvsatellite.time_resolution_minutes
+                history_duration=minutes(configuration.input_data.hrvsatellite.history_minutes),
+                forecast_duration=minutes(0),
+                sample_period_duration=minutes(
+                    configuration.input_data.hrvsatellite.time_resolution_minutes
                 ),
             )
 
@@ -983,19 +990,15 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             pv_dp1, pv_dp2 = datapipe.fork(2)
             datapipes_to_return[key] = pv_dp1.select_time_slice(
                 t0_datapipe=pv_1,
-                history_duration=timedelta(minutes=configuration.input_data.pv.history_minutes),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.pv.time_resolution_minutes
-                ),
+                history_duration=minutes(configuration.input_data.pv.history_minutes),
+                forecast_duration=minutes(0),
+                sample_period_duration=minutes(configuration.input_data.pv.time_resolution_minutes),
             )
             datapipes_to_return[key + "_future"] = pv_dp2.select_time_slice(
                 t0_datapipe=pv_2,
-                history_duration=timedelta(minutes=0),
-                forecast_duration=timedelta(minutes=configuration.input_data.pv.forecast_minutes),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.pv.time_resolution_minutes
-                ),
+                history_duration=minutes(0),
+                forecast_duration=minutes(configuration.input_data.pv.forecast_minutes),
+                sample_period_duration=minutes(configuration.input_data.pv.time_resolution_minutes),
             )
 
         if "wind" == key:
@@ -1003,18 +1006,18 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             wind_dp1, wind_dp2 = datapipe.fork(2)
             datapipes_to_return[key] = wind_dp1.select_time_slice(
                 t0_datapipe=wind_1,
-                history_duration=timedelta(minutes=configuration.input_data.wind.history_minutes),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.wind.time_resolution_minutes
+                history_duration=minutes(configuration.input_data.wind.history_minutes),
+                forecast_duration=minutes(0),
+                sample_period_duration=minutes(
+                    configuration.input_data.wind.time_resolution_minutes
                 ),
             )
             datapipes_to_return[key + "_future"] = wind_dp2.select_time_slice(
                 t0_datapipe=wind_2,
-                history_duration=timedelta(minutes=0),
-                forecast_duration=timedelta(minutes=configuration.input_data.wind.forecast_minutes),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.wind.time_resolution_minutes
+                history_duration=minutes(0),
+                forecast_duration=minutes(configuration.input_data.wind.forecast_minutes),
+                sample_period_duration=minutes(
+                    configuration.input_data.wind.time_resolution_minutes
                 ),
             )
 
@@ -1023,20 +1026,18 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             sensor_dp1, sensor_dp2 = datapipe.fork(2)
             datapipes_to_return[key] = sensor_dp1.select_time_slice(
                 t0_datapipe=sensor_1,
-                history_duration=timedelta(minutes=configuration.input_data.sensor.history_minutes),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.sensor.time_resolution_minutes
+                history_duration=minutes(configuration.input_data.sensor.history_minutes),
+                forecast_duration=minutes(0),
+                sample_period_duration=minutes(
+                    configuration.input_data.sensor.time_resolution_minutes
                 ),
             )
             datapipes_to_return[key + "_future"] = sensor_dp2.select_time_slice(
                 t0_datapipe=sensor_2,
-                history_duration=timedelta(minutes=0),
-                forecast_duration=timedelta(
-                    minutes=configuration.input_data.sensor.forecast_minutes
-                ),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.sensor.time_resolution_minutes
+                history_duration=minutes(0),
+                forecast_duration=minutes(configuration.input_data.sensor.forecast_minutes),
+                sample_period_duration=minutes(
+                    configuration.input_data.sensor.time_resolution_minutes
                 ),
             )
 
@@ -1045,18 +1046,18 @@ def add_selected_time_slices_from_datapipes(used_datapipes: dict):
             gsp_dp1, gsp_dp2 = datapipe.fork(2)
             datapipes_to_return[key] = gsp_dp1.select_time_slice(
                 t0_datapipe=gsp_1,
-                history_duration=timedelta(minutes=configuration.input_data.gsp.history_minutes),
-                forecast_duration=timedelta(minutes=0),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.gsp.time_resolution_minutes
+                history_duration=minutes(configuration.input_data.gsp.history_minutes),
+                forecast_duration=minutes(0),
+                sample_period_duration=minutes(
+                    configuration.input_data.gsp.time_resolution_minutes
                 ),
             )
             datapipes_to_return[key + "_future"] = gsp_dp2.select_time_slice(
                 t0_datapipe=gsp_2,
-                history_duration=timedelta(minutes=0),
-                forecast_duration=timedelta(minutes=configuration.input_data.gsp.forecast_minutes),
-                sample_period_duration=timedelta(
-                    minutes=configuration.input_data.gsp.time_resolution_minutes
+                history_duration=minutes(0),
+                forecast_duration=minutes(configuration.input_data.gsp.forecast_minutes),
+                sample_period_duration=minutes(
+                    configuration.input_data.gsp.time_resolution_minutes
                 ),
             )
     if "topo" in used_datapipes.keys():
@@ -1070,8 +1071,6 @@ def create_t0_and_loc_datapipes(
     configuration: Configuration,
     key_for_t0: str = "gsp",
     shuffle: bool = True,
-    nwp_max_dropout_minutes: int = 0,
-    nwp_max_staleness_minutes: int = 180,
 ):
     """
     Takes source datapipes and returns datapipes of appropriate sample pairs of locations and times.
@@ -1085,11 +1084,6 @@ def create_t0_and_loc_datapipes(
         key_for_t0: Key to use for the t0 datapipe. Must be "gsp" or "pv".
         shuffle: Whether to use the internal shuffle function when yielding location times. Else
             location times will be heavily ordered.
-        nwp_max_dropout_minutes: If using dropout on NWP, sometimes we have to go back to previous
-            NWP init time. In order to accomodate for this possibility in selecting times, set
-            `nwp_max_dropout_minutes` as the max NWP dropout delay you plan to use.
-        nwp_max_staleness_minutes: Sets a limit on how stale an NWP init time is allowed to be
-            whilst still being used to costruct an example
 
     Returns:
         location datapipe, t0 datapipe
@@ -1102,7 +1096,6 @@ def create_t0_and_loc_datapipes(
         "wind",
         "sensor",
     ]
-    assert nwp_max_staleness_minutes >= nwp_max_dropout_minutes
 
     contiguous_time_datapipes = []  # Used to store contiguous time periods from each data source
 
@@ -1122,11 +1115,22 @@ def create_t0_and_loc_datapipes(
                 # Different config setting per NWP source
                 nwp_conf = configuration.input_data.nwp[nwp_key]
 
+                if nwp_conf.dropout_timedeltas_minutes is None:
+                    max_dropout = minutes(0)
+                else:
+                    max_dropout = minutes(int(np.max(np.abs(nwp_conf.dropout_timedeltas_minutes))))
+
+                if nwp_conf.max_staleness_minutes is None:
+                    max_staleness = None
+                else:
+                    max_staleness = minutes(nwp_conf.max_staleness_minutes)
+
                 # NWP is a forecast product so gets its own contiguous function
                 time_periods = datapipe_copy.find_contiguous_t0_time_periods_nwp(
-                    history_duration=timedelta(minutes=nwp_conf.history_minutes),
-                    max_staleness=timedelta(minutes=nwp_max_staleness_minutes),
-                    max_dropout=timedelta(minutes=nwp_max_dropout_minutes),
+                    history_duration=minutes(nwp_conf.history_minutes),
+                    forecast_duration=minutes(nwp_conf.forecast_minutes),
+                    max_staleness=max_staleness,
+                    max_dropout=max_dropout,
                     time_dim="init_time_utc",
                 )
 
@@ -1175,9 +1179,9 @@ def create_t0_and_loc_datapipes(
             datapipes_dict[key], datapipe_copy = datapipes_dict[key].fork(2, buffer_size=5)
 
             time_periods = datapipe_copy.find_contiguous_t0_time_periods(
-                sample_period_duration=timedelta(minutes=sample_frequency),
-                history_duration=timedelta(minutes=history_duration),
-                forecast_duration=timedelta(minutes=forecast_duration),
+                sample_period_duration=minutes(sample_frequency),
+                history_duration=minutes(history_duration),
+                forecast_duration=minutes(forecast_duration),
                 time_dim=time_dim,
             )
 
