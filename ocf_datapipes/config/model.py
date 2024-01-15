@@ -167,6 +167,19 @@ class SystemDropoutMixin(Base):
     # the range [system_dropout_fraction_min, system_dropout_fraction_max]
     system_dropout_fraction_min: float = Field(0, description="Min chance of system dropout")
     system_dropout_fraction_max: float = Field(0, description="Max chance of system dropout")
+    
+    @validator("system_dropout_fraction_min", "system_dropout_fraction_max")
+    def validate_system_dropout_fractions(cls, v):
+        assert 0 <= v <= 1
+        return v
+    
+    @root_validator()
+    def validate_system_dropout_fraction_range(cls, values):
+        assert (
+            values["system_dropout_fraction_min"] 
+            <= values["system_dropout_fraction_max"]
+        )
+        return values
 
 
 class TimeResolutionMixin(Base):
