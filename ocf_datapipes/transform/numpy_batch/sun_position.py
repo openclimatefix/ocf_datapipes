@@ -16,8 +16,8 @@ from ocf_datapipes.utils.consts import (
 from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 
 
-def _get_azimuth_and_elevation(lat, lon, dt, must_be_finite):
-    if not np.isfinite([lat, lon]).all():
+def _get_azimuth_and_elevation(lon, lat, dt, must_be_finite):
+    if not np.isfinite([lon, lat]).all():
         if must_be_finite:
             raise ValueError(f"Non-finite (lon, lat) = ({lon}, {lat}")
         return (
