@@ -44,7 +44,6 @@ def normalize_pv(x: xr.DataArray):
     return x / 3500.0  # TODO Check the actual max value
 
 
-@functional_datapipe("dict_datasets")
 class DictDatasetIterDataPipe(IterDataPipe):
     """Create a dictionary of xr.Datasets from a dict of datapipes"""
 
@@ -86,7 +85,6 @@ class DictDatasetIterDataPipe(IterDataPipe):
             yield output_dict
 
 
-@functional_datapipe("load_dict_datasets")
 class LoadDictDatasetIterDataPipe(IterDataPipe):
     """Load NetCDF files and split them back into individual xr.Datasets"""
 
