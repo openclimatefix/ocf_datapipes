@@ -20,7 +20,6 @@ from ocf_datapipes.training.common import (
     fill_nans_in_arrays,
     fill_nans_in_pv,
     normalize_gsp,
-    normalize_wind,
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
