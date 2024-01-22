@@ -38,12 +38,11 @@ def open_gfs(zarr_path: Union[Path, str]) -> xr.Dataset:
     if "valid_time" in nwp.coords.keys():
         nwp = nwp.drop("valid_time")
 
-    # nwp = nwp.resample(init_time_utc="60T").pad()
     _log.debug("Interpolating hour 0 to NWP data")
     nwp_step0 = nwp.interp(step=[pd.Timedelta(hours=0)])
     nwp = xr.concat([nwp_step0, nwp], dim="step")
-    nwp = nwp.resample(init_time_utc="60T").pad()
-    nwp = nwp.resample(step="60T").pad()
+    nwp = nwp.resample(init_time_utc="60min").pad()
+    nwp = nwp.resample(step="60min").pad()
 
     _log.debug(nwp)
 

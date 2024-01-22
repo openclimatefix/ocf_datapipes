@@ -48,7 +48,7 @@ class PVInterpolateInfillIterDataPipe(IterDataPipe):
             # Using pandas gives us more options in the interpolation
             df_interp = (
                 ds.to_pandas()
-                .resample(f"{self.time_resolution_minutes}T")
+                .resample(f"{self.time_resolution_minutes}min")
                 .interpolate(
                     method="time",
                     limit=self.fill_n,
