@@ -17,7 +17,6 @@ from typing import Dict, List, Optional, Union
 
 import git
 import numpy as np
-from nowcasting_datamodel.models.pv import providers, pv_output, solar_sheffield_passiv
 from pathy import Pathy
 from pydantic import BaseModel, Field, root_validator, validator
 
@@ -42,7 +41,7 @@ DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE = 2048
 logger = logging.getLogger(__name__)
 
 # add SV to list of providers
-providers.append("SV")
+providers = ["pvoutput.org", "solar_sheffield_passiv", "SV", "india"]
 
 
 class Base(BaseModel):
@@ -128,6 +127,60 @@ class DataSourceMixin(Base):
         return int(np.ceil(self.history_minutes / 60))
 
 
+class DropoutMixin(Base):
+    """Mixin class, to add dropout minutes"""
+
+    dropout_timedeltas_minutes: List[int] = Field(
+        None,
+        description="List of possible minutes before t0 where data availability may start. Must be "
+        "negative or zero.",
+    )
+
+    dropout_fraction: float = Field(0, description="Chance of dropout being applied to each sample")
+
+    @validator("dropout_timedeltas_minutes")
+    def dropout_timedeltas_minutes_negative(cls, v):
+        """Validate 'dropout_timedeltas_minutes'"""
+        if v is not None:
+            for m in v:
+                assert m <= 0
+        return v
+
+    @validator("dropout_fraction")
+    def dropout_fraction_valid(cls, v):
+        """Validate 'dropout_fraction'"""
+        assert 0 <= v <= 1
+        return v
+
+
+class SystemDropoutMixin(Base):
+    """Mixin class, to add independent system dropout"""
+
+    system_dropout_timedeltas_minutes: List[int] = Field(
+        None,
+        description="List of possible minutes before t0 where data availability may start. Must be "
+        "negative or zero. Each system in a sample is delayed independently from the other by "
+        "values randomly selected from this list.",
+    )
+
+    # The degree of system dropout for each returned sample will be randomly drawn from
+    # the range [system_dropout_fraction_min, system_dropout_fraction_max]
+    system_dropout_fraction_min: float = Field(0, description="Min chance of system dropout")
+    system_dropout_fraction_max: float = Field(0, description="Max chance of system dropout")
+
+    @validator("system_dropout_fraction_min", "system_dropout_fraction_max")
+    def validate_system_dropout_fractions(cls, v):
+        """Validate dropout fraction values"""
+        assert 0 <= v <= 1
+        return v
+
+    @root_validator()
+    def validate_system_dropout_fraction_range(cls, values):
+        """Ensure positive dropout fraction range"""
+        assert values["system_dropout_fraction_min"] <= values["system_dropout_fraction_max"]
+        return values
+
+
 class TimeResolutionMixin(Base):
     """Time resolution mix in"""
 
@@ -158,7 +211,7 @@ class XYDimensionalNames(Base):
         description="The y dimension name. Should be either y_osgb or latitude",
     )
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_x_y_dimension_names(cls, values):
         """Check that the x and y dimeision pair up correctly"""
 
@@ -180,39 +233,64 @@ class XYDimensionalNames(Base):
         return values
 
 
-class StartEndDatetimeMixin(Base):
-    """Mixin class to add start and end date"""
+class WindFiles(BaseModel):
+    """Model to hold pv file and metadata file"""
 
-    start_datetime: datetime = Field(
-        datetime(2020, 1, 1),
-        description="Load date from data sources from this date. "
-        "If None, this will get overwritten by InputData.start_date. ",
+    wind_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/Wind/India/India_Wind_timeseries_batch.nc",
+        description="The NetCDF files holding the wind power timeseries.",
     )
-    end_datetime: datetime = Field(
-        datetime(2021, 9, 1),
-        description="Load date from data sources up to this date. "
-        "If None, this will get overwritten by InputData.start_date. ",
+    wind_metadata_filename: str = Field(
+        "gs://solar-pv-nowcasting-data/Wind/India/India_Wind_metadata.csv",
+        description="The CSV files describing each wind system.",
     )
 
-    @root_validator
-    def check_start_and_end_datetime(cls, values):
-        """
-        Make sure start datetime is before end datetime
-        """
+    label: str = Field(str, description="Label of where the wind data came from")
 
-        start_datetime = values["start_datetime"]
-        end_datetime = values["end_datetime"]
 
-        # check start datetime is less than end datetime
-        if start_datetime >= end_datetime:
-            message = (
-                f"Start datetime ({start_datetime}) "
-                f"should be less than end datetime ({end_datetime})"
-            )
-            logger.error(message)
-            assert Exception(message)
+class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
+    """Wind configuration model"""
 
-        return values
+    wind_files_groups: List[WindFiles] = [WindFiles()]
+    wind_ml_ids: List[int] = Field(
+        None,
+        description="List of the ML IDs of the Wind systems you'd like to filter to.",
+    )
+    time_resolution_minutes: int = Field(15, description="The temporal resolution (in minutes).")
+    wind_image_size_meters_height: int = METERS_PER_ROI
+    wind_image_size_meters_width: int = METERS_PER_ROI
+    n_wind_systems_per_example: int = Field(
+        DEFAULT_N_PV_SYSTEMS_PER_EXAMPLE,
+        description="The number of Wind systems samples per example. "
+        "If there are less in the ROI then the data is padded with zeros. ",
+    )
+
+    is_live: bool = Field(
+        False, description="Option if to use live data from the nowcasting pv database"
+    )
+
+    live_interpolate_minutes: int = Field(
+        30, description="The number of minutes we allow PV data to interpolate"
+    )
+    live_load_extra_minutes: int = Field(
+        0,
+        description="The number of extra minutes in the past we should load. Then the recent "
+        "values can be interpolated, and the extra minutes removed. This is "
+        "because some live data takes ~1 hour to come in.",
+    )
+    get_center: bool = Field(
+        False,
+        description="If the batches are centered on one Wind system (or not). "
+        "The other options is to have one GSP at the center of a batch. "
+        "Typically, get_center would be set to true if and only if "
+        "WindDataSource is used to define the geospatial positions of each example.",
+    )
+
+    time_resolution_minutes: int = Field(
+        15,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
 
 
 class PVFiles(BaseModel):
@@ -228,10 +306,10 @@ class PVFiles(BaseModel):
     )
     inferred_metadata_filename: str = Field(
         None,
-        description="Tthe CSV files describing inferred PV metadata for each system.",
+        description="The CSV files describing inferred PV metadata for each system.",
     )
 
-    label: str = Field(pv_output, description="Label of where the pv data came from")
+    label: str = Field(providers[0], description="Label of where the pv data came from")
 
     @validator("label")
     def v_label0(cls, v):
@@ -243,7 +321,9 @@ class PVFiles(BaseModel):
         return v
 
 
-class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+class PV(
+    DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin, SystemDropoutMixin
+):
     """PV configuration model"""
 
     pv_files_groups: List[PVFiles] = [PVFiles()]
@@ -291,6 +371,12 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
         "because some live data takes ~1 hour to come in.",
     )
 
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
+
     @classmethod
     def model_validation(cls, v):
         """Move old way of storing filenames to new way"""
@@ -300,7 +386,9 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
                 "Loading pv files the old way, and moving them the new way. "
                 "Please update configuration file"
             )
-            label = pv_output if "pvoutput" in v.pv_filename.lower() else solar_sheffield_passiv
+            label = (
+                "pv_output.org" if "pvoutput" in v.pv_filename.lower() else "solar_sheffield_passiv"
+            )
             pv_file = PVFiles(
                 pv_filename=v.pv_filename, pv_metadata_filename=v.pv_metadata_filename, label=label
             )
@@ -311,7 +399,7 @@ class PV(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensio
         return v
 
 
-class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+class Sensor(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     """PV configuration model"""
 
     sensor_image_size_meters_height: int = METERS_PER_ROI
@@ -351,8 +439,14 @@ class Sensor(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDime
         AWOS_VARIABLE_NAMES, description="the sensor variables that are used"
     )
 
+    time_resolution_minutes: int = Field(
+        30,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
 
-class Satellite(DataSourceMixin, TimeResolutionMixin):
+
+class Satellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """Satellite configuration model"""
 
     satellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
@@ -377,14 +471,6 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
         description="The number of meters per pixel for non-HRV satellite channels.",
     )
 
-    keep_dawn_dusk_hours: int = Field(
-        0,
-        description="The number hours around dawn and dusk that should be keep. "
-        "I.e 'keep_dawn_dusk_hours'=2,"
-        " then if dawn if 07.00, "
-        " then data is keep from 06.00",
-    )
-
     is_live: bool = Field(
         False,
         description="Option if to use live data from the satelite consumer. "
@@ -396,8 +482,14 @@ class Satellite(DataSourceMixin, TimeResolutionMixin):
         30, description="The expected delay in minutes of the satellite data"
     )
 
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
+    )
 
-class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
+
+class HRVSatellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """Satellite configuration model for HRV data"""
 
     hrvsatellite_zarr_path: Union[str, tuple[str], list[str]] = Field(
@@ -414,14 +506,6 @@ class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
     hrvsatellite_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     hrvsatellite_meters_per_pixel: int = METERS_PER_PIXEL_FIELD
 
-    keep_dawn_dusk_hours: int = Field(
-        0,
-        description="The number hours around dawn and dusk that should be keep. "
-        "I.e 'keep_dawn_dusk_hours'=2,"
-        " then if dawn if 07.00, "
-        " then data is keep from 06.00",
-    )
-
     is_live: bool = Field(
         False,
         description="Option if to use live data from the satelite consumer. "
@@ -431,6 +515,12 @@ class HRVSatellite(DataSourceMixin, TimeResolutionMixin):
 
     live_delay_minutes: int = Field(
         30, description="The expected delay in minutes of the satellite data"
+    )
+
+    time_resolution_minutes: int = Field(
+        5,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
     )
 
 
@@ -499,11 +589,9 @@ class OpticalFlow(DataSourceMixin, TimeResolutionMixin):
     )
 
 
-class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensionalNames):
+class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin):
     """NWP configuration model"""
 
-    # TODO change to nwp_path, as it could be a netcdf now.
-    # https://github.com/openclimatefix/nowcasting_dataset/issues/582
     nwp_zarr_path: Union[str, tuple[str], list[str]] = Field(
         "gs://solar-pv-nowcasting-data/NWP/UK_Met_Office/UKV__2018-01_to_2019-12__chunks__variable10__init_time1__step1__x548__y704__.zarr",  # noqa: E501
         description="The path which holds the NWP zarr.",
@@ -517,6 +605,13 @@ class NWP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin, XYDimensi
     nwp_provider: str = Field("ukv", description="The provider of the NWP data")
     index_by_id: bool = Field(
         False, description="If the NWP data has an id coordinate, not x and y."
+    )
+
+    max_staleness_minutes: int = Field(
+        None,
+        description="Sets a limit on how stale an NWP init time is allowed to be whilst still being"
+        " used to construct an example. If set to None, then the max staleness is set according to"
+        " the maximum forecast horizon of the NWP and the requested forecast length.",
     )
 
     @validator("nwp_provider")
@@ -555,7 +650,7 @@ class MultiNWP(Base):
         return self.__root__.items()
 
 
-class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
+class GSP(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """GSP configuration model"""
 
     gsp_zarr_path: str = Field("gs://solar-pv-nowcasting-data/PV/GSP/v2/pv_gsp.zarr")
@@ -581,6 +676,11 @@ class GSP(DataSourceMixin, StartEndDatetimeMixin, TimeResolutionMixin):
         description="The number of extra minutes in the past we should load. Then the recent "
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
+    )
+    time_resolution_minutes: int = Field(
+        30,
+        description="The temporal resolution (in minutes) of the data."
+        "Note that this needs to be divisible by 5.",
     )
 
     @validator("history_minutes")
@@ -640,6 +740,7 @@ class InputData(Base):
     topographic: Optional[Topographic] = None
     sun: Optional[Sun] = None
     sensor: Optional[Sensor] = None
+    wind: Optional[Wind] = None
 
     default_forecast_minutes: int = Field(
         60,
@@ -665,7 +766,7 @@ class InputData(Base):
         """How many steps are there in 5 minute datasets"""
         return int((self.default_history_minutes + self.default_forecast_minutes) / 5 + 1)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def set_forecast_and_history_minutes(cls, values):
         """
         Set default history and forecast values, if needed.
@@ -685,6 +786,7 @@ class InputData(Base):
             "sun",
             "opticalflow",
             "sensor",
+            "wind",
         )
         enabled_data_sources = [
             data_source_name
@@ -725,6 +827,7 @@ class InputData(Base):
             sun=Sun(),
             opticalflow=OpticalFlow(),
             sensor=Sensor(),
+            wind=Wind(),
         )
 
 
@@ -746,6 +849,8 @@ class Configuration(Base):
             "nwp.nwp_zarr_path",
             "gsp.gsp_zarr_path",
             "sensor.sensor_filename",
+            "wind.wind_filename",
+            "wind.wind_metadata_filename",
         ]
         for cls_and_attr_name in path_attrs:
             cls_name, attribute = cls_and_attr_name.split(".")

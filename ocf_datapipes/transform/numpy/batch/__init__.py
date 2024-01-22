@@ -1,1 +1,0 @@
-"""Methods on NumpyBatch objects"""

@@ -1,8 +1,8 @@
 """Merge multiple modalities together in NumpyBatch"""
 from torch.utils.data import IterDataPipe, functional_datapipe
 
+from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.utils import Zipper
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
 
 
 @functional_datapipe("merge_numpy_modalities")

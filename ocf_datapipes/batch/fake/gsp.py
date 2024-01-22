@@ -3,9 +3,9 @@ from datetime import datetime
 
 import numpy as np
 
+from ocf_datapipes.batch import BatchKey
 from ocf_datapipes.batch.fake.utils import get_n_time_steps_from_config, make_time_utc
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.utils.consts import BatchKey
 
 
 def make_fake_gsp_data(
@@ -60,6 +60,5 @@ def make_fake_gsp_data(
     batch[BatchKey.gsp_time_utc_fourier] = np.random.random(
         (batch_size, n_times, n_fourier_features)
     )
-    batch[BatchKey.gsp_time_utc_fourier_t0] = np.random.random((batch_size, n_fourier_features))
 
     return batch

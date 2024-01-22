@@ -8,13 +8,15 @@ import xarray
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.convert import ConvertGSPToNumpy
-from ocf_datapipes.select import DropGSP, LocationPicker
+from ocf_datapipes.select import FilterGSPIDs, PickLocations
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
 )
-from ocf_datapipes.transform.xarray import PreProcessMetNet
+from ocf_datapipes.training.metnet.metnet_preprocessor import (
+    PreProcessMetNetIterDataPipe as PreProcessMetNet,
+)
 from ocf_datapipes.utils.consts import RSS_MEAN, RSS_STD, UKV_MEAN, UKV_STD
 
 xarray.set_options(keep_attrs=True)
@@ -48,7 +50,7 @@ def normalize_pv(x):  # So it can be pickled
     return x / x.observed_capacity_wp
 
 
-def _remove_nans(x):
+def _select_non_nan_times(x):
     return x.fillna(0.0)
 
 
@@ -99,7 +101,7 @@ def metnet_national_datapipe(
         use_pv=use_pv,
     )
     # Load GSP national data
-    used_datapipes["gsp"] = used_datapipes["gsp"].select_train_test_time(start_time, end_time)
+    used_datapipes["gsp"] = used_datapipes["gsp"].filter_times(start_time, end_time)
 
     # Now get overlapping time periods
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
@@ -111,7 +113,7 @@ def metnet_national_datapipe(
     gsp_history = used_datapipes["gsp"].normalize(normalize_fn=normalize_gsp)
     gsp_datapipe = used_datapipes["gsp_future"].normalize(normalize_fn=normalize_gsp)
     # Split into GSP for target, only national, and one for history
-    gsp_datapipe = DropGSP(gsp_datapipe, gsps_to_keep=[0])
+    gsp_datapipe = FilterGSPIDs(gsp_datapipe, gsps_to_keep=[0])
 
     if "nwp" in used_datapipes.keys():
         # take nwp time slices
@@ -130,23 +132,23 @@ def metnet_national_datapipe(
         )
 
     if "topo" in used_datapipes.keys():
-        topo_datapipe = used_datapipes["topo"].map(_remove_nans)
+        topo_datapipe = used_datapipes["topo"].map(_select_non_nan_times)
 
     # Now combine in the MetNet format
     modalities = []
     if gsp_in_image and "hrv" in used_datapipes.keys():
         sat_hrv_datapipe, sat_gsp_datapipe = sat_hrv_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+        gsp_history = gsp_history.filter_gsp_ids(gsps_to_keep=[0]).create_gsp_image(
             image_datapipe=sat_gsp_datapipe
         )
     elif gsp_in_image and "sat" in used_datapipes.keys():
         sat_datapipe, sat_gsp_datapipe = sat_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+        gsp_history = gsp_history.filter_gsp_ids(gsps_to_keep=[0]).create_gsp_image(
             image_datapipe=sat_gsp_datapipe
         )
     elif gsp_in_image and "nwp" in used_datapipes.keys():
         nwp_datapipe, nwp_gsp_datapipe = nwp_datapipe.fork(2)
-        gsp_history = gsp_history.drop_gsp(gsps_to_keep=[0]).create_gsp_image(
+        gsp_history = gsp_history.filter_gsp_ids(gsps_to_keep=[0]).create_gsp_image(
             image_datapipe=nwp_gsp_datapipe, image_dim="osgb"
         )
     if "nwp" in used_datapipes.keys():
@@ -162,7 +164,7 @@ def metnet_national_datapipe(
 
     gsp_datapipe, gsp_loc_datapipe = gsp_datapipe.fork(2, buffer_size=5)
 
-    location_datapipe = LocationPicker(gsp_loc_datapipe)
+    location_datapipe = PickLocations(gsp_loc_datapipe)
 
     metnet_datapipe = PreProcessMetNet(
         modalities,
@@ -178,7 +180,7 @@ def metnet_national_datapipe(
     gsp_datapipe = ConvertGSPToNumpy(gsp_datapipe)
 
     if not gsp_in_image:
-        gsp_history = gsp_history.map(_remove_nans)
+        gsp_history = gsp_history.map(_select_non_nan_times)
         gsp_history = ConvertGSPToNumpy(gsp_history, return_id=True)
         return metnet_datapipe.zip_ocf(gsp_history, gsp_datapipe)  # Makes (Inputs, Label) tuples
     else:

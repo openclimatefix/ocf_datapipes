@@ -9,4 +9,4 @@ below.
 
 - `metnet_preprocessor` returns a numpy array of the processed Xarray inputs following the description in the MetNet
   2021 paper.
-- `get_contiguous_time_periods` returns pandas DataFrames that contains the contiguous time periods
+- `find_contiguous_t0_time_periods` returns pandas DataFrames that contains the contiguous time periods

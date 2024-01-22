@@ -3,7 +3,7 @@ import logging
 
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch
+from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class ConvertGSPToNumpyBatchIterDataPipe(IterDataPipe):
             ):
                 if dataset_key in xr_data.coords.keys():
                     values = xr_data[dataset_key].values
-                    # Expand dims so EncodeSpaceTime works!
+                    # Expand dims so AddFourierSpaceTime works!
                     example[batch_key] = values  # np.expand_dims(values, axis=1)
 
             yield example

@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from torch.utils.data.datapipes.iter import IterableWrapper
 
-from ocf_datapipes.utils.consts import BatchKey, NWPBatchKey, NumpyBatch, NWPNumpyBatch
+from ocf_datapipes.batch import BatchKey, NWPBatchKey, NumpyBatch, NWPNumpyBatch
 
 
 from ocf_datapipes.batch.merge_numpy_examples_to_batch import (
@@ -27,7 +27,15 @@ def _single_batch_sample(fill_value):
     )  # shape: (time, variable, x, y)
     sample_nwp_ukv[NWPBatchKey.nwp_channel_names] = ["a", "b"]  # shape: (variable,)
 
-    sample[BatchKey.nwp] = {"ukv": sample_nwp_ukv}
+    sample_nwp_ecmwf: NWPNumpyBatch = {}
+    sample_nwp_ecmwf[NWPBatchKey.nwp] = np.full(
+        (8, 4, 12, 12), fill_value
+    )  # shape: (time, variable, x, y)
+
+    sample[BatchKey.nwp] = {
+        "ukv": sample_nwp_ukv,
+        "ecmwf": sample_nwp_ecmwf,
+    }
 
     return sample
 

@@ -2,7 +2,7 @@
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import NumpyBatch
+from ocf_datapipes.batch import NumpyBatch
 
 
 @functional_datapipe("convert_pv_to_numpy")

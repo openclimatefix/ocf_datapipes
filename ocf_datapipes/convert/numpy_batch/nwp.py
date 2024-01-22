@@ -2,7 +2,7 @@
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import NWPBatchKey, NWPNumpyBatch
+from ocf_datapipes.batch import NWPBatchKey, NWPNumpyBatch
 from ocf_datapipes.utils.utils import datetime64_to_float
 
 

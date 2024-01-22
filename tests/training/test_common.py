@@ -2,7 +2,7 @@ import pytest
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes.iter import Zipper
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.utils.consts import Location
+from ocf_datapipes.utils import Location
 from torch.utils.data import DataLoader
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
@@ -20,7 +20,7 @@ import numpy as np
 
 def test_open_and_return_datapipes(configuration_filename):
     used_datapipes = open_and_return_datapipes(configuration_filename)
-    expected_keys = set(["nwp", "config", "topo", "gsp", "pv", "sat", "hrv"])
+    expected_keys = set(["nwp", "config", "wind", "topo", "gsp", "pv", "sat", "hrv"])
     assert set(used_datapipes.keys()) == expected_keys
     for key in expected_keys - set(["nwp", "config"]):
         assert isinstance(used_datapipes[key], IterDataPipe)
@@ -33,7 +33,7 @@ def test_get_and_return_overlapping_time_periods_and_t0(configuration_filename):
     used_datapipes = open_and_return_datapipes(configuration_filename)
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
 
-    datapipe_keys = set(["gsp", "hrv", "nwp/ukv", "pv", "sat"])
+    datapipe_keys = set(["gsp", "hrv", "nwp/ukv", "pv", "sat", "wind"])
     t0_keys = set([f"{k}_t0" for k in datapipe_keys])
     extra_keys = set(["config", "topo"])
 
@@ -48,7 +48,9 @@ def test_add_selected_time_slices_from_datapipes(configuration_filename):
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
 
-    datapipe_keys = set(["gsp", "gsp_future", "pv", "pv_future", "hrv", "nwp/ukv", "sat"])
+    datapipe_keys = set(
+        ["gsp", "gsp_future", "pv", "pv_future", "hrv", "nwp/ukv", "sat", "wind", "wind_future"]
+    )
     extra_keys = set(["config", "topo"])
 
     assert set(used_datapipes.keys()) == datapipe_keys.union(extra_keys)
@@ -67,7 +69,20 @@ def test_add_selected_time_slices_from_datapipes_fork_iterations(configuration_f
     used_datapipes = get_and_return_overlapping_time_periods_and_t0(used_datapipes)
     used_datapipes = add_selected_time_slices_from_datapipes(used_datapipes)
 
-    datapipe_keys = set(["gsp", "gsp_future", "pv", "pv_future", "hrv", "nwp/ukv", "sat", "topo"])
+    datapipe_keys = set(
+        [
+            "gsp",
+            "gsp_future",
+            "pv",
+            "pv_future",
+            "hrv",
+            "nwp/ukv",
+            "sat",
+            "topo",
+            "wind",
+            "wind_future",
+        ]
+    )
 
     # Zip datapipes together
     zipped = Zipper(*[used_datapipes[k] for k in datapipe_keys])

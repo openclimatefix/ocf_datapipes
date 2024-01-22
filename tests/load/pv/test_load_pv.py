@@ -19,11 +19,23 @@ def test_open_passiv_from_nc():
     assert len(data.pv_system_id) == 2
 
 
-def test_open_passiv_from_parquet(pv_parquet_file):
-    pv = PV(
-        start_datetime=datetime(2018, 1, 1),
-        end_datetime=datetime(2023, 1, 1),
+def test_open_india_from_nc():
+    pv = PV()
+    pv_file = PVFiles(
+        pv_filename="tests/data/pv/india/test.nc",
+        pv_metadata_filename="tests/data/pv/india/india_solar_metadata.csv",
+        label="india",
     )
+    pv.pv_files_groups = [pv_file]
+
+    pv_datapipe = OpenPVFromNetCDF(pv=pv)
+    data = next(iter(pv_datapipe))
+    assert data is not None
+    assert len(data.pv_system_id) == 1
+
+
+def test_open_passiv_from_parquet(pv_parquet_file):
+    pv = PV()
     pv_file = PVFiles(
         pv_filename=pv_parquet_file,
         pv_metadata_filename="tests/data/pv/passiv/UK_PV_metadata.csv",
@@ -77,6 +89,7 @@ def test_open_both_from_nc():
     pv_file_passiv = PVFiles(
         pv_filename="tests/data/pv/passiv/test.nc",
         pv_metadata_filename="tests/data/pv/passiv/UK_PV_metadata.csv",
+        label="solar_sheffield_passiv",
     )
     pv.pv_files_groups = [pv_file, pv_file_passiv]
 

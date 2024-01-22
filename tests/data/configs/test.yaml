@@ -6,6 +6,8 @@ input_data:
   gsp:
     gsp_zarr_path: tests/data/gsp/test.zarr
     history_minutes: 120
+    dropout_timedeltas_minutes: [-30]
+    dropout_fraction: 0.1
   nwp:
     ukv:
       nwp_channels:
@@ -18,6 +20,18 @@ input_data:
       forecast_minutes: 120
       time_resolution_minutes: 60
       index_by_id: True
+      dropout_timedeltas_minutes: [-180]
+      dropout_fraction: 1.0
+  wind:
+    wind_files_groups:
+      - label: india
+        wind_filename: tests/data/wind/wind_test_data.nc
+        wind_metadata_filename: tests/data/wind/wind_metadata.csv
+    get_center: false
+    wind_image_size_meters_height: 10000000
+    wind_image_size_meters_width: 10000000
+    n_wind_systems_per_example: 1
+    wind_ml_ids: []
   pv:
     pv_files_groups:
       - label: solar_sheffield_passiv
@@ -30,9 +44,10 @@ input_data:
     pv_image_size_meters_height: 10000000
     pv_image_size_meters_width: 10000000
     n_pv_systems_per_example: 32
-    start_datetime: "2010-01-01 00:00:00"
-    end_datetime: "2030-01-01 00:00:00"
     pv_ml_ids: []
+    system_dropout_timedeltas_minutes: [-15, -10, -5, 0]
+    system_dropout_fraction_min: 0
+    system_dropout_fraction_max: 0.2
   satellite:
     satellite_channels:
       - IR_016
@@ -47,6 +62,8 @@ input_data:
     hrvsatellite_zarr_path: tests/data/hrv_sat_data.zarr
     history_minutes: 30
     forecast_minutes: 60
+    dropout_timedeltas_minutes: [-60, -30]
+    dropout_fraction: 1.0
   sun:
     sun_zarr_path: tests/data/sun/test.zarr
   topographic:

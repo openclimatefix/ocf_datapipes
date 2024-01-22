@@ -1,12 +1,81 @@
+import numpy as np
+import xarray as xr
+from ocf_datapipes.utils import Location
+
 from ocf_datapipes.select import (
-    LocationPicker,
+    PickLocations,
     SelectSpatialSliceMeters,
     SelectSpatialSlicePixels,
 )
 
+from ocf_datapipes.select.select_spatial_slice import select_spatial_slice_pixels
+
+
+def test_select_spatial_slice_pixels_function():
+    # Create dummy data
+    x = np.arange(100)
+    y = np.arange(100)[::-1]
+
+    xr_data = xr.Dataset(
+        data_vars=dict(
+            data=(["x", "y"], np.random.normal(size=(len(x), len(y)))),
+        ),
+        coords=dict(
+            x=(["x"], x),
+            y=(["y"], y),
+        ),
+    )
+
+    center_idx = Location(x=10, y=10, coordinate_system="idx")
+
+    # Select window which lies within data
+    xr_selected = select_spatial_slice_pixels(
+        xr_data,
+        center_idx,
+        width_pixels=10,
+        height_pixels=10,
+        xr_x_dim="x",
+        xr_y_dim="y",
+        allow_partial_slice=True,
+    )
+
+    assert (xr_selected.x.values == np.arange(5, 15)).all()
+    assert (xr_selected.y.values == np.arange(85, 95)[::-1]).all()
+    assert not xr_selected.data.isnull().any()
+
+    # Select window where the edge of the window lies at the edge of the data
+    xr_selected = select_spatial_slice_pixels(
+        xr_data,
+        center_idx,
+        width_pixels=20,
+        height_pixels=20,
+        xr_x_dim="x",
+        xr_y_dim="y",
+        allow_partial_slice=True,
+    )
+
+    assert (xr_selected.x.values == np.arange(0, 20)).all()
+    assert (xr_selected.y.values == np.arange(80, 100)[::-1]).all()
+    assert not xr_selected.data.isnull().any()
+
+    # Select window which is partially outside the boundary of the data
+    xr_selected = select_spatial_slice_pixels(
+        xr_data,
+        center_idx,
+        width_pixels=30,
+        height_pixels=30,
+        xr_x_dim="x",
+        xr_y_dim="y",
+        allow_partial_slice=True,
+    )
+
+    assert (xr_selected.x.values == np.arange(-5, 25)).all(), xr_selected.x.values
+    assert (xr_selected.y.values == np.arange(75, 105)[::-1]).all(), xr_selected.y.values
+    assert xr_selected.data.isnull().sum() == 275
+
 
 def test_select_spatial_slice_meters_passiv(passiv_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe)
+    loc_datapipe = PickLocations(passiv_datapipe)
     passiv_datapipe = SelectSpatialSliceMeters(
         passiv_datapipe,
         location_datapipe=loc_datapipe,
@@ -19,7 +88,7 @@ def test_select_spatial_slice_meters_passiv(passiv_datapipe):
 
 
 def test_select_spatial_slice_pixels_hrv(passiv_datapipe, sat_hrv_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe)
+    loc_datapipe = PickLocations(passiv_datapipe)
     sat_hrv_datapipe = SelectSpatialSlicePixels(
         sat_hrv_datapipe,
         location_datapipe=loc_datapipe,
@@ -32,7 +101,7 @@ def test_select_spatial_slice_pixels_hrv(passiv_datapipe, sat_hrv_datapipe):
 
 
 def test_select_spatial_slice_pixel_icon_eu(passiv_datapipe, icon_eu_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe)
+    loc_datapipe = PickLocations(passiv_datapipe)
     icon_eu_datapipe = SelectSpatialSlicePixels(
         icon_eu_datapipe,
         location_datapipe=loc_datapipe,
@@ -45,7 +114,7 @@ def test_select_spatial_slice_pixel_icon_eu(passiv_datapipe, icon_eu_datapipe):
 
 
 def test_select_spatial_slice_pixel_icon_global(passiv_datapipe, icon_global_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
+    loc_datapipe = PickLocations(passiv_datapipe, return_all_locations=True)
     icon_global_datapipe = SelectSpatialSlicePixels(
         icon_global_datapipe,
         location_datapipe=loc_datapipe,
@@ -59,7 +128,7 @@ def test_select_spatial_slice_pixel_icon_global(passiv_datapipe, icon_global_dat
 
 
 def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe)
+    loc_datapipe = PickLocations(passiv_datapipe)
     icon_eu_datapipe = SelectSpatialSliceMeters(
         icon_eu_datapipe,
         location_datapipe=loc_datapipe,
@@ -77,7 +146,7 @@ def test_select_spatial_slice_meters_icon_eu(passiv_datapipe, icon_eu_datapipe):
 
 
 def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_datapipe):
-    loc_datapipe = LocationPicker(passiv_datapipe, return_all_locations=True)
+    loc_datapipe = PickLocations(passiv_datapipe, return_all_locations=True)
     icon_global_datapipe = SelectSpatialSliceMeters(
         icon_global_datapipe,
         location_datapipe=loc_datapipe,

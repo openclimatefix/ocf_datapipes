@@ -26,8 +26,6 @@ def load_yaml_configuration(filename: Union[str, Pathy]) -> Configuration:
     with fsspec.open(filename, mode="r") as stream:
         configuration = parse_config(data=stream)
         # this means we can load ENVs in the yaml file
-
     # turn into pydantic class
     configuration = Configuration(**configuration)
-
     return configuration

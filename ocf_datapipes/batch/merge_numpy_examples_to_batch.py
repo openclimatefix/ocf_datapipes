@@ -5,7 +5,7 @@ from typing import Sequence, Union
 import numpy as np
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.utils.consts import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch
+from ocf_datapipes.batch import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch
 
 logger = logging.getLogger(__name__)
 
@@ -73,12 +73,14 @@ def stack_np_examples_into_batch(dict_list: Sequence[NumpyBatch]) -> NumpyBatch:
         if batch_key == BatchKey.nwp:
             nwp_batch: dict[str, NWPNumpyBatch] = {}
 
-            # Unpack keys
+            # Unpack source keys
             nwp_sources = list(dict_list[0][BatchKey.nwp].keys())
-            nwp_batch_keys = list(dict_list[0][BatchKey.nwp][nwp_sources[0]].keys())
-            for nwp_source in nwp_sources:
-                nwp_source_batch: NWPNumpyBatch = {}
 
+            for nwp_source in nwp_sources:
+                # Keys can be different for different NWPs
+                nwp_batch_keys = list(dict_list[0][BatchKey.nwp][nwp_source].keys())
+
+                nwp_source_batch: NWPNumpyBatch = {}
                 for nwp_batch_key in nwp_batch_keys:
                     nwp_source_batch[nwp_batch_key] = stack_data_list(
                         [d[BatchKey.nwp][nwp_source][nwp_batch_key] for d in dict_list],
@@ -136,9 +138,12 @@ def unstack_np_batch_into_examples(batch: NumpyBatch):
 
                 # Unpack keys
                 nwp_sources = list(batch[BatchKey.nwp].keys())
-                nwp_keys = list(batch[BatchKey.nwp][nwp_sources[0]].keys())
+
                 for nwp_source in nwp_sources:
                     nwp_source_batch: NWPNumpyBatch = {}
+
+                    # Keys can be different for each NWP source
+                    nwp_keys = list(batch[BatchKey.nwp][nwp_source].keys())
 
                     for nwp_key in nwp_keys:
                         nwp_source_batch[nwp_key] = extract_sample_from_batch(
