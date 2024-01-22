@@ -2,7 +2,6 @@
 import warnings
 
 import numpy as np
-import pandas as pd
 import pvlib
 from torch.utils.data import IterDataPipe, functional_datapipe
 
