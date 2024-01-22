@@ -52,7 +52,7 @@ def test_drop_with_constructed_dataarray():
     # 1 and 2, produce no power in the night
     # 3 produces power in the night
 
-    time = pd.date_range(start="2022-01-01", freq="5T", periods=289)
+    time = pd.date_range(start="2022-01-01", freq="5min", periods=289)
     pv_system_id = [1, 2, 3]
     ALL_COORDS = {"time_utc": time, "pv_system_id": pv_system_id}
 

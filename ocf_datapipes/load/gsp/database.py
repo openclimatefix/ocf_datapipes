@@ -140,13 +140,13 @@ def get_gsp_power_from_database(
     logger.debug(f"Getting {len(gsp_ids)} gsp ids")
 
     extra_duration = timedelta(minutes=load_extra_minutes)
-    now = pd.to_datetime(datetime.now(tz=timezone.utc)).floor("30T")
+    now = pd.to_datetime(datetime.now(tz=timezone.utc)).floor("30min")
     start_utc = now - history_duration
     start_utc_extra = start_utc - extra_duration
 
     # create empty dataframe with 30 mins periods
     empty_df = pd.DataFrame(
-        index=pd.date_range(start=start_utc_extra, end=now, freq="30T", tz=timezone.utc)
+        index=pd.date_range(start=start_utc_extra, end=now, freq="30min", tz=timezone.utc)
     )
 
     # make database connection

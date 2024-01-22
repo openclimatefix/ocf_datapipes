@@ -157,7 +157,7 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
     # Satellite datetimes can sometimes be 04, 09, minutes past the hour, or other slight offsets.
     # These slight offsets will break downstream code, which expects satellite data to be at
     # exactly 5 minutes past the hour.
-    assert (datetime_index == datetime_index.round("5T")).all()
+    assert (datetime_index == datetime_index.round("5min")).all()
 
     _log.info("Opened satellite data")
 

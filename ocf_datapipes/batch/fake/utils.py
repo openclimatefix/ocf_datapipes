@@ -16,7 +16,7 @@ def make_t0_datetimes_utc(batch_size, temporally_align_examples: bool = False):
     Returns: pandas index of t0 datetimes
     """
 
-    all_datetimes = pd.date_range("2023-01-01", "2023-02-01", freq="5T")
+    all_datetimes = pd.date_range("2023-01-01", "2023-02-01", freq="5min")
 
     if temporally_align_examples:
         t0_datetimes_utc = list(np.random.choice(all_datetimes, size=1)) * batch_size
@@ -86,7 +86,7 @@ def make_time_utc(
     start_datetime = t0_datetime_utc - timedelta(minutes=history_minutes)
     end_datetime = t0_datetime_utc + timedelta(minutes=forecast_minutes)
     time_utc = pd.date_range(
-        start=start_datetime, end=end_datetime, freq=f"{time_resolution_minutes}T"
+        start=start_datetime, end=end_datetime, freq=f"{time_resolution_minutes}min"
     )
 
     time_utc = time_utc.values.astype("datetime64[s]")

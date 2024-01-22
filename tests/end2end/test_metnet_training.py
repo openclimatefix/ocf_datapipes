@@ -146,10 +146,10 @@ def test_metnet_production(
     sat_hrv_datapipe = Normalize(
         sat_hrv_datapipe, mean=RSS_MEAN.sel(channel="HRV") / 4, std=RSS_STD.sel(channel="HRV") / 4
     ).map(
-        lambda x: x.resample(time_utc="5T").interpolate("linear")
+        lambda x: x.resample(time_utc="5min").interpolate("linear")
     )  # Interplate to 5 minutes incase its 15 minutes
     sat_datapipe = Normalize(sat_datapipe, mean=RSS_MEAN, std=RSS_STD).map(
-        lambda x: x.resample(time_utc="5T").interpolate("linear")
+        lambda x: x.resample(time_utc="5min").interpolate("linear")
     )  # Interplate to 5 minutes incase its 15 minutes
     nwp_datapipe = Normalize(nwp_datapipe, mean=UKV_MEAN, std=UKV_STD)
     topo_datapipe = Normalize(topo_datapipe, calculate_mean_std_from_example=True)
