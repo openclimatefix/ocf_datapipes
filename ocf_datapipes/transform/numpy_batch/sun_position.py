@@ -126,7 +126,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             assert len(time_utc.shape) in [1, 2]
             is_batched = len(time_utc.shape) == 2
 
-            times = pd.to_datetime(time_utc, unit="s")
+            times = time_utc.astype("datetime64[s]")
 
             if is_batched:
                 assert lons.shape == (time_utc.shape[0],)
