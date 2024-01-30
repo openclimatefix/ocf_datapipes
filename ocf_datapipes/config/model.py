@@ -174,7 +174,7 @@ class SystemDropoutMixin(Base):
         assert 0 <= v <= 1
         return v
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_system_dropout_fraction_range(self):
         """Ensure positive dropout fraction range"""
         assert self.system_dropout_fraction_min <= self.system_dropout_fraction_max
@@ -211,7 +211,7 @@ class XYDimensionalNames(Base):
         description="The y dimension name. Should be either y_osgb or latitude",
     )
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_x_y_dimension_names(self):
         """Check that the x and y dimeision pair up correctly"""
 
@@ -766,7 +766,7 @@ class InputData(Base):
         """How many steps are there in 5 minute datasets"""
         return int((self.default_history_minutes + self.default_forecast_minutes) / 5 + 1)
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def set_forecast_and_history_minutes(self):
         """
         Set default history and forecast values, if needed.
