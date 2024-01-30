@@ -653,6 +653,10 @@ class MultiNWP(Base):
 class GSP(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
     """GSP configuration model"""
 
+    # Note this is the pydantic 1.10 way to do this.
+    class Config:
+        extra = 'allow'
+
     gsp_zarr_path: str = Field("gs://solar-pv-nowcasting-data/PV/GSP/v2/pv_gsp.zarr")
     n_gsp_per_example: int = Field(
         DEFAULT_N_GSP_PER_EXAMPLE,
