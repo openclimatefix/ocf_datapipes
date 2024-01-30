@@ -130,8 +130,8 @@ class DataSourceMixin(Base):
 class DropoutMixin(Base):
     """Mixin class, to add dropout minutes"""
 
-    dropout_timedeltas_minutes: List[int] = Field(
-        None,
+    dropout_timedeltas_minutes: Optional[List[int]] = Field(
+        default=None,
         description="List of possible minutes before t0 where data availability may start. Must be "
         "negative or zero.",
     )
@@ -296,20 +296,20 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixi
 class PVFiles(BaseModel):
     """Model to hold pv file and metadata file"""
 
-    pv_filename: str = Field(
+    pv_filename: Optional[str] = Field(
         "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_timeseries_batch.nc",
         description="The NetCDF files holding the solar PV power timeseries.",
     )
-    pv_metadata_filename: str = Field(
+    pv_metadata_filename: Optional[str] = Field(
         "gs://solar-pv-nowcasting-data/PV/PVOutput.org/UK_PV_metadata.csv",
         description="Tthe CSV files describing each PV system.",
     )
-    inferred_metadata_filename: str = Field(
+    inferred_metadata_filename: Optional[str] = Field(
         None,
         description="The CSV files describing inferred PV metadata for each system.",
     )
 
-    label: str = Field(providers[0], description="Label of where the pv data came from")
+    label: Optional[str] = Field(providers[0], description="Label of where the pv data came from")
 
     @validator("label")
     def v_label0(cls, v):
@@ -343,11 +343,11 @@ class PV(
         "PVDataSource is used to define the geospatial positions of each example.",
     )
 
-    pv_filename: str = Field(
+    pv_filename: Optional[str] = Field(
         None,
         description="The NetCDF files holding the solar PV power timeseries.",
     )
-    pv_metadata_filename: str = Field(
+    pv_metadata_filename: Optional[str] = Field(
         None,
         description="Tthe CSV files describing each PV system.",
     )
@@ -607,7 +607,7 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin
         False, description="If the NWP data has an id coordinate, not x and y."
     )
 
-    max_staleness_minutes: int = Field(
+    max_staleness_minutes: Optional[int] = Field(
         None,
         description="Sets a limit on how stale an NWP init time is allowed to be whilst still being"
         " used to construct an example. If set to None, then the max staleness is set according to"
