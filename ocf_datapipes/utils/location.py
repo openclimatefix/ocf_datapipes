@@ -2,7 +2,7 @@
 from typing import Optional
 
 import numpy as np
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 
 
 class Location(BaseModel):
@@ -11,7 +11,7 @@ class Location(BaseModel):
     coordinate_system: Optional[str] = "osgb"  # ["osgb", "lon_lat", "geostationary", "idx"]
     x: float
     y: float
-    id: Optional[int]
+    id: Optional[int] = Field(None)
 
     @validator("coordinate_system", pre=True, always=True)
     def validate_coordinate_system(cls, v):

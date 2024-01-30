@@ -205,7 +205,6 @@ def db_connection(pv_system_db_data):
         with connection.engine.connect() as conn:
             df_gen.to_sql(name="generation", con=conn, index=False)
             df_meta.to_sql(name="sites", con=conn, index=False)
-            conn.commit()
 
         yield connection
 
