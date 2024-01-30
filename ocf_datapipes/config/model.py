@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Union
 import git
 import numpy as np
 from pathy import Pathy
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, RootModel, model_validator, validator
 
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
@@ -174,11 +174,11 @@ class SystemDropoutMixin(Base):
         assert 0 <= v <= 1
         return v
 
-    @root_validator()
-    def validate_system_dropout_fraction_range(cls, values):
+    @model_validator(mode='after')
+    def validate_system_dropout_fraction_range(self):
         """Ensure positive dropout fraction range"""
-        assert values["system_dropout_fraction_min"] <= values["system_dropout_fraction_max"]
-        return values
+        assert self.system_dropout_fraction_min <= self.system_dropout_fraction_max
+        return self
 
 
 class TimeResolutionMixin(Base):
@@ -211,12 +211,12 @@ class XYDimensionalNames(Base):
         description="The y dimension name. Should be either y_osgb or latitude",
     )
 
-    @root_validator(skip_on_failure=True)
-    def check_x_y_dimension_names(cls, values):
+    @model_validator(mode='after')
+    def check_x_y_dimension_names(self):
         """Check that the x and y dimeision pair up correctly"""
 
-        x_dim_name = values["x_dim_name"]
-        y_dim_name = values["y_dim_name"]
+        x_dim_name = self.x_dim_name
+        y_dim_name = self.y_dim_name
 
         assert x_dim_name in ["x_osgb", "longitude", "x"]
         assert y_dim_name in ["y_osgb", "latitude", "y"]
@@ -230,7 +230,7 @@ class XYDimensionalNames(Base):
         if x_dim_name == "longitude":
             assert y_dim_name == "latitude"
 
-        return values
+        return self
 
 
 class WindFiles(BaseModel):
@@ -624,30 +624,30 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin
         return v
 
 
-class MultiNWP(Base):
+class MultiNWP(RootModel):
     """Configuration for multiple NWPs"""
 
-    __root__: Dict[str, NWP]
+    root: Dict[str, NWP]
 
     def __getattr__(self, item):
-        return self.__root__[item]
+        return self.root[item]
 
     def __getitem__(self, item):
-        return self.__root__[item]
+        return self.root[item]
 
     def __len__(self):
-        return len(self.__root__)
+        return len(self.root)
 
     def __iter__(self):
-        return iter(self.__root__)
+        return iter(self.root)
 
     def keys(self):
         """Returns dictionary-like keys"""
-        return self.__root__.keys()
+        return self.root.keys()
 
     def items(self):
         """Returns dictionary-like items"""
-        return self.__root__.items()
+        return self.root.items()
 
 
 class GSP(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
@@ -766,8 +766,8 @@ class InputData(Base):
         """How many steps are there in 5 minute datasets"""
         return int((self.default_history_minutes + self.default_forecast_minutes) / 5 + 1)
 
-    @root_validator(skip_on_failure=True)
-    def set_forecast_and_history_minutes(cls, values):
+    @model_validator(mode='after')
+    def set_forecast_and_history_minutes(self):
         """
         Set default history and forecast values, if needed.
 
@@ -791,25 +791,25 @@ class InputData(Base):
         enabled_data_sources = [
             data_source_name
             for data_source_name in ALL_DATA_SOURCE_NAMES
-            if values[data_source_name] is not None
+            if getattr(self, data_source_name) is not None
         ]
 
         for data_source_name in enabled_data_sources:
-            if values[data_source_name].forecast_minutes is None:
-                values[data_source_name].forecast_minutes = values["default_forecast_minutes"]
+            if getattr(self, data_source_name).forecast_minutes is None:
+                getattr(self, data_source_name).forecast_minutes = self.default_forecast_minutes
 
-            if values[data_source_name].history_minutes is None:
-                values[data_source_name].history_minutes = values["default_history_minutes"]
+            if getattr(self, data_source_name).history_minutes is None:
+                getattr(self, data_source_name).history_minutes = self.default_history_minutes
 
-        if values["nwp"] is not None:
-            for k in values["nwp"].keys():
-                if values["nwp"][k].forecast_minutes is None:
-                    values["nwp"][k].forecast_minutes = values["default_forecast_minutes"]
+        if self.nwp is not None:
+            for k in self.nwp.keys():
+                if self.nwp[k].forecast_minutes is None:
+                    self.nwp[k].forecast_minutes = self.default_forecast_minutes
 
-                if values["nwp"][k].history_minutes is None:
-                    values["nwp"][k].history_minutes = values["default_history_minutes"]
+                if self.nwp[k].history_minutes is None:
+                    self.nwp[k].history_minutes = self.default_history_minutes
 
-        return values
+        return self
 
     @classmethod
     def set_all_to_defaults(cls):
