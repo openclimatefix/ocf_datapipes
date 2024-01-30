@@ -9,7 +9,7 @@ pandas
 rioxarray
 pathy
 pyaml_env
-nowcasting_datamodel
+nowcasting_datamodel==1.5.30
 gitpython
 geopandas
 dask
