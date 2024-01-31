@@ -126,13 +126,11 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
     def __init__(
         self,
         dataset_dict_dp: IterDataPipe,
-        configuration: Configuration,
         check_satellite_no_zeros: bool = False,
     ):
         """Init"""
         super().__init__()
         self.dataset_dict_dp = dataset_dict_dp
-        self.configuration = configuration
         self.check_satellite_no_zeros = check_satellite_no_zeros
 
     def __iter__(self):
@@ -353,7 +351,6 @@ def split_dataset_dict_dp(element):
 
 
 def windnet_netcdf_datapipe(
-    config_filename: str,
     keys: List[str],
     filenames: List[str],
 ) -> IterDataPipe:
@@ -369,14 +366,12 @@ def windnet_netcdf_datapipe(
         Datapipe that transforms the NetCDF files to numpy batch
     """
     logger.info("Constructing windnet file pipeline")
-    config_datapipe = OpenConfiguration(config_filename)
-    configuration: Configuration = next(iter(config_datapipe))
     # Load files
     datapipe_dict_dp: IterDataPipe = LoadDictDatasetIterDataPipe(
         filenames=filenames,
         keys=keys,
     ).map(split_dataset_dict_dp)
-    datapipe = datapipe_dict_dp.windnet_convert_to_numpy_batch(configuration=configuration)
+    datapipe = datapipe_dict_dp.windnet_convert_to_numpy_batch()
 
     return datapipe
 
