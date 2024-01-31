@@ -8,11 +8,10 @@ from ocf_datapipes.transform.numpy_batch.sun_position import _get_azimuth_and_el
 
 
 def test_get_azimuth_and_elevation():
-
     lon = -0.8
     lat = 51.64
-    times = ['2024-01-31T12:30:00', '2024-01-31T13:00:00']
-    times = np.array([datetime.fromisoformat(time) for time in times], dtype='datetime64[s]')
+    times = ["2024-01-31T12:30:00", "2024-01-31T13:00:00"]
+    times = np.array([datetime.fromisoformat(time) for time in times], dtype="datetime64[s]")
 
     azimuth, elevation = _get_azimuth_and_elevation(lon=lon, lat=lat, dt=times, must_be_finite=True)
     assert elevation.mean() > 20
