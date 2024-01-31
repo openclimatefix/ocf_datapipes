@@ -8,10 +8,6 @@ from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
 
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
-from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import (
-    OpenConfiguration,
-)
 from ocf_datapipes.training.common import (
     DatapipeKeyForker,
     _get_datapipes_dict,
@@ -41,7 +37,7 @@ logger = logging.getLogger("pvnet_site_datapipe")
 
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
-    return x / 3500.0  # TODO Check the actual max value
+    return x / 3773.0  # TODO Check the actual max value
 
 
 class DictDatasetIterDataPipe(IterDataPipe):
@@ -124,13 +120,11 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
     def __init__(
         self,
         dataset_dict_dp: IterDataPipe,
-        configuration: Configuration,
         check_satellite_no_zeros: bool = False,
     ):
         """Init"""
         super().__init__()
         self.dataset_dict_dp = dataset_dict_dp
-        self.configuration = configuration
         self.check_satellite_no_zeros = check_satellite_no_zeros
 
     def __iter__(self):
@@ -351,7 +345,6 @@ def split_dataset_dict_dp(element):
 
 
 def pvnet_site_netcdf_datapipe(
-    config_filename: str,
     keys: List[str],
     filenames: List[str],
 ) -> IterDataPipe:
@@ -359,7 +352,6 @@ def pvnet_site_netcdf_datapipe(
     Load the saved Datapipes from pvnet site, and transform to numpy batch
 
     Args:
-        config_filename: Path to config file.
         keys: List of keys to extract from the single NetCDF files
         filenames: List of NetCDF files to load
 
@@ -367,33 +359,21 @@ def pvnet_site_netcdf_datapipe(
         Datapipe that transforms the NetCDF files to numpy batch
     """
     logger.info("Constructing pvnet site file pipeline")
-    config_datapipe = OpenConfiguration(config_filename)
-    configuration: Configuration = next(iter(config_datapipe))
     # Load files
     datapipe_dict_dp: IterDataPipe = LoadDictDatasetIterDataPipe(
         filenames=filenames,
         keys=keys,
     ).map(split_dataset_dict_dp)
-    datapipe = datapipe_dict_dp.pvnet_site_convert_to_numpy_batch(configuration=configuration)
+    datapipe = datapipe_dict_dp.pvnet_site_convert_to_numpy_batch()
 
     return datapipe
 
 
 if __name__ == "__main__":
-    # Load the ECMWF and sensor data here
-    datapipe = pvnet_site_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        start_time=datetime(2023, 1, 1),
-        end_time=datetime(2023, 11, 2),
-    )
-    batch = next(iter(datapipe))
-    print(batch)
-    batch.to_netcdf("test.nc", engine="h5netcdf")
     # Load the saved NetCDF files here
     datapipe = pvnet_site_netcdf_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
         keys=["nwp", "pv"],
-        filenames=["test.nc"],
+        filenames=["/run/media/jacob/data/pvnet_india_batches/val/000000.nc"],
     )
     batch = next(iter(datapipe))
     print(batch)
