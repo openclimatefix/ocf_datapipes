@@ -16,6 +16,10 @@ from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 
 
 def _get_azimuth_and_elevation(lon, lat, dt, must_be_finite):
+    if type(dt[0]) == np.datetime64:
+        # This caused an issue if it was 'datetime64[s]'
+        dt = np.array(dt, dtype="datetime64[ns]")
+
     if not np.isfinite([lon, lat]).all():
         if must_be_finite:
             raise ValueError(f"Non-finite (lon, lat) = ({lon}, {lat}")
