@@ -154,7 +154,9 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
                 numpy_modalities.append(datapipes_dict["wind"].convert_wind_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
-            combined_datapipe = MergeNumpyModalities(numpy_modalities)
+            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
+                modality_name="pv"
+            )
 
             logger.info("Filtering out samples with no data")
             # if self.check_satellite_no_zeros:
