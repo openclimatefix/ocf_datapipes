@@ -135,8 +135,8 @@ def pv_system_db_data():
     # Create generation data
     n_systems = 10
 
-    t0 = pd.Timestamp.now().floor("5T")
-    datetimes = pd.date_range(t0 - timedelta(minutes=120), t0, freq="5T")
+    t0 = pd.Timestamp.now().floor("5min")
+    datetimes = pd.date_range(t0 - timedelta(minutes=120), t0, freq="5min")
     site_uuids = [str(uuid.uuid4()) for _ in range(n_systems)]
 
     data = np.zeros((len(datetimes), n_systems))
@@ -205,7 +205,6 @@ def db_connection(pv_system_db_data):
         with connection.engine.connect() as conn:
             df_gen.to_sql(name="generation", con=conn, index=False)
             df_meta.to_sql(name="sites", con=conn, index=False)
-            conn.commit()
 
         yield connection
 
@@ -351,7 +350,7 @@ def gsp_yields(db_session):
 
 @pytest.fixture()
 def pv_xarray_data():
-    datetimes = pd.date_range("2022-09-01 00:00", "2022-09-08 00:00", freq="5T")
+    datetimes = pd.date_range("2022-09-01 00:00", "2022-09-08 00:00", freq="5min")
     pv_system_ids = (np.arange(10) + 9905).astype(str)
 
     data = np.full((len(datetimes), len(pv_system_ids)), fill_value=9.1)
@@ -474,7 +473,7 @@ def nwp_data_with_id_filename():
     - id
     """
 
-    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60T", periods=24 * 7)
+    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60min", periods=24 * 7)
     steps = [timedelta(minutes=60 * i) for i in range(0, 11)]
     variables = ["si10", "dswrf", "t", "prate"]
     ids = np.array(range(0, 10)) + 9905
@@ -513,7 +512,7 @@ def nwp_gfs_data():
     - longitude
     """
 
-    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60T", periods=24 * 7)
+    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="60min", periods=24 * 7)
     steps = [timedelta(minutes=60 * i) for i in range(0, 11)]
     x = np.array(range(0, 10))
     y = np.array(range(0, 10))
@@ -553,7 +552,7 @@ def nwp_gfs_data_filename(nwp_gfs_data):
 
 @pytest.fixture()
 def nwp_ukv_data():
-    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="180T", periods=24 * 7)
+    init_times = pd.date_range(start=datetime(2022, 9, 1), freq="180min", periods=24 * 7)
     steps = [timedelta(minutes=60 * i) for i in range(0, 11)]
 
     # These are the values from the training data but it takes too long:

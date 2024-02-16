@@ -463,7 +463,7 @@ def fill_nans_in_arrays(
         if isinstance(v, np.ndarray) and np.issubdtype(v.dtype, np.number):
             if np.isnan(v).any():
                 _filled_keys.update({f"{_key_prefix}{k}"})
-                np.nan_to_num(v, copy=False, nan=0.0)
+                batch[k] = np.nan_to_num(v, copy=True, nan=0.0)
 
         # Recursion is included to reach NWP arrays in subdict
         elif isinstance(v, dict):

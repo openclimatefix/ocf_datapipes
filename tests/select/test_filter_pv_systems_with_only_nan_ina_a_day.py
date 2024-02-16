@@ -11,7 +11,7 @@ from ocf_datapipes.select import FilterPVSystemsWithOnlyNanInADay
 
 
 def test_execution_time():
-    time = pd.date_range(start="2022-01-01", end="2023-01-01", freq="5T")
+    time = pd.date_range(start="2022-01-01", end="2023-01-01", freq="5min")
     pv_system_id = [1, 2, 3]
     ALL_COORDS = {"time_utc": time, "pv_system_id": pv_system_id}
 

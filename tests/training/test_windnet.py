@@ -20,7 +20,6 @@ def test_windnet_datapipe(configuration_filename):
     # Need to serialize attributes to strings
     datasets.to_netcdf("test.nc", mode="w", engine="h5netcdf", compute=True)
     dp = windnet_netcdf_datapipe(
-        config_filename=configuration_filename,
         filenames=["test.nc"],
         keys=[
             "nwp",

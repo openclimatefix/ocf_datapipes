@@ -16,7 +16,6 @@ from ocf_datapipes.training.common import (
     fill_nans_in_arrays,
     fill_nans_in_pv,
     normalize_gsp,
-    normalize_wind,
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
@@ -33,14 +32,14 @@ from ocf_datapipes.utils.utils import (
 )
 
 xr.set_options(keep_attrs=True)
-logger = logging.getLogger("windnet_datapipe")
+logger = logging.getLogger("pvnet_site_datapipe")
 
 
-def _normalize_wind_power(x):
-    return x / 3381.0
+def normalize_pv(x: xr.DataArray):
+    """Normalize PV data"""
+    return x / 3773.0  # TODO Check the actual max value
 
 
-@functional_datapipe("dict_datasets")
 class DictDatasetIterDataPipe(IterDataPipe):
     """Create a dictionary of xr.Datasets from a dict of datapipes"""
 
@@ -82,7 +81,6 @@ class DictDatasetIterDataPipe(IterDataPipe):
             yield output_dict
 
 
-@functional_datapipe("load_dict_datasets")
 class LoadDictDatasetIterDataPipe(IterDataPipe):
     """Load NetCDF files and split them back into individual xr.Datasets"""
 
@@ -115,7 +113,7 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 yield dataset_dict
 
 
-@functional_datapipe("windnet_convert_to_numpy_batch")
+@functional_datapipe("pvnet_site_convert_to_numpy_batch")
 class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
     """Converts Xarray Dataset to Numpy Batch"""
 
@@ -156,7 +154,9 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
                 numpy_modalities.append(datapipes_dict["wind"].convert_wind_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
-            combined_datapipe = MergeNumpyModalities(numpy_modalities)
+            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
+                modality_name="pv"
+            )
 
             logger.info("Filtering out samples with no data")
             # if self.check_satellite_no_zeros:
@@ -246,13 +246,13 @@ def construct_sliced_data_pipeline(
         )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
-    if "wind" in datapipes_dict:
+    if "pv" in datapipes_dict:
         # Recombine Sensor arrays - see function doc for further explanation
-        wind_datapipe = (
-            datapipes_dict["wind"].zip_ocf(datapipes_dict["wind_future"]).map(concat_xr_time_utc)
+        pv_datapipe = (
+            datapipes_dict["pv"].zip_ocf(datapipes_dict["pv_future"]).map(concat_xr_time_utc)
         )
-        wind_datapipe = wind_datapipe.normalize(normalize_fn=normalize_wind)
-        wind_datapipe = wind_datapipe.map(fill_nans_in_pv)
+        pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
+        pv_datapipe = pv_datapipe.map(fill_nans_in_pv)
 
     finished_dataset_dict = {"config": configuration}
 
@@ -285,26 +285,26 @@ def construct_sliced_data_pipeline(
         finished_dataset_dict["nwp"] = nwp_datapipes_dict
     if "sat" in datapipes_dict:
         finished_dataset_dict["sat"] = sat_datapipe
-    if "wind" in datapipes_dict:
-        finished_dataset_dict["wind"] = wind_datapipe
+    if "pv" in datapipes_dict:
+        finished_dataset_dict["pv"] = pv_datapipe
 
     return finished_dataset_dict
 
 
-def windnet_datapipe(
+def pvnet_site_datapipe(
     config_filename: str,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
 ) -> IterDataPipe:
     """
-    Construct windnet pipeline for the input data config file.
+    Construct PVNet site pipeline for the input data config file.
 
     Args:
         config_filename: Path to config file.
         start_time: Minimum time at which a sample can be selected.
         end_time: Maximum time at which a sample can be selected.
     """
-    logger.info("Constructing windnet pipeline")
+    logger.info("Constructing pvnet site pipeline")
 
     # Open datasets from the config and filter to useable location-time pairs
     location_pipe, t0_datapipe = construct_loctime_pipelines(
@@ -346,47 +346,36 @@ def split_dataset_dict_dp(element):
     return output_dict
 
 
-def windnet_netcdf_datapipe(
+def pvnet_site_netcdf_datapipe(
     keys: List[str],
     filenames: List[str],
 ) -> IterDataPipe:
     """
-    Load the saved Datapipes from windnet, and transform to numpy batch
+    Load the saved Datapipes from pvnet site, and transform to numpy batch
 
     Args:
-        config_filename: Path to config file.
         keys: List of keys to extract from the single NetCDF files
         filenames: List of NetCDF files to load
 
     Returns:
         Datapipe that transforms the NetCDF files to numpy batch
     """
-    logger.info("Constructing windnet file pipeline")
+    logger.info("Constructing pvnet site file pipeline")
     # Load files
     datapipe_dict_dp: IterDataPipe = LoadDictDatasetIterDataPipe(
         filenames=filenames,
         keys=keys,
     ).map(split_dataset_dict_dp)
-    datapipe = datapipe_dict_dp.windnet_convert_to_numpy_batch()
+    datapipe = datapipe_dict_dp.pvnet_site_convert_to_numpy_batch()
 
     return datapipe
 
 
 if __name__ == "__main__":
-    # Load the ECMWF and sensor data here
-    datapipe = windnet_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        start_time=datetime(2023, 1, 1),
-        end_time=datetime(2023, 11, 2),
-    )
-    batch = next(iter(datapipe))
-    print(batch)
-    batch.to_netcdf("test.nc", engine="h5netcdf")
     # Load the saved NetCDF files here
-    datapipe = windnet_netcdf_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        keys=["nwp", "sensor"],
-        filenames=["test.nc"],
+    datapipe = pvnet_site_netcdf_datapipe(
+        keys=["nwp", "pv"],
+        filenames=["/run/media/jacob/data/pvnet_india_batches/val/000000.nc"],
     )
     batch = next(iter(datapipe))
     print(batch)

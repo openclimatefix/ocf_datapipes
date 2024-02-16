@@ -2,7 +2,6 @@
 import warnings
 
 import numpy as np
-import pandas as pd
 import pvlib
 from torch.utils.data import IterDataPipe, functional_datapipe
 
@@ -17,6 +16,10 @@ from ocf_datapipes.utils.geospatial import osgb_to_lon_lat
 
 
 def _get_azimuth_and_elevation(lon, lat, dt, must_be_finite):
+    if type(dt[0]) == np.datetime64:
+        # This caused an issue if it was 'datetime64[s]'
+        dt = np.array(dt, dtype="datetime64[ns]")
+
     if not np.isfinite([lon, lat]).all():
         if must_be_finite:
             raise ValueError(f"Non-finite (lon, lat) = ({lon}, {lat}")
@@ -126,7 +129,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             assert len(time_utc.shape) in [1, 2]
             is_batched = len(time_utc.shape) == 2
 
-            times = pd.to_datetime(time_utc, unit="s")
+            times = time_utc.astype("datetime64[s]")
 
             if is_batched:
                 assert lons.shape == (time_utc.shape[0],)
