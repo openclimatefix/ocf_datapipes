@@ -25,10 +25,12 @@ from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
 try:
     from ocf_datapipes.load import OpenTopography
+
     # Rioxarray is sometimes a pain to install, so only load this if its installed
 except ImportError:
-    print("Could not import OpenTopography,"
-          " this is probably becasye Rioxarray is not installed.")
+    print(
+        "Could not import OpenTopography," " this is probably becasye Rioxarray is not installed."
+    )
     pass
 
 
