@@ -163,7 +163,7 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             # in production we don't want any nans in the satellite data
             #    combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
 
-            logger.info("Fill in nans")
+            logger.info("Fill in nans in arrays")
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
             logger.info("Getting on batch")
