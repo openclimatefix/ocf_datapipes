@@ -27,44 +27,44 @@ optionally `.transform.numpy`.
 loading the config file, data, selecting and transforming data, and returning
 the numpy data to the PyTorch dataloader.
 
-Modules have their own README's as well to go into further detail. This is a pruned tree showing the general repo structure. 
+Modules have their own README's as well to go into further detail. This is part of a `tree` showing the general repo structure. 
 
 ```
-ocf_datapipes/
-├── batch/
-│   ├── fake/
-├── config/
-├── convert/
-│   ├── numpy/
-│   ├── numpy_batch/
-├── experimental/
-├── load/
-│   ├── gsp/
-│   ├── nwp/
-│   ├── pv/
-│   ├── satellite.py
-│   ├── sensor/
-│   ├── topographic.py
-│   └── wind/
-├── production/
-├── select/
-├── training/
-│   ├── common.py
-│   ├── example/
-│   ├── metnet/
-│   ├── pseudo_irradience.py
-│   ├── pvnet.py
-│   ├── pvnet_site.py
-│   └── windnet.py
-├── transform/
-│   ├── numpy_batch/
-│   └── xarray/
-├── utils/
-│   ├── gsp_shape/
-│   ├── split/
-├── validation/
-└── visualization/
-
+.
+└── ocf_datapipes/
+    ├── batch/
+    │   ├── fake/
+    ├── config/
+    ├── convert/
+    │   ├── numpy/
+    │   ├── numpy_batch/
+    ├── experimental/
+    ├── load/
+    │   ├── gsp/
+    │   ├── nwp/
+    │   ├── pv/
+    │   ├── satellite.py
+    │   ├── sensor/
+    │   ├── topographic.py
+    │   └── wind/
+    ├── production/
+    ├── select/
+    ├── training/
+    │   ├── common.py
+    │   ├── example/
+    │   ├── metnet/
+    │   ├── pseudo_irradience.py
+    │   ├── pvnet.py
+    │   ├── pvnet_site.py
+    │   └── windnet.py
+    ├── transform/
+    │   ├── numpy_batch/
+    │   └── xarray/
+    ├── utils/
+    │   ├── gsp_shape/
+    │   ├── split/
+    ├── validation/
+    └── visualization/
 ```
 
 ## Adding a new DataPipe
