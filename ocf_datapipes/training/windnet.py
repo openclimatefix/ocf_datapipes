@@ -166,6 +166,7 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             logger.info("Fill in nans")
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
+            logger.info("Getting on batch")
             one_batch = next(iter(combined_datapipe))
             logger.info(one_batch)
 
