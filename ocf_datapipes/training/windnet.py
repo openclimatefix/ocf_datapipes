@@ -166,10 +166,7 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             logger.info("Fill in nans")
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
-            one_batch = next(iter(combined_datapipe))
-            logger.info(one_batch)
-
-            yield one_batch
+            yield next(iter(combined_datapipe))
 
 
 def minutes(num_mins: int):
