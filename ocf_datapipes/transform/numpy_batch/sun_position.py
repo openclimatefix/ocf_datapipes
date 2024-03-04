@@ -63,6 +63,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             "hrvsatellite",
             "gsp",
             "pv",
+            "wind",
         ], f"Cant add sun position on {self.modality_name}"
 
     def __iter__(self):
