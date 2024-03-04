@@ -195,6 +195,9 @@ class BatchKey(Enum):
     sensor_longitude_fourier = auto()
     sensor_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
 
+    wind_solar_azimuth = auto()
+    wind_solar_elevation = auto()
+
 
 class NWPBatchKey(Enum):
     """The names of the different elements of each NWP batch.
