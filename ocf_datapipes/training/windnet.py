@@ -185,7 +185,7 @@ def construct_sliced_data_pipeline(
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
     production: bool = False,
-    upsample_nwp:bool = False
+    upsample_nwp: bool = False,
 ) -> dict:
     """Constructs data pipeline for the input data config file.
 
