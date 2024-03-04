@@ -1,10 +1,9 @@
 """Up Sample Xarray datasets Datapipe"""
-from torch.utils.data import IterDataPipe, functional_datapipe
-
+import logging
 from typing import Optional
 
-import logging
 import numpy as np
+from torch.utils.data import IterDataPipe, functional_datapipe
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ class UpSampleIterDataPipe(IterDataPipe):
         x_dim_name: str = "longitude",
         y_dim_name: str = "latitude",
         keep_same_shape: bool = False,
-        round_to_dp: Optional[int] = None
+        round_to_dp: Optional[int] = None,
     ):
         """
         Up Sample xarray dataset/dataarrays with interpolate
@@ -46,7 +45,6 @@ class UpSampleIterDataPipe(IterDataPipe):
     def __iter__(self):
         """Coarsen the data on the specified dimensions"""
         for xr_data in self.source_datapipe:
-
             log.info("Up Sampling Data")
             print(xr_data)
 
@@ -75,7 +73,6 @@ class UpSampleIterDataPipe(IterDataPipe):
                 new_y_max = new_y_min + new_y_interval * (len(current_y_dim_values) - 1)
 
             else:
-
                 new_x_min = min(current_x_dim_values)
                 new_x_max = max(current_x_dim_values)
 
@@ -114,11 +111,11 @@ class UpSampleIterDataPipe(IterDataPipe):
             if current_x_dim_values[0] > current_x_dim_values[1]:
                 new_x_dim_values = new_x_dim_values[::-1]
                 new_x_max, new_x_min = new_x_min, new_x_max
-                log.debug('X dims are reversed')
+                log.debug("X dims are reversed")
             if current_y_dim_values[0] > current_y_dim_values[1]:
                 new_y_dim_values = new_y_dim_values[::-1]
                 new_y_max, new_y_min = new_y_min, new_y_max
-                log.debug('Y dims are reversed')
+                log.debug("Y dims are reversed")
 
             log.info(
                 f"Up Sampling X from ({min(current_x_dim_values)}, {current_x_interval}, "

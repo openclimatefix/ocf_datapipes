@@ -8,7 +8,6 @@ from .convert_pressure_levels_to_separate_variables import (
 from .create_sun_image import CreateSunImageIterDataPipe as CreateSunImage
 from .create_time_image import CreateTimeImageIterDataPipe as CreateTimeImage
 from .downsample import DownsampleIterDataPipe as Downsample
-from .upsample import UpSampleIterDataPipe as Upsample
 from .gsp.create_gsp_image import CreateGSPImageIterDataPipe as CreateGSPImage
 from .gsp.ensure_n_gsp_per_example import (
     EnsureNGSPSPerExampleIterDataPipe as EnsureNGSPSPerExampleIter,
@@ -29,3 +28,4 @@ from .pv.remove_pv_zero_examples import PVPowerRemoveZeroDataIterDataPipe as PVP
 from .reproject_topographic_data import (
     ReprojectTopographyIterDataPipe as ReprojectTopography,
 )
+from .upsample import UpSampleIterDataPipe as Upsample
