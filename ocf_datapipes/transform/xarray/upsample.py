@@ -1,6 +1,8 @@
 """Up Sample Xarray datasets Datapipe"""
 from torch.utils.data import IterDataPipe, functional_datapipe
 
+from typing import Optional
+
 import logging
 import numpy as np
 
@@ -19,6 +21,7 @@ class UpSampleIterDataPipe(IterDataPipe):
         x_dim_name: str = "longitude",
         y_dim_name: str = "latitude",
         keep_same_shape: bool = False,
+        round_to_dp: Optional[int] = None
     ):
         """
         Up Sample xarray dataset/dataarrays with interpolate
@@ -38,6 +41,7 @@ class UpSampleIterDataPipe(IterDataPipe):
         self.x_dim_name = x_dim_name
         self.y_dim_name = y_dim_name
         self.keep_same_shape = keep_same_shape
+        self.round_to_dp = round_to_dp
 
     def __iter__(self):
         """Coarsen the data on the specified dimensions"""
@@ -78,6 +82,16 @@ class UpSampleIterDataPipe(IterDataPipe):
                 new_y_min = min(current_y_dim_values)
                 new_y_max = max(current_y_dim_values)
 
+            # round to decimals places
+            if self.round_to_dp is not None:
+                new_x_min = np.round(new_x_min, self.round_to_dp)
+                new_x_max = np.round(new_x_max, self.round_to_dp)
+                new_x_interval = np.round(new_x_interval, self.round_to_dp)
+
+                new_y_min = np.round(new_y_min, self.round_to_dp)
+                new_y_max = np.round(new_y_max, self.round_to_dp)
+                new_y_interval = np.round(new_y_interval, self.round_to_dp)
+
             # get new x values
             new_x_dim_values = list(
                 np.arange(
@@ -95,6 +109,16 @@ class UpSampleIterDataPipe(IterDataPipe):
                     new_y_interval,
                 )
             )
+
+            # check the order
+            if current_x_dim_values[0] > current_x_dim_values[1]:
+                new_x_dim_values = new_x_dim_values[::-1]
+                new_x_max, new_x_min = new_x_min, new_x_max
+                log.debug('X dims are reversed')
+            if current_y_dim_values[0] > current_y_dim_values[1]:
+                new_y_dim_values = new_y_dim_values[::-1]
+                new_y_max, new_y_min = new_y_min, new_y_max
+                log.debug('Y dims are reversed')
 
             log.info(
                 f"Up Sampling X from ({min(current_x_dim_values)}, {current_x_interval}, "
