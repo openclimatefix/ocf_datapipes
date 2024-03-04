@@ -46,7 +46,6 @@ class UpSampleIterDataPipe(IterDataPipe):
         """Coarsen the data on the specified dimensions"""
         for xr_data in self.source_datapipe:
             log.info("Up Sampling Data")
-            print(xr_data)
 
             # get current x and y values
             current_x_dim_values = getattr(xr_data, self.x_dim_name).values
