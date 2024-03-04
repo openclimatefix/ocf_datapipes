@@ -239,6 +239,11 @@ def construct_sliced_data_pipeline(
                 std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
             )
 
+            if production:
+                nwp_datapipes_dict[nwp_key] = nwp_datapipes_dict[nwp_key].upsample(
+                    y_upsample=2, x_upsample=2, keep_same_shape=True
+                )
+
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
 
