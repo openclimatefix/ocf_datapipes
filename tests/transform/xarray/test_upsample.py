@@ -48,4 +48,4 @@ def test_nwp_upsample_keep_same_shape(nwp_datapipe):
 
     # check middle valyes are the same
     assert data_new.x_osgb.values[274] == data_old.x_osgb.values[274]
-    assert data_new.y_osgb.values[352] == data_old.y_osgb.values[352]
+    assert data_new.y_osgb.values[351] == data_old.y_osgb.values[352]

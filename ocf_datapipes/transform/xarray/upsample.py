@@ -59,6 +59,10 @@ class UpSampleIterDataPipe(IterDataPipe):
             new_x_interval = current_x_interval / self.x_upsample
             new_y_interval = current_y_interval / self.y_upsample
 
+            if self.round_to_dp is not None:
+                new_x_interval = np.round(new_x_interval, self.round_to_dp)
+                new_y_interval = np.round(new_y_interval, self.round_to_dp)
+
             if self.keep_same_shape:
                 # up sample the center of the image and keep the same shape as original image
 
@@ -82,11 +86,9 @@ class UpSampleIterDataPipe(IterDataPipe):
             if self.round_to_dp is not None:
                 new_x_min = np.round(new_x_min, self.round_to_dp)
                 new_x_max = np.round(new_x_max, self.round_to_dp)
-                new_x_interval = np.round(new_x_interval, self.round_to_dp)
 
                 new_y_min = np.round(new_y_min, self.round_to_dp)
                 new_y_max = np.round(new_y_max, self.round_to_dp)
-                new_y_interval = np.round(new_y_interval, self.round_to_dp)
 
             # get new x values
             new_x_dim_values = list(
