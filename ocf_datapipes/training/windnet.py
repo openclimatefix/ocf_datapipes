@@ -185,6 +185,7 @@ def construct_sliced_data_pipeline(
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
     production: bool = False,
+    upsample_nwp: bool = False,
 ) -> dict:
     """Constructs data pipeline for the input data config file.
 
@@ -195,6 +196,7 @@ def construct_sliced_data_pipeline(
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
         production: Whether constucting pipeline for production inference.
+        upsample_nwp: Optional to upsample nwp dat Used for ECMWF production data
     """
 
     datapipes_dict = _get_datapipes_dict(
@@ -238,6 +240,11 @@ def construct_sliced_data_pipeline(
                 mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
                 std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
             )
+
+            if upsample_nwp:
+                nwp_datapipes_dict[nwp_key] = nwp_datapipes_dict[nwp_key].upsample(
+                    y_upsample=2, x_upsample=2, keep_same_shape=True, round_to_dp=2
+                )
 
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
