@@ -33,6 +33,8 @@ class UpSampleIterDataPipe(IterDataPipe):
             y_dim_name: Y dimension name
             keep_same_shape: Optional to keep the same shape. Defaults to zero.
                 If True, shape is trimmed around the edges.
+            round_to_dp: Try to round values to this number of decimal places.
+                Default is None, so no rounding is done.
         """
         self.source_datapipe = source_datapipe
         self.y_upsample = y_upsample
