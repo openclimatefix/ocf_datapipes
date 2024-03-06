@@ -1221,5 +1221,5 @@ def potentially_coarsen(xr_data: xr.Dataset):
     """Coarsen the data, if it is separated by 0.05 degrees each"""
     if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
         if xr_data.latitude.values[1] - xr_data.latitude.values[0] == 0.05:
-            xr_data = xr_data.coarsen(latitude=2, longitude=2).mean()
+            xr_data = xr_data.coarsen(latitude=2, longitude=2)
     return xr_data
