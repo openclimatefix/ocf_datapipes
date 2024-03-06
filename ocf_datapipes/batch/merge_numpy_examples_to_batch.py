@@ -23,15 +23,10 @@ def stack_data_list(
 
     See also: `extract_sample_from_batch()` for opposite
     """
-    print(batch_key)
     if _key_is_constant(batch_key):
         # These are always the same for all examples.
         return data_list[0]
     try:
-        shapes = [example.shape for example in data_list]
-        if not all([shape == shapes[0] for shape in shapes]):
-            for d in data_list:
-                print(d)
         return np.stack(data_list)
     except Exception as e:
         logger.debug(f"Could not stack the following shapes together, ({batch_key})")
