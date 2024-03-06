@@ -18,6 +18,7 @@ from ocf_datapipes.training.common import (
     normalize_gsp,
     normalize_wind,
     slice_datapipes_by_time,
+    potentially_coarsen,
 )
 from ocf_datapipes.utils.consts import (
     NWP_MEANS,
@@ -348,14 +349,6 @@ def split_dataset_dict_dp(element):
     output_dict = nest_nwp_source_dict(output_dict)
 
     return output_dict
-
-
-def potentially_coarsen(xr: xr.Dataset):
-    """Coarsen the data, if it is separated by 0.05 degrees each"""
-    if "latitude" in xr and "longitude" in xr:
-        if xr.latitude.values[1] - xr.latitude.values[0] == 0.05:
-            xr = xr.coarsen(latitude=2, longitude=2).mean()
-    return xr
 
 
 def windnet_netcdf_datapipe(

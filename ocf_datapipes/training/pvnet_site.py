@@ -17,6 +17,7 @@ from ocf_datapipes.training.common import (
     fill_nans_in_pv,
     normalize_gsp,
     slice_datapipes_by_time,
+    potentially_coarsen,
 )
 from ocf_datapipes.utils.consts import (
     NWP_MEANS,
@@ -166,14 +167,6 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
             yield next(iter(combined_datapipe))
-
-
-def potentially_coarsen(xr: xr.Dataset):
-    """Coarsen the data, if it is separated by 0.05 degrees each"""
-    if "latitude" in xr and "longitude" in xr:
-        if xr.latitude.values[1] - xr.latitude.values[0] == 0.05:
-            xr = xr.coarsen(latitude=2, longitude=2).mean()
-    return xr
 
 
 def minutes(num_mins: int):
