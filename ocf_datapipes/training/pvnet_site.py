@@ -234,9 +234,14 @@ def construct_sliced_data_pipeline(
             )
             # Coarsen the data, if it is separated by 0.05 degrees each
             nwp_datapipe = nwp_datapipe.map(potentially_coarsen)
+            # Somewhat hacky way for India specifically, need different mean/std for ECMWF data
+            if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
+                normalize_provider = "ecmwf_india"
+            else:
+                normalize_provider = conf_nwp[nwp_key].nwp_provider
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
-                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider + "_india"],
-                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider + "_india"],
+                mean=NWP_MEANS[normalize_provider],
+                std=NWP_STDS[normalize_provider],
             )
 
     if "sat" in datapipes_dict:

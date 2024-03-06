@@ -35,7 +35,7 @@ class NWPStatDict(dict):
 
 # --------------------------- NWP ------------------------------------
 
-NWP_PROVIDERS = ["ukv", "gfs", "icon-eu", "icon-global", "ecmwf"]
+NWP_PROVIDERS = ["ukv", "gfs", "icon-eu", "icon-global", "ecmwf", "ecmwf_india"]
 
 # ------ UKV
 # Means and std computed WITH version_7 and higher, MetOffice values
