@@ -1219,7 +1219,7 @@ def create_t0_and_loc_datapipes(
 
 def potentially_coarsen(xr: xr.Dataset):
     """Coarsen the data, if it is separated by 0.05 degrees each"""
-    if "latitude" in xr and "longitude" in xr:
+    if "latitude" in xr.coords and "longitude" in xr.coords:
         if xr.latitude.values[1] - xr.latitude.values[0] == 0.05:
             xr = xr.coarsen(latitude=2, longitude=2).mean()
     return xr
