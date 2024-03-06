@@ -234,9 +234,10 @@ def construct_sliced_data_pipeline(
                 roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
+            nwp_datapipe = nwp_datapipe.map(potentially_coarsen)
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
-                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
-                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
+                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider + "_india"],
+                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider + "_india"],
             )
 
     if "sat" in datapipes_dict:
@@ -347,6 +348,14 @@ def split_dataset_dict_dp(element):
     output_dict = nest_nwp_source_dict(output_dict)
 
     return output_dict
+
+
+def potentially_coarsen(xr: xr.Dataset):
+    """Coarsen the data, if it is separated by 0.05 degrees each"""
+    if "latitude" in xr and "longitude" in xr:
+        if xr.latitude.values[1] - xr.latitude.values[0] == 0.05:
+            xr = xr.coarsen(latitude=2, longitude=2).mean()
+    return xr
 
 
 def windnet_netcdf_datapipe(

@@ -189,19 +189,67 @@ ECMWF_VARIABLE_NAMES = tuple(ECMWF_MEAN.keys())
 ECMWF_STD = _to_data_array(ECMWF_STD)
 ECMWF_MEAN = _to_data_array(ECMWF_MEAN)
 
+# These were calculated from 200 random init times of ECMWF data from 2020-2024
+INDIA_ECMWF_MEAN = {
+    "dlwrf": 56931292.0,
+    "dswrf": 31114434.0,
+    "duvrs": 3363442.75,
+    "hcc": 0.2640938460826874,
+    "lcc": 0.09548956900835037,
+    "mcc": 0.11118797957897186,
+    "prate": 3.028022729267832e-05,
+    "sde": 0.0015021926956251264,
+    "sr": 31403020.0,
+    "t2m": 298.24462890625,
+    "tcc": 0.33420485258102417,
+    "u10": 0.7755107283592224,
+    "u100": 1.0605329275131226,
+    "u200": 1.2298915386199951,
+    "v10": 0.02332865633070469,
+    "v100": -0.07577426731586456,
+    "v200": -0.1255049854516983,
+}
+
+INDIA_ECMWF_STD = {
+    "dlwrf": 34551808.0,
+    "dswrf": 21211150.0,
+    "duvrs": 2300205.5,
+    "hcc": 0.3942722678184509,
+    "lcc": 0.22802403569221497,
+    "mcc": 0.2254289835691452,
+    "prate": 0.00023954990319907665,
+    "sde": 0.09043189883232117,
+    "sr": 23481620.0,
+    "t2m": 7.574307918548584,
+    "tcc": 0.4046371579170227,
+    "u10": 2.7440550327301025,
+    "u100": 4.084362506866455,
+    "u200": 4.770451068878174,
+    "v10": 2.401158571243286,
+    "v100": 3.5278923511505127,
+    "v200": 3.974159002304077,
+}
+
+
+INDIA_ECMWF_VARIABLE_NAMES = tuple(INDIA_ECMWF_MEAN.keys())
+INDIA_ECMWF_STD = _to_data_array(INDIA_ECMWF_STD)
+INDIA_ECMWF_MEAN = _to_data_array(INDIA_ECMWF_MEAN)
+
 # ------ ALL NWPS
 # These dictionaries are for convenience
 NWP_VARIABLE_NAMES = NWPStatDict(
     ukv=UKV_VARIABLE_NAMES,
     gfs=GFS_VARIABLE_NAMES,
     ecmwf=ECMWF_VARIABLE_NAMES,
+    ecmwf_india=INDIA_ECMWF_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
     gfs=GFS_STD,
     ecmwf=ECMWF_STD,
+    ecmwf_india=INDIA_ECMWF_STD,
 )
-NWP_MEANS = NWPStatDict(ukv=UKV_MEAN, gfs=GFS_MEAN, ecmwf=ECMWF_MEAN)
+NWP_MEANS = NWPStatDict(ukv=UKV_MEAN, gfs=GFS_MEAN, ecmwf=ECMWF_MEAN, ecmwf_india=INDIA_ECMWF_MEAN)
 
 # --------------------------- SATELLITE ------------------------------
 
