@@ -27,35 +27,44 @@ optionally `.transform.numpy`.
 loading the config file, data, selecting and transforming data, and returning
 the numpy data to the PyTorch dataloader.
 
-Modules have their own README's as well to go into further detail.
+Modules have their own README's as well to go into further detail. This is part of a `tree` showing the general repo structure.
 
 ```
 .
 └── ocf_datapipes/
     ├── batch/
-    │   └── fake
+    │   ├── fake/
     ├── config/
-    │   └── convert/
-    │       └── numpy/
-    │           └── batch
-    ├── experimental
-    ├── fake
-    ├── load/
-    │   ├── gsp
-    │   ├── nwp
-    │   └── pv
-    ├── production
-    ├── select
-    ├── training
-    │   ├── datamodules
-    ├── transform/
+    ├── convert/
     │   ├── numpy/
-    │   │   └── batch
+    │   ├── numpy_batch/
+    ├── experimental/
+    ├── load/
+    │   ├── gsp/
+    │   ├── nwp/
+    │   ├── pv/
+    │   ├── satellite.py
+    │   ├── sensor/
+    │   ├── topographic.py
+    │   └── wind/
+    ├── production/
+    ├── select/
+    ├── training/
+    │   ├── common.py
+    │   ├── example/
+    │   ├── metnet/
+    │   ├── pseudo_irradience.py
+    │   ├── pvnet.py
+    │   ├── pvnet_site.py
+    │   └── windnet.py
+    ├── transform/
+    │   ├── numpy_batch/
     │   └── xarray/
-    │       └── pv
     ├── utils/
-    │   └── split
-    └── validation
+    │   ├── gsp_shape/
+    │   ├── split/
+    ├── validation/
+    └── visualization/
 ```
 
 ## Adding a new DataPipe
