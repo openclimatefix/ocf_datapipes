@@ -391,19 +391,18 @@ def windnet_netcdf_datapipe(
 
 if __name__ == "__main__":
     # Load the ECMWF and sensor data here
-    datapipe = windnet_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        start_time=datetime(2023, 1, 1),
-        end_time=datetime(2023, 11, 2),
-    )
-    batch = next(iter(datapipe))
-    print(batch)
-    batch.to_netcdf("test.nc", engine="h5netcdf")
+    # datapipe = windnet_datapipe(
+    #    config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
+    #    start_time=datetime(2023, 1, 1),
+    #    end_time=datetime(2023, 11, 2),
+    # )
+    # batch = next(iter(datapipe))
+    # print(batch)
+    # batch.to_netcdf("test.nc", engine="h5netcdf")
     # Load the saved NetCDF files here
     datapipe = windnet_netcdf_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        keys=["nwp", "sensor"],
-        filenames=["test.nc"],
+        keys=["nwp", "wind"],
+        filenames=["/run/media/jacob/data/windnet_india_batches_medium/val/000000.nc"],
     )
     batch = next(iter(datapipe))
-    print(batch)
+    # print(batch)
