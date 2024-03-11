@@ -1220,6 +1220,9 @@ def create_t0_and_loc_datapipes(
 def potentially_coarsen(xr_data: xr.Dataset):
     """Coarsen the data, if it is separated by 0.05 degrees each"""
     if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
-        if xr_data.latitude.values[1] - xr_data.latitude.values[0] == 0.05:
-            xr_data = xr_data.coarsen(latitude=2, longitude=2)
+        if np.isclose(np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0]), 0.05):
+            if np.isclose(np.round(xr_data.latitude.values[0], 1), xr_data.latitude.values[0]):
+                xr_data = xr_data.isel(latitude=slice(0, None, 2), longitude=slice(0, None, 2))
+            else:
+                xr_data = xr_data.isel(latitude=slice(1, None, 2), longitude=slice(1, None, 2))
     return xr_data
