@@ -1221,12 +1221,8 @@ def potentially_coarsen(xr_data: xr.Dataset):
     """Coarsen the data, if it is separated by 0.05 degrees each"""
     if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
         if np.isclose(np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0]), 0.05):
-            # Take every second latitude and longitude point, no interpolation, from the first point, or second,
-            # Check if the first point is 0.05 degrees or not, only take ones that are 0.1
-            # Check if the first point rounds to the same 0.1 as itself, otherwise take the second point
             if np.isclose(np.round(xr_data.latitude.values[0], 1), xr_data.latitude.values[0]):
                 xr_data = xr_data.isel(latitude=slice(0, None, 2), longitude=slice(0, None, 2))
             else:
                 xr_data = xr_data.isel(latitude=slice(1, None, 2), longitude=slice(1, None, 2))
-            # xr_data = xr_data.coarsen(latitude=2, longitude=2, coord_func="").mean()
     return xr_data
