@@ -45,3 +45,20 @@ def open_excarta(zarr_path) -> xr.Dataset:
     assert time.is_unique
     assert time.is_monotonic_increasing
     return nwp
+
+
+import xarray as xr
+import datetime
+import pandas as pd
+
+ISSUE_DATE = datetime.datetime(2023, 1, 1)
+zarrs = []
+for issue_date in pd.date_range(start=ISSUE_DATE, periods=7, freq="D"):
+    zarrs.append(
+        issue_date.strftime(
+            "https://storage.googleapis.com/excarta-public-us/hindcast/20220225/%Y/%Y%m%d.zarr"
+        )
+    )
+
+nwps = open_excarta(zarrs)
+print(nwps)
