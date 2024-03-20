@@ -9,10 +9,10 @@ def preprocess_excarta(ds: xr.Dataset) -> xr.Dataset:
     """
     Preprocesses the Excarta hindcast data
     Args:
-        ds:
+        ds: The dataset to preprocess
 
     Returns:
-
+        The preprocessed dataset, with the init_time_utc added
     """
     # Filename
     filename = ds.encoding["source"]
@@ -26,9 +26,6 @@ def preprocess_excarta(ds: xr.Dataset) -> xr.Dataset:
 def open_excarta(zarr_path) -> xr.Dataset:
     """
     Opens the Excarta hindcast data
-
-    ISSUE_DATE = datetime.datetime(2023,1,1)
-    forecast = xr.open_zarr(ISSUE_DATE.strftime('https://storage.googleapis.com/excarta-public-us/hindcast/20220225/%Y/%Y%m%d.zarr'))
 
     Args:
         zarr_path: Path to the zarr to open
