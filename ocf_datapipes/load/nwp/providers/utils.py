@@ -1,14 +1,16 @@
 """Common NWP providers"""
 import xarray as xr
+from typing import Callable
 
 
-def open_zarr_paths(zarr_path, time_dim="init_time") -> xr.Dataset:
+def open_zarr_paths(zarr_path, time_dim="init_time", preprocessor: Callable = None) -> xr.Dataset:
     """
     Opens the NWP data
 
     Args:
         zarr_path: Path to the zarr(s) to open
         time_dim: Name of the time dimension
+        preprocessor: Optional preprocessor to apply to the dataset
 
     Returns:
         The opened Xarray Dataset
@@ -20,6 +22,7 @@ def open_zarr_paths(zarr_path, time_dim="init_time") -> xr.Dataset:
             concat_dim=time_dim,
             combine="nested",
             chunks="auto",
+            preprocess=preprocessor,
         ).sortby(time_dim)
     else:
         nwp = xr.open_dataset(
