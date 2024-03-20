@@ -1,6 +1,7 @@
 """Excarta Loading"""
 import pandas as pd
 import xarray as xr
+import numpy as np
 
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
@@ -40,10 +41,10 @@ def open_excarta(zarr_path) -> xr.Dataset:
     nwp = nwp.sortby("init_time_utc")
     # wind is split into speed and direction, so would want to decompose it with sin and cos
     # And split into u and v
-    nwp["10u"] = nwp.wind_speed * xr.ufuncs.cos(xr.ufuncs.deg2rad(nwp["10m_wind_speed_angle"]))
-    nwp["10v"] = nwp.wind_speed * xr.ufuncs.sin(xr.ufuncs.deg2rad(nwp["10m_wind_speed_angle"]))
-    nwp["100u"] = nwp.wind_speed * xr.ufuncs.cos(xr.ufuncs.deg2rad(nwp["100m_wind_speed_angle"]))
-    nwp["100v"] = nwp.wind_speed * xr.ufuncs.sin(xr.ufuncs.deg2rad(nwp["100m_wind_speed_angle"]))
+    nwp["10u"] = nwp["10m_wind_speed"] * np.cos(np.deg2rad(nwp["10m_wind_speed_angle"]))
+    nwp["10v"] = nwp["10m_wind_speed"] * np.sin(np.deg2rad(nwp["10m_wind_speed_angle"]))
+    nwp["100u"] = nwp["100m_wind_speed"] * np.cos(np.deg2rad(nwp["100m_wind_speed_angle"]))
+    nwp["100v"] = nwp["100m_wind_speed"] * np.sin(np.deg2rad(nwp["100m_wind_speed_angle"]))
     # Sanity checks.
     time = pd.DatetimeIndex(nwp.init_time_utc)
     assert time.is_unique
