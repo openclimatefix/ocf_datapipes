@@ -36,9 +36,27 @@ from ocf_datapipes.utils.utils import (
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("windnet_datapipe")
 
+normalization_values = {
+    2019: 3132.0,
+    2020: 2817.0,
+    2021: 3254.0,
+    2022: 3381.0,
+    2023: 3225.0,
+    2024: 3225.0,
+}
 
-def _normalize_wind_power(x):
-    return x / 3381.0
+
+def _normalize_wind_power(x: xr.DataArray):
+    """Normalize PV data"""
+    # This is after the data has been temporally sliced, so have the year
+    year = x.time_utc.dt.year
+
+    # Add the effective_capacity_mwp to the dataset, indexed on the time_utc
+    return (
+        x / normalization_values[year]
+        if year in normalization_values
+        else x / normalization_values[2024]
+    )
 
 
 @functional_datapipe("dict_datasets")
@@ -105,11 +123,23 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Iterate through each filename, loading it, uncombining it, and then yielding it"""
+        import numpy as np
+
         while True:
             for filename in self.filenames:
                 dataset = xr.open_dataset(filename)
                 datasets = uncombine_from_single_dataset(dataset)
+                # print(datasets)
+                datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
+                # Select the specific keys desired
+                print(datasets["nwp"]["ecmwf"])
+                datasets["nwp"]["ecmwf"] = datasets["nwp"]["ecmwf"].sel(
+                    channel=["u10", "u100", "u200", "v10", "v100", "v200"]
+                )
+                print(datasets["nwp"]["ecmwf"])
+                exit()
                 # Yield a dictionary of the data, using the keys in self.keys
+                # print(datasets)
                 dataset_dict = {}
                 for k in self.keys:
                     dataset_dict[k] = datasets[k]
