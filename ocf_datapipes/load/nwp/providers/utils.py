@@ -1,6 +1,7 @@
 """Common NWP providers"""
-import xarray as xr
 from typing import Callable
+
+import xarray as xr
 
 
 def open_zarr_paths(zarr_path, time_dim="init_time", preprocessor: Callable = None) -> xr.Dataset:
