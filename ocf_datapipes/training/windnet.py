@@ -132,12 +132,9 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 # print(datasets)
                 datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
                 # Select the specific keys desired
-                print(datasets["nwp"]["ecmwf"])
                 datasets["nwp"]["ecmwf"] = datasets["nwp"]["ecmwf"].sel(
                     channel=["u10", "u100", "u200", "v10", "v100", "v200"]
                 )
-                print(datasets["nwp"]["ecmwf"])
-                exit()
                 # Yield a dictionary of the data, using the keys in self.keys
                 # print(datasets)
                 dataset_dict = {}
