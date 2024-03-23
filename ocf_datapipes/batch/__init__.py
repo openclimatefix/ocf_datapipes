@@ -1,5 +1,5 @@
 """Datapipes for batching together data"""
-from .batches import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch, XarrayBatch
+from .batches import BatchKey, NumpyBatch, NWPBatchKey, NWPNumpyBatch, TensorBatch, XarrayBatch
 from .merge_numpy_examples_to_batch import (
     MergeNumpyBatchIterDataPipe as MergeNumpyBatch,
 )
