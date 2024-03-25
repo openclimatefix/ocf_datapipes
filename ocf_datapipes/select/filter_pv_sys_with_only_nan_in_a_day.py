@@ -1,6 +1,7 @@
 """
 Drop PV systems which has only NaN's in a single day
 """
+
 import logging
 
 import numpy as np

@@ -1,4 +1,5 @@
 """ Test for loading pv data from database """
+
 from datetime import timedelta
 
 from ocf_datapipes.load.pv.database import (

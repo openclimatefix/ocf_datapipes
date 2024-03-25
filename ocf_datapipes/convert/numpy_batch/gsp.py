@@ -1,4 +1,5 @@
 """Convert GSP to Numpy Batch"""
+
 import logging
 
 from torch.utils.data import IterDataPipe, functional_datapipe

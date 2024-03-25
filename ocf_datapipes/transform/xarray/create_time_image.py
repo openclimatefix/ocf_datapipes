@@ -1,4 +1,5 @@
 """Create image channels of time values at each pixel"""
+
 from typing import Union
 
 import numpy as np

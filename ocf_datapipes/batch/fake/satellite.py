@@ -1,4 +1,5 @@
 """ Make fake Satellite data """
+
 from datetime import datetime
 
 import numpy as np
@@ -80,9 +81,9 @@ def make_fake_satellite_data(
         0, 100, (batch_size, width)
     )
 
-    batch[
-        getattr(BatchKey, f"{variable}_time_utc")
-    ] = time_utc  # Seconds since UNIX epoch (1970-01-01).
+    batch[getattr(BatchKey, f"{variable}_time_utc")] = (
+        time_utc  # Seconds since UNIX epoch (1970-01-01).
+    )
     # Added by np_batch_processor.Topography:
     batch[getattr(BatchKey, f"{variable}_surface_height")] = np.random.randint(
         0, 100, (batch_size, height, width)

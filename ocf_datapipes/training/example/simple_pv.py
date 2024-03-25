@@ -1,4 +1,5 @@
 """Wrapper for Power Perceiver Production Data Pipeline"""
+
 from datetime import timedelta
 from pathlib import Path
 from typing import Union

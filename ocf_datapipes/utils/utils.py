@@ -1,4 +1,5 @@
 """Various utilites that didn't fit elsewhere"""
+
 import logging
 from pathlib import Path
 from typing import Tuple, Union
@@ -187,9 +188,11 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
         # If NWP, then has init_time_utc and step, so do it off key__init_time_utc
         dataset = xr.concat(
             batched_datasets,
-            dim=f"{key}__target_time_utc"
-            if f"{key}__target_time_utc" in dataset.coords
-            else f"{key}__time_utc",
+            dim=(
+                f"{key}__target_time_utc"
+                if f"{key}__target_time_utc" in dataset.coords
+                else f"{key}__time_utc"
+            ),
         )
         # Serialize attributes to be JSON-seriaizable
         final_datasets_to_combined.append(dataset)

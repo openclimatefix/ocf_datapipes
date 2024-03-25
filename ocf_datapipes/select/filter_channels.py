@@ -1,4 +1,5 @@
 """Select channels"""
+
 import logging
 from typing import List, Union
 

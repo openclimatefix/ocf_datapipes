@@ -1,4 +1,5 @@
 """Encodes the Fourier features for space and time"""
+
 import logging
 import warnings
 from typing import Union

@@ -1,4 +1,5 @@
 """Convert GSP to Numpy Array"""
+
 import logging
 
 import numpy as np
