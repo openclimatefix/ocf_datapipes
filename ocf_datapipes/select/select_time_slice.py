@@ -1,4 +1,5 @@
 """Selects time slice"""
+
 import logging
 from datetime import timedelta
 from typing import Optional, Union

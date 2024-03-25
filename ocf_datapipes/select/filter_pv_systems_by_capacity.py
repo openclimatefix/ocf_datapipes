@@ -1,4 +1,5 @@
 """Select PV systems based off their capacity"""
+
 from typing import Union
 
 import numpy as np

@@ -1,6 +1,7 @@
 """
 This is a class function that drops the pv systems with generates power over night.
 """
+
 import logging
 
 import xarray as xr

@@ -1,4 +1,5 @@
 """Datapipes from TorchData that have been copied in for use with core PyTorch Datapipes"""
+
 from typing import Iterator, List, Optional, Sequence, Sized, Tuple, TypeVar
 
 from torch.utils.data import IterDataPipe, functional_datapipe

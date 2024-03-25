@@ -1,4 +1,5 @@
 """Compute the rolling mean of PV Power data"""
+
 from typing import Optional, Union
 
 import pandas as pd

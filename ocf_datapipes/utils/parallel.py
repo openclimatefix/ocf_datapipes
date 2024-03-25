@@ -1,4 +1,5 @@
 """Utilities for parallelizing code"""
+
 from collections import deque
 from concurrent import futures
 from typing import Callable, Iterator

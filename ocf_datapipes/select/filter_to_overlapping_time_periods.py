@@ -1,4 +1,5 @@
 """Select overlapping time slices for training"""
+
 import logging
 from typing import Iterable, Optional
 

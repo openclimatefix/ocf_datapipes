@@ -1,4 +1,5 @@
 """Selects time slice"""
+
 import logging
 from typing import Union
 

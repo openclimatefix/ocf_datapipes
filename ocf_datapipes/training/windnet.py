@@ -1,4 +1,5 @@
 """Create the training/validation datapipe for training the PVNet Model"""
+
 import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -123,7 +124,6 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Iterate through each filename, loading it, uncombining it, and then yielding it"""
-        import numpy as np
 
         while True:
             for filename in self.filenames:

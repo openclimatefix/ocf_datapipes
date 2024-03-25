@@ -1,6 +1,7 @@
 """
 This is a class function that assigns day night status
 """
+
 import logging
 
 import numpy as np

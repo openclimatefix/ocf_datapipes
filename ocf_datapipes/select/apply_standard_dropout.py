@@ -1,4 +1,5 @@
 """Selects time slice from satellite, GSP data, or other xarray objects, and masks with dropout"""
+
 from datetime import timedelta
 from typing import List, Optional, Union
 

@@ -1,4 +1,5 @@
 """Remove any data with nans"""
+
 import logging
 
 import xarray as xr

@@ -1,4 +1,5 @@
 """ Model for splitting data """
+
 from typing import List
 
 from pydantic import BaseModel, validator
