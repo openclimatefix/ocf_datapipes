@@ -128,12 +128,15 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
             for filename in self.filenames:
                 dataset = xr.open_dataset(filename)
                 datasets = uncombine_from_single_dataset(dataset)
-                # print(datasets)
-                datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
-                # Select the specific keys desired
-                datasets["nwp"]["ecmwf"] = datasets["nwp"]["ecmwf"].sel(
-                    channel=["u10", "u100", "u200", "v10", "v100", "v200"]
-                )
+
+                if "ecmwf" in datasets["nwp"]:
+                    datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
+
+                    # Select the specific keys desired
+                    datasets["nwp"]["ecmwf"] = datasets["nwp"]["ecmwf"].sel(
+                        channel=["u10", "u100", "u200", "v10", "v100", "v200"]
+                    )
+
                 # Yield a dictionary of the data, using the keys in self.keys
                 # print(datasets)
                 dataset_dict = {}
