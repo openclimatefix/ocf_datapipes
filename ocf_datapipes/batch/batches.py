@@ -4,6 +4,7 @@ from enum import Enum, auto
 from typing import Union
 
 import numpy as np
+import torch
 import xarray as xr
 
 
@@ -229,3 +230,5 @@ NWPNumpyBatch = dict[NWPBatchKey, np.ndarray]
 NumpyBatch = dict[BatchKey, Union[np.ndarray, dict[str, NWPNumpyBatch]]]
 
 XarrayBatch = dict[BatchKey, Union[xr.DataArray, xr.Dataset]]
+
+TensorBatch = dict[BatchKey, Union[torch.Tensor, dict[str, dict[NWPBatchKey, torch.Tensor]]]]

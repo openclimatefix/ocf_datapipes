@@ -6,9 +6,8 @@ from typing import List, Optional
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
-from ocf_datapipes.batch import BatchKey, NumpyBatch
 
-from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
+from ocf_datapipes.batch import BatchKey, MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.training.common import (
     DatapipeKeyForker,
     _get_datapipes_dict,
