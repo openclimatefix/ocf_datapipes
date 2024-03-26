@@ -1,7 +1,7 @@
 """Common functionality for datapipes"""
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union, Callable
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import xarray as xr
@@ -37,7 +37,11 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def is_config_and_path_valid(use_flag: bool, config: Optional[InputData], filepath_resolver: Union[str, Callable[[InputData], str]]) -> bool:
+def is_config_and_path_valid(
+    use_flag: bool,
+    config: Optional[InputData],
+    filepath_resolver: Union[str, Callable[[InputData], str]],
+) -> bool:
     """
     Checks if the given configuration should be used based on specific criteria.
 
