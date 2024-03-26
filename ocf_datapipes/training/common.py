@@ -38,16 +38,20 @@ logger = logging.getLogger(__name__)
 
 def is_config_and_path_valid(use_flag: bool, config, filepath_resolver) -> bool:
     """
-    Helper fucntion for open_and_return_datapipes that checks if the configuration attribute exists
-    and the specified file path attribute is not empty.
+    Checks if the given configuration should be used based on the use_flag,
+    presence of the configuration, and the non-emptiness of a specified file path.
 
     Args:
-        config_attr (object): Configuration attribute to check.
-        file_path_attr (str): File path attribute to check for non-emptiness
+        use_flag (bool): Indicates whether to consider using the configuration.
+        config (object): The configuration object to check.
+        filepath_resolver (str or callable): Specifies how to access the file path within config;
+            can be an attribute name (str) or a function (callable) that returns the file path.
 
     Returns:
-        bool: True if config_attr is not None and file_path_attr is not an empty string, False otherwise.
+        bool: True if all conditions are met (use_flag is True, config is not None,
+              and the resolved file path is not empty), otherwise False.
     """
+
     if not use_flag or config is None:
         return False
 
