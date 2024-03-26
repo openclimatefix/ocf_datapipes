@@ -123,7 +123,6 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Iterate through each filename, loading it, uncombining it, and then yielding it"""
-        import numpy as np
 
         while True:
             for filename in self.filenames:

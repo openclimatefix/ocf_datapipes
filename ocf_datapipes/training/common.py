@@ -36,6 +36,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 def is_config_and_path_valid(use_flag: bool, config, filepath_resolver) -> bool:
     """
     Checks if the given configuration should be used based on the use_flag,
@@ -55,7 +56,11 @@ def is_config_and_path_valid(use_flag: bool, config, filepath_resolver) -> bool:
     if not use_flag or config is None:
         return False
 
-    filepath = filepath_resolver(config) if callable(filepath_resolver) else getattr(config, filepath_resolver, "")
+    filepath = (
+        filepath_resolver(config)
+        if callable(filepath_resolver)
+        else getattr(config, filepath_resolver, "")
+    )
     return bool(filepath)
 
 
@@ -100,13 +105,23 @@ def open_and_return_datapipes(
         and all(v.nwp_zarr_path != "" for _, v in conf_in.nwp.items())
     )
 
-    use_pv = is_config_and_path_valid(use_pv, conf_in.pv, lambda config: config.pv_files_groups[0].pv_filename if config.pv_files_groups else "")
+    use_pv = is_config_and_path_valid(
+        use_pv,
+        conf_in.pv,
+        lambda config: config.pv_files_groups[0].pv_filename if config.pv_files_groups else "",
+    )
     use_sat = is_config_and_path_valid(use_sat, conf_in.satellite, "satellite_zarr_path")
     use_hrv = is_config_and_path_valid(use_hrv, conf_in.hrvsatellite, "hrvsatellite_zarr_path")
     use_topo = is_config_and_path_valid(use_topo, conf_in.topographic, "topographic_filename")
     use_gsp = is_config_and_path_valid(use_gsp, conf_in.gsp, "gsp_zarr_path")
     use_sensor = is_config_and_path_valid(use_sensor, conf_in.sensor, "sensor_filename")
-    use_wind = is_config_and_path_valid(use_wind, conf_in.wind, lambda config: config.wind_files_groups[0].wind_filename if config.wind_files_groups else "")
+    use_wind = is_config_and_path_valid(
+        use_wind,
+        conf_in.wind,
+        lambda config: config.wind_files_groups[0].wind_filename
+        if config.wind_files_groups
+        else "",
+    )
 
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
