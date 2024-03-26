@@ -17,6 +17,7 @@ from ocf_datapipes.training.common import (
     fill_nans_in_pv,
     normalize_gsp,
     normalize_wind,
+    potentially_coarsen,
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
@@ -35,9 +36,27 @@ from ocf_datapipes.utils.utils import (
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("windnet_datapipe")
 
+normalization_values = {
+    2019: 3132.0,
+    2020: 2817.0,
+    2021: 3254.0,
+    2022: 3381.0,
+    2023: 3225.0,
+    2024: 3225.0,
+}
 
-def _normalize_wind_power(x):
-    return x / 3381.0
+
+def _normalize_wind_power(x: xr.DataArray):
+    """Normalize PV data"""
+    # This is after the data has been temporally sliced, so have the year
+    year = x.time_utc.dt.year
+
+    # Add the effective_capacity_mwp to the dataset, indexed on the time_utc
+    return (
+        x / normalization_values[year]
+        if year in normalization_values
+        else x / normalization_values[2024]
+    )
 
 
 @functional_datapipe("dict_datasets")
@@ -104,11 +123,19 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Iterate through each filename, loading it, uncombining it, and then yielding it"""
+
         while True:
             for filename in self.filenames:
                 dataset = xr.open_dataset(filename)
                 datasets = uncombine_from_single_dataset(dataset)
+                # print(datasets)
+                datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
+                # Select the specific keys desired
+                datasets["nwp"]["ecmwf"] = datasets["nwp"]["ecmwf"].sel(
+                    channel=["u10", "u100", "u200", "v10", "v100", "v200"]
+                )
                 # Yield a dictionary of the data, using the keys in self.keys
+                # print(datasets)
                 dataset_dict = {}
                 for k in self.keys:
                     dataset_dict[k] = datasets[k]
@@ -156,13 +183,16 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
                 numpy_modalities.append(datapipes_dict["wind"].convert_wind_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
-            combined_datapipe = MergeNumpyModalities(numpy_modalities)
+            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
+                modality_name="wind"
+            )
 
             logger.info("Filtering out samples with no data")
             # if self.check_satellite_no_zeros:
             # in production we don't want any nans in the satellite data
             #    combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
 
+            logger.info("Fill in nans")
             combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
             yield next(iter(combined_datapipe))
@@ -182,6 +212,7 @@ def construct_sliced_data_pipeline(
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
     production: bool = False,
+    upsample_nwp: bool = False,
 ) -> dict:
     """Constructs data pipeline for the input data config file.
 
@@ -192,6 +223,7 @@ def construct_sliced_data_pipeline(
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
         production: Whether constucting pipeline for production inference.
+        upsample_nwp: Optional to upsample nwp dat Used for ECMWF production data
     """
 
     datapipes_dict = _get_datapipes_dict(
@@ -231,10 +263,21 @@ def construct_sliced_data_pipeline(
                 roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
+            nwp_datapipe = nwp_datapipe.map(potentially_coarsen)
+            # Somewhat hacky way for India specifically, need different mean/std for ECMWF data
+            if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
+                normalize_provider = "ecmwf_india"
+            else:
+                normalize_provider = conf_nwp[nwp_key].nwp_provider
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
-                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
-                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
+                mean=NWP_MEANS[normalize_provider],
+                std=NWP_STDS[normalize_provider],
             )
+
+            if upsample_nwp:
+                nwp_datapipes_dict[nwp_key] = nwp_datapipes_dict[nwp_key].upsample(
+                    y_upsample=2, x_upsample=2, keep_same_shape=True, round_to_dp=2
+                )
 
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
@@ -374,19 +417,18 @@ def windnet_netcdf_datapipe(
 
 if __name__ == "__main__":
     # Load the ECMWF and sensor data here
-    datapipe = windnet_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        start_time=datetime(2023, 1, 1),
-        end_time=datetime(2023, 11, 2),
-    )
-    batch = next(iter(datapipe))
-    print(batch)
-    batch.to_netcdf("test.nc", engine="h5netcdf")
+    # datapipe = windnet_datapipe(
+    #    config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
+    #    start_time=datetime(2023, 1, 1),
+    #    end_time=datetime(2023, 11, 2),
+    # )
+    # batch = next(iter(datapipe))
+    # print(batch)
+    # batch.to_netcdf("test.nc", engine="h5netcdf")
     # Load the saved NetCDF files here
     datapipe = windnet_netcdf_datapipe(
-        config_filename="/home/jacob/Development/ocf_datapipes/tests/config/india_test.yaml",
-        keys=["nwp", "sensor"],
-        filenames=["test.nc"],
+        keys=["nwp", "wind"],
+        filenames=["/run/media/jacob/data/windnet_india_batches_medium/val/000000.nc"],
     )
     batch = next(iter(datapipe))
-    print(batch)
+    # print(batch)

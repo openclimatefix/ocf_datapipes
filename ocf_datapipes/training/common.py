@@ -19,10 +19,20 @@ from ocf_datapipes.load import (
     OpenPVFromNetCDF,
     OpenPVFromPVSitesDB,
     OpenSatellite,
-    OpenTopography,
     OpenWindFromNetCDF,
 )
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
+
+try:
+    from ocf_datapipes.load import OpenTopography
+
+    # Rioxarray is sometimes a pain to install, so only load this if its installed
+except ImportError:
+    print(
+        "Could not import OpenTopography," " this is probably becasye Rioxarray is not installed."
+    )
+    pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -1205,3 +1215,14 @@ def create_t0_and_loc_datapipes(
     location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)
 
     return location_pipe, t0_datapipe
+
+
+def potentially_coarsen(xr_data: xr.Dataset):
+    """Coarsen the data, if it is separated by 0.05 degrees each"""
+    if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
+        if np.isclose(np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0]), 0.05):
+            if np.isclose(np.round(xr_data.latitude.values[0], 1), xr_data.latitude.values[0]):
+                xr_data = xr_data.isel(latitude=slice(0, None, 2), longitude=slice(0, None, 2))
+            else:
+                xr_data = xr_data.isel(latitude=slice(1, None, 2), longitude=slice(1, None, 2))
+    return xr_data
