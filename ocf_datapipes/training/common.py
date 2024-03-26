@@ -36,6 +36,24 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+def is_config_and_path_valid(use_flag: bool, config, filepath_resolver) -> bool:
+    """
+    Helper fucntion for open_and_return_datapipes that checks if the configuration attribute exists
+    and the specified file path attribute is not empty.
+
+    Args:
+        config_attr (object): Configuration attribute to check.
+        file_path_attr (str): File path attribute to check for non-emptiness
+
+    Returns:
+        bool: True if config_attr is not None and file_path_attr is not an empty string, False otherwise.
+    """
+    if not use_flag or config is None:
+        return False
+
+    filepath = filepath_resolver(config) if callable(filepath_resolver) else getattr(config, filepath_resolver, "")
+    return bool(filepath)
+
 
 def open_and_return_datapipes(
     configuration_filename: str,
@@ -77,33 +95,14 @@ def open_and_return_datapipes(
         and len(conf_in.nwp) != 0
         and all(v.nwp_zarr_path != "" for _, v in conf_in.nwp.items())
     )
-    use_pv = (
-        use_pv and (conf_in.pv is not None) and (conf_in.pv.pv_files_groups[0].pv_filename != "")
-    )
-    use_sat = (
-        use_sat
-        and (conf_in.satellite is not None)
-        and (conf_in.satellite.satellite_zarr_path != "")
-    )
-    use_hrv = (
-        use_hrv
-        and (conf_in.hrvsatellite is not None)
-        and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
-    )
-    use_topo = (
-        use_topo
-        and (conf_in.topographic is not None)
-        and (conf_in.topographic.topographic_filename != "")
-    )
-    use_gsp = use_gsp and (conf_in.gsp is not None) and (conf_in.gsp.gsp_zarr_path != "")
-    use_sensor = (
-        use_sensor and (conf_in.sensor is not None) and (conf_in.sensor.sensor_filename != "")
-    )
-    use_wind = (
-        use_wind
-        and (conf_in.wind is not None)
-        and (conf_in.wind.wind_files_groups[0].wind_filename != "")
-    )
+
+    use_pv = is_config_and_path_valid(use_pv, conf_in.pv, lambda config: config.pv_files_groups[0].pv_filename if config.pv_files_groups else "")
+    use_sat = is_config_and_path_valid(use_sat, conf_in.satellite, "satellite_zarr_path")
+    use_hrv = is_config_and_path_valid(use_hrv, conf_in.hrvsatellite, "hrvsatellite_zarr_path")
+    use_topo = is_config_and_path_valid(use_topo, conf_in.topographic, "topographic_filename")
+    use_gsp = is_config_and_path_valid(use_gsp, conf_in.gsp, "gsp_zarr_path")
+    use_sensor = is_config_and_path_valid(use_sensor, conf_in.sensor, "sensor_filename")
+    use_wind = is_config_and_path_valid(use_wind, conf_in.wind, lambda config: config.wind_files_groups[0].wind_filename if config.wind_files_groups else "")
 
     logger.debug(
         f"GSP: {use_gsp} NWP: {use_nwp} Sat: {use_sat},"
