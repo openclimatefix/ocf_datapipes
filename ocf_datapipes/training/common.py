@@ -39,8 +39,7 @@ logger = logging.getLogger(__name__)
 
 def is_config_and_path_valid(use_flag: bool, config, filepath_resolver) -> bool:
     """
-    Checks if the given configuration should be used based on the use_flag,
-    presence of the configuration, and the non-emptiness of a specified file path.
+    Checks if the given configuration should be used based on specific criteria.
 
     Args:
         use_flag (bool): Indicates whether to consider using the configuration.
