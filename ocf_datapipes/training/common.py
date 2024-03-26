@@ -1,7 +1,7 @@
 """Common functionality for datapipes"""
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Callable
 
 import numpy as np
 import xarray as xr
@@ -9,7 +9,7 @@ from torch.utils.data import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.batch import BatchKey, NumpyBatch
-from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.config.model import Configuration, InputData
 from ocf_datapipes.load import (
     OpenAWOSFromNetCDF,
     OpenConfiguration,
@@ -37,7 +37,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def is_config_and_path_valid(use_flag: bool, config, filepath_resolver) -> bool:
+def is_config_and_path_valid(use_flag: bool, config: Optional[InputData], filepath_resolver: Union[str, Callable[[InputData], str]]) -> bool:
     """
     Checks if the given configuration should be used based on specific criteria.
 
