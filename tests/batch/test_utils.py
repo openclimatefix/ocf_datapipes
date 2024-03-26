@@ -5,6 +5,7 @@ from ocf_datapipes.batch import BatchKey, NumpyBatch, TensorBatch
 from ocf_datapipes.batch.utils import copy_batch_to_device, batch_to_tensor
 import pytest
 
+
 @pytest.fixture()
 def sample_numpy_batch():
     sample: NumpyBatch = {}
