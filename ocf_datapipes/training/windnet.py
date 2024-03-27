@@ -48,6 +48,7 @@ normalization_values = {
 
 def _normalize_wind_power(x: xr.DataArray):
     """Normalize PV data"""
+    return x / normalization_values[2024]
     # This is after the data has been temporally sliced, so have the year
     year = x.time_utc.dt.year
 

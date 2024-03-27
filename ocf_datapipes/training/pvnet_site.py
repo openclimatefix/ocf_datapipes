@@ -48,6 +48,8 @@ normalization_values = {
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
     # This is after the data has been temporally sliced, so have the year
+    return x / normalization_values[2024]
+
     year = x.time_utc.dt.year
 
     # Add the effective_capacity_mwp to the dataset, indexed on the time_utc
