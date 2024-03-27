@@ -37,7 +37,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def is_config_and_path_valid(use_flag: bool, config: Optional[InputData], filepath_resolver: Union[str, Callable[[InputData], str]]) -> bool:
+def is_config_and_path_valid(use_flag: bool, config, filepath_resolver: Union[str, Callable[[InputData], str]]) -> bool:
     """
     Checks if the given configuration should be used based on specific criteria.
 
