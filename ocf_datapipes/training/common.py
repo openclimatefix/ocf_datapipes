@@ -1,7 +1,7 @@
 """Common functionality for datapipes"""
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import xarray as xr
@@ -9,7 +9,7 @@ from torch.utils.data import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.batch import BatchKey, NumpyBatch
-from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.config.model import Configuration, InputData
 from ocf_datapipes.load import (
     OpenAWOSFromNetCDF,
     OpenConfiguration,
@@ -35,6 +35,36 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
+
+
+def is_config_and_path_valid(
+    use_flag: bool,
+    config,
+    filepath_resolver: Union[str, Callable[[InputData], str]],
+) -> bool:
+    """
+    Checks if the given configuration should be used based on specific criteria.
+
+    Args:
+        use_flag (bool): Indicates whether to consider using the configuration.
+        config (object): The configuration object to check.
+        filepath_resolver (str or callable): Specifies how to access the file path within config;
+            can be an attribute name (str) or a function (callable) that returns the file path.
+
+    Returns:
+        bool: True if all conditions are met (use_flag is True, config is not None,
+              and the resolved file path is not empty), otherwise False.
+    """
+
+    if not use_flag or config is None:
+        return False
+
+    filepath = (
+        filepath_resolver(config)
+        if callable(filepath_resolver)
+        else getattr(config, filepath_resolver, "")
+    )
+    return bool(filepath)
 
 
 def open_and_return_datapipes(
@@ -77,32 +107,23 @@ def open_and_return_datapipes(
         and len(conf_in.nwp) != 0
         and all(v.nwp_zarr_path != "" for _, v in conf_in.nwp.items())
     )
-    use_pv = (
-        use_pv and (conf_in.pv is not None) and (conf_in.pv.pv_files_groups[0].pv_filename != "")
+
+    use_pv = is_config_and_path_valid(
+        use_pv,
+        conf_in.pv,
+        lambda config: config.pv_files_groups[0].pv_filename if config.pv_files_groups else "",
     )
-    use_sat = (
-        use_sat
-        and (conf_in.satellite is not None)
-        and (conf_in.satellite.satellite_zarr_path != "")
-    )
-    use_hrv = (
-        use_hrv
-        and (conf_in.hrvsatellite is not None)
-        and (conf_in.hrvsatellite.hrvsatellite_zarr_path != "")
-    )
-    use_topo = (
-        use_topo
-        and (conf_in.topographic is not None)
-        and (conf_in.topographic.topographic_filename != "")
-    )
-    use_gsp = use_gsp and (conf_in.gsp is not None) and (conf_in.gsp.gsp_zarr_path != "")
-    use_sensor = (
-        use_sensor and (conf_in.sensor is not None) and (conf_in.sensor.sensor_filename != "")
-    )
-    use_wind = (
-        use_wind
-        and (conf_in.wind is not None)
-        and (conf_in.wind.wind_files_groups[0].wind_filename != "")
+    use_sat = is_config_and_path_valid(use_sat, conf_in.satellite, "satellite_zarr_path")
+    use_hrv = is_config_and_path_valid(use_hrv, conf_in.hrvsatellite, "hrvsatellite_zarr_path")
+    use_topo = is_config_and_path_valid(use_topo, conf_in.topographic, "topographic_filename")
+    use_gsp = is_config_and_path_valid(use_gsp, conf_in.gsp, "gsp_zarr_path")
+    use_sensor = is_config_and_path_valid(use_sensor, conf_in.sensor, "sensor_filename")
+    use_wind = is_config_and_path_valid(
+        use_wind,
+        conf_in.wind,
+        lambda config: config.wind_files_groups[0].wind_filename
+        if config.wind_files_groups
+        else "",
     )
 
     logger.debug(
