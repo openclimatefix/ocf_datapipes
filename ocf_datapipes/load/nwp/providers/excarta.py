@@ -46,7 +46,9 @@ def open_excarta(zarr_path) -> xr.Dataset:
                 )
             )
     # Open the data
-    nwp = open_zarr_paths(zarr_path, time_dim="init_time_utc", preprocessor=preprocess_excarta)
+    nwp: xr.Dataset = open_zarr_paths(
+        zarr_path, time_dim="init_time_utc", preprocessor=preprocess_excarta
+    )
     nwp = nwp.rename({"prediction_timedelta": "step"})
     nwp = nwp.sortby("init_time_utc")
     # wind is split into speed and direction, so would want to decompose it with sin and cos
@@ -55,6 +57,12 @@ def open_excarta(zarr_path) -> xr.Dataset:
     nwp["10v"] = nwp["10m_wind_speed"] * np.sin(np.deg2rad(nwp["10m_wind_speed_angle"]))
     nwp["100u"] = nwp["100m_wind_speed"] * np.cos(np.deg2rad(nwp["100m_wind_speed_angle"]))
     nwp["100v"] = nwp["100m_wind_speed"] * np.sin(np.deg2rad(nwp["100m_wind_speed_angle"]))
+
+    # Combine them all into a channels dimension
+    nwp = nwp.drop_vars(
+        ["10m_wind_speed", "10m_wind_speed_angle", "100m_wind_speed", "100m_wind_speed_angle"]
+    )
+    nwp = nwp.to_dataarray(dim="channels")
     # Sanity checks.
     time = pd.DatetimeIndex(nwp.init_time_utc)
     assert time.is_unique
