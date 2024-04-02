@@ -59,7 +59,3 @@ def open_excarta(zarr_path) -> xr.Dataset:
     assert time.is_unique
     assert time.is_monotonic_increasing
     return nwp
-
-
-data = open_excarta("pathy")
-print(data)
