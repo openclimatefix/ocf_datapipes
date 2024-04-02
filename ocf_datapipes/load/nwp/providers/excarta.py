@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
+import datetime
 
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
@@ -35,8 +36,16 @@ def open_excarta(zarr_path) -> xr.Dataset:
     Returns:
         Xarray DataArray of the NWP data
     """
+    # Doing the wildcard doesn't really work for Excarta at the moment
+    zarr_paths = []
+    for issue_date in pd.date_range(start="2021-01-01", end="2023-12-31", freq="D"):
+        zarr_paths.append(
+            issue_date.strftime(
+                "https://storage.googleapis.com/excarta-public-us/hindcast/20220225/%Y/%Y%m%d.zarr"
+            )
+        )
     # Open the data
-    nwp = open_zarr_paths(zarr_path, time_dim="init_time_utc", preprocessor=preprocess_excarta)
+    nwp = open_zarr_paths(zarr_paths, time_dim="init_time_utc", preprocessor=preprocess_excarta)
     nwp = nwp.rename({"prediction_timedelta": "step"})
     nwp = nwp.sortby("init_time_utc")
     # wind is split into speed and direction, so would want to decompose it with sin and cos
@@ -50,3 +59,7 @@ def open_excarta(zarr_path) -> xr.Dataset:
     assert time.is_unique
     assert time.is_monotonic_increasing
     return nwp
+
+
+data = open_excarta("pathy")
+print(data)
