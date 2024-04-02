@@ -62,7 +62,7 @@ def open_excarta(zarr_path) -> xr.Dataset:
     nwp = nwp.drop_vars(
         ["10m_wind_speed", "10m_wind_speed_angle", "100m_wind_speed", "100m_wind_speed_angle"]
     )
-    nwp = nwp.to_dataarray(dim="channels")
+    nwp = nwp.to_dataarray(dim="channel")
     # Sanity checks.
     time = pd.DatetimeIndex(nwp.init_time_utc)
     assert time.is_unique

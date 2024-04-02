@@ -32,7 +32,7 @@ class FilterChannelsIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data in self.source_datapipe:
-            if "channels" not in xr_data.dims and isinstance(
+            if "channel" not in xr_data.dims and isinstance(
                 xr_data, xr.Dataset
             ):  # Variables are in their own data variables, not channels
                 logger.debug(
