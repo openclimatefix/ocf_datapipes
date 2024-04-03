@@ -1,6 +1,7 @@
 """ECMWF provider loaders"""
 import pandas as pd
 import xarray as xr
+import numpy as np
 
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
@@ -17,6 +18,7 @@ def open_ifs(zarr_path) -> xr.DataArray:
     """
     # Open the data
     nwp = open_zarr_paths(zarr_path)
+    nwp = nwp.reindex(latitude=np.concatenate([np.arange(62, 60, -0.05), nwp.latitude.values])) # hack to fill in data for shetland isles
     dataVars = list(nwp.data_vars.keys())
     if len(dataVars) > 1:
         raise Exception("Too many TLDVs")

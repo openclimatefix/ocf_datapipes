@@ -258,6 +258,10 @@ def _load_pv_metadata(
 
         # Any other keys other than those in the dict above are mapped to NaN
         df_metadata["orientation"] = df_metadata.orientation.map(mapping)
+
+    elif label == "solar_sme_sites":
+        df_metadata["capacity_watts"] = df_metadata.capacity * 1000 * 1000 # MW to Watts
+
     else:
         raise NotImplementedError(f"Provider label {label} not implemented")
 

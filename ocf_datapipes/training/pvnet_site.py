@@ -37,7 +37,7 @@ logger = logging.getLogger("pvnet_site_datapipe")
 
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
-    return x / 3773.0  # TODO Check the actual max value
+    return x / 3773.0  # TODO Check the actual max value, generation value (change this in for smartest)
 
 
 class DictDatasetIterDataPipe(IterDataPipe):
@@ -374,8 +374,9 @@ def pvnet_site_netcdf_datapipe(
 if __name__ == "__main__":
     # Load the saved NetCDF files here
     datapipe = pvnet_site_netcdf_datapipe(
-        keys=["nwp", "pv"],
-        filenames=["/run/media/jacob/data/pvnet_india_batches/val/000000.nc"],
+        keys=["nwp", "sat", "pv"],
+        filenames=["/run/media/jacob/data/pvnet_india_batches/val/000000.nc"], # what are these netcdf files/how are they different from the ones in the config?
     )
     batch = next(iter(datapipe))
     print(batch)
+
