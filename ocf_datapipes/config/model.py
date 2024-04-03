@@ -156,7 +156,7 @@ class DropoutMixin(Base):
 class SystemDropoutMixin(Base):
     """Mixin class, to add independent system dropout"""
 
-    system_dropout_timedeltas_minutes: List[int] = Field(
+    system_dropout_timedeltas_minutes: Optional[List[int]] = Field(
         None,
         description="List of possible minutes before t0 where data availability may start. Must be "
         "negative or zero. Each system in a sample is delayed independently from the other by "
