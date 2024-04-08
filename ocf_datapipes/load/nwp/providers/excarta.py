@@ -36,6 +36,13 @@ def open_excarta(zarr_path) -> xr.Dataset:
     Returns:
         Xarray DataArray of the NWP data
     """
+
+    if "hindcast" in str(zarr_path):  # Preprocessed one
+        nwp = open_zarr_paths(zarr_path)
+        time = pd.DatetimeIndex(nwp.init_time_utc)
+        assert time.is_unique
+        assert time.is_monotonic_increasing
+        return nwp
     # Doing the wildcard doesn't really work for Excarta at the moment
     if "*" in str(zarr_path):
         zarr_path = []
@@ -59,10 +66,10 @@ def open_excarta(zarr_path) -> xr.Dataset:
     nwp["100v"] = nwp["100m_wind_speed"] * np.sin(np.deg2rad(nwp["100m_wind_speed_angle"]))
 
     # Combine them all into a channels dimension
-    nwp = nwp.drop_vars(
+    nwp: xr.Dataset = nwp.drop_vars(
         ["10m_wind_speed", "10m_wind_speed_angle", "100m_wind_speed", "100m_wind_speed_angle"]
     )
-    nwp = nwp.to_dataarray(dim="channel")
+    nwp: xr.DataArray = nwp.to_array(dim="channel")
     # Sanity checks.
     time = pd.DatetimeIndex(nwp.init_time_utc)
     assert time.is_unique
