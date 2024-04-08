@@ -1,8 +1,8 @@
 """Excarta Loading"""
+
 import numpy as np
 import pandas as pd
 import xarray as xr
-import datetime
 
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
