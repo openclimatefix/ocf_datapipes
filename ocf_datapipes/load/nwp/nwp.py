@@ -8,6 +8,7 @@ from ocf_blosc2 import Blosc2  # noqa: F401
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
+from ocf_datapipes.load.nwp.providers.excarta import open_excarta
 from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
@@ -43,6 +44,8 @@ class OpenNWPIterDataPipe(IterDataPipe):
             self.open_nwp = open_ifs
         elif provider.lower() == "gfs":
             self.open_nwp = open_gfs
+        elif provider.lower() == "excarta":
+            self.open_nwp = open_excarta
         else:
             raise ValueError(f"Unknown provider: {provider}")
 

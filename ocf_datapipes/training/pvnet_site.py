@@ -7,7 +7,7 @@ import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
 from torch.utils.data.datapipes.iter import IterableWrapper
 
-from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
+from ocf_datapipes.batch import BatchKey, MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.training.common import (
     DatapipeKeyForker,
     _get_datapipes_dict,
@@ -16,6 +16,7 @@ from ocf_datapipes.training.common import (
     fill_nans_in_arrays,
     fill_nans_in_pv,
     normalize_gsp,
+    potentially_coarsen,
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
@@ -34,10 +35,29 @@ from ocf_datapipes.utils.utils import (
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_site_datapipe")
 
+normalization_values = {
+    2019: 3185.0,
+    2020: 2678.0,
+    2021: 3196.0,
+    2022: 3575.0,
+    2023: 3773.0,
+    2024: 3773.0,
+}
+
 
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
-    return x / 3773.0  # TODO Check the actual max value, generation value (change this in for smartest)
+    # This is after the data has been temporally sliced, so have the year
+    return x / normalization_values[2024]
+
+    year = x.time_utc.dt.year
+
+    # Add the effective_capacity_mwp to the dataset, indexed on the time_utc
+    return (
+        x / normalization_values[year]
+        if year in normalization_values
+        else x / normalization_values[2024]
+    )
 
 
 class DictDatasetIterDataPipe(IterDataPipe):
@@ -106,6 +126,7 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
             for filename in self.filenames:
                 dataset = xr.open_dataset(filename)
                 datasets = uncombine_from_single_dataset(dataset)
+                datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
                 # Yield a dictionary of the data, using the keys in self.keys
                 dataset_dict = {}
                 for k in self.keys:
@@ -231,9 +252,16 @@ def construct_sliced_data_pipeline(
                 roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
+            # Coarsen the data, if it is separated by 0.05 degrees each
+            nwp_datapipe = nwp_datapipe.map(potentially_coarsen)
+            # Somewhat hacky way for India specifically, need different mean/std for ECMWF data
+            if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
+                normalize_provider = "ecmwf_india"
+            else:
+                normalize_provider = conf_nwp[nwp_key].nwp_provider
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
-                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
-                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
+                mean=NWP_MEANS[normalize_provider],
+                std=NWP_STDS[normalize_provider],
             )
 
     if "sat" in datapipes_dict:
@@ -374,9 +402,10 @@ def pvnet_site_netcdf_datapipe(
 if __name__ == "__main__":
     # Load the saved NetCDF files here
     datapipe = pvnet_site_netcdf_datapipe(
-        keys=["nwp", "sat", "pv"],
-        filenames=["/run/media/jacob/data/pvnet_india_batches/val/000000.nc"], # what are these netcdf files/how are they different from the ones in the config?
+        keys=["nwp", "pv"],
+        filenames=["/run/media/jacob/data/train/000000.nc"],
     )
     batch = next(iter(datapipe))
-    print(batch)
-
+    # print(batch)
+    # print(len(batch[BatchKey.pv_solar_azimuth]))
+    print(batch[BatchKey.pv_solar_elevation].shape)

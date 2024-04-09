@@ -28,3 +28,4 @@ from .pv.remove_pv_zero_examples import PVPowerRemoveZeroDataIterDataPipe as PVP
 from .reproject_topographic_data import (
     ReprojectTopographyIterDataPipe as ReprojectTopography,
 )
+from .upsample import UpSampleIterDataPipe as Upsample
