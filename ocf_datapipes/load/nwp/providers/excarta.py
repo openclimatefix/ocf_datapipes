@@ -37,7 +37,7 @@ def open_excarta(zarr_path) -> xr.Dataset:
         Xarray DataArray of the NWP data
     """
 
-    if "hindcast" in str(zarr_path):  # Preprocessed one
+    if "hindcast.zarr" in str(zarr_path):  # Preprocessed one
         nwp = open_zarr_paths(zarr_path)
         time = pd.DatetimeIndex(nwp.init_time_utc)
         assert time.is_unique
