@@ -4,7 +4,6 @@ import logging
 import fsspec
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
-import ocf_blosc2
 
 from ocf_datapipes.config.model import Sensor
 
