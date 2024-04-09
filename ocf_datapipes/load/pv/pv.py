@@ -86,6 +86,7 @@ def load_everything_into_ram(
     df_gen, estimated_capacities = _load_pv_generation_and_capacity(
         generation_filename,
         estimated_capacity_percentile=estimated_capacity_percentile,
+        label=label,
     )
 
     # Drop systems where all values are NaN
@@ -174,6 +175,10 @@ def _load_pv_generation_and_capacity(
                     "Going to try and carry on anyway"
                 )
                 _log.warning(e)
+        if label == "solar_sme_sites":
+            # getting the df with pv data into the required format
+            df_gen = df_gen[['power']]
+            df_gen = df_gen.pivot_table(values='power', index='ts', columns='pv_id')
 
     # Fix data types
     df_gen = df_gen.astype(np.float32)

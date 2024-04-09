@@ -48,7 +48,8 @@ normalization_values = {
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
     # This is after the data has been temporally sliced, so have the year
-    return x / normalization_values[2024]
+    # return x / normalization_values[2024]
+    return x / 49.620 # harcoded for now but this needs to be changed to a value per site
 
     year = x.time_utc.dt.year
 
@@ -255,10 +256,10 @@ def construct_sliced_data_pipeline(
             # Coarsen the data, if it is separated by 0.05 degrees each
             nwp_datapipe = nwp_datapipe.map(potentially_coarsen)
             # Somewhat hacky way for India specifically, need different mean/std for ECMWF data
-            if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
-                normalize_provider = "ecmwf_india"
-            else:
-                normalize_provider = conf_nwp[nwp_key].nwp_provider
+            # if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
+            #     normalize_provider = "ecmwf_india"
+            # else:
+            normalize_provider = conf_nwp[nwp_key].nwp_provider
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
                 mean=NWP_MEANS[normalize_provider],
                 std=NWP_STDS[normalize_provider],
