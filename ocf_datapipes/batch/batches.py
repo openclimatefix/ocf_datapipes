@@ -4,6 +4,7 @@ from enum import Enum, auto
 from typing import Union
 
 import numpy as np
+import torch
 import xarray as xr
 
 
@@ -195,6 +196,9 @@ class BatchKey(Enum):
     sensor_longitude_fourier = auto()
     sensor_time_utc_fourier = auto()  # (batch_size, time, n_fourier_features)
 
+    wind_solar_azimuth = auto()
+    wind_solar_elevation = auto()
+
 
 class NWPBatchKey(Enum):
     """The names of the different elements of each NWP batch.
@@ -226,3 +230,5 @@ NWPNumpyBatch = dict[NWPBatchKey, np.ndarray]
 NumpyBatch = dict[BatchKey, Union[np.ndarray, dict[str, NWPNumpyBatch]]]
 
 XarrayBatch = dict[BatchKey, Union[xr.DataArray, xr.Dataset]]
+
+TensorBatch = dict[BatchKey, Union[torch.Tensor, dict[str, dict[NWPBatchKey, torch.Tensor]]]]

@@ -63,6 +63,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
             "hrvsatellite",
             "gsp",
             "pv",
+            "wind",
         ], f"Cant add sun position on {self.modality_name}"
 
     def __iter__(self):
@@ -100,6 +101,25 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                     lats = lats[..., 0]
                     lons = lons[..., 0]
 
+            elif self.modality_name == "wind":
+                lats = np_batch[BatchKey.wind_latitude]  # Shape: (optional[example], n_pvs)
+                lons = np_batch[BatchKey.wind_longitude]  # Shape: (optional[example], n_pvs)
+                time_utc = np_batch[BatchKey.wind_time_utc]  # Shape: optional[example]
+
+                # If using multiple PV systems, take mean location
+                if lats.shape[-1] > 1:
+                    # Sometimes, the PV coords can all be NaNs if there are no PV systems
+                    # for that datetime and location. e.g. in northern Scotland!
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings(
+                            action="ignore", category=RuntimeWarning, message="Mean of empty slice"
+                        )
+                        lats = np.nanmean(lats, axis=-1)
+                        lons = np.nanmean(lons, axis=-1)
+                else:
+                    lats = lats[..., 0]
+                    lons = lons[..., 0]
+
             elif self.modality_name == "gsp":
                 y_osgb = np_batch[BatchKey.gsp_y_osgb]  # Shape: optional[example], n_gsps
                 x_osgb = np_batch[BatchKey.gsp_x_osgb]  # Shape: optional[example], n_gsps
@@ -117,7 +137,7 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 raise ValueError(f"Unrecognized modality: {self.modality_name }")
 
             # As we move away from OSGB and towards lon, lat we can exclude more sources here
-            if self.modality_name not in ["pv"]:
+            if self.modality_name not in ["pv", "wind"]:
                 # Convert to the units that pvlib expects: lon, lat
                 lons, lats = osgb_to_lon_lat(x=x_osgb, y=y_osgb)
 

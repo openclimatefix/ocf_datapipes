@@ -35,7 +35,7 @@ class NWPStatDict(dict):
 
 # --------------------------- NWP ------------------------------------
 
-NWP_PROVIDERS = ["ukv", "gfs", "icon-eu", "icon-global", "ecmwf"]
+NWP_PROVIDERS = ["ukv", "gfs", "icon-eu", "icon-global", "ecmwf", "ecmwf_india", "excarta"]
 
 # ------ UKV
 # Means and std computed WITH version_7 and higher, MetOffice values
@@ -189,19 +189,118 @@ ECMWF_VARIABLE_NAMES = tuple(ECMWF_MEAN.keys())
 ECMWF_STD = _to_data_array(ECMWF_STD)
 ECMWF_MEAN = _to_data_array(ECMWF_MEAN)
 
+# These were calculated from 200 random init times of ECMWF data from 2020-2024
+INDIA_ECMWF_MEAN = {
+    "dlwrf": 56931292.0,
+    "dswrf": 31114434.0,
+    "duvrs": 3363442.75,
+    "hcc": 0.2640938460826874,
+    "lcc": 0.09548956900835037,
+    "mcc": 0.11118797957897186,
+    "prate": 3.028022729267832e-05,
+    "sde": 0.0015021926956251264,
+    "sr": 31403020.0,
+    "t2m": 298.24462890625,
+    "tcc": 0.33420485258102417,
+    "u10": 0.7755107283592224,
+    "u100": 1.0605329275131226,
+    "u200": 1.2298915386199951,
+    "v10": 0.02332865633070469,
+    "v100": -0.07577426731586456,
+    "v200": -0.1255049854516983,
+}
+
+INDIA_ECMWF_STD = {
+    "dlwrf": 34551808.0,
+    "dswrf": 21211150.0,
+    "duvrs": 2300205.5,
+    "hcc": 0.3942722678184509,
+    "lcc": 0.22802403569221497,
+    "mcc": 0.2254289835691452,
+    "prate": 0.00023954990319907665,
+    "sde": 0.09043189883232117,
+    "sr": 23481620.0,
+    "t2m": 7.574307918548584,
+    "tcc": 0.4046371579170227,
+    "u10": 2.7440550327301025,
+    "u100": 4.084362506866455,
+    "u200": 4.770451068878174,
+    "v10": 2.401158571243286,
+    "v100": 3.5278923511505127,
+    "v200": 3.974159002304077,
+}
+
+
+INDIA_ECMWF_VARIABLE_NAMES = tuple(INDIA_ECMWF_MEAN.keys())
+INDIA_ECMWF_STD = _to_data_array(INDIA_ECMWF_STD)
+INDIA_ECMWF_MEAN = _to_data_array(INDIA_ECMWF_MEAN)
+
+# ------- Excarta
+EXCARTA_MEAN = {
+    "10m_wind_speed": 6.228208065032959,
+    "10m_wind_speed_angle": 175.47128295898438,
+    "100m_wind_speed": 7.9128193855285645,
+    "100m_wind_speed_angle": 175.80787658691406,
+    "2m_dewpoint_temperature": 274.4578857421875,
+    "2m_temperature": 278.8953857421875,
+    "dhi": 57.628360730489284,
+    "dni": 199.1950671565817,
+    "ghi": 166.49980409084822,
+    "mean_sea_level_pressure": 1009.3062133789062,
+    "surface_pressure": 966.7402954101562,
+    "total_precipitation_1hr": 0.11734692007303238,
+    "10u": -0.223025843501091,
+    "10v": 0.022012686356902122,
+    "100u": -0.24015851318836212,
+    "100v": -0.05406061187386513,
+}
+EXCARTA_STD = {
+    "10m_wind_speed": 3.7157022953033447,
+    "10m_wind_speed_angle": 99.94088745117188,
+    "100m_wind_speed": 4.652981281280518,
+    "100m_wind_speed_angle": 100.15699768066406,
+    "2m_dewpoint_temperature": 20.453125,
+    "2m_temperature": 20.99526596069336,
+    "dhi": 81.87070491961677,
+    "dni": 300.6946092717406,
+    "ghi": 253.34016941784316,
+    "mean_sea_level_pressure": 13.694265365600586,
+    "surface_pressure": 94.92646789550781,
+    "total_precipitation_1hr": 0.2296331822872162,
+    "10u": 4.701057434082031,
+    "10v": 5.518700122833252,
+    "100u": 6.01924991607666,
+    "100v": 6.966071128845215,
+}
+
+EXCARTA_VARIABLE_NAMES = tuple(EXCARTA_MEAN.keys())
+EXCARTA_STD = _to_data_array(EXCARTA_STD)
+EXCARTA_MEAN = _to_data_array(EXCARTA_MEAN)
+
+
 # ------ ALL NWPS
 # These dictionaries are for convenience
 NWP_VARIABLE_NAMES = NWPStatDict(
     ukv=UKV_VARIABLE_NAMES,
     gfs=GFS_VARIABLE_NAMES,
     ecmwf=ECMWF_VARIABLE_NAMES,
+    ecmwf_india=INDIA_ECMWF_VARIABLE_NAMES,
+    excarta=EXCARTA_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
     gfs=GFS_STD,
     ecmwf=ECMWF_STD,
+    ecmwf_india=INDIA_ECMWF_STD,
+    excarta=EXCARTA_STD,
 )
-NWP_MEANS = NWPStatDict(ukv=UKV_MEAN, gfs=GFS_MEAN, ecmwf=ECMWF_MEAN)
+NWP_MEANS = NWPStatDict(
+    ukv=UKV_MEAN,
+    gfs=GFS_MEAN,
+    ecmwf=ECMWF_MEAN,
+    ecmwf_india=INDIA_ECMWF_MEAN,
+    excarta=EXCARTA_MEAN,
+)
 
 # --------------------------- SATELLITE ------------------------------
 
