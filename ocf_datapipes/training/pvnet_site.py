@@ -49,7 +49,7 @@ def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
     # This is after the data has been temporally sliced, so have the year
     # return x / normalization_values[2024]
-    return x / 49.620 # harcoded for now but this needs to be changed to a value per site
+    return x / (x.nominal_capacity_wp / (1000 * 1000 )) # generation values in MW so convert capacity to MW first from Watts
 
     year = x.time_utc.dt.year
 
