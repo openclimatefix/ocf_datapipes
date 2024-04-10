@@ -72,8 +72,8 @@ def open_excarta(zarr_path) -> xr.Dataset:
         ["10m_wind_speed", "10m_wind_speed_angle", "100m_wind_speed", "100m_wind_speed_angle"]
     )
     nwp: xr.DataArray = nwp.to_array(dim="channel")
-    #nwp = nwp.rename({"__xarray_dataarray_variable__": "excarta"})
-    #nwp: xr.DataArray = nwp["excarta"]
+    # nwp = nwp.rename({"__xarray_dataarray_variable__": "excarta"})
+    # nwp: xr.DataArray = nwp["excarta"]
     # Sanity checks.
     time = pd.DatetimeIndex(nwp.init_time_utc)
     assert time.is_unique
