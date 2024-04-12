@@ -21,12 +21,12 @@ from ocf_datapipes.training.common import (
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
+    METEOMATICS_MEAN,
+    METEOMATICS_STDDEV,
     NWP_MEANS,
     NWP_STDS,
     RSS_MEAN,
     RSS_STD,
-    METEOMATICS_MEAN, 
-    METEOMATICS_STDDEV
 )
 from ocf_datapipes.utils.utils import (
     combine_to_single_dataset,
@@ -126,7 +126,6 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
     def __iter__(self):
         """Iterate through each filename, loading it, uncombining it, and then yielding it"""
-        import numpy as np
 
         while True:
             for filename in self.filenames:
