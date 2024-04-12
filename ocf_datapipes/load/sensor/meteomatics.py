@@ -36,4 +36,3 @@ class OpenMeteomaticsFromNetCDFIterDataPipe(IterDataPipe):
             ds = ds[self.variables].to_array()
         while True:
             yield ds
-
