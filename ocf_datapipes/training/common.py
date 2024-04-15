@@ -885,20 +885,6 @@ def slice_datapipes_by_time(
             fill_selection=production,
         )
 
-        # Dropout on the sensor, but not the future sensor
-        dropout_timedeltas = minutes_list_to_timedeltas(conf_in.sensor.dropout_timedeltas_minutes)
-
-        sensor_dropout_time_datapipe = get_t0_datapipe("sensor").draw_dropout_time(
-            # All sensor data could be delayed by up to 30 minutes
-            # (this does not stem from production - just setting for now)
-            dropout_timedeltas=dropout_timedeltas,
-            dropout_frac=0 if production else conf_in.sensor.dropout_fraction,
-        )
-
-        datapipes_dict["sensor"] = datapipes_dict["sensor"].apply_dropout_time(
-            dropout_time_datapipe=sensor_dropout_time_datapipe,
-        )
-
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
 
