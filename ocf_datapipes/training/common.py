@@ -11,16 +11,15 @@ from torch.utils.data.datapipes.datapipe import IterDataPipe
 from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.config.model import Configuration, InputData
 from ocf_datapipes.load import (
-    OpenAWOSFromNetCDF,
     OpenConfiguration,
     OpenGSP,
     OpenGSPFromDatabase,
+    OpenMeteomaticsFromZarr,
     OpenNWP,
     OpenPVFromNetCDF,
     OpenPVFromPVSitesDB,
     OpenSatellite,
     OpenWindFromNetCDF,
-    OpenMeteomaticsFromZarr,
 )
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
