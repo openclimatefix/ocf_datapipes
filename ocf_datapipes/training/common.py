@@ -881,7 +881,7 @@ def slice_datapipes_by_time(
             t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(conf_in.sensor.time_resolution_minutes),
             interval_start=minutes(-conf_in.sensor.history_minutes),
-            interval_end=minutes(0),
+            interval_end=minutes(conf_in.sensor.forecast_minutes),
             fill_selection=production,
         )
 

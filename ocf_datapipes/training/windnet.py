@@ -247,7 +247,7 @@ def construct_sliced_data_pipeline(
 
     # We don't need somes keys even if they are in the data dictionary
     fork_keys = fork_keys - set(
-        ["topo", "nwp", "wind", "wind_future", "sensor", "hrv", "pv_future", "pv"]
+        ["topo", "nwp", "wind", "wind_future", "sensor", "sensor_future", "hrv", "pv_future", "pv"]
     )
 
     # Set up a key-forker for all the data sources we need it for
