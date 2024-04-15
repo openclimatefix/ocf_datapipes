@@ -1,7 +1,6 @@
 """Load Metoematics data from local files for training/inference"""
 import logging
 
-import fsspec
 import numpy as np
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
