@@ -12,7 +12,7 @@ _log = logging.getLogger(__name__)
 
 
 @functional_datapipe("OpenMeteomatics")
-class OpenMeteomaticsFromNetCDFIterDataPipe(IterDataPipe):
+class OpenMeteomaticsFromZarrIterDataPipe(IterDataPipe):
     """OpenMeteomaticsFromNetCDFIterDataPipe"""
 
     def __init__(
@@ -31,9 +31,14 @@ class OpenMeteomaticsFromNetCDFIterDataPipe(IterDataPipe):
         self.variables = list(self.sensor.sensor_variables)
 
     def __iter__(self):
-        with fsspec.open(self.filename, "rb") as f:
-            data = xr.open_mfdataset(f, engine="zarr", combine="nested", concat_dim="time_utc")
-            data = data.sortby("time_utc")
+        if len(self.filename) == 1 or "*" not in self.filename:
+            data = xr.open_zarr(self.filename)
+        else:
+            data = xr.open_mfdataset(
+                self.filename, engine="zarr", combine="nested", concat_dim="time_utc"
+            )
+        data = data.sortby("time_utc")
+        if "wind_speed_100m:ms" in data:
             # Generate U and V components from wind speed and direction
             data["100u"] = data["wind_speed_100m:ms"] * np.cos(np.deg2rad(data["wind_dir_100m:d"]))
             data["100v"] = data["wind_speed_100m:ms"] * np.sin(np.deg2rad(data["wind_dir_100m:d"]))
@@ -41,6 +46,6 @@ class OpenMeteomaticsFromNetCDFIterDataPipe(IterDataPipe):
             data["10v"] = data["wind_speed_10m:ms"] * np.sin(np.deg2rad(data["wind_dir_10m:d"]))
             data["200u"] = data["wind_speed_200m:ms"] * np.cos(np.deg2rad(data["wind_dir_200m:d"]))
             data["200v"] = data["wind_speed_200m:ms"] * np.sin(np.deg2rad(data["wind_dir_200m:d"]))
-            data = data[self.variables].to_array()
+        data = data[self.variables].to_array()
         while True:
             yield data
