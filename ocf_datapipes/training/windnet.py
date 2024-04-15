@@ -21,6 +21,8 @@ from ocf_datapipes.training.common import (
     slice_datapipes_by_time,
 )
 from ocf_datapipes.utils.consts import (
+    METEOMATICS_MEAN,
+    METEOMATICS_STDDEV,
     NWP_MEANS,
     NWP_STDS,
     RSS_MEAN,
@@ -129,15 +131,9 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
             for filename in self.filenames:
                 dataset = xr.open_dataset(filename)
                 datasets = uncombine_from_single_dataset(dataset)
-
-                if "ecmwf" in datasets["nwp"]:
+                # print(datasets)
+                if "ecmwf" in datasets["nwp"].keys():
                     datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
-
-                    # Select the specific keys desired
-                    datasets["nwp"]["ecmwf"] = datasets["nwp"]["ecmwf"].sel(
-                        channel=["u10", "u100", "u200", "v10", "v100", "v200"]
-                    )
-
                 # Yield a dictionary of the data, using the keys in self.keys
                 # print(datasets)
                 dataset_dict = {}
@@ -251,7 +247,7 @@ def construct_sliced_data_pipeline(
 
     # We don't need somes keys even if they are in the data dictionary
     fork_keys = fork_keys - set(
-        ["topo", "nwp", "wind", "wind_future", "sensor", "hrv", "pv_future", "pv"]
+        ["topo", "nwp", "wind", "wind_future", "sensor", "sensor_future", "hrv", "pv_future", "pv"]
     )
 
     # Set up a key-forker for all the data sources we need it for
@@ -282,7 +278,15 @@ def construct_sliced_data_pipeline(
                 nwp_datapipes_dict[nwp_key] = nwp_datapipes_dict[nwp_key].upsample(
                     y_upsample=2, x_upsample=2, keep_same_shape=True, round_to_dp=2
                 )
-
+    if "sensor" in datapipes_dict:
+        sensor_datapipe = datapipes_dict["sensor"]
+        sensor_datapipe = sensor_datapipe.select_spatial_slice_meters(
+            location_datapipe=get_loc_datapipe("sensor"),
+            roi_height_meters=10000000,
+            roi_width_meters=100000000,
+            dim_name="station_id",
+        )
+        sensor_datapipe = sensor_datapipe.normalize(mean=METEOMATICS_MEAN, std=METEOMATICS_STDDEV)
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
 
@@ -334,6 +338,8 @@ def construct_sliced_data_pipeline(
         finished_dataset_dict["sat"] = sat_datapipe
     if "wind" in datapipes_dict:
         finished_dataset_dict["wind"] = wind_datapipe
+    if "sensor" in datapipes_dict:
+        finished_dataset_dict["sensor"] = sensor_datapipe
 
     return finished_dataset_dict
 

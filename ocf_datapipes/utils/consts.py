@@ -370,3 +370,58 @@ AWOS_VARIABLE_NAMES = [
     "apparent_temperature_fahrenheit",
     "snow_depth_inches",
 ]
+
+METEOMATICS_MEAN = {
+    "air_density_100m:kgm3": 1.1133829082116107,
+    "air_density_10m:kgm3": 1.1258197248774804,
+    "air_density_200m:kgm3": 1.1025331248239914,
+    "air_density_25m:kgm3": 1.1233539544600366,
+    "cape:Jkg": 253.03451561805372,
+    "wind_dir_100m:d": 169.45384588817276,
+    "wind_dir_10m:d": 167.41098619295326,
+    "wind_dir_200m:d": 172.84169301261238,
+    "wind_gusts_100m:ms": 7.5697940411227,
+    "wind_gusts_10m:ms": 6.669156757048757,
+    "wind_gusts_200m:ms": 7.931425709746494,
+    "wind_speed_100m:ms": 5.700552600676936,
+    "wind_speed_10m:ms": 3.965335089434524,
+    "wind_speed_200m:ms": 6.165206326392172,
+    "100u": -1.3123529788956498,
+    "100v": -0.8755045035036727,
+    "10u": -1.0394979843264418,
+    "10v": -0.66336142004311,
+    "200u": -1.424415379022279,
+    "200v": -1.229537229620669,
+    "diffuse_rad:W": 82.88873314973185,
+    "direct_rad:W": 133.4593731845195,
+    "global_rad:W": 216.3481430642122,
+}
+METEOMATICS_STDDEV = {
+    "air_density_100m:kgm3": 0.03185123687962139,
+    "air_density_10m:kgm3": 0.03697884909883139,
+    "air_density_200m:kgm3": 0.030173773277697897,
+    "air_density_25m:kgm3": 0.03545224924821819,
+    "cape:Jkg": 526.2390700702676,
+    "wind_dir_100m:d": 93.64265888083348,
+    "wind_dir_10m:d": 93.33727424358632,
+    "wind_dir_200m:d": 94.36429741102313,
+    "wind_gusts_100m:ms": 3.5043788891546646,
+    "wind_gusts_10m:ms": 3.2687753968202165,
+    "wind_gusts_200m:ms": 3.8968274114850043,
+    "wind_speed_100m:ms": 2.7628611366229463,
+    "wind_speed_10m:ms": 2.0002702159429586,
+    "wind_speed_200m:ms": 3.2343287696357392,
+    "100u": 4.420773201146464,
+    "100v": 4.254137684713525,
+    "10u": 3.169128942791583,
+    "10v": 2.856743008957849,
+    "200u": 4.686837329830969,
+    "200v": 4.79202321673883,
+    "diffuse_rad:W": 103.34484637546339,
+    "direct_rad:W": 195.3664813556391,
+    "global_rad:W": 287.2154712794865,
+}
+
+METEOMATICS_VARIABLE_NAMES = tuple(METEOMATICS_MEAN.keys())
+METEOMATICS_STDDEV = _to_data_array(METEOMATICS_STDDEV)
+METEOMATICS_MEAN = _to_data_array(METEOMATICS_MEAN)

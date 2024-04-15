@@ -11,10 +11,10 @@ from torch.utils.data.datapipes.datapipe import IterDataPipe
 from ocf_datapipes.batch import BatchKey, NumpyBatch
 from ocf_datapipes.config.model import Configuration, InputData
 from ocf_datapipes.load import (
-    OpenAWOSFromNetCDF,
     OpenConfiguration,
     OpenGSP,
     OpenGSPFromDatabase,
+    OpenMeteomaticsFromZarr,
     OpenNWP,
     OpenPVFromNetCDF,
     OpenPVFromPVSitesDB,
@@ -217,7 +217,7 @@ def open_and_return_datapipes(
 
     if use_sensor:
         logger.debug("Opening Sensor Data")
-        sensor_datapipe = OpenAWOSFromNetCDF(
+        sensor_datapipe = OpenMeteomaticsFromZarr(
             configuration.input_data.sensor
         ).add_t0_idx_and_sample_period_duration(
             sample_period_duration=minutes(configuration.input_data.sensor.time_resolution_minutes),
@@ -872,7 +872,7 @@ def slice_datapipes_by_time(
         datapipes_dict["sensor_future"] = dp.select_time_slice(
             t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(conf_in.sensor.time_resolution_minutes),
-            interval_start=minutes(30),
+            interval_start=minutes(15),
             interval_end=minutes(conf_in.sensor.forecast_minutes),
             fill_selection=production,
         )
@@ -881,7 +881,7 @@ def slice_datapipes_by_time(
             t0_datapipe=get_t0_datapipe(None),
             sample_period_duration=minutes(conf_in.sensor.time_resolution_minutes),
             interval_start=minutes(-conf_in.sensor.history_minutes),
-            interval_end=minutes(0),
+            interval_end=minutes(conf_in.sensor.forecast_minutes),
             fill_selection=production,
         )
 
