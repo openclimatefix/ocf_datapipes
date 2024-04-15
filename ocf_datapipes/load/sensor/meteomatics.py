@@ -2,10 +2,9 @@
 import logging
 
 import fsspec
+import numpy as np
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
-import numpy as np
-import ocf_blosc2
 
 from ocf_datapipes.config.model import Sensor
 
@@ -45,4 +44,3 @@ class OpenMeteomaticsFromNetCDFIterDataPipe(IterDataPipe):
             data = data[self.variables].to_array()
         while True:
             yield data
-
