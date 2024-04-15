@@ -28,6 +28,7 @@ from ocf_datapipes.training.common import (
     slice_datapipes_by_time,
     minutes,
     open_and_return_datapipes,
+    create_valid_t0_periods_datapipe,
 )
 from ocf_datapipes.utils.consts import (
     NWP_MEANS,
@@ -58,12 +59,20 @@ logger = logging.getLogger("pvnet_all_gsp_datapipe")
 
 
 class SampleFunction:
+    """Apply a function to each sample in the concurrent batch list"""
+    
     def __init__(self, function):
+        """Apply a function to each sample in the concurrent batch list
+        
+        Args:
+            function: Function to apply to each sample
+        """
         self.function = function
 
     def __call__(self, sample_list):
         return [self.function(sample) for sample in sample_list]
-    
+
+
 class ZipFunction:
     def __init__(self, function):
         self.function = function
@@ -74,7 +83,14 @@ class ZipFunction:
             
 
 class SampleRepeat:
+    """Use a single input element to create a list of identical values"""
+    
     def __init__(self, num_repeats):
+        """Use a single input element to create a list of identical values
+        
+        Args:
+            num_repeats: Length of the returned list of duplicated values
+        """
         self.num_repeats = num_repeats
         
     def __call__(self, x):
@@ -108,7 +124,6 @@ class GSPLocationLookup:
         )
 
 
-    
 def create_t0_datapipe(
     datapipes_dict: dict,
     configuration: Configuration,
@@ -121,122 +136,22 @@ def create_t0_datapipe(
 
     Args:
         datapipes_dict: Dictionary of datapipes of input sources for which we want to select
-            appropriate location and times.
+            appropriate t0 times.
         configuration: Configuration object for inputs.
-        shuffle: Whether to use the internal shuffle function when yielding location times. Else
+        shuffle: Whether to use the internal shuffle function when yielding times. Else
             location times will be heavily ordered.
 
     Returns:
-        location datapipe, t0 datapipe
+        t0 datapipe
 
     """
-    assert "gsp" in datapipes_dict
+    valid_t0_periods_datapipe = create_valid_t0_periods_datapipe(
+        datapipes_dict,
+        configuration,
+        key_for_t0="gsp",
+    )
 
-    contiguous_time_datapipes = []  # Used to store contiguous time periods from each data source
-
-    datapipes_dict["gsp"], key_datapipe = datapipes_dict["gsp"].fork(2, buffer_size=5)
-
-    for key in datapipes_dict.keys():
-        if key in ["topo"]:
-            continue
-
-        elif key == "nwp":
-            for nwp_key in datapipes_dict["nwp"].keys():
-                # NWPs are nested since there can be multiple NWP sources
-                datapipes_dict["nwp"][nwp_key], datapipe_copy = datapipes_dict["nwp"][nwp_key].fork(
-                    2, buffer_size=5
-                )
-
-                # Different config setting per NWP source
-                nwp_conf = configuration.input_data.nwp[nwp_key]
-
-                if nwp_conf.dropout_timedeltas_minutes is None:
-                    max_dropout = minutes(0)
-                else:
-                    max_dropout = minutes(int(np.max(np.abs(nwp_conf.dropout_timedeltas_minutes))))
-
-                if nwp_conf.max_staleness_minutes is None:
-                    max_staleness = None
-                else:
-                    max_staleness = minutes(nwp_conf.max_staleness_minutes)
-
-                # NWP is a forecast product so gets its own contiguous function
-                time_periods = datapipe_copy.find_contiguous_t0_time_periods_nwp(
-                    history_duration=minutes(nwp_conf.history_minutes),
-                    forecast_duration=minutes(nwp_conf.forecast_minutes),
-                    max_staleness=max_staleness,
-                    max_dropout=max_dropout,
-                    time_dim="init_time_utc",
-                )
-
-                contiguous_time_datapipes.append(time_periods)
-
-        else:
-            if key == "sat":
-                sample_frequency = configuration.input_data.satellite.time_resolution_minutes
-                history_duration = configuration.input_data.satellite.history_minutes
-                forecast_duration = 0
-                time_dim = "time_utc"
-
-            elif key == "hrv":
-                sample_frequency = configuration.input_data.hrvsatellite.time_resolution_minutes
-                history_duration = configuration.input_data.hrvsatellite.history_minutes
-                forecast_duration = 0
-                time_dim = "time_utc"
-
-            elif key == "pv":
-                sample_frequency = configuration.input_data.pv.time_resolution_minutes
-                history_duration = configuration.input_data.pv.history_minutes
-                forecast_duration = configuration.input_data.pv.forecast_minutes
-                time_dim = "time_utc"
-
-            elif key == "wind":
-                sample_frequency = configuration.input_data.wind.time_resolution_minutes
-                history_duration = configuration.input_data.wind.history_minutes
-                forecast_duration = configuration.input_data.wind.forecast_minutes
-                time_dim = "time_utc"
-
-            elif key == "sensor":
-                sample_frequency = configuration.input_data.sensor.time_resolution_minutes
-                history_duration = configuration.input_data.sensor.history_minutes
-                forecast_duration = configuration.input_data.sensor.forecast_minutes
-                time_dim = "time_utc"
-
-            elif key == "gsp":
-                sample_frequency = configuration.input_data.gsp.time_resolution_minutes
-                history_duration = configuration.input_data.gsp.history_minutes
-                forecast_duration = configuration.input_data.gsp.forecast_minutes
-                time_dim = "time_utc"
-
-            else:
-                raise ValueError(f"Unexpected key: {key}")
-
-            datapipes_dict[key], datapipe_copy = datapipes_dict[key].fork(2, buffer_size=5)
-
-            time_periods = datapipe_copy.find_contiguous_t0_time_periods(
-                sample_period_duration=minutes(sample_frequency),
-                history_duration=minutes(history_duration),
-                forecast_duration=minutes(forecast_duration),
-                time_dim=time_dim,
-            )
-
-            contiguous_time_datapipes.append(time_periods)
-
-    # Find joint overlapping contiguous time periods
-    if len(contiguous_time_datapipes) > 1:
-        logger.debug("Getting joint time periods")
-        overlapping_datapipe = contiguous_time_datapipes[0].filter_to_overlapping_time_periods(
-            secondary_datapipes=contiguous_time_datapipes[1:],
-        )
-    else:
-        logger.debug("Skipping getting joint time periods")
-        overlapping_datapipe = contiguous_time_datapipes[0]
-
-    # Select time periods and set length
-    key_datapipe = key_datapipe.filter_time_periods(time_periods=overlapping_datapipe)
-
-    t0_datapipe = key_datapipe.pick_t0_times()#return_all=True, shuffle=shuffle)
-
+    t0_datapipe = valid_t0_periods_datapipe.pick_t0_times(return_all=True, shuffle=shuffle)
 
     return t0_datapipe
 
@@ -488,8 +403,6 @@ class ConvertWrapper(IterDataPipe):
             dp = self.convert_class(IterableWrapper(concurrent_samples))            
             stacked_converted_values = stack_np_examples_into_batch([x for x in iter(dp)])
             yield stacked_converted_values
-
-
 
 
 def construct_sliced_data_pipeline(
