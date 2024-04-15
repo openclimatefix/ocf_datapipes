@@ -885,6 +885,15 @@ def slice_datapipes_by_time(
             fill_selection=production,
         )
 
+        sensor_dropout_time_datapipe = get_t0_datapipe("sensor").draw_dropout_time(
+            dropout_timedeltas=0,
+            dropout_frac=0,
+        )
+
+        datapipes_dict["sensor"] = datapipes_dict["sensor"].apply_dropout_time(
+            dropout_time_datapipe=sensor_dropout_time_datapipe,
+        )
+
     if "gsp" in datapipes_dict:
         datapipes_dict["gsp"], dp = datapipes_dict["gsp"].fork(2, buffer_size=5)
 
