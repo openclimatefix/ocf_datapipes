@@ -237,7 +237,7 @@ def construct_sliced_data_pipeline(
 
     # We don't need somes keys even if they are in the data dictionary
     fork_keys = fork_keys - set(
-        ["topo", "nwp", "wind", "wind_future", "sensor", "hrv", "pv_future", "pv"]
+        ["topo", "nwp", "wind", "wind_future", "sensor", "hrv", "pv_future"]
     )
 
     # Set up a key-forker for all the data sources we need it for
@@ -282,6 +282,14 @@ def construct_sliced_data_pipeline(
         )
         pv_datapipe = pv_datapipe.normalize(normalize_fn=normalize_pv)
         pv_datapipe = pv_datapipe.map(fill_nans_in_pv)
+
+        pv_datapipe = pv_datapipe.select_spatial_slice_meters(
+            location_datapipe=get_loc_datapipe("pv"),
+            roi_height_meters=100,
+            roi_width_meters=100,
+            dim_name="pv_system_id",
+        )
+        pv_datapipe = pv_datapipe.ensure_n_pv_systems_per_example(n_pv_systems_per_example = 1)
 
     finished_dataset_dict = {"config": configuration}
 
