@@ -37,8 +37,10 @@ def open_excarta(zarr_path) -> xr.Dataset:
         Xarray DataArray of the NWP data
     """
 
-    if "hindcast" in str(zarr_path):  # Preprocessed one
+    if "hindcast.zarr" in str(zarr_path):  # Preprocessed one
         nwp = open_zarr_paths(zarr_path)
+        nwp = nwp.rename({"__xarray_dataarray_variable__": "excarta"})
+        nwp: xr.DataArray = nwp["excarta"]
         time = pd.DatetimeIndex(nwp.init_time_utc)
         assert time.is_unique
         assert time.is_monotonic_increasing
@@ -70,6 +72,8 @@ def open_excarta(zarr_path) -> xr.Dataset:
         ["10m_wind_speed", "10m_wind_speed_angle", "100m_wind_speed", "100m_wind_speed_angle"]
     )
     nwp: xr.DataArray = nwp.to_array(dim="channel")
+    # nwp = nwp.rename({"__xarray_dataarray_variable__": "excarta"})
+    # nwp: xr.DataArray = nwp["excarta"]
     # Sanity checks.
     time = pd.DatetimeIndex(nwp.init_time_utc)
     assert time.is_unique

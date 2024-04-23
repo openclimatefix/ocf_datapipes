@@ -80,8 +80,9 @@ def select_spatial_slice_pixels(
         else:
             raise ValueError(
                 f"Window for location {center_idx} not available. Missing (left, right, top, "
-                f"bottom) pixels  = ({left_pad_pixels}, {right_pad_pixels}, {top_pad_pixels}, "
-                f"{bottom_pad_pixels}). You may wish to set `allow_partial_slice=True`"
+                f"bottom) pixels  = ({left_pad_required}, {right_pad_required}, "
+                f"{top_pad_required}, {bottom_pad_required}). "
+                f"You may wish to set `allow_partial_slice=True`"
             )
 
     else:
