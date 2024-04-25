@@ -137,8 +137,12 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 # Yield a dictionary of the data, using the keys in self.keys
                 # print(datasets)
                 dataset_dict = {}
-                for k in self.keys:
-                    dataset_dict[k] = datasets[k]
+                if len(self.keys) > 0:
+                    for k in self.keys:
+                        dataset_dict[k] = datasets[k]
+                else:
+                    for k in datasets.keys():
+                        dataset_dict[k] = datasets[k]
                 yield dataset_dict
 
 
