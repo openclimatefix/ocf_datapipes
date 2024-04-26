@@ -139,7 +139,10 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 dataset_dict = {}
                 if len(self.keys) > 0:
                     for k in self.keys:
-                        dataset_dict[k] = datasets[k]
+                        try:
+                            dataset_dict[k] = datasets[k]
+                        except KeyError:
+                            continue # Skip if not available
                 else:
                     for k in datasets.keys():
                         dataset_dict[k] = datasets[k]
