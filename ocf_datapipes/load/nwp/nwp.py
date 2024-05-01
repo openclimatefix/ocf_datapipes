@@ -7,11 +7,11 @@ import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
 from torch.utils.data import IterDataPipe, functional_datapipe
 
-from ocf_datapipes.load.nwp.providers.merra2 import open_merra2
 from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
 from ocf_datapipes.load.nwp.providers.excarta import open_excarta
 from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
+from ocf_datapipes.load.nwp.providers.merra2 import open_merra2
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
 
 logger = logging.getLogger(__name__)
