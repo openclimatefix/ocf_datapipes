@@ -17,20 +17,16 @@ def open_merra2(zarr_path) -> xr.DataArray:
     """
     # Open the data
     nwp = open_zarr_paths(zarr_path)
-    
+
     init_time = nwp.time[0]
     nwp = nwp.expand_dims({"init_time_utc": [init_time.values]})
-    nwp = nwp.rename(
-        {
-            "lat": "latitude",
-            "lon": "longitude",
-            "time": "step"
-        }
-    )
+    nwp = nwp.rename({"lat": "latitude", "lon": "longitude", "time": "step"})
     nwp["step"] = nwp["step"] - init_time.values
-    nwp = nwp.expand_dims({"channel": list(nwp.keys())}).assign_coords({"channel": list(nwp.keys())})
+    nwp = nwp.expand_dims({"channel": list(nwp.keys())}).assign_coords(
+        {"channel": list(nwp.keys())}
+    )
     nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longitude")
-    
+
     # Sanity checks.
     time = pd.DatetimeIndex(nwp.step + nwp.init_time_utc.values)
     assert time.is_unique
