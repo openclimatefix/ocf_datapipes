@@ -47,7 +47,7 @@ def test_load_merra2():
     if bool(dim_keys - set(nwp_datapipe[metadata].dims)):
         raise ValueError(
             "The following dimensions are missing: %s"
-            % (str(dim_keys - set(nwp_datapipe[metadata].dims))[1:-1])
+            % (str(dim_keys - set(metadata.dims)))
         )
 
 
