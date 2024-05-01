@@ -7,6 +7,7 @@ import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
 from torch.utils.data import IterDataPipe, functional_datapipe
 
+from ocf_datapipes.load.nwp.providers.merra2 import open_merra2
 from ocf_datapipes.load.nwp.providers.ecmwf import open_ifs
 from ocf_datapipes.load.nwp.providers.excarta import open_excarta
 from ocf_datapipes.load.nwp.providers.gfs import open_gfs
@@ -46,6 +47,8 @@ class OpenNWPIterDataPipe(IterDataPipe):
             self.open_nwp = open_gfs
         elif provider.lower() == "excarta":
             self.open_nwp = open_excarta
+        elif provider.lower() == "merra2":
+            self.open_nwp = open_merra2
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
