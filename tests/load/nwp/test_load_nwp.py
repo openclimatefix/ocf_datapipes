@@ -7,6 +7,12 @@ def test_load_nwp():
     nwp_datapipe = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr")
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    dim_keys = set(["channel", "init_time_utc", "y_osgb", "x_osgb", "step"])
+    if bool(dim_keys - set(metadata.dims)):
+        raise ValueError(
+            "The following dimensions are missing: %s"
+            % (str(dim_keys - set(metadata.dims)))
+        )
 
 
 def test_load_icon_eu():
@@ -16,6 +22,12 @@ def test_load_icon_eu():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    dim_keys = set(["isobaricInhPa", "init_time_utc", "latitude", "longitude", "step"])
+    if bool(dim_keys - set(metadata.dims)):
+        raise ValueError(
+            "The following dimensions are missing: %s"
+            % (str(dim_keys - set(metadata.dims)))
+        )
 
 
 def test_load_icon_global():
@@ -25,6 +37,12 @@ def test_load_icon_global():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    dim_keys = set(["isobaricInhPa", "init_time_utc", "step"])
+    if bool(dim_keys - set(metadata.dims)):
+        raise ValueError(
+            "The following dimensions are missing: %s"
+            % (str(dim_keys - set(metadata.dims)))
+        )
 
 
 def test_load_ecmwf():
@@ -34,6 +52,12 @@ def test_load_ecmwf():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
+    if bool(dim_keys - set(metadata.dims)):
+        raise ValueError(
+            "The following dimensions are missing: %s"
+            % (str(dim_keys - set(metadata.dims)))
+        )
 
 
 def test_load_merra2():
@@ -46,7 +70,8 @@ def test_load_merra2():
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
     if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
-            "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
+            "The following dimensions are missing: %s"
+            % (str(dim_keys - set(metadata.dims)))
         )
 
 
@@ -65,3 +90,9 @@ def test_load_excarta():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
+    if bool(dim_keys - set(metadata.dims)):
+        raise ValueError(
+            "The following dimensions are missing: %s"
+            % (str(dim_keys - set(metadata.dims)))
+        )
