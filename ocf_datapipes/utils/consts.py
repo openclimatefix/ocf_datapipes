@@ -44,7 +44,7 @@ NWP_PROVIDERS = [
     "ecmwf_india",
     "excarta",
     "merra2",
-    "merra2_britain",
+    "merra2_uk",
 ]
 
 # ------ UKV
@@ -297,12 +297,12 @@ MERRA2_STD = _to_data_array(MERRA2_STD)
 MERRA2_MEAN = _to_data_array(MERRA2_MEAN)
 
 
-BRITAIN_MERRA2_STD = {"AODANA": 0.09051198}
-BRITAIN_MERRA2_MEAN = {"AODANA": 0.13139527}
+UK_MERRA2_STD = {"AODANA": 0.09051198}
+UK_MERRA2_MEAN = {"AODANA": 0.13139527}
 
-BRITAIN_MERRA2_VARIABLE_NAMES = tuple(BRITAIN_MERRA2_MEAN.keys())
-BRITAIN_MERRA2_STD = _to_data_array(BRITAIN_MERRA2_STD)
-BRITAIN_MERRA2_MEAN = _to_data_array(BRITAIN_MERRA2_MEAN)
+UK_MERRA2_VARIABLE_NAMES = tuple(UK_MERRA2_MEAN.keys())
+UK_MERRA2_STD = _to_data_array(UK_MERRA2_STD)
+UK_MERRA2_MEAN = _to_data_array(UK_MERRA2_MEAN)
 
 
 # ------ ALL NWPS
@@ -314,7 +314,7 @@ NWP_VARIABLE_NAMES = NWPStatDict(
     ecmwf_india=INDIA_ECMWF_VARIABLE_NAMES,
     excarta=EXCARTA_VARIABLE_NAMES,
     merra2=MERRA2_VARIABLE_NAMES,
-    merra2_britain=BRITAIN_MERRA2_VARIABLE_NAMES,
+    merra2_uk=UK_MERRA2_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
@@ -323,7 +323,7 @@ NWP_STDS = NWPStatDict(
     ecmwf_india=INDIA_ECMWF_STD,
     excarta=EXCARTA_STD,
     merra2=MERRA2_STD,
-    merra2_britain=BRITAIN_MERRA2_STD,
+    merra2_uk=UK_MERRA2_STD,
 )
 NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
@@ -332,7 +332,7 @@ NWP_MEANS = NWPStatDict(
     ecmwf_india=INDIA_ECMWF_MEAN,
     excarta=EXCARTA_MEAN,
     merra2=MERRA2_MEAN,
-    merra2_britain=BRITAIN_MERRA2_MEAN,
+    merra2_uk=UK_MERRA2_MEAN,
 )
 
 # --------------------------- SATELLITE ------------------------------
