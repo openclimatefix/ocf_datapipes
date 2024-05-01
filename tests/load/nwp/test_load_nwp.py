@@ -36,6 +36,15 @@ def test_load_ecmwf():
     assert metadata is not None
 
 
+def test_load_merra2():
+    nwp_datapipe = OpenNWP(
+        zarr_path="tests/data/merra2_test.zarr",
+        provider="merra2",
+    )
+    metadata = next(iter(nwp_datapipe))
+    assert metadata is not None
+
+
 def test_load_excarta():
     zarrs = []
     for issue_date in pd.date_range(start="2023-01-01", periods=7, freq="D"):
