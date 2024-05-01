@@ -44,7 +44,7 @@ def test_load_merra2():
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
-    if bool(dim_keys - set(nwp_datapipe[metadata].dims)):
+    if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
