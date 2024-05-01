@@ -1,0 +1,153 @@
+{
+    "metadata": {
+        ".zattrs": {},
+        ".zgroup": {
+            "zarr_format": 2
+        },
+        "AODANA/.zarray": {
+            "chunks": [
+                8,
+                361,
+                576
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f4",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                64,
+                361,
+                576
+            ],
+            "zarr_format": 2
+        },
+        "AODANA/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time",
+                "lat",
+                "lon"
+            ],
+            "fmissing_value": 999999986991104.0,
+            "long_name": "Aerosol Optical Depth Analysis",
+            "standard_name": "Aerosol Optical Depth Analysis",
+            "units": "1",
+            "valid_range": [
+                -999999986991104.0,
+                999999986991104.0
+            ],
+            "vmax": 999999986991104.0,
+            "vmin": -999999986991104.0
+        },
+        "lat/.zarray": {
+            "chunks": [
+                361
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                361
+            ],
+            "zarr_format": 2
+        },
+        "lat/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lat"
+            ],
+            "long_name": "latitude",
+            "units": "degrees_north",
+            "valid_range": [
+                -999999986991104.0,
+                999999986991104.0
+            ],
+            "vmax": 999999986991104.0,
+            "vmin": -999999986991104.0
+        },
+        "lon/.zarray": {
+            "chunks": [
+                576
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                576
+            ],
+            "zarr_format": 2
+        },
+        "lon/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "lon"
+            ],
+            "long_name": "longitude",
+            "units": "degrees_east",
+            "valid_range": [
+                -999999986991104.0,
+                999999986991104.0
+            ],
+            "vmax": 999999986991104.0,
+            "vmin": -999999986991104.0
+        },
+        "time/.zarray": {
+            "chunks": [
+                2920
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<i4",
+            "fill_value": null,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                64
+            ],
+            "zarr_format": 2
+        },
+        "time/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "time"
+            ],
+            "begin_date": 20180101,
+            "begin_time": 0,
+            "calendar": "proleptic_gregorian",
+            "long_name": "time",
+            "time_increment": 30000,
+            "units": "minutes since 2018-01-01",
+            "valid_range": [
+                -999999986991104.0,
+                999999986991104.0
+            ],
+            "vmax": 999999986991104.0,
+            "vmin": -999999986991104.0
+        }
+    },
+    "zarr_consolidated_format": 1
+}
