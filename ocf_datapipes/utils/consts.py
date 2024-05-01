@@ -35,7 +35,17 @@ class NWPStatDict(dict):
 
 # --------------------------- NWP ------------------------------------
 
-NWP_PROVIDERS = ["ukv", "gfs", "icon-eu", "icon-global", "ecmwf", "ecmwf_india", "excarta", "merra2", "merra2_britain"]
+NWP_PROVIDERS = [
+    "ukv",
+    "gfs",
+    "icon-eu",
+    "icon-global",
+    "ecmwf",
+    "ecmwf_india",
+    "excarta",
+    "merra2",
+    "merra2_britain",
+]
 
 # ------ UKV
 # Means and std computed WITH version_7 and higher, MetOffice values
@@ -279,24 +289,16 @@ EXCARTA_MEAN = _to_data_array(EXCARTA_MEAN)
 
 # ------ MERRA2
 # Calculated on data from 2018-01-01 to 2024-02-29
-MERRA2_STD = {
-    "AODANA": 0.26992613
-}
-MERRA2_MEAN = {
-    "AODANA": 0.38423285
-}
+MERRA2_STD = {"AODANA": 0.26992613}
+MERRA2_MEAN = {"AODANA": 0.38423285}
 
 MERRA2_VARIABLE_NAMES = tuple(MERRA2_MEAN.keys())
 MERRA2_STD = _to_data_array(MERRA2_STD)
 MERRA2_MEAN = _to_data_array(MERRA2_MEAN)
 
 
-BRITAIN_MERRA2_STD = {
-    "AODANA": 0.09051198
-}
-BRITAIN_MERRA2_MEAN = {
-    "AODANA": 0.13139527
-}
+BRITAIN_MERRA2_STD = {"AODANA": 0.09051198}
+BRITAIN_MERRA2_MEAN = {"AODANA": 0.13139527}
 
 BRITAIN_MERRA2_VARIABLE_NAMES = tuple(BRITAIN_MERRA2_MEAN.keys())
 BRITAIN_MERRA2_STD = _to_data_array(BRITAIN_MERRA2_STD)
