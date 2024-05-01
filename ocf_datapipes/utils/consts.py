@@ -35,7 +35,17 @@ class NWPStatDict(dict):
 
 # --------------------------- NWP ------------------------------------
 
-NWP_PROVIDERS = ["ukv", "gfs", "icon-eu", "icon-global", "ecmwf", "ecmwf_india", "excarta"]
+NWP_PROVIDERS = [
+    "ukv",
+    "gfs",
+    "icon-eu",
+    "icon-global",
+    "ecmwf",
+    "ecmwf_india",
+    "excarta",
+    "merra2",
+    "merra2_uk",
+]
 
 # ------ UKV
 # Means and std computed WITH version_7 and higher, MetOffice values
@@ -277,6 +287,23 @@ EXCARTA_VARIABLE_NAMES = tuple(EXCARTA_MEAN.keys())
 EXCARTA_STD = _to_data_array(EXCARTA_STD)
 EXCARTA_MEAN = _to_data_array(EXCARTA_MEAN)
 
+# ------ MERRA2
+# Calculated on data from 2018-01-01 to 2024-02-29
+MERRA2_STD = {"AODANA": 0.26992613}
+MERRA2_MEAN = {"AODANA": 0.38423285}
+
+MERRA2_VARIABLE_NAMES = tuple(MERRA2_MEAN.keys())
+MERRA2_STD = _to_data_array(MERRA2_STD)
+MERRA2_MEAN = _to_data_array(MERRA2_MEAN)
+
+
+UK_MERRA2_STD = {"AODANA": 0.09051198}
+UK_MERRA2_MEAN = {"AODANA": 0.13139527}
+
+UK_MERRA2_VARIABLE_NAMES = tuple(UK_MERRA2_MEAN.keys())
+UK_MERRA2_STD = _to_data_array(UK_MERRA2_STD)
+UK_MERRA2_MEAN = _to_data_array(UK_MERRA2_MEAN)
+
 
 # ------ ALL NWPS
 # These dictionaries are for convenience
@@ -286,6 +313,8 @@ NWP_VARIABLE_NAMES = NWPStatDict(
     ecmwf=ECMWF_VARIABLE_NAMES,
     ecmwf_india=INDIA_ECMWF_VARIABLE_NAMES,
     excarta=EXCARTA_VARIABLE_NAMES,
+    merra2=MERRA2_VARIABLE_NAMES,
+    merra2_uk=UK_MERRA2_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
@@ -293,6 +322,8 @@ NWP_STDS = NWPStatDict(
     ecmwf=ECMWF_STD,
     ecmwf_india=INDIA_ECMWF_STD,
     excarta=EXCARTA_STD,
+    merra2=MERRA2_STD,
+    merra2_uk=UK_MERRA2_STD,
 )
 NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
@@ -300,6 +331,8 @@ NWP_MEANS = NWPStatDict(
     ecmwf=ECMWF_MEAN,
     ecmwf_india=INDIA_ECMWF_MEAN,
     excarta=EXCARTA_MEAN,
+    merra2=MERRA2_MEAN,
+    merra2_uk=UK_MERRA2_MEAN,
 )
 
 # --------------------------- SATELLITE ------------------------------
