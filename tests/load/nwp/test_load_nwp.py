@@ -86,7 +86,7 @@ def test_load_excarta():
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
 
-    
+
 def test_load_excarta_local():
     nwp_datapipe = OpenNWP(
         zarr_path="tests/data/excarta/hindcast.zarr",
