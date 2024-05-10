@@ -1,0 +1,11 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "channel",
+        "init_time_utc",
+        "step",
+        "latitude",
+        "longitude"
+    ],
+    "valid_date_str": "20230101",
+    "valid_hour": 0
+}
