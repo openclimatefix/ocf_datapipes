@@ -160,7 +160,7 @@ def open_and_return_datapipes(
                 )
                 .filter_channels(nwp_conf.nwp_channels)
                 .add_t0_idx_and_sample_period_duration(
-                    sample_period_duration=timedelta(hours=1),
+                    sample_period_duration=minutes(nwp_conf.time_resolution_minutes),
                     history_duration=minutes(nwp_conf.history_minutes),
                 )
             )
