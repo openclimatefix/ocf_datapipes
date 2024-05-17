@@ -25,7 +25,7 @@ def open_merra2(zarr_path) -> xr.DataArray:
     nwp = nwp.expand_dims({"channel": list(nwp.keys())}).assign_coords(
         {"channel": list(nwp.keys())}
     )
-    nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longit>
+    nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longitude")
     aodana: xr.DataArray = nwp["AODANA"]
     del nwp
 
