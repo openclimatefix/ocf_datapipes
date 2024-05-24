@@ -110,8 +110,14 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
 
     filenames: List[str]
     keys: List[str]
+    nwp_channels: Optional[dict[str, List[str]]] = None
 
-    def __init__(self, filenames: List[str], keys: List[str]):
+    def __init__(
+        self,
+        filenames: List[str],
+        keys: List[str],
+        nwp_channels: Optional[dict[str, List[str]]] = None,
+    ):
         """
         Load NetCDF files and split them back into individual xr.Datasets
 
@@ -119,10 +125,12 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
             filenames: List of filesnames to load
             keys: List of keys from each file to use, each key should be a
                 dataarray in the xr.Dataset
+            nwp_channels: Optional dictionary of NWP channels to use
         """
         super().__init__()
         self.keys = keys
         self.filenames = filenames
+        self.nwp_channels = nwp_channels
 
     def __iter__(self):
         """Iterate through each filename, loading it, uncombining it, and then yielding it"""
@@ -146,6 +154,14 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 else:
                     for k in datasets.keys():
                         dataset_dict[k] = datasets[k]
+
+                # lets reduce the number of nwp channels
+                # TODO could move this out to a differnt data pipe, so its more general
+                if self.nwp_channels is not None:
+                    for key, channels in self.nwp_channels.items():
+                        dataset_dict["nwp"][key] = dataset_dict["nwp"][key].sel(channel=channels)
+                        print(dataset_dict["nwp"][key])
+
                 yield dataset_dict
 
 
@@ -409,6 +425,7 @@ def split_dataset_dict_dp(element):
 def windnet_netcdf_datapipe(
     keys: List[str],
     filenames: List[str],
+    nwp_channels: Optional[dict[str, List[str]]] = None,
 ) -> IterDataPipe:
     """
     Load the saved Datapipes from windnet, and transform to numpy batch
@@ -417,6 +434,7 @@ def windnet_netcdf_datapipe(
         config_filename: Path to config file.
         keys: List of keys to extract from the single NetCDF files
         filenames: List of NetCDF files to load
+        nwp_channels: Optional dictionary of NWP channels to use
 
     Returns:
         Datapipe that transforms the NetCDF files to numpy batch
@@ -424,8 +442,7 @@ def windnet_netcdf_datapipe(
     logger.info("Constructing windnet file pipeline")
     # Load files
     datapipe_dict_dp: IterDataPipe = LoadDictDatasetIterDataPipe(
-        filenames=filenames,
-        keys=keys,
+        filenames=filenames, keys=keys, nwp_channels=nwp_channels
     ).map(split_dataset_dict_dp)
     datapipe = datapipe_dict_dp.windnet_convert_to_numpy_batch()
 
