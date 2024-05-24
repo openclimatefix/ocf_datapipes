@@ -56,7 +56,7 @@ def test_windnet_datapipe_nwp_channels(configuration_filename):
             "nwp-ukv__init_time_utc": nwp_ukv.coords["nwp-ukv__init_time_utc"],
             "nwp-ukv__step": nwp_ukv.coords["nwp-ukv__step"],
         },
-        attrs=nwp_ukv.attrs
+        attrs=nwp_ukv.attrs,
     )
     datasets.__setitem__("nwp-ukv", da)
 
