@@ -53,7 +53,7 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
         self.dropout_frac = dropout_frac
         self.accum_channels = accum_channels
         self.channel_dim_name = channel_dim_name
-        
+
         if dropout_timedeltas is not None:
             assert all(
                 [t < timedelta(minutes=0) for t in dropout_timedeltas]
@@ -66,19 +66,14 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
         """Iterate through both datapipes and convert Xarray dataset"""
 
         xr_data = next(iter(self.source_datapipe))
-        
-        # The accumatation and non-accumulation channels
-        accum_channels = np.intersect1d(
-            xr_data[self.channel_dim_name].values, 
-            self.accum_channels
-        )
-        non_accum_channels = np.setdiff1d(
-            xr_data[self.channel_dim_name].values, 
-            self.accum_channels
-        )
-    
-        for t0 in self.t0_datapipe:
 
+        # The accumatation and non-accumulation channels
+        accum_channels = np.intersect1d(xr_data[self.channel_dim_name].values, self.accum_channels)
+        non_accum_channels = np.setdiff1d(
+            xr_data[self.channel_dim_name].values, self.accum_channels
+        )
+
+        for t0 in self.t0_datapipe:
             t0 = pd.Timestamp(t0)
             start_dt = (t0 - self.history_duration).ceil(self.sample_period_duration)
             end_dt = (t0 + self.forecast_duration).ceil(self.sample_period_duration)
@@ -119,22 +114,24 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
             xr_non_accum = xr_data.sel({self.channel_dim_name: non_accum_channels})
             xr_non_accum = xr_non_accum.sel(step=step_indexer, init_time_utc=init_time_indexer)
 
-            if len(accum_channels)==0:
+            if len(accum_channels) == 0:
                 xr_sel = xr_non_accum
 
             else:
-                # First minimise the size of the dataset we are diffing
+                # First minimise the size of the dataset we are diffing
                 # - find the init times we are slicing from
                 unique_init_times = np.unique(selected_init_times)
                 # - find the min and max steps we slice over. Max is extended due to diff
                 min_step = min(steps)
-                max_step = max(steps) + (xr_data.step[1]-xr_data.step[0])
+                max_step = max(steps) + (xr_data.step[1] - xr_data.step[0])
 
-                xr_accum = xr_data.sel({
-                    self.channel_dim_name: accum_channels,
-                    "init_time_utc": unique_init_times, 
-                    "step": slice(min_step, max_step)
-                })
+                xr_accum = xr_data.sel(
+                    {
+                        self.channel_dim_name: accum_channels,
+                        "init_time_utc": unique_init_times,
+                        "step": slice(min_step, max_step),
+                    }
+                )
 
                 # Take the diff and slice requested data
                 xr_accum = xr_accum.diff(dim="step", label="lower")
@@ -142,9 +139,8 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
 
                 # Join diffed and non-diffed variables
                 xr_sel = xr.concat([xr_sel_non_accum, xr_sel_accum], dim=self.channel_dim_name)
-                
-                # Reorder the variable back to the original order
-                xr_sel = xr_sel.sel({self.channel_dim_name:xr_data[self.channel_dim_name].values})
-                    
+
+                # Reorder the variable back to the original order
+                xr_sel = xr_sel.sel({self.channel_dim_name: xr_data[self.channel_dim_name].values})
 
             yield xr_sel
