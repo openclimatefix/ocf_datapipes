@@ -24,9 +24,58 @@ from ocf_datapipes.utils.consts import (
     RSS_MEAN,
     RSS_STD,
 )
+from ocf_datapipes.config.model import Configuration
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_datapipe")
+
+
+def slice_datapipes_by_space(
+    datapipes_dict: dict,
+    location_pipe: IterDataPipe,
+    configuration: Configuration,
+) -> None:
+    """Modifies a dictionary of datapipes in-place to yield slices around a given location
+
+    Args:
+        datapipes_dict: Dictionary of used datapipes and t0 ones
+        loc_datapipe: Datapipe which yields location for sample
+        configuration: Configuration object.
+    """
+
+    # Unpack for convenience
+    conf_sat = configuration.input_data.satellite
+    conf_nwp = configuration.input_data.nwp
+
+    if "nwp" in datapipes_dict:
+
+        for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
+            location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
+            datapipes_dict["nwp"][nwp_key] = nwp_datapipe.select_spatial_slice_pixels(
+                location_pipe_copy,
+                roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
+                roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
+            )
+
+    if "sat" in datapipes_dict:
+        sat_datapipe = datapipes_dict["sat"]
+
+        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
+        datapipes_dict["sat"] = datapipes_dict["sat"].select_spatial_slice_pixels(
+            location_pipe_copy,
+            roi_height_pixels=conf_sat.satellite_image_size_pixels_height,
+            roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
+        )
+
+    # GSP always assumed to be in data
+    datapipes_dict["gsp"] = datapipes_dict["gsp"].select_spatial_slice_meters(
+        location_datapipe=location_pipe,
+        roi_height_meters=1,
+        roi_width_meters=1,
+        dim_name="gsp_id",
+    )
+
+    return
 
 
 def construct_sliced_data_pipeline(
@@ -58,23 +107,21 @@ def construct_sliced_data_pipeline(
     # Unpack for convenience
     conf_sat = configuration.input_data.satellite
     conf_nwp = configuration.input_data.nwp
+    
+    # Slice all of the datasets by spce - this is an in-place operation
+    slice_datapipes_by_space(datapipes_dict, location_pipe, configuration)
 
     # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
 
     # Spatially slice, normalize, and convert data to numpy arrays
     numpy_modalities = []
-
+    
+    # Normalise the inputs and convert to numpy format
     if "nwp" in datapipes_dict:
         nwp_numpy_modalities = dict()
 
         for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
-            location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
-            nwp_datapipe = nwp_datapipe.select_spatial_slice_pixels(
-                location_pipe_copy,
-                roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
-                roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
-            )
             nwp_datapipe = nwp_datapipe.normalize(
                 mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
                 std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
@@ -87,13 +134,6 @@ def construct_sliced_data_pipeline(
 
     if "sat" in datapipes_dict:
         sat_datapipe = datapipes_dict["sat"]
-
-        location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
-        sat_datapipe = sat_datapipe.select_spatial_slice_pixels(
-            location_pipe_copy,
-            roi_height_pixels=conf_sat.satellite_image_size_pixels_height,
-            roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
-        )
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         # Check for large amount of zeros
         sat_datapipe = sat_datapipe.check_value_equal_to_fraction(
@@ -113,23 +153,9 @@ def construct_sliced_data_pipeline(
         numpy_modalities.append(pv_datapipe.convert_pv_to_numpy_batch())
 
     # GSP always assumed to be in data
-    location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
     gsp_future_datapipe = datapipes_dict["gsp_future"]
-    gsp_future_datapipe = gsp_future_datapipe.select_spatial_slice_meters(
-        location_datapipe=location_pipe_copy,
-        roi_height_meters=1,
-        roi_width_meters=1,
-        dim_name="gsp_id",
-    )
-
     gsp_datapipe = datapipes_dict["gsp"]
-    gsp_datapipe = gsp_datapipe.select_spatial_slice_meters(
-        location_datapipe=location_pipe,
-        roi_height_meters=1,
-        roi_width_meters=1,
-        dim_name="gsp_id",
-    )
-
+    
     # Recombine GSP arrays - see function doc for further explanation
     gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(concat_xr_time_utc)
     gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)

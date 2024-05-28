@@ -73,6 +73,7 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         max_staleness: Optional[timedelta] = None,
         max_dropout: Optional[timedelta] = timedelta(minutes=0),
         time_dim: Optional[str] = "init_time_utc",
+        end_buffer: Optional[timedelta] = timedelta(minutes=0),
     ):
         """
         Get contiguous time periods for use in determing t0 times for training
@@ -87,6 +88,8 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
             max_dropout: What is the maximum amount of dropout that will be used. This must be <=
                 max_staleness.
             time_dim: time dimensions for which to find the contiguous time periods
+            end_buffer: buffer to add to the end when calculating the possible max staleness. Useful
+                when taking the diff of accumulated variables
         """
         self.source_datapipe = source_datapipe
         self.history_duration = history_duration
@@ -94,6 +97,7 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
         self.max_staleness = max_staleness
         self.max_dropout = max_dropout
         self.time_dim = time_dim
+        self.end_buffer = end_buffer
 
     def __iter__(self) -> pd.DataFrame:
         """Calculate contiguous time periods and return a dataframe containing them"""
@@ -101,11 +105,12 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
             logger.debug("Getting contiguous NWP t0 time periods")
             assert "step" in xr_data.coords
             # It is possible to use up to this amount of max staleness for the dataset and slice
-            # Required
+            # required
             possible_max_staleness = (
-                pd.Timedelta(xr_data["step"].max().item()) - self.forecast_duration
+                pd.Timedelta(xr_data["step"].max().item()) 
+                - self.forecast_duration - self.end_buffer
             )
-
+            
             # If max_staleness is set to None we set it based on the max step ahead of the input
             # forecast data
             if self.max_staleness is None:
