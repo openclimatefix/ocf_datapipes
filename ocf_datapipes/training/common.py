@@ -1151,10 +1151,10 @@ def create_t0_and_loc_datapipes(
                     max_staleness = None
                 else:
                     max_staleness = minutes(nwp_conf.max_staleness_minutes)
-                    
-                # If we are diffing some the accumulatd channels, we can't use the last time stamp 
+
+                # If we are diffing some the accumulatd channels, we can't use the last time stamp
                 # of the NWP forecast
-                if len(nwp_conf.nwp_accum_channels)>0:
+                if len(nwp_conf.nwp_accum_channels) > 0:
                     end_buffer = minutes(60)
                 else:
                     end_buffer = minutes(0)

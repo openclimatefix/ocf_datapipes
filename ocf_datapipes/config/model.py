@@ -599,9 +599,7 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin
     nwp_channels: tuple = Field(
         NWP_VARIABLE_NAMES["ukv"], description="the channels used in the nwp data"
     )
-    nwp_accum_channels: tuple = Field(
-        [], description="the nwp channels which need to be diffed"
-    )
+    nwp_accum_channels: tuple = Field([], description="the nwp channels which need to be diffed")
     nwp_image_size_pixels_height: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_image_size_pixels_width: int = IMAGE_SIZE_PIXELS_FIELD
     nwp_meters_per_pixel: int = METERS_PER_PIXEL_FIELD

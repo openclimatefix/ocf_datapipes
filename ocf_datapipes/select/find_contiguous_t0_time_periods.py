@@ -107,10 +107,11 @@ class FindContiguousT0TimePeriodsNWPIterDataPipe(IterDataPipe):
             # It is possible to use up to this amount of max staleness for the dataset and slice
             # required
             possible_max_staleness = (
-                pd.Timedelta(xr_data["step"].max().item()) 
-                - self.forecast_duration - self.end_buffer
+                pd.Timedelta(xr_data["step"].max().item())
+                - self.forecast_duration
+                - self.end_buffer
             )
-            
+
             # If max_staleness is set to None we set it based on the max step ahead of the input
             # forecast data
             if self.max_staleness is None:

@@ -7,6 +7,7 @@ import xarray as xr
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
+from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.training.common import (
     _get_datapipes_dict,
     check_nans_in_satellite_data,
@@ -24,7 +25,6 @@ from ocf_datapipes.utils.consts import (
     RSS_MEAN,
     RSS_STD,
 )
-from ocf_datapipes.config.model import Configuration
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_datapipe")
@@ -48,7 +48,6 @@ def slice_datapipes_by_space(
     conf_nwp = configuration.input_data.nwp
 
     if "nwp" in datapipes_dict:
-
         for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
             location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
             datapipes_dict["nwp"][nwp_key] = nwp_datapipe.select_spatial_slice_pixels(
@@ -107,7 +106,7 @@ def construct_sliced_data_pipeline(
     # Unpack for convenience
     conf_sat = configuration.input_data.satellite
     conf_nwp = configuration.input_data.nwp
-    
+
     # Slice all of the datasets by spce - this is an in-place operation
     slice_datapipes_by_space(datapipes_dict, location_pipe, configuration)
 
@@ -116,7 +115,7 @@ def construct_sliced_data_pipeline(
 
     # Spatially slice, normalize, and convert data to numpy arrays
     numpy_modalities = []
-    
+
     # Normalise the inputs and convert to numpy format
     if "nwp" in datapipes_dict:
         nwp_numpy_modalities = dict()
@@ -155,7 +154,7 @@ def construct_sliced_data_pipeline(
     # GSP always assumed to be in data
     gsp_future_datapipe = datapipes_dict["gsp_future"]
     gsp_datapipe = datapipes_dict["gsp"]
-    
+
     # Recombine GSP arrays - see function doc for further explanation
     gsp_datapipe = gsp_datapipe.zip_ocf(gsp_future_datapipe).map(concat_xr_time_utc)
     gsp_datapipe = gsp_datapipe.normalize(normalize_fn=normalize_gsp)
