@@ -736,7 +736,7 @@ def slice_datapipes_by_time(
                 forecast_duration=minutes(conf_in.nwp[nwp_key].forecast_minutes),
                 dropout_timedeltas=dropout_timedeltas,
                 dropout_frac=0 if production else conf_in.nwp[nwp_key].dropout_fraction,
-                accum_channels=conf_nwp[nwp_key].nwp_accum_channels,
+                accum_channels=conf_in.nwp[nwp_key].nwp_accum_channels,
             )
 
     if "sat" in datapipes_dict:

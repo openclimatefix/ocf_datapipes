@@ -39,7 +39,7 @@ def slice_datapipes_by_space(
 
     Args:
         datapipes_dict: Dictionary of used datapipes and t0 ones
-        loc_datapipe: Datapipe which yields location for sample
+        location_pipe: Datapipe which yields location for sample
         configuration: Configuration object.
     """
 
@@ -57,8 +57,6 @@ def slice_datapipes_by_space(
             )
 
     if "sat" in datapipes_dict:
-        sat_datapipe = datapipes_dict["sat"]
-
         location_pipe, location_pipe_copy = location_pipe.fork(2, buffer_size=5)
         datapipes_dict["sat"] = datapipes_dict["sat"].select_spatial_slice_pixels(
             location_pipe_copy,
@@ -104,7 +102,6 @@ def construct_sliced_data_pipeline(
     configuration = datapipes_dict.pop("config")
 
     # Unpack for convenience
-    conf_sat = configuration.input_data.satellite
     conf_nwp = configuration.input_data.nwp
 
     # Slice all of the datasets by spce - this is an in-place operation
@@ -135,10 +132,7 @@ def construct_sliced_data_pipeline(
         sat_datapipe = datapipes_dict["sat"]
         sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
         # Check for large amount of zeros
-        sat_datapipe = sat_datapipe.check_value_equal_to_fraction(
-            value=0.0,
-            fraction=0.9,
-        )
+        sat_datapipe = sat_datapipe.check_value_equal_to_fraction(value=0.0, fraction=0.9)
         numpy_modalities.append(sat_datapipe.convert_satellite_to_numpy_batch())
 
     if "pv" in datapipes_dict:
