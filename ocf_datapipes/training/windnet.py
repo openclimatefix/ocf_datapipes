@@ -160,7 +160,6 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 if self.nwp_channels is not None:
                     for key, channels in self.nwp_channels.items():
                         dataset_dict["nwp"][key] = dataset_dict["nwp"][key].sel(channel=channels)
-                        print(dataset_dict["nwp"][key])
 
                 yield dataset_dict
 
