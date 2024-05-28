@@ -72,8 +72,8 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
         non_accum_channels = np.setdiff1d(
             xr_data[self.channel_dim_name].values, self.accum_channels
         )
-        
-        if len(accum_channels)>0:
+
+        if len(accum_channels) > 0:
             logger.debug(f"The following NWP channels will be diffed: {accum_channels}")
 
         for t0 in self.t0_datapipe:
@@ -117,7 +117,7 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
             xr_non_accum = xr_data.sel({self.channel_dim_name: non_accum_channels})
             xr_sel_non_accum = xr_non_accum.sel(step=step_indexer, init_time_utc=init_time_indexer)
 
-            if len(accum_channels)==0:
+            if len(accum_channels) == 0:
                 xr_sel = xr_sel_non_accum
 
             else:
