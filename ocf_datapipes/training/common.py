@@ -736,6 +736,7 @@ def slice_datapipes_by_time(
                 forecast_duration=minutes(conf_in.nwp[nwp_key].forecast_minutes),
                 dropout_timedeltas=dropout_timedeltas,
                 dropout_frac=0 if production else conf_in.nwp[nwp_key].dropout_fraction,
+                accum_channels=conf_in.nwp[nwp_key].nwp_accum_channels,
             )
 
     if "sat" in datapipes_dict:
@@ -1151,6 +1152,13 @@ def create_t0_and_loc_datapipes(
                 else:
                     max_staleness = minutes(nwp_conf.max_staleness_minutes)
 
+                # If we are diffing some the accumulatd channels, we can't use the last time stamp
+                # of the NWP forecast
+                if len(nwp_conf.nwp_accum_channels) > 0:
+                    end_buffer = minutes(60)
+                else:
+                    end_buffer = minutes(0)
+
                 # NWP is a forecast product so gets its own contiguous function
                 time_periods = datapipe_copy.find_contiguous_t0_time_periods_nwp(
                     history_duration=minutes(nwp_conf.history_minutes),
@@ -1158,6 +1166,7 @@ def create_t0_and_loc_datapipes(
                     max_staleness=max_staleness,
                     max_dropout=max_dropout,
                     time_dim="init_time_utc",
+                    end_buffer=end_buffer,
                 )
 
                 contiguous_time_datapipes.append(time_periods)
