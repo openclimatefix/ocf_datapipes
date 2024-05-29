@@ -65,18 +65,14 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
 
-        xr_data = next(iter(self.source_datapipe))
+        for t0, xr_data in self.t0_datapipe.zip(self.source_datapipe):
+            
+            # The accumatation and non-accumulation channels
+            accum_channels = np.intersect1d(xr_data[self.channel_dim_name].values, self.accum_channels)
+            non_accum_channels = np.setdiff1d(
+                xr_data[self.channel_dim_name].values, self.accum_channels
+            )
 
-        # The accumatation and non-accumulation channels
-        accum_channels = np.intersect1d(xr_data[self.channel_dim_name].values, self.accum_channels)
-        non_accum_channels = np.setdiff1d(
-            xr_data[self.channel_dim_name].values, self.accum_channels
-        )
-
-        if len(accum_channels) > 0:
-            logger.debug(f"The following NWP channels will be diffed: {accum_channels}")
-
-        for t0 in self.t0_datapipe:
             t0 = pd.Timestamp(t0)
             start_dt = (t0 - self.history_duration).ceil(self.sample_period_duration)
             end_dt = (t0 + self.forecast_duration).ceil(self.sample_period_duration)
