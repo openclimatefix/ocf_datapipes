@@ -145,10 +145,10 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
 
                 # Reorder the variable back to the original order
                 xr_sel = xr_sel.sel({self.channel_dim_name: xr_data[self.channel_dim_name].values})
-                
+
                 # Rename the diffed channels
                 xr_sel[self.channel_dim_name] = [
-                    f"diff_{v}" if v in accum_channels else v 
+                    f"diff_{v}" if v in accum_channels else v
                     for v in xr_sel[self.channel_dim_name].values
                 ]
 

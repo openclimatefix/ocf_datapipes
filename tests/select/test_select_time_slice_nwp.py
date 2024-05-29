@@ -92,11 +92,7 @@ def test_select_time_slice_nwp_diff(nwp_datapipe):
         ds1["channel"] = [f"diff_{ds1.channel.values[0]}"]
 
         # Select the same part of diffed data
-        ds2 = (
-            ds_diffed.isel(channel=[0])
-            .isel(target_time_utc=slice(0, 1))
-            .compute()
-        )
+        ds2 = ds_diffed.isel(channel=[0]).isel(target_time_utc=slice(0, 1)).compute()
 
         # Check they are equal
         assert ds1.equals(ds2)
