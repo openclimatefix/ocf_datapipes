@@ -134,7 +134,7 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
                         "init_time_utc": unique_init_times,
                         "step": slice(min_step, max_step),
                     }
-                )
+                ).compute()
 
                 # Take the diff and slice requested data
                 xr_accum = xr_accum.diff(dim="step", label="lower")
@@ -145,5 +145,11 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
 
                 # Reorder the variable back to the original order
                 xr_sel = xr_sel.sel({self.channel_dim_name: xr_data[self.channel_dim_name].values})
+                
+                # Rename the diffed channels
+                xr_sel[self.channel_dim_name] = [
+                    f"diff_{v}" if v in accum_channels else v 
+                    for v in xr_sel[self.channel_dim_name].values
+                ]
 
             yield xr_sel

@@ -83,15 +83,17 @@ def test_select_time_slice_nwp_diff(nwp_datapipe):
     for ds, ds_diffed in zip(dropout_datapipe, dropout_datapipe_diffed):
         # Diff the un-diffed data and select part
         ds1 = (
-            ds.sel(channel=[ds_nwp.channel.values[0]])
+            ds.isel(channel=[0])
             .diff(dim="target_time_utc", label="lower")
             .isel(target_time_utc=slice(0, 1))
             .compute()
         )
+        # Need to rename the diffed variable
+        ds1["channel"] = [f"diff_{ds1.channel.values[0]}"]
 
-        # Select same part of diffed data
+        # Select the same part of diffed data
         ds2 = (
-            ds_diffed.sel(channel=[ds_nwp.channel.values[0]])
+            ds_diffed.isel(channel=[0])
             .isel(target_time_utc=slice(0, 1))
             .compute()
         )
