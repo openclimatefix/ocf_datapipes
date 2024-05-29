@@ -136,11 +136,11 @@ def intersection_of_2_dataframes_of_periods(a: pd.DataFrame, b: pd.DataFrame) ->
         # to start no earlier than `a_start_dt`, and end no later than `a_end_dt`.
 
         # First, make a copy, so we don't clip the underlying data in `b`.
-        intersecting_periods = overlapping_periods.copy()
-        intersecting_periods.start_dt.clip(lower=a_period.start_dt, inplace=True)
-        intersecting_periods.end_dt.clip(upper=a_period.end_dt, inplace=True)
+        intersection = overlapping_periods.copy()
+        intersection["start_dt"] = intersection.start_dt.clip(lower=a_period.start_dt)
+        intersection["end_dt"] = intersection.end_dt.clip(upper=a_period.end_dt)
 
-        all_intersecting_periods.append(intersecting_periods)
+        all_intersecting_periods.append(intersection)
 
     all_intersecting_periods = pd.concat(all_intersecting_periods)
     return all_intersecting_periods.sort_values(by="start_dt").reset_index(drop=True)
