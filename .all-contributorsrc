@@ -50,6 +50,34 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "markus-kreft",
+      "name": "Markus",
+      "avatar_url": "https://avatars.githubusercontent.com/u/129367085?v=4",
+      "profile": "https://github.com/markus-kreft",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "code",
+      "name": "Code/OS",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7318?v=4",
+      "profile": "https://github.com/code",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "Sukh-P",
+      "name": "Sukh-P",
+      "avatar_url": "https://avatars.githubusercontent.com/u/42407101?v=4",
+      "profile": "https://github.com/Sukh-P",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

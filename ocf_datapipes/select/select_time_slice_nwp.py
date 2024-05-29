@@ -24,6 +24,8 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
         forecast_duration: timedelta,
         dropout_timedeltas: Optional[List[timedelta]] = None,
         dropout_frac: Optional[float] = 0,
+        accum_channels: Optional[List[str]] = [],
+        channel_dim_name: str = "channel",
     ):
         """Convert NWP Xarray dataset to use target time as indexer
 
@@ -38,6 +40,9 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
             dropout_timedeltas: List of timedeltas. We randonly select the delay for each NWP
                 forecast from this list. These should be negative timedeltas w.r.t time t0.
             dropout_frac: Fraction of samples subject to dropout
+            accum_channels: Some variables which are stored as accumulations. This allows us to take
+                the diff of these channels.
+            channel_dim_name: Dimension name for channels
         """
         self.source_datapipe = source_datapipe
         self.t0_datapipe = t0_datapipe
@@ -46,6 +51,9 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
         self.forecast_duration = forecast_duration
         self.dropout_timedeltas = dropout_timedeltas
         self.dropout_frac = dropout_frac
+        self.accum_channels = accum_channels
+        self.channel_dim_name = channel_dim_name
+
         if dropout_timedeltas is not None:
             assert all(
                 [t < timedelta(minutes=0) for t in dropout_timedeltas]
@@ -57,18 +65,19 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
 
-        xr_data = next(iter(self.source_datapipe))
-
-        for t0 in self.t0_datapipe:
-            t0 = pd.Timestamp(t0)
-            start_dt = t0 - self.history_duration
-            end_dt = t0 + self.forecast_duration
-
-            target_times = pd.date_range(
-                start_dt.ceil(self.sample_period_duration),
-                end_dt.ceil(self.sample_period_duration),
-                freq=self.sample_period_duration,
+        for t0, xr_data in self.t0_datapipe.zip(self.source_datapipe):
+            
+            # The accumatation and non-accumulation channels
+            accum_channels = np.intersect1d(xr_data[self.channel_dim_name].values, self.accum_channels)
+            non_accum_channels = np.setdiff1d(
+                xr_data[self.channel_dim_name].values, self.accum_channels
             )
+
+            t0 = pd.Timestamp(t0)
+            start_dt = (t0 - self.history_duration).ceil(self.sample_period_duration)
+            end_dt = (t0 + self.forecast_duration).ceil(self.sample_period_duration)
+
+            target_times = pd.date_range(start_dt, end_dt, freq=self.sample_period_duration)
 
             # Maybe apply NWP dropout
             if self._consider_dropout and (np.random.uniform() < self.dropout_frac):
@@ -78,14 +87,18 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
                 t0_available = t0
 
             # Forecasts made up to and including t0
-            xr_available = xr_data.sel(init_time_utc=slice(None, t0_available))
+            available_init_times = xr_data.init_time_utc.sel(
+                init_time_utc=slice(None, t0_available)
+            )
 
-            init_times = xr_available.sel(
+            # Find the most recent available init times for all target times
+            selected_init_times = available_init_times.sel(
                 init_time_utc=target_times,
                 method="ffill",  # forward fill from init times to target times
-            ).init_time_utc.values
+            ).values
 
-            steps = target_times - init_times
+            # Find the required steps for all target times
+            steps = target_times - selected_init_times
 
             # We want one timestep for each target_time_hourly (obviously!) If we simply do
             # nwp.sel(init_time=init_times, step=steps) then we'll get the *product* of
@@ -93,8 +106,46 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
             # vectorized-indexing mode by using a DataArray indexer.  See the last example here:
             # https://docs.xarray.dev/en/latest/user-guide/indexing.html#more-advanced-indexing
             coords = {"target_time_utc": target_times}
-            init_time_indexer = xr.DataArray(init_times, coords=coords)
+            init_time_indexer = xr.DataArray(selected_init_times, coords=coords)
             step_indexer = xr.DataArray(steps, coords=coords)
-            xr_sel = xr_available.sel(step=step_indexer, init_time_utc=init_time_indexer)
+
+            # Slice out the data which does not need to be diffed
+            xr_non_accum = xr_data.sel({self.channel_dim_name: non_accum_channels})
+            xr_sel_non_accum = xr_non_accum.sel(step=step_indexer, init_time_utc=init_time_indexer)
+
+            if len(accum_channels) == 0:
+                xr_sel = xr_sel_non_accum
+
+            else:
+                # First minimise the size of the dataset we are diffing
+                # - find the init times we are slicing from
+                unique_init_times = np.unique(selected_init_times)
+                # - find the min and max steps we slice over. Max is extended due to diff
+                min_step = min(steps)
+                max_step = max(steps) + (xr_data.step[1] - xr_data.step[0])
+
+                xr_accum = xr_data.sel(
+                    {
+                        self.channel_dim_name: accum_channels,
+                        "init_time_utc": unique_init_times,
+                        "step": slice(min_step, max_step),
+                    }
+                ).compute()
+
+                # Take the diff and slice requested data
+                xr_accum = xr_accum.diff(dim="step", label="lower")
+                xr_sel_accum = xr_accum.sel(step=step_indexer, init_time_utc=init_time_indexer)
+
+                # Join diffed and non-diffed variables
+                xr_sel = xr.concat([xr_sel_non_accum, xr_sel_accum], dim=self.channel_dim_name)
+
+                # Reorder the variable back to the original order
+                xr_sel = xr_sel.sel({self.channel_dim_name: xr_data[self.channel_dim_name].values})
+                
+                # Rename the diffed channels
+                xr_sel[self.channel_dim_name] = [
+                    f"diff_{v}" if v in accum_channels else v 
+                    for v in xr_sel[self.channel_dim_name].values
+                ]
 
             yield xr_sel
