@@ -187,7 +187,6 @@ class SelectTimeSliceIterDataPipe(IterDataPipe):
         return xr_data.sel(time_utc=slice(start_dt, end_dt))
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
-
         for t0, xr_data in self.t0_datapipe.zip(self.source_datapipe):
             t0_datetime_utc = pd.Timestamp(t0)
             start_dt = t0_datetime_utc + self.interval_start
