@@ -24,7 +24,7 @@ class FilterChannelsIterDataPipe(IterDataPipe):
         Args:
             source_datapipe: Datapipe of Xarray objects
             channels: Channel names to keep
-            dim_name: Dimension name for time
+            dim_name: Dimension name for channels
         """
         self.source_datapipe = source_datapipe
         self.channels = channels
