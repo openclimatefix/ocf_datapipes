@@ -7,7 +7,7 @@ Any real processing should be performed in the `transform` module.
 
 ## NWP
 
-The NWP data is loaded into an ```IterDataPipe``` in `ocf_datapipes/load/nwp/nwp.py` using a provider from `ocf_datapipes/load/nwp/providers`. Providers open the data file and transform the data into a standardised format that datapipes use; normally this means having the following 5 dimensions: ```init_time_utc, step, channel, latitude, longitude```.
+The NWP data is loaded into an ```IterDataPipe``` in `ocf_datapipes/load/nwp/nwp.py` using a provider from `ocf_datapipes/load/nwp/providers`. Providers open the data file and transform the data into a `DataAray` of a standardised shape the datapipes use; normally this means having the following 5 dimensions: ```init_time_utc, step, channel, latitude, longitude```.
 
 Example of loaded ECMWF data:
 
