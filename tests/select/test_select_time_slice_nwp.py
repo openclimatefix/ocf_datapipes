@@ -52,13 +52,15 @@ def test_select_time_slice_nwp(nwp_datapipe):
 
 def test_select_time_slice_nwp_diff(nwp_datapipe):
     ds_nwp = next(iter(nwp_datapipe))
+    
+    nwp_datapipe1, nwp_datapipe2 = nwp_datapipe.fork(2, buffer_size=3)
 
     t0 = pd.Timestamp(ds_nwp.init_time_utc.values[3])
     times = [t0 + timedelta(minutes=m) for m in [0, 30, 120]]
 
     # No diffing
     dropout_datapipe = SelectTimeSliceNWP(
-        nwp_datapipe,
+        nwp_datapipe1,
         IterableWrapper(times),
         sample_period_duration=timedelta(minutes=60),
         history_duration=timedelta(minutes=60),
@@ -69,7 +71,7 @@ def test_select_time_slice_nwp_diff(nwp_datapipe):
 
     # With diffing
     dropout_datapipe_diffed = SelectTimeSliceNWP(
-        nwp_datapipe,
+        nwp_datapipe2,
         IterableWrapper(times),
         sample_period_duration=timedelta(minutes=60),
         history_duration=timedelta(minutes=60),
