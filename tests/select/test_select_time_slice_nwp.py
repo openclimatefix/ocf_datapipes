@@ -52,7 +52,7 @@ def test_select_time_slice_nwp(nwp_datapipe):
 
 def test_select_time_slice_nwp_diff(nwp_datapipe):
     ds_nwp = next(iter(nwp_datapipe))
-    
+
     nwp_datapipe1, nwp_datapipe2 = nwp_datapipe.fork(2, buffer_size=3)
 
     t0 = pd.Timestamp(ds_nwp.init_time_utc.values[3])
