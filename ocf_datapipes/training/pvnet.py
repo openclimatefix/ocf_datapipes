@@ -75,42 +75,12 @@ def slice_datapipes_by_space(
     return
 
 
-def construct_sliced_data_pipeline(
-    config_filename: str,
-    location_pipe: IterDataPipe,
-    t0_datapipe: IterDataPipe,
-    production: bool = False,
-    check_satellite_no_zeros: bool = False,
-) -> IterDataPipe:
-    """Constructs data pipeline for the input data config file.
-
-    This yields samples from the location and time datapipes.
-
-    Args:
-        config_filename: Path to config file.
-        location_pipe: Datapipe yielding locations.
-        t0_datapipe: Datapipe yielding times.
-        production: Whether constucting pipeline for production inference.
-        check_satellite_no_zeros: Whether to check that satellite data has no zeros.
-    """
-
-    datapipes_dict = _get_datapipes_dict(
-        config_filename,
-        production=production,
-    )
-
-    configuration = datapipes_dict.pop("config")
-
+def process_and_combine_datapipes(datapipes_dict, configuration):
+    """Normalize and convert data to numpy arrays"""
+    
     # Unpack for convenience
     conf_nwp = configuration.input_data.nwp
-
-    # Slice all of the datasets by spce - this is an in-place operation
-    slice_datapipes_by_space(datapipes_dict, location_pipe, configuration)
-
-    # Slice all of the datasets by time - this is an in-place operation
-    slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
-
-    # Spatially slice, normalize, and convert data to numpy arrays
+    
     numpy_modalities = []
 
     # Normalise the inputs and convert to numpy format
@@ -158,12 +128,49 @@ def construct_sliced_data_pipeline(
     logger.debug("Combine all the data sources")
     combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(modality_name="gsp")
 
-    logger.info("Filtering out samples with no data")
+    combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
+    
+    return combined_datapipe
+
+
+def construct_sliced_data_pipeline(
+    config_filename: str,
+    location_pipe: IterDataPipe,
+    t0_datapipe: IterDataPipe,
+    production: bool = False,
+    check_satellite_no_zeros: bool = False,
+) -> IterDataPipe:
+    """Constructs data pipeline for the input data config file.
+
+    This yields samples from the location and time datapipes.
+
+    Args:
+        config_filename: Path to config file.
+        location_pipe: Datapipe yielding locations.
+        t0_datapipe: Datapipe yielding times.
+        production: Whether constucting pipeline for production inference.
+        check_satellite_no_zeros: Whether to check that satellite data has no zeros.
+    """
+
+    datapipes_dict = _get_datapipes_dict(
+        config_filename,
+        production=production,
+    )
+
+    configuration = datapipes_dict.pop("config")
+
+    # Slice all of the datasets by space - this is an in-place operation
+    slice_datapipes_by_space(datapipes_dict, location_pipe, configuration)
+
+    # Slice all of the datasets by time - this is an in-place operation
+    slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
+    
+    # Normalise, and combine the data sources into NumpyBatches
+    combined_datapipe = process_and_combine_datapipes(datapipes_dict, configuration)
+    
     if check_satellite_no_zeros:
         # in production we don't want any nans in the satellite data
         combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
-
-    combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
     return combined_datapipe
 

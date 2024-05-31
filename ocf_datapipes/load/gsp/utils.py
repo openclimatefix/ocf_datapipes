@@ -1,8 +1,19 @@
 """ Utils for GSP loading"""
+from typing import Optional
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import xarray as xr
+
+from ocf_datapipes.utils.location import Location
+
+try:
+    from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
+    _has_pvlive = True
+except ImportError:
+    print("Unable to import PVLive utils, please provide filenames with OpenGSP")
+    _has_pvlive = False
 
 
 def put_gsp_data_into_an_xr_dataarray(
@@ -48,7 +59,8 @@ def put_gsp_data_into_an_xr_dataarray(
 
 
 def get_gsp_id_to_shape(
-    gsp_id_to_region_id_filename: str, sheffield_solar_region_path: str
+    gsp_id_to_region_id_filename: Optional[str] = None, 
+    sheffield_solar_region_path: Optional[str] = None,
 ) -> gpd.GeoDataFrame:
     """
     Get the GSP ID to the shape
@@ -60,6 +72,16 @@ def get_gsp_id_to_shape(
     Returns:
         GeoDataFrame containing the mapping from ID to shape
     """
+    
+    did_provide_filepaths = None not in [gsp_id_to_region_id_filename, sheffield_solar_region_path]
+    assert _has_pvlive or did_provide_filepaths
+    
+    if not did_provide_filepaths:
+        if gsp_id_to_region_id_filename is None:
+            gsp_id_to_region_id_filename = get_gsp_metadata_from_eso()
+        if sheffield_solar_region_path is None:
+            sheffield_solar_region_path = get_gsp_shape_from_eso()        
+        
     # Load mapping from GSP ID to Sheffield Solar GSP ID to GSP name:
     gsp_id_to_region_id = pd.read_csv(
         gsp_id_to_region_id_filename,
@@ -94,4 +116,42 @@ def get_gsp_id_to_shape(
     # For the national forecast, GSP ID 0, we want the shape to be the
     # union of all the other shapes
     gsp_id_to_shape = pd.concat([gsp_id_to_shape, gsp_0]).sort_index()
+    
+    # Add central coordinates
+    gsp_id_to_shape["x_osgb"] = gsp_id_to_shape.geometry.centroid.x.astype(np.float32)
+    gsp_id_to_shape["y_osgb"] = gsp_id_to_shape.geometry.centroid.y.astype(np.float32)
+    
     return gsp_id_to_shape
+
+
+class GSPLocationLookup:
+    """Query object for GSP location from GSP ID"""
+
+    def __init__(
+        self, 
+        gsp_id_to_region_id_filename: Optional[str] = None, 
+        sheffield_solar_region_path: Optional[str] = None,          
+):
+        """Query object for GSP location from GSP ID
+
+        Args:
+            gsp_id_to_region_id_filename: Filename of the mapping file
+            sheffield_solar_region_path: Path to the region shapes
+
+        """
+        self.gsp_id_to_shape = get_gsp_id_to_shape(
+            gsp_id_to_region_id_filename, 
+            sheffield_solar_region_path,
+        )
+
+    def __call__(self, gsp_id: int) -> Location:
+        """Returns the locations for the input GSP IDs.
+
+        Args:
+            gsp_id: Integer ID of the GSP
+        """
+        return Location(
+            x=self.gsp_id_to_shape.loc[gsp_id].x_osgb.astype(np.float32),
+            y=self.gsp_id_to_shape.loc[gsp_id].y_osgb.astype(np.float32),
+            id=gsp_id,
+        )
