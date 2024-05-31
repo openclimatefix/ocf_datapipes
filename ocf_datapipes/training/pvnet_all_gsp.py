@@ -71,9 +71,10 @@ class SampleRepeat:
 
 class ConvertWrapper(IterDataPipe):
     """A class to adapt our Convert[X]ToNumpyBatch datapipes to work on a list of samples"""
+
     def __init__(self, source_datapipe: IterDataPipe, convert_class: Type[IterDataPipe]):
         """A class to adapt our Convert[X]ToNumpyBatch datapipes to work on a list of samples
-        
+
         Args:
             source_datapipe: The source datapipe yielding lists of samples
             convert_class: The class to apply to the output of source_datapipe
@@ -321,7 +322,7 @@ def slice_datapipes_by_space_all_gsps(
 
 def pre_spatial_slice_process(datapipes_dict, configuration):
     """Apply pre-processing steps to the dictionary of datapipes in place
-    
+
     These steps are normalisation and recombining past and future GSP/PV data
     """
     conf_nwp = configuration.input_data.nwp
@@ -347,7 +348,7 @@ def pre_spatial_slice_process(datapipes_dict, configuration):
             .map(normalize_pv)
             .map(fill_nans_in_pv)
         )
-        
+
         del datapipes_dict["pv_future"]
 
     # GSP always assumed to be in data
@@ -358,12 +359,13 @@ def pre_spatial_slice_process(datapipes_dict, configuration):
         .map(concat_xr_time_utc)
         .map(normalize_gsp)
     )
-    
+
     del datapipes_dict["gsp_future"]
+
 
 def post_spatial_slice_process(datapipes_dict, check_satellite_no_nans=False):
     """Convert the dictionary of datapipes to NumpyBatches, combine, and fill nans"""
-    
+
     numpy_modalities = []
 
     if "nwp" in datapipes_dict:
@@ -401,15 +403,12 @@ def post_spatial_slice_process(datapipes_dict, check_satellite_no_nans=False):
     )
 
     # Combine all the data sources
-    combined_datapipe = (
-        MergeNumpyModalities(numpy_modalities)
-        .add_sun_position(modality_name="gsp")
-    )
-    
+    combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(modality_name="gsp")
+
     if check_satellite_no_nans:
         # in production we don't want any nans in the satellite data
         combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
-        
+
     combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
     return combined_datapipe
