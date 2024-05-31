@@ -49,6 +49,7 @@ logger = logging.getLogger("pvnet_all_gsp_datapipe")
 
 
 def xr_compute(xr_data):
+    """Compute the xarray object"""
     return xr_data.compute()
 
 
@@ -64,11 +65,19 @@ class SampleRepeat:
         self.num_repeats = num_repeats
 
     def __call__(self, x):
+        """Repeat the input a number of times as a list"""
         return [x for _ in range(self.num_repeats)]
 
 
 class ConvertWrapper(IterDataPipe):
+    """A class to adapt our Convert[X]ToNumpyBatch datapipes to work on a list of samples"""
     def __init__(self, source_datapipe: IterDataPipe, convert_class: Type[IterDataPipe]):
+        """A class to adapt our Convert[X]ToNumpyBatch datapipes to work on a list of samples
+        
+        Args:
+            source_datapipe: The source datapipe yielding lists of samples
+            convert_class: The class to apply to the output of source_datapipe
+        """
         self.source_datapipe = source_datapipe
         self.convert_class = convert_class
 
@@ -106,6 +115,7 @@ class SelectAllGSPSpatialSlicePixelsIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of Xarray data
+            locations: List of all locations to create samples for
             roi_height_pixels: ROI height in pixels
             roi_width_pixels: ROI width in pixels
             allow_partial_slice: Whether to allow a partial slice.
@@ -155,7 +165,7 @@ class SelectAllGSPSpatialSliceMetersIterDataPipe(IterDataPipe):
 
         Args:
             source_datapipe: Datapipe of Xarray data
-            location_datapipe: Location datapipe
+            locations: List of all locations to create samples for
             roi_width_meters: ROI width in meters
             roi_height_meters: ROI height in meters
             dim_name: Dimension name to select for ID, None for coordinates
@@ -295,7 +305,7 @@ def slice_datapipes_by_space_all_gsps(
 
     if "pv" in datapipes_dict:
         # No spatial slice for PV since it is always the same, just repeat for GSPs
-        pv_datapipe = pv_datapipe.map(SampleRepeat(len(locations)))
+        datapipes_dict["pv"] = datapipes_dict["pv"].map(SampleRepeat(len(locations)))
 
     # GSP always assumed to be in data
     datapipes_dict["gsp"] = datapipes_dict["gsp"].select_all_gsp_spatial_slice_meters(
@@ -310,6 +320,10 @@ def slice_datapipes_by_space_all_gsps(
 
 
 def pre_spatial_slice_process(datapipes_dict, configuration):
+    """Apply pre-processing steps to the dictionary of datapipes in place
+    
+    These steps are normalisation and recombining past and future GSP/PV data
+    """
     conf_nwp = configuration.input_data.nwp
 
     if "nwp" in datapipes_dict:
@@ -333,6 +347,8 @@ def pre_spatial_slice_process(datapipes_dict, configuration):
             .map(normalize_pv)
             .map(fill_nans_in_pv)
         )
+        
+        del datapipes_dict["pv_future"]
 
     # GSP always assumed to be in data
     # Recombine GSP arrays - see function doc for further explanation
@@ -342,10 +358,12 @@ def pre_spatial_slice_process(datapipes_dict, configuration):
         .map(concat_xr_time_utc)
         .map(normalize_gsp)
     )
+    
+    del datapipes_dict["gsp_future"]
 
-
-def post_spatial_slice_process(datapipes_dict):
-    # Spatially slice, normalize, and convert data to numpy arrays
+def post_spatial_slice_process(datapipes_dict, check_satellite_no_nans=False):
+    """Convert the dictionary of datapipes to NumpyBatches, combine, and fill nans"""
+    
     numpy_modalities = []
 
     if "nwp" in datapipes_dict:
@@ -386,8 +404,13 @@ def post_spatial_slice_process(datapipes_dict):
     combined_datapipe = (
         MergeNumpyModalities(numpy_modalities)
         .add_sun_position(modality_name="gsp")
-        .map(fill_nans_in_arrays)
     )
+    
+    if check_satellite_no_nans:
+        # in production we don't want any nans in the satellite data
+        combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+        
+    combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
     return combined_datapipe
 
@@ -399,7 +422,7 @@ def construct_sliced_data_pipeline(
     config_filename: str,
     t0_datapipe: IterDataPipe,
     production: bool = False,
-    check_satellite_no_zeros: bool = False,
+    check_satellite_no_nans: bool = False,
 ) -> IterDataPipe:
     """Constructs data pipeline for the input data config file.
 
@@ -409,7 +432,7 @@ def construct_sliced_data_pipeline(
         config_filename: Path to config file.
         t0_datapipe: Datapipe yielding times.
         production: Whether constucting pipeline for production inference.
-        check_satellite_no_zeros: Whether to check that satellite data has no zeros.
+        check_satellite_no_nans: Whether to check that satellite data has no nans.
     """
 
     datapipes_dict = _get_datapipes_dict(
@@ -435,10 +458,6 @@ def construct_sliced_data_pipeline(
 
     # Convert to NumpyBatch
     combined_datapipe = post_spatial_slice_process(datapipes_dict)
-
-    if check_satellite_no_zeros:
-        # in production we don't want any nans in the satellite data
-        combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
 
     return combined_datapipe
 
