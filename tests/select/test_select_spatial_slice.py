@@ -8,10 +8,10 @@ from ocf_datapipes.select import (
     SelectSpatialSlicePixels,
 )
 
-from ocf_datapipes.select.select_spatial_slice import select_spatial_slice_pixels
+from ocf_datapipes.select.select_spatial_slice import slice_spatial_pixel_window_from_xarray
 
 
-def test_select_spatial_slice_pixels_function():
+def test_slice_spatial_pixel_window_from_xarray_function():
     # Create dummy data
     x = np.arange(100)
     y = np.arange(100)[::-1]
@@ -29,7 +29,7 @@ def test_select_spatial_slice_pixels_function():
     center_idx = Location(x=10, y=10, coordinate_system="idx")
 
     # Select window which lies within data
-    xr_selected = select_spatial_slice_pixels(
+    xr_selected = slice_spatial_pixel_window_from_xarray(
         xr_data,
         center_idx,
         width_pixels=10,
@@ -44,7 +44,7 @@ def test_select_spatial_slice_pixels_function():
     assert not xr_selected.data.isnull().any()
 
     # Select window where the edge of the window lies at the edge of the data
-    xr_selected = select_spatial_slice_pixels(
+    xr_selected = slice_spatial_pixel_window_from_xarray(
         xr_data,
         center_idx,
         width_pixels=20,
@@ -59,7 +59,7 @@ def test_select_spatial_slice_pixels_function():
     assert not xr_selected.data.isnull().any()
 
     # Select window which is partially outside the boundary of the data
-    xr_selected = select_spatial_slice_pixels(
+    xr_selected = slice_spatial_pixel_window_from_xarray(
         xr_data,
         center_idx,
         width_pixels=30,
