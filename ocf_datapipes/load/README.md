@@ -48,3 +48,4 @@ Add sanity checks to ensure time is unique and monotonic
 Current tests include:
     - checking the loaded data is not None
     - checking all expected dimensions are present
+4. Calculate the mean and std of your data and add to `ocf_datapipes/utils/consts.py`
