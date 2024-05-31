@@ -131,7 +131,7 @@ def process_and_combine_datapipes(datapipes_dict, configuration, check_satellite
     if check_satellite_no_nans:
         # in production we don't want any nans in the satellite data
         combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
-    
+
     combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
 
     return combined_datapipe
@@ -171,9 +171,7 @@ def construct_sliced_data_pipeline(
 
     # Normalise, and combine the data sources into NumpyBatches
     combined_datapipe = process_and_combine_datapipes(
-        datapipes_dict, 
-        configuration, 
-        check_satellite_no_nans
+        datapipes_dict, configuration, check_satellite_no_nans
     )
 
     return combined_datapipe
