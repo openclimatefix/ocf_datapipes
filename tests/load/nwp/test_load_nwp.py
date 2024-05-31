@@ -1,4 +1,5 @@
 import pandas as pd
+from xarray import DataArray
 
 from ocf_datapipes.load import OpenNWP
 
@@ -49,6 +50,7 @@ def test_load_ecmwf():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    assert type(next(enumerate(metadata))[1]) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
     if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
@@ -63,6 +65,7 @@ def test_load_merra2():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    assert type(next(enumerate(metadata))[1]) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
     if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
