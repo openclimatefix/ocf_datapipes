@@ -1099,7 +1099,7 @@ def create_valid_t0_periods_datapipe(
     key_for_t0: str = "gsp",
 ):
     """Create datapipe yielding t0 periods which are valid for the input data sources.
-    
+
     Args:
         datapipes_dict: Dictionary of datapipes of input sources for which we want to select
             appropriate location and times.
@@ -1224,9 +1224,8 @@ def create_valid_t0_periods_datapipe(
 
     # Select time periods and set length
     valid_t0_periods_datapipe = key_datapipe.filter_time_periods(time_periods=overlapping_datapipe)
-    
-    return valid_t0_periods_datapipe
 
+    return valid_t0_periods_datapipe
 
 
 def create_t0_and_loc_datapipes(
@@ -1257,7 +1256,7 @@ def create_t0_and_loc_datapipes(
         configuration,
         key_for_t0,
     )
-    
+
     t0_loc_datapipe = valid_t0_periods_datapipe.pick_locs_and_t0s(return_all=True, shuffle=shuffle)
 
     location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)

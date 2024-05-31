@@ -34,14 +34,13 @@ class PickT0TimesIterDataPipe(IterDataPipe):
         self.return_all = return_all
         self.shuffle = shuffle
         self.dim_name = dim_name
-        
-    
+
     def _yield_random_iter(self, xr_dataset):
         """Sample t0 with replacement"""
         while True:
             t0 = np.random.choice(xr_dataset[self.dim_name].values)
             yield t0
-            
+
     def _yield_all_iter(self, xr_dataset):
         """Yield all the t0s in order, and maybe with a shuffle"""
         all_t0s = np.copy(xr_dataset[self.dim_name].values)
@@ -52,13 +51,11 @@ class PickT0TimesIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> pd.Timestamp:
         xr_dataset = next(iter(self.source_datapipe))
-        
+
         if len(xr_dataset[self.dim_name].values) == 0:
             raise Exception("There are no values to get t0 from")
-                    
+
         if self.return_all:
             return self._yield_all_iter(xr_dataset)
         else:
             return self._yield_random_iter(xr_dataset)
-            
-

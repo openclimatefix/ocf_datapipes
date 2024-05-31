@@ -45,7 +45,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""
         gsp_id_to_shape = get_gsp_id_to_shape(
-            self.gsp_id_to_region_id_filename, 
+            self.gsp_id_to_region_id_filename,
             self.sheffield_solar_region_path,
         )
 
@@ -56,7 +56,7 @@ class OpenGSPIterDataPipe(IterDataPipe):
 
         # Ensure the centroids have the same GSP ID index as the GSP PV power
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_ds.gsp_id]
-        
+
         data_array = put_gsp_data_into_an_xr_dataarray(
             gsp_pv_power_mw=gsp_pv_power_mw_ds.generation_mw.data.astype(np.float32),
             time_utc=gsp_pv_power_mw_ds.datetime_gmt.data,

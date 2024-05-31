@@ -1,38 +1,37 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
-from typing import Optional, Type, Tuple, List, Union
 from datetime import datetime
+from typing import List, Optional, Tuple, Type, Union
 
-import numpy as np
 import xarray as xr
-from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes._decorator import functional_datapipe
+from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes.iter import IterableWrapper
-from ocf_datapipes.convert import (
-    ConvertNWPToNumpyBatch,
-    ConvertPVToNumpyBatch,
-    ConvertSatelliteToNumpyBatch,
-    ConvertGSPToNumpyBatch,
-
-)
 
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.batch.merge_numpy_examples_to_batch import stack_np_examples_into_batch
+from ocf_datapipes.config.model import Configuration
+from ocf_datapipes.convert import (
+    ConvertGSPToNumpyBatch,
+    ConvertNWPToNumpyBatch,
+    ConvertPVToNumpyBatch,
+    ConvertSatelliteToNumpyBatch,
+)
+from ocf_datapipes.load.gsp.utils import GSPLocationLookup
 from ocf_datapipes.select.select_spatial_slice import (
-    select_spatial_slice_pixels, 
     select_spatial_slice_meters,
+    select_spatial_slice_pixels,
 )
 from ocf_datapipes.training.common import (
     _get_datapipes_dict,
     check_nans_in_satellite_data,
     concat_xr_time_utc,
+    create_valid_t0_periods_datapipe,
     fill_nans_in_arrays,
     fill_nans_in_pv,
     normalize_gsp,
     normalize_pv,
     slice_datapipes_by_time,
-    open_and_return_datapipes,
-    create_valid_t0_periods_datapipe,
 )
 from ocf_datapipes.utils.consts import (
     NWP_MEANS,
@@ -40,10 +39,7 @@ from ocf_datapipes.utils.consts import (
     RSS_MEAN,
     RSS_STD,
 )
-
-from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils.location import Location
-from ocf_datapipes.load.gsp.utils import GSPLocationLookup
 
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_all_gsp_datapipe")
@@ -58,35 +54,33 @@ def xr_compute(xr_data):
 
 class SampleRepeat:
     """Use a single input element to create a list of identical values"""
-    
+
     def __init__(self, num_repeats):
         """Use a single input element to create a list of identical values
-        
+
         Args:
             num_repeats: Length of the returned list of duplicated values
         """
         self.num_repeats = num_repeats
-        
+
     def __call__(self, x):
         return [x for _ in range(self.num_repeats)]
-    
+
 
 class ConvertWrapper(IterDataPipe):
-    def __init__(
-        self,
-        source_datapipe: IterDataPipe,
-        convert_class: Type[IterDataPipe]
-    ):
+    def __init__(self, source_datapipe: IterDataPipe, convert_class: Type[IterDataPipe]):
         self.source_datapipe = source_datapipe
         self.convert_class = convert_class
 
     def __iter__(self):
         for concurrent_samples in self.source_datapipe:
-            dp = self.convert_class(IterableWrapper(concurrent_samples)) 
+            dp = self.convert_class(IterableWrapper(concurrent_samples))
             yield [x for x in dp]
+
 
 # ------------------------------ Multi-location datapipes ------------------------------
 # These are datapipes rewritten to run on all GSPs
+
 
 @functional_datapipe("select_all_gsp_spatial_slices_pixels")
 class SelectAllGSPSpatialSlicePixelsIterDataPipe(IterDataPipe):
@@ -127,20 +121,18 @@ class SelectAllGSPSpatialSlicePixelsIterDataPipe(IterDataPipe):
 
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data in self.source_datapipe:
-            
             loc_slices = []
-            
-            for location in self.locations:
 
+            for location in self.locations:
                 selected = select_spatial_slice_pixels(
                     xr_data,
                     location,
-                    self.roi_width_pixels, 
-                    self.roi_height_pixels, 
+                    self.roi_width_pixels,
+                    self.roi_height_pixels,
                     self.allow_partial_slice,
                     self.location_idx_name,
                 )
-                
+
                 loc_slices.append(selected)
 
             yield loc_slices
@@ -194,19 +186,18 @@ class SelectAllGSPSpatialSliceMetersIterDataPipe(IterDataPipe):
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         for xr_data in self.source_datapipe:
             loc_slices = []
-            
-            for location in self.locations:
 
+            for location in self.locations:
                 selected = select_spatial_slice_meters(
-                    xr_data=xr_data, 
+                    xr_data=xr_data,
                     location=location,
                     roi_width_meters=self.roi_width_meters,
                     roi_height_meters=self.roi_height_meters,
-                    dim_name=self.dim_name,  
+                    dim_name=self.dim_name,
                 )
 
                 loc_slices.append(selected)
-            
+
             yield loc_slices
 
 
@@ -284,14 +275,11 @@ def slice_datapipes_by_space_all_gsps(
     locations: list[Location],
     configuration: Configuration,
 ) -> None:
-
     conf_nwp = configuration.input_data.nwp
     conf_sat = configuration.input_data.satellite
-    
+
     if "nwp" in datapipes_dict:
-        
         for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
-            
             datapipes_dict["nwp"][nwp_key] = nwp_datapipe.select_all_gsp_spatial_slices_pixels(
                 locations,
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
@@ -299,7 +287,6 @@ def slice_datapipes_by_space_all_gsps(
             )
 
     if "sat" in datapipes_dict:
-        
         datapipes_dict["sat"] = datapipes_dict["sat"].select_all_gsp_spatial_slices_pixels(
             locations,
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
@@ -309,7 +296,6 @@ def slice_datapipes_by_space_all_gsps(
     if "pv" in datapipes_dict:
         # No spatial slice for PV since it is always the same, just repeat for GSPs
         pv_datapipe = pv_datapipe.map(SampleRepeat(len(locations)))
-    
 
     # GSP always assumed to be in data
     datapipes_dict["gsp"] = datapipes_dict["gsp"].select_all_gsp_spatial_slice_meters(
@@ -322,40 +308,30 @@ def slice_datapipes_by_space_all_gsps(
 
 # -------------------------------- Processing functions --------------------------------
 
-    
+
 def pre_spatial_slice_process(datapipes_dict, configuration):
-    
     conf_nwp = configuration.input_data.nwp
-    
+
     if "nwp" in datapipes_dict:
-
         for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
-                
-            datapipes_dict["nwp"][nwp_key] =  (
-                nwp_datapipe
-                    .map(xr_compute)
-                    .normalize(
-                        mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
-                        std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
-                )
+            datapipes_dict["nwp"][nwp_key] = nwp_datapipe.map(xr_compute).normalize(
+                mean=NWP_MEANS[conf_nwp[nwp_key].nwp_provider],
+                std=NWP_STDS[conf_nwp[nwp_key].nwp_provider],
             )
-            
-    if "sat" in datapipes_dict:
 
+    if "sat" in datapipes_dict:
         datapipes_dict["sat"] = (
-            datapipes_dict["sat"]
-                .map(xr_compute)
-                .normalize(mean=RSS_MEAN, std=RSS_STD)
+            datapipes_dict["sat"].map(xr_compute).normalize(mean=RSS_MEAN, std=RSS_STD)
         )
 
     if "pv" in datapipes_dict:
         # Recombine PV arrays - see function doc for further explanation
         datapipes_dict["pv"] = (
             datapipes_dict["pv"]
-                .zip_ocf(datapipes_dict["pv_future"])
-                .map(concat_xr_time_utc)
-                .map(normalize_pv)
-                .map(fill_nans_in_pv)
+            .zip_ocf(datapipes_dict["pv_future"])
+            .map(concat_xr_time_utc)
+            .map(normalize_pv)
+            .map(fill_nans_in_pv)
         )
 
     # GSP always assumed to be in data
@@ -367,7 +343,7 @@ def pre_spatial_slice_process(datapipes_dict, configuration):
         .map(normalize_gsp)
     )
 
-    
+
 def post_spatial_slice_process(datapipes_dict):
     # Spatially slice, normalize, and convert data to numpy arrays
     numpy_modalities = []
@@ -376,37 +352,34 @@ def post_spatial_slice_process(datapipes_dict):
         nwp_numpy_modalities = dict()
 
         for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
-
-            nwp_numpy_modalities[nwp_key] = (
-                ConvertWrapper(
-                    nwp_datapipe,
-                    ConvertNWPToNumpyBatch,
-                )
-                .map(stack_np_examples_into_batch)
-            )
+            nwp_numpy_modalities[nwp_key] = ConvertWrapper(
+                nwp_datapipe,
+                ConvertNWPToNumpyBatch,
+            ).map(stack_np_examples_into_batch)
 
         # Combine the NWPs into NumpyBatch
         nwp_numpy_modalities = MergeNWPNumpyModalities(nwp_numpy_modalities)
         numpy_modalities.append(nwp_numpy_modalities)
 
     if "sat" in datapipes_dict:
-
         numpy_modalities.append(
-            ConvertWrapper(datapipes_dict["sat"], ConvertSatelliteToNumpyBatch)
-            .map(stack_np_examples_into_batch)
+            ConvertWrapper(datapipes_dict["sat"], ConvertSatelliteToNumpyBatch).map(
+                stack_np_examples_into_batch
+            )
         )
 
     if "pv" in datapipes_dict:
-    
         numpy_modalities.append(
-            ConvertWrapper(datapipes_dict["pv"], ConvertPVToNumpyBatch)
-            .map(stack_np_examples_into_batch)
+            ConvertWrapper(datapipes_dict["pv"], ConvertPVToNumpyBatch).map(
+                stack_np_examples_into_batch
+            )
         )
 
-    # GSP always assumed to be in data    
+    # GSP always assumed to be in data
     numpy_modalities.append(
-        ConvertWrapper(datapipes_dict["gsp"], ConvertGSPToNumpyBatch)
-        .map(stack_np_examples_into_batch)
+        ConvertWrapper(datapipes_dict["gsp"], ConvertGSPToNumpyBatch).map(
+            stack_np_examples_into_batch
+        )
     )
 
     # Combine all the data sources
@@ -415,7 +388,7 @@ def post_spatial_slice_process(datapipes_dict):
         .add_sun_position(modality_name="gsp")
         .map(fill_nans_in_arrays)
     )
-    
+
     return combined_datapipe
 
 
@@ -443,7 +416,7 @@ def construct_sliced_data_pipeline(
         config_filename,
         production=production,
     )
-    
+
     # Get the location objects for all 317 regional GSPs
     gsp_id_to_loc = GSPLocationLookup()
     locations = [gsp_id_to_loc(gsp_id) for gsp_id in range(1, 318)]
@@ -453,20 +426,20 @@ def construct_sliced_data_pipeline(
 
     # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
-    
+
     # Run compute and normalise all the data
     pre_spatial_slice_process(datapipes_dict, configuration)
-    
+
     # Slice all of the datasets by space - this is an in-place operation
     slice_datapipes_by_space_all_gsps(datapipes_dict, locations, configuration)
-    
+
     # Convert to NumpyBatch
     combined_datapipe = post_spatial_slice_process(datapipes_dict)
-    
+
     if check_satellite_no_zeros:
         # in production we don't want any nans in the satellite data
         combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
-    
+
     return combined_datapipe
 
 
@@ -490,7 +463,7 @@ def pvnet_all_gsp_datapipe(
         start_time,
         end_time,
     )
-    
+
     # Shard after we have the times. These are already shuffled so no need to shuffle again
     t0_datapipe = t0_datapipe.sharding_filter()
 
@@ -504,13 +477,13 @@ def pvnet_all_gsp_datapipe(
     return datapipe
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     import time
-    
+
     t0 = time.time()
     dp = pvnet_all_gsp_datapipe(
         config_filename="/home/jamesfulton/repos/PVNet/configs/datamodule/configuration/gcp_configuration.yaml"
     )
-    
-    b  = next(iter(dp))
+
+    b = next(iter(dp))
     print(time.time() - t0)

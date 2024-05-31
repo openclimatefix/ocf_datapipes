@@ -77,10 +77,10 @@ def slice_datapipes_by_space(
 
 def process_and_combine_datapipes(datapipes_dict, configuration):
     """Normalize and convert data to numpy arrays"""
-    
+
     # Unpack for convenience
     conf_nwp = configuration.input_data.nwp
-    
+
     numpy_modalities = []
 
     # Normalise the inputs and convert to numpy format
@@ -129,7 +129,7 @@ def process_and_combine_datapipes(datapipes_dict, configuration):
     combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(modality_name="gsp")
 
     combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
-    
+
     return combined_datapipe
 
 
@@ -164,10 +164,10 @@ def construct_sliced_data_pipeline(
 
     # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
-    
+
     # Normalise, and combine the data sources into NumpyBatches
     combined_datapipe = process_and_combine_datapipes(datapipes_dict, configuration)
-    
+
     if check_satellite_no_zeros:
         # in production we don't want any nans in the satellite data
         combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)

@@ -36,10 +36,9 @@ class PickLocationsIterDataPipe(IterDataPipe):
         self.shuffle = shuffle
 
     def _yield_all_iter(self, xr_dataset):
-        
-        # Get the spatial coords
+        # Get the spatial coords
         xr_coord_system, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
-        
+
         loc_indices = np.arange(len(xr_dataset[xr_x_dim]))
 
         if self.shuffle:
@@ -47,13 +46,12 @@ class PickLocationsIterDataPipe(IterDataPipe):
 
         # Iterate through all locations in dataset
         for loc_index in loc_indices:
-            
             # Get the location ID
             loc_id = None
             for id_dim_name in ["pv_system_id", "gsp_id", "station_id"]:
                 if id_dim_name in xr_dataset.coords.keys():
                     loc_id = int(xr_dataset[id_dim_name][loc_index].values)
-            
+
             location = Location(
                 coordinate_system=xr_coord_system,
                 x=xr_dataset[xr_x_dim][loc_index].values,
@@ -64,13 +62,12 @@ class PickLocationsIterDataPipe(IterDataPipe):
             yield location
 
     def _yield_random_iter(self, xr_dataset):
-        
-        # Get the spatial coords
+        # Get the spatial coords
         xr_coord_system, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
 
         while True:
             loc_index = np.random.randint(0, len(xr_dataset[xr_x_dim]))
-            
+
             # Get the location ID
             loc_id = None
             for id_dim_name in ["pv_system_id", "gsp_id", "station_id"]:
@@ -83,7 +80,7 @@ class PickLocationsIterDataPipe(IterDataPipe):
                 y=xr_dataset[xr_y_dim][loc_index].values,
                 id=loc_id,
             )
-            
+
             yield location
 
     def __iter__(self) -> Location:
