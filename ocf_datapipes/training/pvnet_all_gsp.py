@@ -286,6 +286,7 @@ def slice_datapipes_by_space_all_gsps(
     locations: list[Location],
     configuration: Configuration,
 ) -> None:
+    """Slice the dictionary of datapipes by space in-place"""
     conf_nwp = configuration.input_data.nwp
     conf_sat = configuration.input_data.satellite
 
