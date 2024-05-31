@@ -12,14 +12,6 @@ from ocf_datapipes.load.gsp.utils import get_gsp_id_to_shape, put_gsp_data_into_
 
 logger = logging.getLogger(__name__)
 
-try:
-    from ocf_datapipes.utils.eso import get_gsp_metadata_from_eso, get_gsp_shape_from_eso
-
-    _has_pvlive = True
-except ImportError:
-    print("Unable to import PVLive utils, please provide filenames with OpenGSP")
-    _has_pvlive = False
-
 
 @functional_datapipe("open_gsp")
 class OpenGSPIterDataPipe(IterDataPipe):
@@ -44,40 +36,34 @@ class OpenGSPIterDataPipe(IterDataPipe):
             sample_period_duration: Sample period of the GSP data
         """
         self.gsp_pv_power_zarr_path = gsp_pv_power_zarr_path
-        if (
-            gsp_id_to_region_id_filename is None
-            or sheffield_solar_region_path is None
-            and _has_pvlive
-        ):
-            self.gsp_id_to_region_id_filename = get_gsp_metadata_from_eso()
-            self.sheffield_solar_region_path = get_gsp_shape_from_eso()
-        else:
-            self.gsp_id_to_region_id_filename = gsp_id_to_region_id_filename
-            self.sheffield_solar_region_path = sheffield_solar_region_path
+
+        self.gsp_id_to_region_id_filename = gsp_id_to_region_id_filename
+        self.sheffield_solar_region_path = sheffield_solar_region_path
         self.threshold_mw = threshold_mw
         self.sample_period_duration = sample_period_duration
 
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""
         gsp_id_to_shape = get_gsp_id_to_shape(
-            self.gsp_id_to_region_id_filename, self.sheffield_solar_region_path
+            self.gsp_id_to_region_id_filename, 
+            self.sheffield_solar_region_path,
         )
-        self._gsp_id_to_shape = gsp_id_to_shape  # Save, mostly for plotting to check all is fine!
 
         logger.debug(f"Getting GSP data from {self.gsp_pv_power_zarr_path}")
 
-        # Load GSP generation xr.Dataset:
+        # Load GSP generation xr.Dataset
         gsp_pv_power_mw_ds = xr.open_dataset(self.gsp_pv_power_zarr_path, engine="zarr")
 
-        # Ensure the centroids have the same GSP ID index as the GSP PV power:
+        # Ensure the centroids have the same GSP ID index as the GSP PV power
         gsp_id_to_shape = gsp_id_to_shape.loc[gsp_pv_power_mw_ds.gsp_id]
+        
         data_array = put_gsp_data_into_an_xr_dataarray(
             gsp_pv_power_mw=gsp_pv_power_mw_ds.generation_mw.data.astype(np.float32),
             time_utc=gsp_pv_power_mw_ds.datetime_gmt.data,
             gsp_id=gsp_pv_power_mw_ds.gsp_id.data,
             # TODO: Try using `gsp_id_to_shape.geometry.envelope.centroid`. See issue #76.
-            x_osgb=gsp_id_to_shape.geometry.centroid.x.astype(np.float32),
-            y_osgb=gsp_id_to_shape.geometry.centroid.y.astype(np.float32),
+            x_osgb=gsp_id_to_shape.x_osgb.astype(np.float32),
+            y_osgb=gsp_id_to_shape.y_osgb.astype(np.float32),
             nominal_capacity_mwp=gsp_pv_power_mw_ds.installedcapacity_mwp.data.astype(np.float32),
             effective_capacity_mwp=gsp_pv_power_mw_ds.capacity_mwp.data.astype(np.float32),
         )

@@ -66,9 +66,10 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
         """Iterate through both datapipes and convert Xarray dataset"""
 
         for t0, xr_data in self.t0_datapipe.zip(self.source_datapipe):
-            
             # The accumatation and non-accumulation channels
-            accum_channels = np.intersect1d(xr_data[self.channel_dim_name].values, self.accum_channels)
+            accum_channels = np.intersect1d(
+                xr_data[self.channel_dim_name].values, self.accum_channels
+            )
             non_accum_channels = np.setdiff1d(
                 xr_data[self.channel_dim_name].values, self.accum_channels
             )
@@ -141,10 +142,10 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
 
                 # Reorder the variable back to the original order
                 xr_sel = xr_sel.sel({self.channel_dim_name: xr_data[self.channel_dim_name].values})
-                
+
                 # Rename the diffed channels
                 xr_sel[self.channel_dim_name] = [
-                    f"diff_{v}" if v in accum_channels else v 
+                    f"diff_{v}" if v in accum_channels else v
                     for v in xr_sel[self.channel_dim_name].values
                 ]
 
