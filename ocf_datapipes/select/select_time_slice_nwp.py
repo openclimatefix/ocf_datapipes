@@ -62,12 +62,10 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
         assert 0 <= dropout_frac <= 1
         self._consider_dropout = (dropout_timedeltas is not None) and dropout_frac > 0
 
-    
     def __iter__(self) -> Union[xr.DataArray, xr.Dataset]:
         """Iterate through both datapipes and convert Xarray dataset"""
 
         for t0, xr_data in self.t0_datapipe.zip(self.source_datapipe):
-
             # The accumatation and non-accumulation channels
             accum_channels = np.intersect1d(
                 xr_data[self.channel_dim_name].values, self.accum_channels
@@ -132,7 +130,9 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
 
                 # Slice out the data which does not need to be diffed
                 xr_non_accum = xr_min.sel({self.channel_dim_name: non_accum_channels})
-                xr_sel_non_accum = xr_non_accum.sel(step=step_indexer, init_time_utc=init_time_indexer)
+                xr_sel_non_accum = xr_non_accum.sel(
+                    step=step_indexer, init_time_utc=init_time_indexer
+                )
 
                 # Slice out the channels which need to be diffed
                 xr_accum = xr_min.sel({self.channel_dim_name: accum_channels})
@@ -152,6 +152,5 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
                     f"diff_{v}" if v in accum_channels else v
                     for v in xr_sel[self.channel_dim_name].values
                 ]
-                
 
             yield xr_sel
