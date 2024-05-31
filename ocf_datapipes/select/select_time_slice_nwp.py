@@ -110,12 +110,8 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
             init_time_indexer = xr.DataArray(selected_init_times, coords=coords)
             step_indexer = xr.DataArray(steps, coords=coords)
 
-            # Slice out the data which does not need to be diffed
-            xr_non_accum = xr_data.sel({self.channel_dim_name: non_accum_channels})
-            xr_sel_non_accum = xr_non_accum.sel(step=step_indexer, init_time_utc=init_time_indexer)
-
             if len(accum_channels) == 0:
-                xr_sel = xr_sel_non_accum
+                xr_sel = xr_data.sel(step=step_indexer, init_time_utc=init_time_indexer)
 
             else:
                 # First minimise the size of the dataset we are diffing
@@ -125,13 +121,21 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
                 min_step = min(steps)
                 max_step = max(steps) + (xr_data.step[1] - xr_data.step[0])
 
-                xr_accum = xr_data.sel(
+                xr_min = xr_data.sel(
                     {
-                        self.channel_dim_name: accum_channels,
                         "init_time_utc": unique_init_times,
                         "step": slice(min_step, max_step),
                     }
-                ).compute()
+                )
+
+                # Slice out the data which does not need to be diffed
+                xr_non_accum = xr_min.sel({self.channel_dim_name: non_accum_channels})
+                xr_sel_non_accum = xr_non_accum.sel(
+                    step=step_indexer, init_time_utc=init_time_indexer
+                )
+
+                # Slice out the channels which need to be diffed
+                xr_accum = xr_min.sel({self.channel_dim_name: accum_channels})
 
                 # Take the diff and slice requested data
                 xr_accum = xr_accum.diff(dim="step", label="lower")
