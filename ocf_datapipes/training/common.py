@@ -936,7 +936,6 @@ def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
     Check if there are any Nans values in the satellite data.
     """
     if np.any(np.isnan(batch[BatchKey.satellite_actual])):
-        
         logger.error("Found nans values in satellite data")
         logger.error(batch[BatchKey.satellite_actual].shape)
 
@@ -947,7 +946,7 @@ def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
                     sat_data_one_step = batch[BatchKey.satellite_actual][t]
                 else:
                     sat_data_one_step = batch[BatchKey.satellite_actual][:, t]
-                
+
                 nans = np.isnan(sat_data_one_step)
 
                 if np.any(nans):
