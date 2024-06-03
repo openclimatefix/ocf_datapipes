@@ -10,7 +10,6 @@ from ocf_datapipes.batch import BatchKey, NWPBatchKey
 from ocf_datapipes.utils import Location
 
 
-
 def test_construct_sliced_data_pipeline(pvnet_config_filename):
     # This is randomly chosen, but real, GSP location
     loc_pipe = IterableWrapper([Location(x=246699.328125, y=849771.9375, id=18)])
