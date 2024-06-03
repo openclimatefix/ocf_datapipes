@@ -9,9 +9,7 @@ from ocf_datapipes.training.pvnet_all_gsp import (
 from ocf_datapipes.batch import BatchKey, NWPBatchKey
 
 
-
 def test_construct_sliced_data_pipeline(pvnet_config_filename):
-
     # This is a randomly chosen time in the middle of the test data
     t0_pipe = IterableWrapper([datetime(2020, 4, 1, 13, 30)])
 

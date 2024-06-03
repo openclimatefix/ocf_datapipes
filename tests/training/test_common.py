@@ -111,7 +111,7 @@ def test_create_t0_and_loc_datapipes(configuration_filename):
     assert isinstance(loc0, Location)
     assert isinstance(t0, np.datetime64)
 
-    
+
 def test_construct_loctime_pipelines(configuration_filename):
     start_time = datetime(1900, 1, 1)
     end_time = datetime(2050, 1, 1)

@@ -1,7 +1,6 @@
 """ECMWF provider loaders"""
 import pandas as pd
 import xarray as xr
-import numpy as np
 
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
