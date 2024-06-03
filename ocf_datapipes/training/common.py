@@ -160,7 +160,7 @@ def open_and_return_datapipes(
                 )
                 .filter_channels(nwp_conf.nwp_channels)
                 .add_t0_idx_and_sample_period_duration(
-                    sample_period_duration=timedelta(hours=1),
+                    sample_period_duration=minutes(nwp_conf.time_resolution_minutes),
                     history_duration=minutes(nwp_conf.history_minutes),
                 )
             )
@@ -731,7 +731,7 @@ def slice_datapipes_by_time(
 
             datapipes_dict["nwp"][nwp_key] = dp.select_time_slice_nwp(
                 t0_datapipe=get_t0_datapipe(f"nwp/{nwp_key}"),
-                sample_period_duration=minutes(60),
+                sample_period_duration=minutes(conf_in.nwp[nwp_key].time_resolution_minutes),
                 history_duration=minutes(conf_in.nwp[nwp_key].history_minutes),
                 forecast_duration=minutes(conf_in.nwp[nwp_key].forecast_minutes),
                 dropout_timedeltas=dropout_timedeltas,

@@ -26,9 +26,11 @@ def open_merra2(zarr_path) -> xr.DataArray:
         {"channel": list(nwp.keys())}
     )
     nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longitude")
+    aodana: xr.DataArray = nwp["AODANA"]
+    del nwp
 
     # Sanity checks.
-    time = pd.DatetimeIndex(nwp.step + nwp.init_time_utc.values)
+    time = pd.DatetimeIndex(aodana.step + aodana.init_time_utc.values)
     assert time.is_unique
     assert time.is_monotonic_increasing
-    return nwp
+    return aodana

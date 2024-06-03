@@ -22,7 +22,7 @@ def open_ifs(zarr_path) -> xr.DataArray:
         raise Exception("Too many TLDVs")
     else:
         dataVar = dataVars[0]
-    ifs: xr.Dataset = nwp[dataVar]
+    ifs: xr.DataArray = nwp[dataVar]
     del nwp
     ifs = ifs.transpose("init_time", "step", "variable", "latitude", "longitude")
     ifs = ifs.rename(

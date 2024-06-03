@@ -26,7 +26,7 @@ def preprocess_excarta(ds: xr.Dataset) -> xr.Dataset:
     return ds
 
 
-def open_excarta(zarr_path) -> xr.Dataset:
+def open_excarta(zarr_path) -> xr.DataArray:
     """
     Opens the Excarta hindcast data
 
