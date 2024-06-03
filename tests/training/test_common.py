@@ -1,9 +1,13 @@
+from datetime import datetime
+import numpy as np
 import pytest
+
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes.iter import Zipper
+from torch.utils.data import DataLoader
+
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils import Location
-from torch.utils.data import DataLoader
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
@@ -11,12 +15,6 @@ from ocf_datapipes.training.common import (
     create_t0_and_loc_datapipes,
     construct_loctime_pipelines,
 )
-
-import fsspec
-from pyaml_env import parse_config
-
-import pandas as pd
-import numpy as np
 
 
 def test_open_and_return_datapipes(configuration_filename):
