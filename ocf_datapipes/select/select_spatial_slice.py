@@ -351,10 +351,10 @@ def slice_spatial_pixel_window_from_xarray(
 
 
 def select_spatial_slice_pixels(
-    xr_data: Union[xr.Dataset, xr.DataArray], 
+    xr_data: Union[xr.Dataset, xr.DataArray],
     location: Location,
-    roi_width_pixels: int, 
-    roi_height_pixels: int, 
+    roi_width_pixels: int,
+    roi_height_pixels: int,
     allow_partial_slice: bool = False,
     location_idx_name: Optional[str] = None,
 ):
@@ -376,7 +376,7 @@ def select_spatial_slice_pixels(
         location_idx_name: Name for location index of unstructured grid data,
             None if not relevant
     """
-        
+
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
     if location_idx_name is not None:
         selected = _get_points_from_unstructured_grids(
@@ -411,11 +411,11 @@ def select_spatial_slice_pixels(
 
 
 def select_spatial_slice_meters(
-    xr_data: Union[xr.Dataset, xr.DataArray], 
+    xr_data: Union[xr.Dataset, xr.DataArray],
     location: Location,
     roi_width_meters: int,
     roi_height_meters: int,
-    dim_name: Optional[str] = None,                   
+    dim_name: Optional[str] = None,
 ):
     """
     Select spatial slice based off pixels from point of interest
@@ -449,7 +449,7 @@ def select_spatial_slice_meters(
 
     half_width = roi_width_meters // 2
     half_height = roi_height_meters // 2
-    
+
     # Find the bounding box values for the location in either lat-lon or OSGB coord systems
     if location.coordinate_system == "lon_lat":
         right, top = move_lon_lat_by_meters(
@@ -472,9 +472,7 @@ def select_spatial_slice_meters(
         top = location.y + half_height
 
     else:
-        raise ValueError(
-            f"Location coord system not recognized: {location.coordinate_system}"
-        )
+        raise ValueError(f"Location coord system not recognized: {location.coordinate_system}")
 
     # Change the bounding coordinates [left, right, bottom, top] to the same
     # coordinate system as the xarray data
@@ -483,7 +481,7 @@ def select_spatial_slice_meters(
         y=np.array([bottom, top], dtype=np.float32),
         from_coords=location.coordinate_system,
         xr_data=xr_data,
-        )
+    )
 
     # Do it off coordinates, not ID
     if dim_name is None:
@@ -554,14 +552,14 @@ class SelectSpatialSlicePixelsIterDataPipe(IterDataPipe):
             selected = select_spatial_slice_pixels(
                 xr_data=xr_data,
                 location=location,
-                roi_width_pixels=self.roi_width_pixels, 
-                roi_height_pixels=self.roi_height_pixels, 
+                roi_width_pixels=self.roi_width_pixels,
+                roi_height_pixels=self.roi_height_pixels,
                 allow_partial_slice=self.allow_partial_slice,
                 location_idx_name=self.location_idx_name,
             )
 
             yield selected
-    
+
 
 @functional_datapipe("select_spatial_slice_meters")
 class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
@@ -614,11 +612,11 @@ class SelectSpatialSliceMetersIterDataPipe(IterDataPipe):
             logger.debug("Getting Spatial Slice Meters")
 
             selected = select_spatial_slice_meters(
-                xr_data=xr_data, 
+                xr_data=xr_data,
                 location=location,
                 roi_width_meters=self.roi_width_meters,
                 roi_height_meters=self.roi_height_meters,
-                dim_name=self.dim_name,  
+                dim_name=self.dim_name,
             )
 
             yield selected

@@ -2,7 +2,6 @@
 from typing import Optional
 
 import numpy as np
-import xarray as xr
 from pydantic import BaseModel, Field, validator
 
 

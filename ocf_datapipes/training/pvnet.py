@@ -75,12 +75,12 @@ def slice_datapipes_by_space(
     return
 
 
-def process_and_combine_datapipes(datapipes_dict, configuration):
+def process_and_combine_datapipes(datapipes_dict, configuration, check_satellite_no_nans=False):
     """Normalize and convert data to numpy arrays"""
-    
+
     # Unpack for convenience
     conf_nwp = configuration.input_data.nwp
-    
+
     numpy_modalities = []
 
     # Normalise the inputs and convert to numpy format
@@ -128,8 +128,12 @@ def process_and_combine_datapipes(datapipes_dict, configuration):
     logger.debug("Combine all the data sources")
     combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(modality_name="gsp")
 
+    if check_satellite_no_nans:
+        # in production we don't want any nans in the satellite data
+        combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+
     combined_datapipe = combined_datapipe.map(fill_nans_in_arrays)
-    
+
     return combined_datapipe
 
 
@@ -138,7 +142,7 @@ def construct_sliced_data_pipeline(
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
     production: bool = False,
-    check_satellite_no_zeros: bool = False,
+    check_satellite_no_nans: bool = False,
 ) -> IterDataPipe:
     """Constructs data pipeline for the input data config file.
 
@@ -149,7 +153,7 @@ def construct_sliced_data_pipeline(
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
         production: Whether constucting pipeline for production inference.
-        check_satellite_no_zeros: Whether to check that satellite data has no zeros.
+        check_satellite_no_nans: Whether to check that satellite data has no nans.
     """
 
     datapipes_dict = _get_datapipes_dict(
@@ -164,13 +168,11 @@ def construct_sliced_data_pipeline(
 
     # Slice all of the datasets by time - this is an in-place operation
     slice_datapipes_by_time(datapipes_dict, t0_datapipe, configuration, production)
-    
+
     # Normalise, and combine the data sources into NumpyBatches
-    combined_datapipe = process_and_combine_datapipes(datapipes_dict, configuration)
-    
-    if check_satellite_no_zeros:
-        # in production we don't want any nans in the satellite data
-        combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
+    combined_datapipe = process_and_combine_datapipes(
+        datapipes_dict, configuration, check_satellite_no_nans
+    )
 
     return combined_datapipe
 

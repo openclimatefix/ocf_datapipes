@@ -937,20 +937,20 @@ def check_nans_in_satellite_data(batch: NumpyBatch) -> NumpyBatch:
     """
     if np.any(np.isnan(batch[BatchKey.satellite_actual])):
         logger.error("Found nans values in satellite data")
-
         logger.error(batch[BatchKey.satellite_actual].shape)
 
         # loop over time and channels
         for dim in [0, 1]:
             for t in range(batch[BatchKey.satellite_actual].shape[dim]):
                 if dim == 0:
-                    sate_data_one_step = batch[BatchKey.satellite_actual][t]
+                    sat_data_one_step = batch[BatchKey.satellite_actual][t]
                 else:
-                    sate_data_one_step = batch[BatchKey.satellite_actual][:, t]
-                nans = np.isnan(sate_data_one_step)
+                    sat_data_one_step = batch[BatchKey.satellite_actual][:, t]
+
+                nans = np.isnan(sat_data_one_step)
 
                 if np.any(nans):
-                    percent_nans = np.sum(nans) / np.prod(sate_data_one_step.shape) * 100
+                    percent_nans = np.mean(nans) * 100
 
                     logger.error(
                         f"Found nans values in satellite data at index {t} ({dim=}). "
@@ -1099,7 +1099,7 @@ def create_valid_t0_periods_datapipe(
     key_for_t0: str = "gsp",
 ):
     """Create datapipe yielding t0 periods which are valid for the input data sources.
-    
+
     Args:
         datapipes_dict: Dictionary of datapipes of input sources for which we want to select
             appropriate location and times.
@@ -1224,9 +1224,8 @@ def create_valid_t0_periods_datapipe(
 
     # Select time periods and set length
     valid_t0_periods_datapipe = key_datapipe.filter_time_periods(time_periods=overlapping_datapipe)
-    
-    return valid_t0_periods_datapipe
 
+    return valid_t0_periods_datapipe
 
 
 def create_t0_and_loc_datapipes(
@@ -1257,7 +1256,7 @@ def create_t0_and_loc_datapipes(
         configuration,
         key_for_t0,
     )
-    
+
     t0_loc_datapipe = valid_t0_periods_datapipe.pick_locs_and_t0s(return_all=True, shuffle=shuffle)
 
     location_pipe, t0_datapipe = t0_loc_datapipe.unzip(sequence_length=2)
