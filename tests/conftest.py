@@ -590,6 +590,11 @@ def nwp_ukv_data_filename(nwp_ukv_data):
 
 
 @pytest.fixture()
+def pvnet_config_filename():
+    return f"{_top_test_directory}/data/configs/pvnet_test_config.yaml"
+
+
+@pytest.fixture()
 def configuration_filename():
     return f"{_top_test_directory}/data/configs/test.yaml"
 
