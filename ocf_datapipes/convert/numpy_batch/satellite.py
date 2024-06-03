@@ -6,7 +6,6 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 
 
 def _convert_satellite_to_numpy_batch(xr_data):
-    
     example: NumpyBatch = {
         BatchKey.satellite_actual: xr_data.values,
         BatchKey.satellite_t0_idx: xr_data.attrs["t0_idx"],
@@ -19,12 +18,11 @@ def _convert_satellite_to_numpy_batch(xr_data):
     ):
         # HRVSatellite coords are already float32.
         example[batch_key] = xr_data[dataset_key].values
-    
+
     return example
 
 
 def _convert_hrvsatellite_to_numpy_batch(xr_data):
-
     example: NumpyBatch = {
         BatchKey.hrvsatellite_actual: xr_data.values,
         BatchKey.hrvsatellite_t0_idx: xr_data.attrs["t0_idx"],
@@ -37,7 +35,7 @@ def _convert_hrvsatellite_to_numpy_batch(xr_data):
     ):
         # Satellite coords are already float32.
         example[batch_key] = xr_data[dataset_key].values
-    
+
     return example
 
 
@@ -69,4 +67,4 @@ class ConvertSatelliteToNumpyBatchIterDataPipe(IterDataPipe):
     def __iter__(self) -> NumpyBatch:
         """Convert each example to a NumpyBatch object"""
         for xr_data in self.source_datapipe:
-                yield convert_satellite_to_numpy_batch(xr_data, self.is_hrv)
+            yield convert_satellite_to_numpy_batch(xr_data, self.is_hrv)

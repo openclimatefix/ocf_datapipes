@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def convert_sensor_to_numpy_batch(xr_data):
     """Convert Sensor Xarray to NumpyBatch"""
-    
+
     example: NumpyBatch = {
         BatchKey.sensor: xr_data.values,
         BatchKey.sensor_t0_idx: xr_data.attrs["t0_idx"],
@@ -24,7 +24,6 @@ def convert_sensor_to_numpy_batch(xr_data):
         BatchKey.sensor_longitude: xr_data["longitude"].values,
     }
     return example
-    
 
 
 @functional_datapipe("convert_sensor_to_numpy_batch")

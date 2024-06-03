@@ -9,6 +9,7 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 
 logger = logging.getLogger(__name__)
 
+
 def convert_pv_to_numpy_batch(xr_data):
     """Convert PV Xarray to NumpyBatch"""
     example: NumpyBatch = {
@@ -22,8 +23,9 @@ def convert_pv_to_numpy_batch(xr_data):
         BatchKey.pv_latitude: xr_data["latitude"].values,
         BatchKey.pv_longitude: xr_data["longitude"].values,
     }
-    
+
     return example
+
 
 @functional_datapipe("convert_pv_to_numpy_batch")
 class ConvertPVToNumpyBatchIterDataPipe(IterDataPipe):

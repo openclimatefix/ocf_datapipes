@@ -9,9 +9,10 @@ from ocf_datapipes.utils.utils import datetime64_to_float
 
 logger = logging.getLogger(__name__)
 
+
 def convert_wind_to_numpy_batch(xr_data):
     """Convert Wind Xarray to NumpyBatch"""
-    
+
     example: NumpyBatch = {
         BatchKey.wind: xr_data.values,
         BatchKey.wind_t0_idx: xr_data.attrs["t0_idx"],
@@ -23,8 +24,9 @@ def convert_wind_to_numpy_batch(xr_data):
         BatchKey.wind_latitude: xr_data["latitude"].values,
         BatchKey.wind_longitude: xr_data["longitude"].values,
     }
-    
+
     return example
+
 
 @functional_datapipe("convert_wind_to_numpy_batch")
 class ConvertWindToNumpyBatchIterDataPipe(IterDataPipe):

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def convert_gsp_to_numpy_batch(xr_data):
     """Convert from Xarray to NumpyBatch"""
-    
+
     example: NumpyBatch = {
         BatchKey.gsp: xr_data.values,
         BatchKey.gsp_t0_idx: xr_data.attrs["t0_idx"],
@@ -29,8 +29,8 @@ def convert_gsp_to_numpy_batch(xr_data):
         (BatchKey.gsp_x_osgb, "x_osgb"),
     ):
         if dataset_key in xr_data.coords.keys():
-            example[batch_key] = xr_data[dataset_key].values 
-    
+            example[batch_key] = xr_data[dataset_key].values
+
     return example
 
 

@@ -1,12 +1,11 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 import logging
 from datetime import datetime
-from typing import List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Union
 
 import xarray as xr
 from torch.utils.data.datapipes._decorator import functional_datapipe
 from torch.utils.data.datapipes.datapipe import IterDataPipe
-from torch.utils.data.datapipes.iter import IterableWrapper
 
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.batch.merge_numpy_examples_to_batch import stack_np_examples_into_batch
@@ -17,7 +16,6 @@ from ocf_datapipes.convert.numpy_batch import (
     convert_pv_to_numpy_batch,
     convert_satellite_to_numpy_batch,
 )
-
 from ocf_datapipes.load.gsp.utils import GSPLocationLookup
 from ocf_datapipes.select.select_spatial_slice import (
     select_spatial_slice_meters,
@@ -74,22 +72,23 @@ class SampleRepeat:
 @functional_datapipe("list_map")
 class ListMap(IterDataPipe):
     """Datapipe used to appky function to each item in yielded list"""
+
     def __init__(self, source_datapipe: IterDataPipe, func, *args, **kwargs):
         """Datapipe used to appky function to each item in yielded list.
-        
+
         Args:
             source_datapipe: The source datapipe yielding lists of samples
             function: The function to apply to all items in the list
             *args: Args to pass to the function
             **kwargs: Keyword arguments to pass to the function
-        
+
         """
-        
+
         self.source_datapipe = source_datapipe
         self.func = func
         self._args = args
         self._kwargs = kwargs
-        
+
     def __iter__(self):
         for element_list in self.source_datapipe:
             yield [self.func(x, *self._args, **self._kwargs) for x in element_list]
@@ -380,10 +379,8 @@ def post_spatial_slice_process(datapipes_dict, check_satellite_no_nans=False):
         nwp_numpy_modalities = dict()
 
         for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
-            nwp_numpy_modalities[nwp_key] = (
-                nwp_datapipe
-                .list_map(convert_nwp_to_numpy_batch)
-                .map(stack_np_examples_into_batch)
+            nwp_numpy_modalities[nwp_key] = nwp_datapipe.list_map(convert_nwp_to_numpy_batch).map(
+                stack_np_examples_into_batch
             )
 
         # Combine the NWPs into NumpyBatch
@@ -406,9 +403,7 @@ def post_spatial_slice_process(datapipes_dict, check_satellite_no_nans=False):
 
     # GSP always assumed to be in data
     numpy_modalities.append(
-        datapipes_dict["gsp"]
-        .list_map(convert_gsp_to_numpy_batch)
-        .map(stack_np_examples_into_batch)
+        datapipes_dict["gsp"].list_map(convert_gsp_to_numpy_batch).map(stack_np_examples_into_batch)
     )
 
     # Combine all the data sources
