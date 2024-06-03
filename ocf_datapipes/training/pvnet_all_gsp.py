@@ -52,7 +52,6 @@ def xr_compute(xr_data):
     return xr_data.compute()
 
 
-@functional_datapipe("sample_repeat")
 class SampleRepeat:
     """Use a single input element to create a list of identical values"""
 
@@ -78,7 +77,7 @@ class ListMap(IterDataPipe):
 
         Args:
             source_datapipe: The source datapipe yielding lists of samples
-            function: The function to apply to all items in the list
+            func: The function to apply to all items in the list
             *args: Args to pass to the function
             **kwargs: Keyword arguments to pass to the function
 
