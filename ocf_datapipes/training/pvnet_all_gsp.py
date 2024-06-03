@@ -11,12 +11,13 @@ from torch.utils.data.datapipes.iter import IterableWrapper
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.batch.merge_numpy_examples_to_batch import stack_np_examples_into_batch
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.convert import (
-    ConvertGSPToNumpyBatch,
-    ConvertNWPToNumpyBatch,
-    ConvertPVToNumpyBatch,
-    ConvertSatelliteToNumpyBatch,
+from ocf_datapipes.convert.numpy_batch import (
+    convert_gsp_to_numpy_batch,
+    convert_nwp_to_numpy_batch,
+    convert_pv_to_numpy_batch,
+    convert_satellite_to_numpy_batch,
 )
+
 from ocf_datapipes.load.gsp.utils import GSPLocationLookup
 from ocf_datapipes.select.select_spatial_slice import (
     select_spatial_slice_meters,
@@ -53,6 +54,7 @@ def xr_compute(xr_data):
     return xr_data.compute()
 
 
+@functional_datapipe("sample_repeat")
 class SampleRepeat:
     """Use a single input element to create a list of identical values"""
 
@@ -69,23 +71,28 @@ class SampleRepeat:
         return [x for _ in range(self.num_repeats)]
 
 
-class ConvertWrapper(IterDataPipe):
-    """A class to adapt our Convert[X]ToNumpyBatch datapipes to work on a list of samples"""
-
-    def __init__(self, source_datapipe: IterDataPipe, convert_class: Type[IterDataPipe]):
-        """A class to adapt our Convert[X]ToNumpyBatch datapipes to work on a list of samples
-
+@functional_datapipe("list_map")
+class ListMap(IterDataPipe):
+    """Datapipe used to appky function to each item in yielded list"""
+    def __init__(self, source_datapipe: IterDataPipe, func, *args, **kwargs):
+        """Datapipe used to appky function to each item in yielded list.
+        
         Args:
             source_datapipe: The source datapipe yielding lists of samples
-            convert_class: The class to apply to the output of source_datapipe
+            function: The function to apply to all items in the list
+            *args: Args to pass to the function
+            **kwargs: Keyword arguments to pass to the function
+        
         """
+        
         self.source_datapipe = source_datapipe
-        self.convert_class = convert_class
-
+        self.func = func
+        self._args = args
+        self._kwargs = kwargs
+        
     def __iter__(self):
-        for concurrent_samples in self.source_datapipe:
-            dp = self.convert_class(IterableWrapper(concurrent_samples))
-            yield [x for x in dp]
+        for element_list in self.source_datapipe:
+            yield [self.func(x, *self._args, **self._kwargs) for x in element_list]
 
 
 # ------------------------------ Multi-location datapipes ------------------------------
@@ -373,10 +380,11 @@ def post_spatial_slice_process(datapipes_dict, check_satellite_no_nans=False):
         nwp_numpy_modalities = dict()
 
         for nwp_key, nwp_datapipe in datapipes_dict["nwp"].items():
-            nwp_numpy_modalities[nwp_key] = ConvertWrapper(
-                nwp_datapipe,
-                ConvertNWPToNumpyBatch,
-            ).map(stack_np_examples_into_batch)
+            nwp_numpy_modalities[nwp_key] = (
+                nwp_datapipe
+                .list_map(convert_nwp_to_numpy_batch)
+                .map(stack_np_examples_into_batch)
+            )
 
         # Combine the NWPs into NumpyBatch
         nwp_numpy_modalities = MergeNWPNumpyModalities(nwp_numpy_modalities)
@@ -384,23 +392,23 @@ def post_spatial_slice_process(datapipes_dict, check_satellite_no_nans=False):
 
     if "sat" in datapipes_dict:
         numpy_modalities.append(
-            ConvertWrapper(datapipes_dict["sat"], ConvertSatelliteToNumpyBatch).map(
-                stack_np_examples_into_batch
-            )
+            datapipes_dict["sat"]
+            .list_map(convert_satellite_to_numpy_batch)
+            .map(stack_np_examples_into_batch)
         )
 
     if "pv" in datapipes_dict:
         numpy_modalities.append(
-            ConvertWrapper(datapipes_dict["pv"], ConvertPVToNumpyBatch).map(
-                stack_np_examples_into_batch
-            )
+            datapipes_dict["pv"]
+            .list_map(convert_pv_to_numpy_batch)
+            .map(stack_np_examples_into_batch)
         )
 
     # GSP always assumed to be in data
     numpy_modalities.append(
-        ConvertWrapper(datapipes_dict["gsp"], ConvertGSPToNumpyBatch).map(
-            stack_np_examples_into_batch
-        )
+        datapipes_dict["gsp"]
+        .list_map(convert_gsp_to_numpy_batch)
+        .map(stack_np_examples_into_batch)
     )
 
     # Combine all the data sources
