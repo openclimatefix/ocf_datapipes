@@ -18,7 +18,6 @@ def open_ifs(zarr_path) -> xr.DataArray:
     """
     # Open the data
     nwp = open_zarr_paths(zarr_path)
-    nwp = nwp.reindex(latitude=np.concatenate([np.arange(62, 60, -0.05), nwp.latitude.values]))
     dataVars = list(nwp.data_vars.keys())
     if len(dataVars) > 1:
         raise Exception("Too many TLDVs")
