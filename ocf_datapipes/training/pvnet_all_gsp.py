@@ -1,14 +1,13 @@
 """Create the training/validation datapipe for UK PVNet batches for all GSPs
 
-
 The main public functions are:
 
     [1] `pvnet_all_gsp_datapipe()`
         This constructs a datapipe yielding batches with inputs for all 317 UK GSPs for random t0
         times.
-        
+
     [2] `construct_sliced_data_pipeline()`
-        Given a datapipe yielding t0 times, this function constructs a datapipe yielding batches 
+        Given a datapipe yielding t0 times, this function constructs a datapipe yielding batches
         with inputs for all 317 UK GSPs for the yielded t0 times. This function is used inside [1].
 
 """
