@@ -36,6 +36,7 @@ class PickLocationsIterDataPipe(IterDataPipe):
         self.shuffle = shuffle
 
     def _yield_all_iter(self, xr_dataset):
+        """Samples without replacement from possible locations"""
         # Get the spatial coords
         xr_coord_system, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
 
@@ -62,6 +63,7 @@ class PickLocationsIterDataPipe(IterDataPipe):
             yield location
 
     def _yield_random_iter(self, xr_dataset):
+        """Samples with replacement from possible locations"""
         # Get the spatial coords
         xr_coord_system, xr_x_dim, xr_y_dim = spatial_coord_type(xr_dataset)
 
