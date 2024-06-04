@@ -1,21 +1,20 @@
+from datetime import datetime
+import numpy as np
 import pytest
+
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 from torch.utils.data.datapipes.iter import Zipper
+from torch.utils.data import DataLoader
+
 from ocf_datapipes.config.model import Configuration
 from ocf_datapipes.utils import Location
-from torch.utils.data import DataLoader
 from ocf_datapipes.training.common import (
     add_selected_time_slices_from_datapipes,
     get_and_return_overlapping_time_periods_and_t0,
     open_and_return_datapipes,
     create_t0_and_loc_datapipes,
+    construct_loctime_pipelines,
 )
-
-import fsspec
-from pyaml_env import parse_config
-
-import pandas as pd
-import numpy as np
 
 
 def test_open_and_return_datapipes(configuration_filename):
@@ -111,3 +110,17 @@ def test_create_t0_and_loc_datapipes(configuration_filename):
     loc0, t0 = next(iter(location_pipe.zip(t0_datapipe)))
     assert isinstance(loc0, Location)
     assert isinstance(t0, np.datetime64)
+
+
+def test_construct_loctime_pipelines(configuration_filename):
+    start_time = datetime(1900, 1, 1)
+    end_time = datetime(2050, 1, 1)
+
+    loc_pipe, t0_pipe = construct_loctime_pipelines(
+        configuration_filename,
+        start_time=start_time,
+        end_time=end_time,
+    )
+
+    next(iter(loc_pipe))
+    next(iter(t0_pipe))

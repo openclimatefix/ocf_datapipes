@@ -6,8 +6,8 @@
         },
         "capacity_mwp/.zarray": {
             "chunks": [
-                9430,
-                20
+                10,
+                318
             ],
             "compressor": {
                 "blocksize": 0,
@@ -21,8 +21,8 @@
             "filters": null,
             "order": "C",
             "shape": [
-                49,
-                22
+                96,
+                318
             ],
             "zarr_format": 2
         },
@@ -34,7 +34,7 @@
         },
         "datetime_gmt/.zarray": {
             "chunks": [
-                37717
+                96
             ],
             "compressor": {
                 "blocksize": 0,
@@ -48,7 +48,7 @@
             "filters": null,
             "order": "C",
             "shape": [
-                49
+                96
             ],
             "zarr_format": 2
         },
@@ -57,17 +57,17 @@
                 "datetime_gmt"
             ],
             "calendar": "proleptic_gregorian",
-            "units": "minutes since 2014-01-01"
+            "units": "minutes since 2020-04-01 00:00:00"
         },
         "generation_mw/.zarray": {
             "chunks": [
-                9430,
-                20
+                10,
+                318
             ],
             "compressor": {
                 "blocksize": 0,
                 "clevel": 5,
-                "cname": "zstd",
+                "cname": "lz4",
                 "id": "blosc",
                 "shuffle": 1
             },
@@ -76,8 +76,8 @@
             "filters": null,
             "order": "C",
             "shape": [
-                49,
-                22
+                96,
+                318
             ],
             "zarr_format": 2
         },
@@ -103,7 +103,7 @@
             "filters": null,
             "order": "C",
             "shape": [
-                22
+                318
             ],
             "zarr_format": 2
         },
@@ -114,8 +114,8 @@
         },
         "installedcapacity_mwp/.zarray": {
             "chunks": [
-                9430,
-                20
+                10,
+                318
             ],
             "compressor": {
                 "blocksize": 0,
@@ -129,8 +129,8 @@
             "filters": null,
             "order": "C",
             "shape": [
-                49,
-                22
+                96,
+                318
             ],
             "zarr_format": 2
         },

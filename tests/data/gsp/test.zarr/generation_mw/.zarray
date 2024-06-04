@@ -1,12 +1,12 @@
 {
     "chunks": [
-        9430,
-        20
+        10,
+        318
     ],
     "compressor": {
         "blocksize": 0,
         "clevel": 5,
-        "cname": "zstd",
+        "cname": "lz4",
         "id": "blosc",
         "shuffle": 1
     },
@@ -15,8 +15,8 @@
     "filters": null,
     "order": "C",
     "shape": [
-        49,
-        22
+        96,
+        318
     ],
     "zarr_format": 2
 }

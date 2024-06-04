@@ -28,7 +28,7 @@ def test_pick_locations_all_locations(gsp_datapipe):
         sample_period_duration=timedelta(minutes=30),
         history_duration=timedelta(hours=1),
     )
-    location_datapipe = PickLocations(gsp_datapipe, return_all_locations=True)
+    location_datapipe = PickLocations(gsp_datapipe, return_all=True)
     loc_iterator = iter(location_datapipe)
     for i in range(len(dataset["x_osgb"])):
         loc_data = next(loc_iterator)
