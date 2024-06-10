@@ -1,4 +1,5 @@
 """Select time periods"""
+
 import logging
 from typing import Union
 

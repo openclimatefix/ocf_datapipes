@@ -1,4 +1,5 @@
 """Convert point PV sites to image output"""
+
 import logging
 
 import numpy as np

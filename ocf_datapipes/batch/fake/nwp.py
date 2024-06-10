@@ -1,4 +1,5 @@
 """ Make fake NWP data """
+
 from datetime import datetime
 
 import numpy as np
@@ -49,12 +50,12 @@ def make_fake_nwp_data(
 
         # main nwp components
 
-        source_batch[
-            NWPBatchKey.nwp_init_time_utc
-        ] = time_utc  # Seconds since UNIX epoch (1970-01-01).
-        source_batch[
-            NWPBatchKey.nwp_target_time_utc
-        ] = time_utc  # Seconds since UNIX epoch (1970-01-01).
+        source_batch[NWPBatchKey.nwp_init_time_utc] = (
+            time_utc  # Seconds since UNIX epoch (1970-01-01).
+        )
+        source_batch[NWPBatchKey.nwp_target_time_utc] = (
+            time_utc  # Seconds since UNIX epoch (1970-01-01).
+        )
         source_batch[NWPBatchKey.nwp] = np.random.random(
             (batch_size, n_times, n_channels, n_y_osgb, n_x_osgb)
         )

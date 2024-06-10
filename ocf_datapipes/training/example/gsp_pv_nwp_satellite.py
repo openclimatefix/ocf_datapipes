@@ -1,4 +1,5 @@
 """Data pipeline for loading GSP, PV, Satellite and NWP"""
+
 import logging
 from datetime import timedelta
 from pathlib import Path

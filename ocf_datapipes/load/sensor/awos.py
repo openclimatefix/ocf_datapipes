@@ -1,4 +1,5 @@
 """Load ASOS data from local files for training/inference"""
+
 import logging
 
 import fsspec

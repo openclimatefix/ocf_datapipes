@@ -1,4 +1,5 @@
 """ Save functions for the configuration model"""
+
 import json
 import logging
 from typing import Optional, Union

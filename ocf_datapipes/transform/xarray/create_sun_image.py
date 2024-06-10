@@ -1,4 +1,5 @@
 """Create image channels of sun position at each pixel"""
+
 from typing import Union
 
 import numpy as np

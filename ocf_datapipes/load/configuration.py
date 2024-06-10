@@ -1,4 +1,5 @@
 """Configuration Loader"""
+
 import logging
 
 from torch.utils.data.datapipes._decorator import functional_datapipe

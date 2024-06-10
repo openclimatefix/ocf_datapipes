@@ -1,4 +1,5 @@
 """Ensure there is N PV systems per example"""
+
 import logging
 
 import numpy as np

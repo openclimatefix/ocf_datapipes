@@ -5,6 +5,7 @@
 3. Open 15 data
 
 """
+
 from ocf_datapipes.load import OpenSatellite
 from freezegun import freeze_time
 

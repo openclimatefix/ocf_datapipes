@@ -1,4 +1,5 @@
 """ Make fake PV data """
+
 from datetime import datetime
 
 import numpy as np

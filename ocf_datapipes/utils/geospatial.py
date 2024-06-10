@@ -1,4 +1,5 @@
 """Geospatial functions"""
+
 from datetime import datetime
 from numbers import Number
 from typing import Union

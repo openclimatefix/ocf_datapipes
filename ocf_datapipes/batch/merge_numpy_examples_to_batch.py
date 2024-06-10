@@ -1,4 +1,5 @@
 """Merge individual examples into a batch"""
+
 import logging
 from typing import Sequence, Union
 

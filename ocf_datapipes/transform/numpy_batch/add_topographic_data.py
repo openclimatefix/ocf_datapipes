@@ -1,4 +1,5 @@
 """Datapipe to add topographic data to NumpyBatch"""
+
 import numpy as np
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe

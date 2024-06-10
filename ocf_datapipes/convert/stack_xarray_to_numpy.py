@@ -1,4 +1,5 @@
 """Stacking Xarray objects to Numpy inputs"""
+
 from typing import List
 
 import numpy as np

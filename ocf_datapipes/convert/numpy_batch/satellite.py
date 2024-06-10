@@ -1,4 +1,5 @@
 """Convert Satellite to NumpyBatch"""
+
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.batch import BatchKey, NumpyBatch

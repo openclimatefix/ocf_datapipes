@@ -1,4 +1,5 @@
 """ Utils Functions to for fake data """
+
 from datetime import timedelta
 
 import numpy as np

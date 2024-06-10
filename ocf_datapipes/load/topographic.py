@@ -1,4 +1,5 @@
 """Load Topographic data"""
+
 from pathlib import Path
 from typing import Union
 

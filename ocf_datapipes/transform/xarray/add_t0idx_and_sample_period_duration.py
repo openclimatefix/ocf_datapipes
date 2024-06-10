@@ -1,4 +1,5 @@
 """Adds useful t0_idx and sample period attributes"""
+
 import logging
 from datetime import timedelta
 from typing import Optional, Union

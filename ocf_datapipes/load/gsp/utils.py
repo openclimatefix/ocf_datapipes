@@ -1,4 +1,5 @@
 """ Utils for GSP loading"""
+
 from typing import Optional
 
 import geopandas as gpd

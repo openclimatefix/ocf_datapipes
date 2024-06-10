@@ -1,4 +1,5 @@
 """Additional utils for working with batches"""
+
 import numpy as np
 import torch
 
