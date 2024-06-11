@@ -1,4 +1,5 @@
 """ Util functions for PV data source"""
+
 from typing import Optional
 
 import numpy as np

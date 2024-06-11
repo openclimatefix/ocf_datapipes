@@ -1,4 +1,5 @@
 """ Make fake Sun data """
+
 import numpy as np
 
 from ocf_datapipes.batch import BatchKey, NWPBatchKey
@@ -62,11 +63,11 @@ def make_fake_sun_data(configuration: Configuration, batch_size: int = 8):
             batch[BatchKey.nwp][nwp_source] = {}
 
             n_nwp_timesteps = get_n_time_steps_from_config(configuration.input_data.nwp[nwp_source])
-            batch[BatchKey.nwp][nwp_source][
-                NWPBatchKey.nwp_target_time_solar_azimuth
-            ] = np.random.random((batch_size, n_nwp_timesteps))
-            batch[BatchKey.nwp][nwp_source][
-                NWPBatchKey.nwp_target_time_solar_elevation
-            ] = np.random.random((batch_size, n_nwp_timesteps))
+            batch[BatchKey.nwp][nwp_source][NWPBatchKey.nwp_target_time_solar_azimuth] = (
+                np.random.random((batch_size, n_nwp_timesteps))
+            )
+            batch[BatchKey.nwp][nwp_source][NWPBatchKey.nwp_target_time_solar_elevation] = (
+                np.random.random((batch_size, n_nwp_timesteps))
+            )
 
     return batch

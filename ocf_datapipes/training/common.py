@@ -1,4 +1,5 @@
 """Common functionality for datapipes"""
+
 import logging
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Tuple, Union
@@ -121,9 +122,9 @@ def open_and_return_datapipes(
     use_wind = is_config_and_path_valid(
         use_wind,
         conf_in.wind,
-        lambda config: config.wind_files_groups[0].wind_filename
-        if config.wind_files_groups
-        else "",
+        lambda config: (
+            config.wind_files_groups[0].wind_filename if config.wind_files_groups else ""
+        ),
     )
 
     logger.debug(

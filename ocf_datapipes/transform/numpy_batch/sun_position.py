@@ -1,4 +1,5 @@
 """Datapipes to add Sun position to NumpyBatch"""
+
 import warnings
 
 import numpy as np

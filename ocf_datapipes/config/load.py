@@ -1,4 +1,5 @@
 """ Loading configuration functions """
+
 import logging
 from typing import Union
 

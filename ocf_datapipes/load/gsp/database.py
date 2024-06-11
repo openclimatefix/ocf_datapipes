@@ -1,4 +1,5 @@
 """ Function to get data from live database """
+
 import logging
 import os
 from datetime import datetime, timedelta, timezone

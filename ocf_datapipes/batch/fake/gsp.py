@@ -1,4 +1,5 @@
 """ Make fake GSP data """
+
 from datetime import datetime
 
 import numpy as np

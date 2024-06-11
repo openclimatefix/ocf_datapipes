@@ -1,4 +1,5 @@
 """Common NWP providers"""
+
 from typing import Callable
 
 import xarray as xr

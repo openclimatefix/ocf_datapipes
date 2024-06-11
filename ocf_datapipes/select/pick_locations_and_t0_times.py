@@ -1,4 +1,5 @@
 """Select the t0 time and lcoation for training"""
+
 import logging
 from typing import Optional
 
