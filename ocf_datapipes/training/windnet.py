@@ -113,12 +113,14 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
     filenames: List[str]
     keys: List[str]
     nwp_channels: Optional[dict[str, List[str]]] = None
+    coarsen_to_deg: Optional[float] = 0.1
 
     def __init__(
         self,
         filenames: List[str],
         keys: List[str],
         nwp_channels: Optional[dict[str, List[str]]] = None,
+        coarsen_to_deg: Optional[float] = 0.1,
     ):
         """
         Load NetCDF files and split them back into individual xr.Datasets
@@ -128,11 +130,13 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
             keys: List of keys from each file to use, each key should be a
                 dataarray in the xr.Dataset
             nwp_channels: Optional dictionary of NWP channels to use
+            coarsen_to_deg: what value to coarsen the NWP data to
         """
         super().__init__()
         self.keys = keys
         self.filenames = filenames
         self.nwp_channels = nwp_channels
+        self.coarsen_to_deg = coarsen_to_deg
 
     def __iter__(self):
         """Iterate through each filename, loading it, uncombining it, and then yielding it"""
@@ -143,7 +147,9 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
                 datasets = uncombine_from_single_dataset(dataset)
                 # print(datasets)
                 if "ecmwf" in datasets["nwp"].keys():
-                    datasets["nwp"]["ecmwf"] = potentially_coarsen(datasets["nwp"]["ecmwf"])
+                    datasets["nwp"]["ecmwf"] = potentially_coarsen(
+                        xr_data=datasets["nwp"]["ecmwf"], coarsen_to_deg=self.coarsen_to_deg
+                    )
                 # Yield a dictionary of the data, using the keys in self.keys
                 # print(datasets)
                 dataset_dict = {}
