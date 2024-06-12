@@ -1271,5 +1271,7 @@ def potentially_coarsen(xr_data: xr.Dataset, coarsen_to_deg: float = 0.1):
         step = np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0])
         coarsen_factor = int(coarsen_to_deg / step)
         if coarsen_factor > 1:
-            xr_data = xr_data.coarsen(latitude=coarsen_factor, longitude=coarsen_factor, boundary="pad").mean()
+            xr_data = xr_data.coarsen(
+                latitude=coarsen_factor, longitude=coarsen_factor, boundary="pad"
+            ).mean()
     return xr_data
