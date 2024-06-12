@@ -2,8 +2,8 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional
 from functools import partial
+from typing import List, Optional
 
 import xarray as xr
 from torch.utils.data import IterDataPipe, functional_datapipe
@@ -287,7 +287,9 @@ def construct_sliced_data_pipeline(
                 roi_height_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_height,
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
-            potentially_coarsen_partial = partial(potentially_coarsen, coarsen_to_deg=conf_nwp[nwp_key].coarsen_to_deg)
+            potentially_coarsen_partial = partial(
+                potentially_coarsen, coarsen_to_deg=conf_nwp[nwp_key].coarsen_to_deg
+            )
             nwp_datapipe = nwp_datapipe.map(potentially_coarsen_partial)
             # Somewhat hacky way for India specifically, need different mean/std for ECMWF data
             if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
