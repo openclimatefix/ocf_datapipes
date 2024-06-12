@@ -1265,12 +1265,11 @@ def create_t0_and_loc_datapipes(
     return location_pipe, t0_datapipe
 
 
-def potentially_coarsen(xr_data: xr.Dataset):
+def potentially_coarsen(xr_data: xr.Dataset, coarsen_to_deg: int = 0.1):
     """Coarsen the data, if it is separated by 0.05 degrees each"""
     if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
-        if np.isclose(np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0]), 0.05):
-            if np.isclose(np.round(xr_data.latitude.values[0], 1), xr_data.latitude.values[0]):
-                xr_data = xr_data.isel(latitude=slice(0, None, 2), longitude=slice(0, None, 2))
-            else:
-                xr_data = xr_data.isel(latitude=slice(1, None, 2), longitude=slice(1, None, 2))
+        step = np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0])
+        coarsen_factor = int(coarsen_to_deg / step)
+        if coarsen_factor > 1:
+            xr_data = xr_data.coarsen(latitude=coarsen_factor, longitude=coarsen_factor, boundary="trim").mean()
     return xr_data
