@@ -128,7 +128,7 @@ def test_construct_loctime_pipelines(configuration_filename):
 
 
 def test_potentially_coarsen(nwp_gfs_data):
-    """ The nwp_gfs_data has lat and long of 0 to 9"""
+    """The nwp_gfs_data has lat and long of 0 to 9"""
 
     assert nwp_gfs_data.si10.shape[2:] == (10, 10)
     data = potentially_coarsen(xr_data=nwp_gfs_data, coarsen_to_deg=2)
@@ -143,4 +143,3 @@ def test_potentially_coarsen(nwp_gfs_data):
     data = potentially_coarsen(xr_data=nwp_gfs_data, coarsen_to_deg=1)
     # should be the same
     assert data.si10.shape[2:] == (10, 10)
-
