@@ -616,7 +616,7 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin
         " the maximum forecast horizon of the NWP and the requested forecast length.",
     )
 
-    coarsen_to_degrees: Optional[int] = Field(
+    coarsen_to_degrees: Optional[float] = Field(
         0.1, description="The number of degrees to coarsen the NWP data to"
     )
 
