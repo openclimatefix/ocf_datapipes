@@ -1275,9 +1275,11 @@ def potentially_coarsen(xr_data: xr.Dataset, coarsen_to_deg: float = 0.1):
     """
     if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
         step = np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0])
+        step = np.round(step, 4)
         coarsen_factor = int(coarsen_to_deg / step)
         if coarsen_factor > 1:
             xr_data = xr_data.coarsen(
-                latitude=coarsen_factor, longitude=coarsen_factor, boundary="pad"
+                latitude=coarsen_factor, longitude=coarsen_factor, boundary="pad", coord_func='min'
             ).mean()
+            # we use the coord_func min, as the fault "mean" results in with some fractions of coordinates sometimes
     return xr_data
