@@ -1266,7 +1266,13 @@ def create_t0_and_loc_datapipes(
 
 
 def potentially_coarsen(xr_data: xr.Dataset, coarsen_to_deg: float = 0.1):
-    """Coarsen the data, if it is separated by 0.05 degrees each"""
+    """
+    Coarsen the data, if it is separated by 0.05 degrees each
+
+    Args:
+        xr_data: xarray dataset
+        coarsen_to_deg: Coarsen to this degree in lat and lon
+    """
     if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
         step = np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0])
         coarsen_factor = int(coarsen_to_deg / step)
