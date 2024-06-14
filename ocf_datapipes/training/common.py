@@ -1281,5 +1281,7 @@ def potentially_coarsen(xr_data: xr.Dataset, coarsen_to_deg: float = 0.1):
             xr_data = xr_data.coarsen(
                 latitude=coarsen_factor, longitude=coarsen_factor, boundary="pad", coord_func="min"
             ).mean()
-            # we use the coord_func min, as the fault "mean" results in with some fractions of coordinates sometimes
+            # we use the coord_func "min", as the using "mean"
+            # results in with some fractions of coordinates (sometimes),
+            # e.g. mean of 0.05, 0.1, 0.15, 0.2 is 0.125,
     return xr_data
