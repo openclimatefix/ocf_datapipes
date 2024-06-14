@@ -158,6 +158,6 @@ class SelectTimeSliceNWPIterDataPipe(IterDataPipe):
             if len(xr_sel.init_time_utc) != 1:
                 logger.warning(f"Expected 1 init time, got {len(xr_sel.init_time_utc)},"
                                "Will now just take the first one")
-                xr_sel = xr_sel.isel(init_time_utc=0)
+                xr_sel.__setitem__('init_time_utc', xr_sel.init_time_utc.values[0])
 
             yield xr_sel

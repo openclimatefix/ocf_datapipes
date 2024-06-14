@@ -25,9 +25,7 @@ def test_select_time_slice_nwp(nwp_datapipe):
     # The init-times should be the last 3-hour mutliple starting 5-minutes before each time t
     for t, ds in zip(times, dropout_datapipe):
         assert "target_time_utc" in ds.coords
-        assert (
-            ds.init_time_utc.values == (t - timedelta(minutes=5)).floor(timedelta(hours=3))
-        ).all()
+        assert ds.init_time_utc.values == (t - timedelta(minutes=5)).floor(timedelta(hours=3))
 
     times = [t0 + timedelta(minutes=m) for m in [0, 30, 120]]
 
@@ -45,9 +43,7 @@ def test_select_time_slice_nwp(nwp_datapipe):
     # The init times should be the last 3-hour mutliple starting an hour before each time t
     for t, ds in zip(times, dropout_datapipe):
         assert "target_time_utc" in ds.coords
-        assert (
-            ds.init_time_utc.values == (t - timedelta(minutes=60)).floor(timedelta(hours=3))
-        ).all()
+        assert ds.init_time_utc.values == (t - timedelta(minutes=60)).floor(timedelta(hours=3))
 
 
 def test_select_time_slice_nwp_diff(nwp_datapipe):
