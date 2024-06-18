@@ -25,3 +25,4 @@ scipy
 pytorch_lightning
 pvlive-api
 pydantic
+cftime
