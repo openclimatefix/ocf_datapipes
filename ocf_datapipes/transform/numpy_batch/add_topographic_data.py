@@ -75,7 +75,7 @@ def _get_surface_height_for_satellite(
     """
     num_examples = satellite.shape[0]
     surface_height = surface_height.rename("surface_height")
-    surface_height_for_batch = np.full_like(satellite.values, fill_value=np.NaN)
+    surface_height_for_batch = np.full_like(satellite.values, fill_value=np.nan)
     for example_idx in range(num_examples):
         satellite_example = satellite.isel(example=example_idx)
         msg = "Satellite imagery must start in the top-left!"
