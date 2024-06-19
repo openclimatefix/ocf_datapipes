@@ -4,7 +4,7 @@ xarray
 zarr
 fsspec
 einops
-numpy>=2.0.0
+numpy
 pandas
 rioxarray
 pathy
