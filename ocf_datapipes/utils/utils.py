@@ -174,6 +174,7 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
                 new_datasets.append(dataset)
             assert isinstance(new_datasets[-1], xr.Dataset)
         new_dataset_dict[key] = new_datasets
+
     # Prepend all coordinates and dimensions names with the key in the dataset_dict
     final_datasets_to_combined = []
     for key, datasets in new_dataset_dict.items():
@@ -194,6 +195,19 @@ def combine_to_single_dataset(dataset_dict: dict[str, xr.Dataset]) -> xr.Dataset
                 else f"{key}__time_utc"
             ),
         )
+
+        # Make sure the init_time is a vector.
+        # If they are all the same value,
+        # then the concat reduces them down to a scalar
+        key_init = f"{key}__init_time_utc"
+        key_target_time = f"{key}__target_time_utc"
+        if key_init in dataset.coords:
+            # check to see if init_time_utc is a scalar
+            if len(dataset[key_init].dims) == 0:
+                # expand the init_time_utc to the same length as the target_time_utc
+                init_time_utcs = [dataset[key_init].values] * len(dataset[key_target_time].values)
+                dataset = dataset.assign_coords({key_init: (key_target_time, init_time_utcs)})
+
         # Serialize attributes to be JSON-seriaizable
         final_datasets_to_combined.append(dataset)
     # Combine all datasets, and append the list of datasets to the dataset_dict

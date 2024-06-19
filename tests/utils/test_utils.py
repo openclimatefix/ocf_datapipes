@@ -33,6 +33,43 @@ def test_combine_to_single_dataset(xarray_dict_sample):
     assert set(ds_comb.keys()) == set(xarray_dict_sample.keys())
 
 
+def test_combine_to_single_dataset_same_init_time(xarray_dict_sample):
+
+    # set nwp init_time_utc to be the same
+    xarray_dict_sample["nwp"] = xarray_dict_sample["nwp"].isel(init_time_utc=0)
+
+    # get a vector of init times
+    init_time_utcs = [xarray_dict_sample["nwp"].init_time_utc.values] * 11
+
+    # need to have the dims
+    # - target_time_utc
+    # - channel
+    # - latitude
+    # - longitude
+    # with coordinates of step and init_time_utc
+    # rename step to target_time_utc, and add init_time_utc and step
+    xarray_dict_sample["nwp"] = xarray_dict_sample["nwp"].rename({"variable": "channel"})
+    xarray_dict_sample["nwp"] = xarray_dict_sample["nwp"].rename({"step": "target_time_utc"})
+    xarray_dict_sample["nwp"] = xarray_dict_sample["nwp"].assign_coords(
+        {"init_time_utc": ("target_time_utc", init_time_utcs)}
+    )
+    xarray_dict_sample["nwp"] = xarray_dict_sample["nwp"].assign_coords(
+        {"step": ("target_time_utc", range(len(init_time_utcs)))}
+    )
+    # order by target_time_utc, channel, latitude, longitude
+    xarray_dict_sample["nwp"] = xarray_dict_sample["nwp"].transpose(
+        "target_time_utc", "channel", "latitude", "longitude"
+    )
+
+    ds_comb = combine_to_single_dataset(xarray_dict_sample)
+
+    # Expected data type
+    assert isinstance(ds_comb, xr.Dataset)
+    assert len(ds_comb["nwp__init_time_utc"].values) == 11
+    # Expected data variables
+    assert set(ds_comb.keys()) == set(xarray_dict_sample.keys())
+
+
 def test_uncombine_from_single_dataset(xarray_dict_sample):
     ds_comb = combine_to_single_dataset(xarray_dict_sample)
 
