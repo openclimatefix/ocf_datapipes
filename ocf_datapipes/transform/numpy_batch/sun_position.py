@@ -25,8 +25,8 @@ def _get_azimuth_and_elevation(lon, lat, dt, must_be_finite):
         if must_be_finite:
             raise ValueError(f"Non-finite (lon, lat) = ({lon}, {lat}")
         return (
-            np.full_like(dt, fill_value=np.NaN).astype(np.float32),
-            np.full_like(dt, fill_value=np.NaN).astype(np.float32),
+            np.full_like(dt, fill_value=np.nan).astype(np.float32),
+            np.full_like(dt, fill_value=np.nan).astype(np.float32),
         )
 
     else:
@@ -156,8 +156,8 @@ class AddSunPositionIterDataPipe(IterDataPipe):
                 assert lons.shape == (time_utc.shape[0],)
                 assert lats.shape == (time_utc.shape[0],)
 
-                azimuth = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
-                elevation = np.full_like(time_utc, fill_value=np.NaN).astype(np.float32)
+                azimuth = np.full_like(time_utc, fill_value=np.nan).astype(np.float32)
+                elevation = np.full_like(time_utc, fill_value=np.nan).astype(np.float32)
 
                 # Loop round each example to get the Sun's elevation and azimuth
                 for example_idx, (lon, lat, dt) in enumerate(zip(lons, lats, times)):

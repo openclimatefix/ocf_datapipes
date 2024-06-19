@@ -127,7 +127,7 @@ def compute_fourier_features(
     )
     fourier_features = np.full(
         shape=array.shape + (n_fourier_features,),
-        fill_value=np.NaN,
+        fill_value=np.nan,
         dtype=array.dtype,
     )
 

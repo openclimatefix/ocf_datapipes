@@ -28,7 +28,7 @@ def datetime64_to_float(datetimes: np.ndarray, dtype=np.float64) -> np.ndarray:
     """
     nums = datetimes.astype("datetime64[s]").astype(dtype)
     mask = np.isfinite(datetimes)
-    return np.where(mask, nums, np.NaN)
+    return np.where(mask, nums, np.nan)
 
 
 def is_sorted(array: np.ndarray) -> bool:
