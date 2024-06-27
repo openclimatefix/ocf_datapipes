@@ -106,7 +106,7 @@ def test_load_excarta_local():
 
 def test_load_gfs():
     nwp_datapipe = OpenNWP(
-        zarr_path="tests/data/gfs_test.zarr.zip",
+        zarr_path="tests/data/gfs.zarr.zip",
         provider="merra2",
     )
     metadata = next(iter(nwp_datapipe))
