@@ -4,6 +4,8 @@ import xarray as xr
 
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
+# import pandas as pd
+
 _log = logging.getLogger(__name__)
 
 
