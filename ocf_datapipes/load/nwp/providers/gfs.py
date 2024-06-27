@@ -1,6 +1,7 @@
-import xarray as xr
 import logging
-import pandas as pd
+
+import xarray as xr
+
 from ocf_datapipes.load.nwp.providers.utils import open_zarr_paths
 
 _log = logging.getLogger(__name__)
@@ -8,14 +9,14 @@ _log = logging.getLogger(__name__)
 
 def open_gfs(zarr_path) -> xr.DataArray:
     """
-        Opens the GFS data
+    Opens the GFS data
 
-        Args:
-            zarr_path: Path to the zarr to open
+    Args:
+        zarr_path: Path to the zarr to open
 
-        Returns:
-            Xarray DataArray of the NWP data
-        """
+    Returns:
+        Xarray DataArray of the NWP data
+    """
     _log.info("Loading NWP GFS data")
 
     # Open data
@@ -39,11 +40,7 @@ def open_gfs(zarr_path) -> xr.DataArray:
 
     del gfs
 
-    nwp = nwp.rename({
-            "variable": "channel"
-                      })
-    nwp = nwp.transpose("init_time_utc", "step",
-                        "channel",
-                        "latitude", "longitude")
+    nwp = nwp.rename({"variable": "channel"})
+    nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longitude")
 
     return nwp
