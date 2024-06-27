@@ -102,3 +102,17 @@ def test_load_excarta_local():
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
+
+def test_load_gfs():
+    nwp_datapipe = OpenNWP(
+        zarr_path="tests/data/gfs_test.zarr.zip",
+        provider="merra2",
+    )
+    metadata = next(iter(nwp_datapipe))
+    assert metadata is not None
+    assert type(next(enumerate(metadata))[1]) == DataArray
+    dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
+    if bool(dim_keys - set(metadata.dims)):
+        raise ValueError(
+            "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
+        )
