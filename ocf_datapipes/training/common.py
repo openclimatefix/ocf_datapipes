@@ -159,7 +159,7 @@ def open_and_return_datapipes(
                     nwp_conf.nwp_zarr_path,
                     provider=nwp_conf.nwp_provider,
                 )
-                .filter_channels(nwp_conf.nwp_channels)
+                .filter_channels(nwp_conf.nwp_channels, provider=nwp_conf.nwp_provider,)
                 .add_t0_idx_and_sample_period_duration(
                     sample_period_duration=minutes(nwp_conf.time_resolution_minutes),
                     history_duration=minutes(nwp_conf.history_minutes),
