@@ -28,6 +28,7 @@ class FilterChannelsIterDataPipe(IterDataPipe):
             source_datapipe: Datapipe of Xarray objects
             channels: Channel names to keep
             dim_name: Dimension name for channels
+            provider: Name of NWP source, if available
         """
         self.source_datapipe = source_datapipe
         self.channels = channels
@@ -40,8 +41,8 @@ class FilterChannelsIterDataPipe(IterDataPipe):
             if len(flux_vars) > 0:
                 logger.warning(
                     f"You have requested channels that have no step 0: {flux_vars}. "
-                    f"Step 0 will be set to NaN. "
-                    f"To extrapolate it uncomment LN7, LN29-39 in ocf_datapipes/load/nwp/providers/gfs.py. "
+                    f"Step 0 will be set to NaN. To extrapolate it uncomment LN7, LN29-39 in "
+                    f"ocf_datapipes/load/nwp/providers/gfs.py. "
                     f"For more info see https://github.com/openclimatefix/ocf_datapipes/issues/253"
                 )
 
