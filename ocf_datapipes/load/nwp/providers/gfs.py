@@ -1,3 +1,5 @@
+"""Open GFS Forecast data"""
+
 import logging
 
 import xarray as xr
