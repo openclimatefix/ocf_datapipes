@@ -41,7 +41,7 @@ class FilterChannelsIterDataPipe(IterDataPipe):
                 logger.warning(
                     f"You have requested channels that have no step 0: {flux_vars}. "
                     f"Step 0 will be set to NaN. "
-                    f"To extrapolate it uncomment LN27-37 in ocf_datapipes/load/nwp/providers/gfs.py. "
+                    f"To extrapolate it uncomment LN7, LN29-39 in ocf_datapipes/load/nwp/providers/gfs.py. "
                     f"For more info see https://github.com/openclimatefix/ocf_datapipes/issues/253"
                 )
 
