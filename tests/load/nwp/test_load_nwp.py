@@ -103,6 +103,7 @@ def test_load_excarta_local():
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
 
+
 def test_load_gfs():
     nwp_datapipe = OpenNWP(
         zarr_path="tests/data/gfs_test.zarr.zip",
