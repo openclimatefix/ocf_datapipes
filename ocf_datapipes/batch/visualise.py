@@ -2,12 +2,12 @@
 
 This is a bit of a working progress, but the idea is to visualize the batch in a markdown file.
 """
-import pandas as pd
-import sys
 
-from ocf_datapipes.batch import NumpyBatch, BatchKey, NWPBatchKey
-import torch
+import pandas as pd
 import plotly.graph_objects as go
+import torch
+
+from ocf_datapipes.batch import BatchKey, NumpyBatch, NWPBatchKey
 
 
 def visualize_batch(batch: NumpyBatch):
@@ -151,6 +151,7 @@ def visualize_batch(batch: NumpyBatch):
                 print(f"{value}")
             else:
                 print(f"{value}")
+
 
 # For example you can run it like this
 # with open("batch.md", "w") as f:
