@@ -10,12 +10,10 @@ import torch
 import plotly.graph_objects as go
 
 
-def visualize_batch(batch: NumpyBatch, example_id: int = 0):
+def visualize_batch(batch: NumpyBatch):
 
     # Wind
     print("# Batch visualization")
-
-    print(f"We are looking at example {example_id}")
 
     print("## Wind \n")
     keys = [
@@ -98,20 +96,23 @@ def visualize_batch(batch: NumpyBatch, example_id: int = 0):
         nwp_data = nwp_provider[NWPBatchKey.nwp]
         # average of lat and lon
         nwp_data = nwp_data.mean(dim=(3, 4))
-        fig = go.Figure()
-        for i in range(len(nwp_provider[NWPBatchKey.nwp_channel_names])):
-            channel = nwp_provider[NWPBatchKey.nwp_channel_names][i]
-            nwp_data_one_channel = nwp_data[example_id, :, i]
-            time = nwp_provider[NWPBatchKey.nwp_target_time_utc][example_id]
-            time = pd.to_datetime(time, unit="s")
-            fig.add_trace(go.Scatter(x=time, y=nwp_data_one_channel, mode="lines", name=channel))
 
-        fig.update_layout(title=f"{provider} NWP", xaxis_title="Time", yaxis_title="Value")
-        # fig.show(renderer='browser')
-        name = f"{provider}_nwp.png"
-        fig.write_image(name)
-        print(f"![]({name})")
-        print("\n")
+        for b in range(nwp_data.shape[0]):
+
+            fig = go.Figure()
+            for i in range(len(nwp_provider[NWPBatchKey.nwp_channel_names])):
+                channel = nwp_provider[NWPBatchKey.nwp_channel_names][i]
+                nwp_data_one_channel = nwp_data[b, :, i]
+                time = nwp_provider[NWPBatchKey.nwp_target_time_utc][b]
+                time = pd.to_datetime(time, unit="s")
+                fig.add_trace(go.Scatter(x=time, y=nwp_data_one_channel, mode="lines", name=channel))
+
+            fig.update_layout(title=f"{provider} NWP - example {b}", xaxis_title="Time", yaxis_title="Value")
+            # fig.show(renderer='browser')
+            name = f"{provider}_nwp_{b}.png"
+            fig.write_image(name)
+            print(f"![]({name})")
+            print("\n")
 
         for key in keys:
             print("\n")
@@ -119,10 +120,14 @@ def visualize_batch(batch: NumpyBatch, example_id: int = 0):
             value = nwp_provider[key]
 
             if "time" in key.name:
-                value = pd.to_datetime(value[example_id], unit="s")
-                print(f"Shape={value.shape}")
-                print(f"Max {value.max()}")
-                print(f"Min {value.min()}")
+
+                # make a table with example, shape, max, min
+                print("| Example | Shape | Max | Min |")
+                print("| --- | --- | --- | --- |")
+
+                for example_id in range(value.shape[0]):
+                    value_ts = pd.to_datetime(value[example_id], unit="s")
+                    print(f"| {example_id} | {len(value_ts)} | {value_ts.max()} | {value_ts.min()} |")
 
             elif "channel" in key.name:
 
