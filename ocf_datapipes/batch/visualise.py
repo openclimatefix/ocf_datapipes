@@ -63,7 +63,21 @@ def visualize_batch(batch: NumpyBatch):
             print("\n")
             print(f"### {key.name}")
             value = batch[key]
-            if isinstance(value, torch.Tensor):
+            if key.name == 'gsp':
+                # plot gsp data
+                for b in range(value.shape[0]):
+                    fig = go.Figure()
+                    gsp_data = value[b,:,0]
+                    time = pd.to_datetime(batch[BatchKey.gsp_time_utc][b], unit='s')
+                    fig.add_trace(go.Scatter(x=time, y=gsp_data, mode="lines", name=f"GSP"))
+                    fig.update_layout(title=f"GSP - example {b}", xaxis_title="Time", yaxis_title="Value")
+                    # fig.show(renderer='browser')
+                    name = f"gsp_{b}.png"
+                    fig.write_image(name)
+                    print(f"![]({name})")
+                    print("\n")
+
+            elif isinstance(value, torch.Tensor):
                 print(f"shape {value.shape=}")
                 print(f"Max {value.max():.2f}")
                 print(f"Min {value.min():.2f}")
@@ -71,6 +85,8 @@ def visualize_batch(batch: NumpyBatch):
                 print(f"{value}")
             else:
                 print(f"{value}")
+
+            # TODO plot solar azimuth and elevation
 
     # NWP
     print("## NWP \n")
@@ -157,4 +173,4 @@ def visualize_batch(batch: NumpyBatch):
 # with open("batch.md", "w") as f:
 #     sys.stdout = f
 #     d = torch.load("000000.pt")
-#     visualize_batch(d, example_id=3)
+#     visualize_batch(d)
