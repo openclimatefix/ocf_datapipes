@@ -212,9 +212,7 @@ def visualize_batch(batch: NumpyBatch):
                     satellite_data_one_channel = value[b, :, i]
                     time = batch[BatchKey.satellite_time_utc][b]
                     time = pd.to_datetime(time, unit="s")
-                    fig.add_trace(
-                        go.Scatter(x=time, y=satellite_data_one_channel, mode="lines")
-                    )
+                    fig.add_trace(go.Scatter(x=time, y=satellite_data_one_channel, mode="lines"))
 
                 fig.update_layout(
                     title=f"Satellite - example {b}", xaxis_title="Time", yaxis_title="Value"
@@ -233,9 +231,7 @@ def visualize_batch(batch: NumpyBatch):
 
             for example_id in range(value.shape[0]):
                 value_ts = pd.to_datetime(value[example_id], unit="s")
-                print(
-                    f"| {example_id} | {len(value_ts)} | {value_ts.max()} | {value_ts.min()} |"
-                )
+                print(f"| {example_id} | {len(value_ts)} | {value_ts.max()} | {value_ts.min()} |")
 
         elif "channel" in key.name:
 
@@ -263,7 +259,6 @@ def visualize_batch(batch: NumpyBatch):
             print(f"{value}")
         else:
             print(f"{value}")
-
 
 
 # For example you can run it like this
