@@ -10,7 +10,7 @@ def test_load_nwp():
     assert metadata is not None
     assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "y_osgb", "x_osgb", "step"])
-    if bool(dim_keys - set(metadata.dims)):
+    if dim_keys - set(metadata.dims):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
@@ -24,7 +24,7 @@ def test_load_icon_eu():
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
     dim_keys = set(["isobaricInhPa", "init_time_utc", "latitude", "longitude", "step"])
-    if bool(dim_keys - set(metadata.dims)):
+    if dim_keys - set(metadata.dims):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
@@ -38,7 +38,7 @@ def test_load_icon_global():
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
     dim_keys = set(["isobaricInhPa", "init_time_utc", "step"])
-    if bool(dim_keys - set(metadata.dims)):
+    if dim_keys - set(metadata.dims):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
@@ -53,7 +53,7 @@ def test_load_ecmwf():
     assert metadata is not None
     assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
-    if bool(dim_keys - set(metadata.dims)):
+    if dim_keys - set(metadata.dims):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
@@ -68,7 +68,7 @@ def test_load_merra2():
     assert metadata is not None
     assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
-    if bool(dim_keys - set(metadata.dims)):
+    if dim_keys - set(metadata.dims):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
@@ -99,7 +99,7 @@ def test_load_excarta_local():
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
-    if bool(dim_keys - set(metadata.dims)):
+    if dim_keys - set(metadata.dims):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
@@ -114,7 +114,7 @@ def test_load_gfs():
     assert metadata is not None
     assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
-    if bool(dim_keys - set(metadata.dims)):
+    if dim_keys - set(metadata.dims):
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
