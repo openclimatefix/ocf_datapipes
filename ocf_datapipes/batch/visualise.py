@@ -11,6 +11,7 @@ from ocf_datapipes.batch import BatchKey, NumpyBatch, NWPBatchKey
 
 
 def visualize_batch(batch: NumpyBatch):
+    """Visualize the batch in a markdown file"""
 
     # Wind
     print("# Batch visualization")
@@ -162,7 +163,11 @@ def visualize_batch(batch: NumpyBatch):
                     channel = value[i]
                     data = nwp_data[:, :, i]
                     print(
-                        f"| {channel} | {data.max().item():.2f} | {data.min().item():.2f} | {data.mean().item():.2f} | {data.std().item():.2f} |"
+                        f"| {channel} "
+                        f"| {data.max().item():.2f} "
+                        f"| {data.min().item():.2f} "
+                        f"| {data.mean().item():.2f} "
+                        f"| {data.std().item():.2f} |"
                     )
 
                 print(f"Shape={value.shape}")
