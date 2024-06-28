@@ -181,6 +181,90 @@ def visualize_batch(batch: NumpyBatch):
             else:
                 print(f"{value}")
 
+    # Satellite
+    print("## Satellite \n")
+    keys = [
+        BatchKey.satellite_actual,
+        BatchKey.satellite_t0_idx,
+        BatchKey.satellite_time_utc,
+        BatchKey.satellite_time_utc,
+        BatchKey.satellite_x_geostationary,
+        BatchKey.satellite_y_geostationary,
+    ]
+
+    for key in keys:
+
+        print("\n")
+        print(f"#### {key.name}")
+        value = batch[key]
+
+        if "satellite_actual" in key.name:
+
+            print(value.shape)
+
+            # average of lat and lon
+            value = value.mean(dim=(3, 4))
+
+            for b in range(value.shape[0]):
+
+                fig = go.Figure()
+                for i in range(value.shape[2]):
+                    satellite_data_one_channel = value[b, :, i]
+                    time = batch[BatchKey.satellite_time_utc][b]
+                    time = pd.to_datetime(time, unit="s")
+                    fig.add_trace(
+                        go.Scatter(x=time, y=satellite_data_one_channel, mode="lines")
+                    )
+
+                fig.update_layout(
+                    title=f"Satellite - example {b}", xaxis_title="Time", yaxis_title="Value"
+                )
+                # fig.show(renderer='browser')
+                name = f"satellite_{b}.png"
+                fig.write_image(name)
+                print(f"![]({name})")
+                print("\n")
+
+        elif "time" in key.name:
+
+            # make a table with example, shape, max, min
+            print("| Example | Shape | Max | Min |")
+            print("| --- | --- | --- | --- |")
+
+            for example_id in range(value.shape[0]):
+                value_ts = pd.to_datetime(value[example_id], unit="s")
+                print(
+                    f"| {example_id} | {len(value_ts)} | {value_ts.max()} | {value_ts.min()} |"
+                )
+
+        elif "channel" in key.name:
+
+            # create a table with the channel names with max, min, mean and std
+            print("| Channel | Max | Min | Mean | Std |")
+            print("| --- | --- | --- | --- | --- |")
+            for i in range(len(value)):
+                channel = value[i]
+                data = nwp_data[:, :, i]
+                print(
+                    f"| {channel} "
+                    f"| {data.max().item():.2f} "
+                    f"| {data.min().item():.2f} "
+                    f"| {data.mean().item():.2f} "
+                    f"| {data.std().item():.2f} |"
+                )
+
+            print(f"Shape={value.shape}")
+
+        elif isinstance(value, torch.Tensor):
+            print(f"Shape {value.shape=}")
+            print(f"Max {value.max():.2f}")
+            print(f"Min {value.min():.2f}")
+        elif isinstance(value, int):
+            print(f"{value}")
+        else:
+            print(f"{value}")
+
+
 
 # For example you can run it like this
 # with open("batch.md", "w") as f:
