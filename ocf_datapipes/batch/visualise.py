@@ -121,9 +121,13 @@ def visualize_batch(batch: NumpyBatch):
                 nwp_data_one_channel = nwp_data[b, :, i]
                 time = nwp_provider[NWPBatchKey.nwp_target_time_utc][b]
                 time = pd.to_datetime(time, unit="s")
-                fig.add_trace(go.Scatter(x=time, y=nwp_data_one_channel, mode="lines", name=channel))
+                fig.add_trace(
+                    go.Scatter(x=time, y=nwp_data_one_channel, mode="lines", name=channel)
+                )
 
-            fig.update_layout(title=f"{provider} NWP - example {b}", xaxis_title="Time", yaxis_title="Value")
+            fig.update_layout(
+                title=f"{provider} NWP - example {b}", xaxis_title="Time", yaxis_title="Value"
+            )
             # fig.show(renderer='browser')
             name = f"{provider}_nwp_{b}.png"
             fig.write_image(name)
@@ -143,7 +147,9 @@ def visualize_batch(batch: NumpyBatch):
 
                 for example_id in range(value.shape[0]):
                     value_ts = pd.to_datetime(value[example_id], unit="s")
-                    print(f"| {example_id} | {len(value_ts)} | {value_ts.max()} | {value_ts.min()} |")
+                    print(
+                        f"| {example_id} | {len(value_ts)} | {value_ts.max()} | {value_ts.min()} |"
+                    )
 
             elif "channel" in key.name:
 
