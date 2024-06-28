@@ -8,6 +8,7 @@ def test_load_nwp():
     nwp_datapipe = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr")
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
+    assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "y_osgb", "x_osgb", "step"])
     if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
@@ -50,7 +51,7 @@ def test_load_ecmwf():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
-    assert type(next(enumerate(metadata))[1]) == DataArray
+    assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
     if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
@@ -65,7 +66,7 @@ def test_load_merra2():
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
-    assert type(next(enumerate(metadata))[1]) == DataArray
+    assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
     if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
@@ -107,11 +108,11 @@ def test_load_excarta_local():
 def test_load_gfs():
     nwp_datapipe = OpenNWP(
         zarr_path="tests/data/gfs.zarr",
-        provider="merra2",
+        provider="gfs",
     )
     metadata = next(iter(nwp_datapipe))
     assert metadata is not None
-    assert type(next(enumerate(metadata))[1]) == DataArray
+    assert type(metadata) == DataArray
     dim_keys = set(["channel", "init_time_utc", "latitude", "longitude", "step"])
     if bool(dim_keys - set(metadata.dims)):
         raise ValueError(
