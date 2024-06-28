@@ -63,14 +63,16 @@ def visualize_batch(batch: NumpyBatch):
             print("\n")
             print(f"### {key.name}")
             value = batch[key]
-            if key.name == 'gsp':
+            if key.name == "gsp":
                 # plot gsp data
                 for b in range(value.shape[0]):
                     fig = go.Figure()
-                    gsp_data = value[b,:,0]
-                    time = pd.to_datetime(batch[BatchKey.gsp_time_utc][b], unit='s')
-                    fig.add_trace(go.Scatter(x=time, y=gsp_data, mode="lines", name=f"GSP"))
-                    fig.update_layout(title=f"GSP - example {b}", xaxis_title="Time", yaxis_title="Value")
+                    gsp_data = value[b, :, 0]
+                    time = pd.to_datetime(batch[BatchKey.gsp_time_utc][b], unit="s")
+                    fig.add_trace(go.Scatter(x=time, y=gsp_data, mode="lines", name="GSP"))
+                    fig.update_layout(
+                        title=f"GSP - example {b}", xaxis_title="Time", yaxis_title="Value"
+                    )
                     # fig.show(renderer='browser')
                     name = f"gsp_{b}.png"
                     fig.write_image(name)
