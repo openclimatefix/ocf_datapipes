@@ -145,13 +145,13 @@ class LoadDictDatasetIterDataPipe(IterDataPipe):
             for filename in self.filenames:
                 dataset = xr.open_dataset(filename)
                 datasets = uncombine_from_single_dataset(dataset)
-                # print(datasets)
+                
                 if "ecmwf" in datasets["nwp"].keys():
                     datasets["nwp"]["ecmwf"] = potentially_coarsen(
                         xr_data=datasets["nwp"]["ecmwf"], coarsen_to_deg=self.coarsen_to_deg
                     )
+               
                 # Yield a dictionary of the data, using the keys in self.keys
-                # print(datasets)
                 dataset_dict = {}
                 if len(self.keys) > 0:
                     for k in self.keys:
