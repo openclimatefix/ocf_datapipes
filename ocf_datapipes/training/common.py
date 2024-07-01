@@ -1267,7 +1267,7 @@ def create_t0_and_loc_datapipes(
 
 def potentially_coarsen(xr_data: xr.Dataset, coarsen_to_deg: float = 0.1):
     """
-    Coarsen the data, if it is separated by 0.05 degrees each
+    Coarsen the data, change the latitude longitude grid
 
     Args:
         xr_data: xarray dataset
