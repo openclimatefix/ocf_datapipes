@@ -59,6 +59,9 @@ coverage.xml
 .pytest_cache/
 test.nc
 
+#test data generator
+tests/load/nwp/test_data_generator.py
+
 # Translations
 *.mo
 *.pot

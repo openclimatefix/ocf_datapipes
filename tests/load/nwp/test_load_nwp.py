@@ -1,6 +1,6 @@
 import pandas as pd
 from xarray import DataArray
-
+import pytest
 from ocf_datapipes.load import OpenNWP
 
 
@@ -102,3 +102,34 @@ def test_load_excarta_local():
         raise ValueError(
             "The following dimensions are missing: %s" % (str(dim_keys - set(metadata.dims)))
         )
+
+def test_check_for_zeros():
+    #positive test case
+    nwp_datapipe1 = OpenNWP(
+        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits.zarr",
+        check_for_zeros=True,)
+    with pytest.raises(ValueError): # checks for Error raised if NWP DataArray contains zeros
+        metadata = next(iter(nwp_datapipe1))
+
+    #negative test case
+    nwp_datapipe2 = OpenNWP(
+        zarr_path="tests/data/nwp_data/test.zarr",
+        check_for_zeros=True)
+    metadata = next(iter(nwp_datapipe2))
+    assert metadata is not None
+    
+
+def test_check_physical_limits():
+    #positive test case
+    nwp_datapipe1 = OpenNWP(
+        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits.zarr",
+        check_physical_limits=True)
+    with pytest.raises(ValueError): # checks for Error raised if NWP data UKV is outside physical limits
+        metadata = next(iter(nwp_datapipe1))
+
+    #negative test case
+    nwp_datapipe2 = OpenNWP(
+        zarr_path="tests/data/nwp_data/test.zarr",
+        check_physical_limits=True)
+    metadata = next(iter(nwp_datapipe2))
+    assert metadata is not None
