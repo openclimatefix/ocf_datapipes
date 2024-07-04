@@ -1,3 +1,6 @@
+import zarr
+import shutil
+import numpy as np
 import pandas as pd
 from xarray import DataArray
 import pytest
@@ -105,16 +108,31 @@ def test_load_excarta_local():
 
 
 def test_check_for_zeros():
+    #to generate data with zeros and limits:
+    original_store_path = 'tests/data/nwp_data/test.zarr'
+    original_store = zarr.open(original_store_path, mode='r')
+    new_store_path = 'tests/data/nwp_data/test_with_zeros_n_limits.zarr'
+    # Optionally, clear the destination store if it already exists
+    shutil.rmtree(new_store_path, ignore_errors=True)
+    with zarr.open(new_store_path, mode='w') as new_store:
+        for item in original_store:
+            zarr.copy(original_store[item], new_store, name=item)
+        
+        new_store['UKV'][0, 0, 0,0]=0
+        new_store['UKV'][0, 0, 0,1]=np.random.uniform(240, 350, size=(548,))
+    shutil.copy("tests/data/nwp_data/test.zarr/.zmetadata", "tests/data/nwp_data/test_with_zeros_n_limits.zarr/.zmetadata")
+    shutil.copy("tests/data/nwp_data/test.zarr/.zattrs", "tests/data/nwp_data/test_with_zeros_n_limits.zarr/.zattrs")
+
     # positive test case
     nwp_datapipe1 = OpenNWP(
-        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits.zarr",
+        zarr_path=new_store_path,
         check_for_zeros=True,
     )
     with pytest.raises(ValueError):  # checks for Error raised if NWP DataArray contains zeros
         metadata = next(iter(nwp_datapipe1))
 
     # negative test case
-    nwp_datapipe2 = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr", check_for_zeros=True)
+    nwp_datapipe2 = OpenNWP(zarr_path=original_store_path, check_for_zeros=True)
     metadata = next(iter(nwp_datapipe2))
     assert metadata is not None
 
@@ -133,3 +151,5 @@ def test_check_physical_limits():
     nwp_datapipe2 = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr", check_physical_limits=True)
     metadata = next(iter(nwp_datapipe2))
     assert metadata is not None
+
+    shutil.rmtree("tests/data/nwp_data/test_with_zeros_n_limits.zarr") #removes the zarr file created for testing
