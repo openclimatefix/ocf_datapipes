@@ -138,11 +138,11 @@ class OpenNWPIterDataPipe(IterDataPipe):
         """Checks if the NWP data contains zeros"""
         if isinstance(nwp, xr.DataArray):
             if (nwp.values == 0).any():
-                raise ValueError("NWP DataArray contains zeros")
+                raise ValueError(f"NWP DataArray contains{(nwp.values == 0).sum()*100/nwp.values.size}% zeros")  # noqa: E501
         if isinstance(nwp, xr.Dataset):
             for var in nwp:
                 if (nwp[var].values == 0).any():
-                    raise ValueError(f"NWP Dataset variable{var} contains zeros")
+                    raise ValueError(f"NWP Dataset variable{var} contains {(nwp[var].values == 0).sum()*100/nwp[var].values.size}% zeros")  # noqa: E501
 
     def check_if_physical_limits(self, nwp: Union[xr.DataArray, xr.Dataset]):
         """Checks if the NWP data is within physical limits"""
@@ -151,9 +151,9 @@ class OpenNWPIterDataPipe(IterDataPipe):
             if var_name in self.limits:
                 lower, upper = self.limits[var_name]
                 if (nwp < lower).any() or (nwp > upper).any():
-                    raise ValueError(f"NWP data {var_name} is outside physical limits")
+                    raise ValueError(f"NWP data {var_name} is outside physical limits: ({lower},{upper})")  # noqa: E501
         elif isinstance(nwp, xr.Dataset):
             for var_name, (lower, upper) in self.limits.items():
                 if var_name in nwp.variables:
                     if not ((nwp[var_name] >= lower).all() and (nwp[var_name] <= upper).all()):
-                        raise ValueError(f"NWP data {var_name} is outside physical limits")
+                        raise ValueError(f"NWP data {var_name} is outside physical limits: ({lower},{upper})")  # noqa: E501
