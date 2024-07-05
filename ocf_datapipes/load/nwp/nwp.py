@@ -41,69 +41,41 @@ class OpenNWPIterDataPipe(IterDataPipe):
         self.zarr_path = zarr_path
         self.check_for_zeros = check_for_zeros
         self.check_physical_limits = check_physical_limits
+
+        #limits for NWP data in accordance with https://huggingface.co/openclimatefix/pvnet_uk_region/blob/main/data_config.yaml
         self.limits = {
-            "temperature": (-100, 60),  # Celsius
-            "specific_humidity": (0, 0.03),  # kg/kg
-            "relative_humidity": (0, 100),  # Percentage
-            "pressure": (0, 1100),  # hPa (sea level pressure)
-            "u_wind": (-200, 200),  # m/s
-            "v_wind": (-200, 200),  # m/s
-            "geopotential": (0, 100000),  # m^2/s^2
-            "total_precipitation": (0, 2000),  # mm/day
-            "convective_precipitation": (0, 1000),  # mm/day
-            "snowfall": (0, 1000),  # mm water equivalent/day
-            "graupel": (0, 500),  # mm water equivalent/day
-            "cloud_cover": (0, 100),  # Percentage
-            "surface_temperature": (-90, 60),  # Celsius
-            "sea_surface_temperature": (-2, 35),  # Celsius
-            "soil_temperature": (-50, 60),  # Celsius
-            "soil_moisture": (0, 1),  # m^3/m^3
-            "visibility": (0, 100000),  # meters
-            "wind_gust": (0, 250),  # m/s
-            "solar_radiation": (0, 1500),  # W/m^2
-            "longwave_radiation": (0, 750),  # W/m^2
-            "evaporation": (0, 50),  # mm/day
-            "potential_evaporation": (0, 100),  # mm/day
-            "boundary_layer_height": (0, 5000),  # meters
-            "cape": (0, 10000),  # J/kg
-            "cin": (0, 1000),  # J/kg
-            "lifted_index": (-15, 15),  # Kelvin
-            "total_column_water": (0, 100),  # kg/m^2
-            "ozone_concentration": (0, 1000),  # Dobson units
-            "dew_point_temperature": (-100, 35),  # Celsius
-            "wet_bulb_temperature": (-100, 35),  # Celsius
-            "potential_temperature": (0, 1000),  # Kelvin
-            "equivalent_potential_temperature": (0, 1000),  # Kelvin
-            "vorticity": (-1e-3, 1e-3),  # 1/s
-            "divergence": (-1e-3, 1e-3),  # 1/s
-            "vertical_velocity": (-50, 50),  # m/s
-            "cloud_base_height": (0, 20000),  # meters
-            "cloud_top_height": (0, 20000),  # meters
-            "cloud_water_content": (0, 5),  # g/kg
-            "ice_water_content": (0, 5),  # g/kg
-            "surface_roughness": (0, 10),  # meters
-            "albedo": (0, 1),  # dimensionless
-            "friction_velocity": (0, 5),  # m/s
-            "sensible_heat_flux": (-500, 500),  # W/m^2
-            "latent_heat_flux": (-500, 500),  # W/m^2
-            "momentum_flux": (-10, 10),  # N/m^2
-            "surface_pressure": (300, 1100),  # hPa
-            "mean_sea_level_pressure": (870, 1090),  # hPa
-            "tropopause_pressure": (50, 500),  # hPa
-            "tropopause_temperature": (-100, 0),  # Celsius
-            "precipitable_water": (0, 100),  # mm
-            "total_cloud_cover": (0, 100),  # Percentage
-            "low_cloud_cover": (0, 100),  # Percentage
-            "medium_cloud_cover": (0, 100),  # Percentage
-            "high_cloud_cover": (0, 100),  # Percentage
-            "convective_available_potential_energy": (0, 10000),  # J/kg
-            "convective_inhibition": (0, 1000),  # J/kg
-            "storm_relative_helicity": (-1000, 1000),  # m^2/s^2
-            "bulk_richardson_number": (-10, 10),  # dimensionless
-            "lifted_condensation_level": (0, 5000),  # meters
-            "level_of_free_convection": (0, 20000),  # meters
-            "equilibrium_level": (0, 20000),  # meters
-            "UKV": (250, 330),  # UKV specific
+            "t2m": (173.15, 333.15),  # Temperature in Kelvin (-100°C to 60°C)
+            "dswrf": (0, 1500),  # Downward short-wave radiation flux, W/m^2
+            "dlwrf": (0, 750),  # Downward long-wave radiation flux, W/m^2
+            "hcc": (0, 100),  # High cloud cover, %
+            "mcc": (0, 100),  # Medium cloud cover, %
+            "lcc": (0, 100),  # Low cloud cover, %
+            "tcc": (0, 100),  # Total cloud cover, %
+            "sde": (0, 1000),  # Snowfall depth, meters
+            "sr": (0, 10),  # Surface roughness, meters
+            "duvrs": (0, 500),  # Direct UV radiation at surface, W/m^2 (positive values only)
+            "u10": (-200, 200),  # U component of 10m wind, m/s
+            "v10": (-200, 200),  # V component of 10m wind, m/s
+
+            # UKV NWP channels (additional to ECMWF)
+            "prate": (0, 2000),  # Precipitation rate, , kg/m^2/s (equivalent to 0-2000 mm/day)
+            "r": (0, 100),  # Relative humidity, %
+            "si10": (0, 250),  # Wind speed at 10m, m/s
+            "t": (173.15, 333.15),  # Temperature in Kelvin (-100°C to 60°C)
+            "vis": (0, 100000),  # Visibility, meters
+
+            # Satellite channels (no direct mapping to physical limits, using placeholder values)
+            "IR_016": (0, 1),  # Infrared channel
+            "IR_039": (0, 1),  # Infrared channel
+            "IR_087": (0, 1),  # Infrared channel
+            "IR_097": (0, 1),  # Infrared channel
+            "IR_108": (0, 1),  # Infrared channel
+            "IR_120": (0, 1),  # Infrared channel
+            "IR_134": (0, 1),  # Infrared channel
+            "VIS006": (0, 1),  # Visible channel
+            "VIS008": (0, 1),  # Visible channel
+            "WV_062": (0, 1),  # Water vapor channel
+            "WV_073": (0, 1),  # Water vapor channel
         }
         logger.info(f"Using {provider.lower()}")
         if provider.lower() == "ukv":
@@ -152,7 +124,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
     def check_if_physical_limits(self, nwp: Union[xr.DataArray, xr.Dataset]):
         """Checks if the NWP data is within physical limits"""
         if isinstance(nwp, xr.DataArray):
-            var_name = nwp.name
+            var_name = nwp.channel.values[0]
             if var_name in self.limits:
                 lower, upper = self.limits[var_name]
                 if (nwp < lower).any() or (nwp > upper).any():
@@ -161,7 +133,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
                     )
         elif isinstance(nwp, xr.Dataset):
             for var_name, (lower, upper) in self.limits.items():
-                if var_name in nwp.variables:
+                if var_name in nwp.channel:
                     if not ((nwp[var_name] >= lower).all() and (nwp[var_name] <= upper).all()):
                         raise ValueError(
                             f"NWP data {var_name} is outside physical limits: ({lower},{upper})"
