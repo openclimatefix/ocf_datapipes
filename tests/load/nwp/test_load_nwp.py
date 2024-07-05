@@ -119,7 +119,7 @@ def test_check_for_zeros():
             zarr.copy(original_store[item], new_store, name=item)
 
         new_store["UKV"][0, 0, 0, 0] = 0
-        new_store["UKV"][0, 0, 0, 1] = np.random.uniform(153, 353, size=(548,))
+        new_store["UKV"][0, 0, 0, 1] = np.random.uniform(190, 360, size=(548,))
     shutil.copy(
         "tests/data/nwp_data/test.zarr/.zmetadata",
         "tests/data/nwp_data/test_with_zeros_n_limits.zarr/.zmetadata",

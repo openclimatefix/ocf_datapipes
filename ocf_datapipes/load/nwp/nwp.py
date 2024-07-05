@@ -44,7 +44,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
 
         # limits for NWP data in accordance with https://huggingface.co/openclimatefix/pvnet_uk_region/blob/main/data_config.yaml
         self.limits = {
-            "t2m": (173.15, 333.15),  # Temperature in Kelvin (-100°C to 60°C)
+            "t2m": (200, 350),  # Temperature in Kelvin (-100°C to 60°C)
             "dswrf": (0, 1500),  # Downward short-wave radiation flux, W/m^2
             "dlwrf": (0, 750),  # Downward long-wave radiation flux, W/m^2
             "hcc": (0, 100),  # High cloud cover, %
@@ -60,20 +60,20 @@ class OpenNWPIterDataPipe(IterDataPipe):
             "prate": (0, 2000),  # Precipitation rate, , kg/m^2/s (equivalent to 0-2000 mm/day)
             "r": (0, 100),  # Relative humidity, %
             "si10": (0, 250),  # Wind speed at 10m, m/s
-            "t": (173.15, 333.15),  # Temperature in Kelvin (-100°C to 60°C)
+            "t": (200, 350),  # Temperature in Kelvin (-100°C to 60°C)
             "vis": (0, 100000),  # Visibility, meters
             # Satellite channels (no direct mapping to physical limits, using placeholder values)
-            "IR_016": (0, 1),  # Infrared channel
-            "IR_039": (0, 1),  # Infrared channel
-            "IR_087": (0, 1),  # Infrared channel
-            "IR_097": (0, 1),  # Infrared channel
-            "IR_108": (0, 1),  # Infrared channel
-            "IR_120": (0, 1),  # Infrared channel
-            "IR_134": (0, 1),  # Infrared channel
-            "VIS006": (0, 1),  # Visible channel
-            "VIS008": (0, 1),  # Visible channel
-            "WV_062": (0, 1),  # Water vapor channel
-            "WV_073": (0, 1),  # Water vapor channel
+            "IR_016": (0, 1000),  # Infrared channel
+            "IR_039": (0, 1000),  # Infrared channel
+            "IR_087": (0, 1000),  # Infrared channel
+            "IR_097": (0, 1000),  # Infrared channel
+            "IR_108": (0, 1000),  # Infrared channel
+            "IR_120": (0, 1000),  # Infrared channel
+            "IR_134": (0, 1000),  # Infrared channel
+            "VIS006": (0, 1000),  # Visible channel
+            "VIS008": (0, 1000),  # Visible channel
+            "WV_062": (0, 1000),  # Water vapor channel
+            "WV_073": (0, 1000),  # Water vapor channel
         }
         logger.info(f"Using {provider.lower()}")
         if provider.lower() == "ukv":
