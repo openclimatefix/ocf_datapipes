@@ -42,7 +42,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
         self.check_for_zeros = check_for_zeros
         self.check_physical_limits = check_physical_limits
 
-        #limits for NWP data in accordance with https://huggingface.co/openclimatefix/pvnet_uk_region/blob/main/data_config.yaml
+        # limits for NWP data in accordance with https://huggingface.co/openclimatefix/pvnet_uk_region/blob/main/data_config.yaml
         self.limits = {
             "t2m": (173.15, 333.15),  # Temperature in Kelvin (-100°C to 60°C)
             "dswrf": (0, 1500),  # Downward short-wave radiation flux, W/m^2
@@ -56,14 +56,12 @@ class OpenNWPIterDataPipe(IterDataPipe):
             "duvrs": (0, 500),  # Direct UV radiation at surface, W/m^2 (positive values only)
             "u10": (-200, 200),  # U component of 10m wind, m/s
             "v10": (-200, 200),  # V component of 10m wind, m/s
-
             # UKV NWP channels (additional to ECMWF)
             "prate": (0, 2000),  # Precipitation rate, , kg/m^2/s (equivalent to 0-2000 mm/day)
             "r": (0, 100),  # Relative humidity, %
             "si10": (0, 250),  # Wind speed at 10m, m/s
             "t": (173.15, 333.15),  # Temperature in Kelvin (-100°C to 60°C)
             "vis": (0, 100000),  # Visibility, meters
-
             # Satellite channels (no direct mapping to physical limits, using placeholder values)
             "IR_016": (0, 1),  # Infrared channel
             "IR_039": (0, 1),  # Infrared channel
