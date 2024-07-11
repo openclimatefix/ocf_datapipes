@@ -80,7 +80,7 @@ def stack_np_examples_into_batch(dict_list: Sequence[NumpyBatch]) -> NumpyBatch:
             for nwp_source in nwp_sources:
                 # Keys can be different for different NWPs
                 nwp_batch_keys = list(dict_list[0][BatchKey.nwp][nwp_source].keys())
-                
+
                 nwp_source_batch: NWPNumpyBatch = {}
                 for nwp_batch_key in nwp_batch_keys:
                     nwp_source_batch[nwp_batch_key] = stack_data_list(
@@ -99,6 +99,7 @@ def stack_np_examples_into_batch(dict_list: Sequence[NumpyBatch]) -> NumpyBatch:
             )
 
     return batch
+
 
 def check_for_nans(batch: dict[str, NWPNumpyBatch]):
     """Check for NaNs in a batch"""
