@@ -106,8 +106,10 @@ class OpenNWPIterDataPipe(IterDataPipe):
 
     def check_if_zeros(self, nwp: Union[xr.DataArray, xr.Dataset]):
         """Checks if the NWP data contains zeros"""
+
         def count_zeros(block):
             return (block == 0).sum()
+
         def check_zeros(result):
             if result > 0:
                 raise ValueError(f"NWP data contains {result*100/nwp.size}% zeros")
