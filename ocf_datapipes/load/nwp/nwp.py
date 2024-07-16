@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from typing import Union
 
+import dask
 import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
 from torch.utils.data import IterDataPipe, functional_datapipe
@@ -52,7 +53,6 @@ class OpenNWPIterDataPipe(IterDataPipe):
             "lcc": (0, 100),  # Low cloud cover, %
             "tcc": (0, 100),  # Total cloud cover, %
             "sde": (0, 1000),  # Snowfall depth, meters
-            "sr": (0, 10),  # Surface roughness, meters
             "duvrs": (0, 500),  # Direct UV radiation at surface, W/m^2 (positive values only)
             "u10": (-200, 200),  # U component of 10m wind, m/s
             "v10": (-200, 200),  # V component of 10m wind, m/s
@@ -106,18 +106,34 @@ class OpenNWPIterDataPipe(IterDataPipe):
 
     def check_if_zeros(self, nwp: Union[xr.DataArray, xr.Dataset]):
         """Checks if the NWP data contains zeros"""
+        def count_zeros(block):
+            return (block == 0).sum()
+        def check_zeros(result):
+            if result > 0:
+                raise ValueError(f"NWP data contains {result*100/nwp.size}% zeros")
+
         if isinstance(nwp, xr.DataArray):
-            if (nwp.values == 0).any():
-                raise ValueError(
-                    f"NWP DataArray contains{(nwp.values == 0).sum()*100/nwp.values.size}% zeros"
-                )
-        if isinstance(nwp, xr.Dataset):
-            for var in nwp:
-                if (nwp[var].values == 0).any():
+            if dask.is_dask_collection(nwp.data):
+                zero_count = nwp.data.map_blocks(count_zeros, dtype=int).compute()
+                check_zeros(zero_count)
+            else:
+                if (nwp.values == 0).any():
                     raise ValueError(
-                        f"NWP Dataset variable{var} "
-                        f"contains {(nwp[var].values == 0).sum()*100/nwp[var].values.size}% zeros"
+                        f"NWP DataArray contains{(nwp.values == 0).sum()*100/nwp.values.size}% "
+                        "zeros"
                     )
+        elif isinstance(nwp, xr.Dataset):
+            for var in nwp:
+                if dask.is_dask_collection(nwp[var].data):
+                    zero_count = nwp[var].data.map_blocks(count_zeros, dtype=int).compute()
+                    check_zeros(zero_count)
+                else:
+                    if (nwp[var].values == 0).any():
+                        raise ValueError(
+                            f"NWP Dataset variable{var} "
+                            f"contains {(nwp[var].values == 0).sum()*100/nwp[var].values.size}% "
+                            "zeros"
+                        )
 
     def check_if_physical_limits(self, nwp: Union[xr.DataArray, xr.Dataset]):
         """Checks if the NWP data is within physical limits"""
