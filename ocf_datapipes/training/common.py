@@ -19,7 +19,7 @@ from ocf_datapipes.load import (
     OpenNWP,
     OpenPVFromNetCDF,
     OpenPVFromPVSitesDB,
-    OpenSatellite,
+    open_sat_data,
     OpenWindFromNetCDF,
 )
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
@@ -36,6 +36,17 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
+
+
+@functional_datapipe("fake_iter")
+class FakeIter(IterDataPipe):
+    def __init__(self, data_xr):
+        self.data_xr = data_xr
+
+    def __iter__(self) -> xr.DataArray:
+        while True:
+            yield self.data_xr
+
 
 
 def is_config_and_path_valid(
@@ -171,8 +182,11 @@ def open_and_return_datapipes(
 
     if use_sat:
         logger.debug("Opening Satellite Data")
-        sat_datapipe = (
-            OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
+
+        sat_xr = open_sat_data(configuration.input_data.satellite.satellite_zarr_path)
+        sat_pipe = FakeIter(sat_xr)
+
+        sat_datapipe = (sat_pipe
             .filter_channels(configuration.input_data.satellite.satellite_channels)
             .add_t0_idx_and_sample_period_duration(
                 sample_period_duration=minutes(
@@ -186,9 +200,11 @@ def open_and_return_datapipes(
 
     if use_hrv:
         logger.debug("Opening HRV Satellite Data")
-        sat_hrv_datapipe = OpenSatellite(
-            configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
-        ).add_t0_idx_and_sample_period_duration(
+
+        sat_xr = open_sat_data(configuration.input_data.satellite.satellite_zarr_path)
+        sat_pipe = FakeIter(sat_xr)
+
+        sat_hrv_datapipe = sat_pipe.add_t0_idx_and_sample_period_duration(
             sample_period_duration=minutes(
                 configuration.input_data.hrvsatellite.time_resolution_minutes
             ),

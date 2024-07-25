@@ -12,8 +12,8 @@ import ocf_datapipes  # noqa
 from ocf_datapipes.batch import MergeNumpyModalities, MergeNWPNumpyModalities
 from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import Configuration
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenSatellite
-from ocf_datapipes.training.common import normalize_gsp, normalize_pv
+from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, open_sat_data
+from ocf_datapipes.training.common import normalize_gsp, normalize_pv, FakeIter
 from ocf_datapipes.utils.consts import NWP_MEANS, NWP_STDS, RSS_MEAN, RSS_STD
 
 logger = logging.getLogger(__name__)
@@ -53,9 +53,9 @@ def gsp_pv_nwp_satellite_data_pipeline(configuration: Union[Path, str]) -> IterD
     )
 
     # Load and noralize satellite data
-    satellite_datapipe = OpenSatellite(
-        zarr_path=configuration.input_data.satellite.satellite_zarr_path
-    ).normalize(mean=RSS_MEAN, std=RSS_STD)
+    sat_xr = open_sat_data(zarr_path=configuration.input_data.satellite.satellite_zarr_path)
+    satellite_datapipe = FakeIter(sat_xr)
+    satellite_datapipe = satellite_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
     # Load and normalize NWP data - There may be multiple NWP sources
     nwp_datapipe_dict = {}

@@ -13,7 +13,8 @@ from ocf_datapipes.load.wind.wind import OpenWindFromNetCDFIterDataPipe as OpenW
 
 from .configuration import OpenConfigurationIterDataPipe as OpenConfiguration
 from .nwp.nwp import OpenNWPIterDataPipe as OpenNWP
-from .satellite import OpenSatelliteIterDataPipe as OpenSatellite
+# from .satellite import OpenSatelliteIterDataPipe as OpenSatellite
+from .satellite import open_sat_data
 
 try:
     import rioxarray  # Rioxarray is sometimes a pain to install, so only load this if its installed

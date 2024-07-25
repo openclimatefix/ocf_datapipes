@@ -29,9 +29,10 @@ from ocf_datapipes.load import (
     OpenGSP,
     OpenNWP,
     OpenPVFromNetCDF,
-    OpenSatellite,
     OpenTopography,
+    open_sat_data
 )
+from ocf_datapipes.training.common import FakeIter
 
 xr.set_options(keep_attrs=True)
 
@@ -49,7 +50,7 @@ def top_test_directory():
 @pytest.fixture()
 def sat_hrv_datapipe():
     filename = _top_test_directory + "/data/hrv_sat_data.zarr"
-    return OpenSatellite(zarr_path=filename)
+    return FakeIter(open_sat_data(zarr_path=filename))
 
 
 @pytest.fixture()
@@ -57,7 +58,7 @@ def sat_datapipe():
     filename = f"{_top_test_directory}/data/sat_data.zarr"
     # The saved data is scaled from 0-1024. Now we use data scaled from 0-1
     # Rescale here for subsequent tests
-    return OpenSatellite(zarr_path=filename).map(lambda da: da / 1024)
+    return FakeIter(open_sat_data(zarr_path=filename)).map(lambda da: da / 1024)
 
 
 @pytest.fixture()
@@ -65,7 +66,7 @@ def sat_15_datapipe():
     filename = f"{_top_test_directory}/data/sat_data_15.zarr"
     # The saved data is scaled from 0-1024. Now we use data scaled from 0-1
     # Rescale here for subsequent tests
-    return OpenSatellite(zarr_path=filename).map(_sat_rescale)
+    return FakeIter(open_sat_data(zarr_path=filename)).map(_sat_rescale)
 
 
 @pytest.fixture()

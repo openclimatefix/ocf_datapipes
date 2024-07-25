@@ -164,23 +164,3 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
 
     return data_array
 
-
-@functional_datapipe("open_satellite")
-class OpenSatelliteIterDataPipe(IterDataPipe):
-    """Open Satellite Zarr"""
-
-    def __init__(self, zarr_path: Union[Path, str]):
-        """
-        Opens the satellite Zarr
-
-        Args:
-            zarr_path: path to the zarr file
-        """
-        self.zarr_path = zarr_path
-        super().__init__()
-
-    def __iter__(self) -> xr.DataArray:
-        """Open the Zarr file"""
-        data: xr.DataArray = open_sat_data(zarr_path=self.zarr_path)
-        while True:
-            yield data

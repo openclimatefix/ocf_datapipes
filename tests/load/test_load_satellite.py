@@ -6,23 +6,20 @@
 
 """
 
-from ocf_datapipes.load import OpenSatellite
+from ocf_datapipes.load import open_sat_data
 from freezegun import freeze_time
 
 
 def test_open_satellite():
-    sat_datapipe = OpenSatellite(zarr_path="tests/data/hrv_sat_data.zarr")
-    metadata = next(iter(sat_datapipe))
-    assert metadata is not None
+    sat_xr = open_sat_data(zarr_path="tests/data/hrv_sat_data.zarr")
+    assert sat_xr is not None
 
 
 def test_open_hrvsatellite():
-    sat_datapipe = OpenSatellite(zarr_path="tests/data/sat_data.zarr")
-    metadata = next(iter(sat_datapipe))
-    assert metadata is not None
+    sat_xr = open_sat_data(zarr_path="tests/data/sat_data.zarr")
+    assert sat_xr is not None
 
 
 def test_open_satellite_15():
-    sat_datapipe = OpenSatellite(zarr_path="tests/data/sat_data_15.zarr")
-    metadata = next(iter(sat_datapipe))
-    assert metadata is not None
+    sat_xr = open_sat_data(zarr_path="tests/data/sat_data_15.zarr")
+    assert sat_xr is not None
