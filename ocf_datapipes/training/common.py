@@ -19,8 +19,8 @@ from ocf_datapipes.load import (
     OpenNWP,
     OpenPVFromNetCDF,
     OpenPVFromPVSitesDB,
-    open_sat_data,
     OpenWindFromNetCDF,
+    open_sat_data,
 )
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
@@ -46,7 +46,6 @@ class FakeIter(IterDataPipe):
     def __iter__(self) -> xr.DataArray:
         while True:
             yield self.data_xr
-
 
 
 def is_config_and_path_valid(
@@ -186,14 +185,13 @@ def open_and_return_datapipes(
         sat_xr = open_sat_data(configuration.input_data.satellite.satellite_zarr_path)
         sat_pipe = FakeIter(sat_xr)
 
-        sat_datapipe = (sat_pipe
-            .filter_channels(configuration.input_data.satellite.satellite_channels)
-            .add_t0_idx_and_sample_period_duration(
-                sample_period_duration=minutes(
-                    configuration.input_data.satellite.time_resolution_minutes
-                ),
-                history_duration=minutes(configuration.input_data.satellite.history_minutes),
-            )
+        sat_datapipe = sat_pipe.filter_channels(
+            configuration.input_data.satellite.satellite_channels
+        ).add_t0_idx_and_sample_period_duration(
+            sample_period_duration=minutes(
+                configuration.input_data.satellite.time_resolution_minutes
+            ),
+            history_duration=minutes(configuration.input_data.satellite.history_minutes),
         )
 
         used_datapipes["sat"] = sat_datapipe

@@ -25,13 +25,7 @@ import ocf_datapipes
 from ocf_datapipes.config.load import load_yaml_configuration
 from ocf_datapipes.config.model import PV, PVFiles
 from ocf_datapipes.config.save import save_yaml_configuration
-from ocf_datapipes.load import (
-    OpenGSP,
-    OpenNWP,
-    OpenPVFromNetCDF,
-    OpenTopography,
-    open_sat_data
-)
+from ocf_datapipes.load import OpenGSP, OpenNWP, OpenPVFromNetCDF, OpenTopography, open_sat_data
 from ocf_datapipes.training.common import FakeIter
 
 xr.set_options(keep_attrs=True)
