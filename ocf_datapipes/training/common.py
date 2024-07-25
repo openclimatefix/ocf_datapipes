@@ -40,12 +40,13 @@ logger = logging.getLogger(__name__)
 
 @functional_datapipe("fake_iter")
 class FakeIter(IterDataPipe):
-    """ This makes a fake iter datapipe
+    """This makes a fake iter datapipe
 
     We are using this just to move away from datapipes.
     This can be done by removing certain function to return xarray data,
     and for the moment using this FakeIter, to make it back into a datapipe
     """
+
     def __init__(self, data_xr):
         self.data_xr = data_xr
 
