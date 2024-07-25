@@ -47,10 +47,10 @@ class FakeIter(IterDataPipe):
     and for the moment using this FakeIter, to make it back into a datapipe
     """
 
-    def __init__(self, data_xr): # noqa
+    def __init__(self, data_xr):  # noqa
         self.data_xr = data_xr
 
-    def __iter__(self) -> xr.DataArray: # noqa
+    def __iter__(self) -> xr.DataArray:  # noqa
         while True:
             yield self.data_xr
 
