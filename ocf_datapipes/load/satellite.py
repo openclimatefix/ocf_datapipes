@@ -9,7 +9,6 @@ import dask
 import pandas as pd
 import xarray as xr
 from ocf_blosc2 import Blosc2  # noqa: F401
-from torch.utils.data import IterDataPipe, functional_datapipe
 
 _log = logging.getLogger(__name__)
 
@@ -163,4 +162,3 @@ def open_sat_data(zarr_path: Union[Path, str, list[Path], list[str]]) -> xr.Data
     _log.info("Opened satellite data")
 
     return data_array
-
