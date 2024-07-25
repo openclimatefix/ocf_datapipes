@@ -28,6 +28,8 @@ def open_gfs(zarr_path) -> xr.DataArray:
     del gfs
 
     nwp = nwp.rename({"variable": "channel"})
+    if "init_time" in nwp.dims:
+        nwp = nwp.rename({"init_time": "init_time_utc"})
     nwp = nwp.transpose("init_time_utc", "step", "channel", "latitude", "longitude")
 
     return nwp
