@@ -7,12 +7,12 @@ from ocf_datapipes.batch import BatchKey
 
 
 def _get_date_time_in_pi(dt):
-    day_of_year = (dt - dt.astype('datetime64[Y]')).astype(int)
-    minute_of_day = (dt - dt.astype('datetime64[D]')).astype(int)
+    day_of_year = (dt - dt.astype("datetime64[Y]")).astype(int)
+    minute_of_day = (dt - dt.astype("datetime64[D]")).astype(int)
 
     # converting into positions on sin-cos circle
-    time_in_pi = (2*np.pi) * (minute_of_day / (24*3600))
-    date_in_pi = (2*np.pi) * (day_of_year / (365*24*3600))
+    time_in_pi = (2 * np.pi) * (minute_of_day / (24 * 3600))
+    date_in_pi = (2 * np.pi) * (day_of_year / (365 * 24 * 3600))
 
     return date_in_pi, time_in_pi
 
