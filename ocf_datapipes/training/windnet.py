@@ -219,7 +219,7 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
             )
             # combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
             #    modality_name="wind"
-            #)
+            # )
 
             # logger.info("Filtering out samples with no data")
             # if self.check_satellite_no_zeros:
