@@ -117,17 +117,19 @@ def _get_idx_of_pixel_closest_to_poi_geostationary(
     """
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
     if center_coordinate.coordinate_system == "osgb":
-        x, y = osgb_to_geostationary_area_coords(x=center_coordinate.x, 
-                                                 y=center_coordinate.y,
-                                                 xr_data=xr_data)
+        x, y = osgb_to_geostationary_area_coords(
+            x=center_coordinate.x, y=center_coordinate.y, xr_data=xr_data
+        )
     elif center_coordinate.coordinate_system == "lon_lat":
-        x, y = lon_lat_to_geostationary_area_coords(x=center_coordinate.x,
-                                                    y=center_coordinate.y,
-                                                    xr_data=xr_data)
+        x, y = lon_lat_to_geostationary_area_coords(
+            x=center_coordinate.x, y=center_coordinate.y, xr_data=xr_data
+        )
     else:
-        raise NotImplementedError(f"Only 'osgb' and 'lon_lat' location coordinates are \
+        raise NotImplementedError(
+            f"Only 'osgb' and 'lon_lat' location coordinates are \
                                   supported in conversion to geostationary \
-                                   - not '{center_coordinate.coordinate_system}'")
+                                   - not '{center_coordinate.coordinate_system}'"
+        )
 
     center_geostationary = Location(x=x, y=y, coordinate_system="geostationary")
     # Check that the requested point lies within the data

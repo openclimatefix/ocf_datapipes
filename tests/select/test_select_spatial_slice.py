@@ -161,6 +161,7 @@ def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_da
     assert len(data.longitude) == 49
     assert len(data.latitude) == 49
 
+
 def test_get_idx_of_pixel_closest_to_poi_geostationary_lon_lat_location():
     # Create dummy data
     x = np.arange(5000000, -5000000, -5000)
@@ -175,12 +176,15 @@ def test_get_idx_of_pixel_closest_to_poi_geostationary_lon_lat_location():
             y_geostationary=(["y_geostationary"], y),
         ),
     )
-    xr_data.attrs["area"] = 'msg_seviri_iodc_3km:\n  description: MSG SEVIRI Indian Ocean Data Coverage service area definition with\n    3 km resolution\n  projection:\n    proj: geos\n    lon_0: 41.5\n    h: 35785831\n    x_0: 0\n    y_0: 0\n    a: 6378169\n    rf: 295.488065897014\n    no_defs: null\n    type: crs\n  shape:\n    height: 3712\n    width: 3712\n  area_extent:\n    lower_left_xy: [5000000, 5000000]\n    upper_right_xy: [-5000000, -5000000]\n    units: m\n'
-
+    xr_data.attrs["area"] = (
+        "msg_seviri_iodc_3km:\n  description: MSG SEVIRI Indian Ocean Data Coverage service area definition with\n    3 km resolution\n  projection:\n    proj: geos\n    lon_0: 41.5\n    h: 35785831\n    x_0: 0\n    y_0: 0\n    a: 6378169\n    rf: 295.488065897014\n    no_defs: null\n    type: crs\n  shape:\n    height: 3712\n    width: 3712\n  area_extent:\n    lower_left_xy: [5000000, 5000000]\n    upper_right_xy: [-5000000, -5000000]\n    units: m\n"
+    )
 
     center = Location(x=77.1, y=28.6, coordinate_system="lon_lat")
 
-    location_center_idx = _get_idx_of_pixel_closest_to_poi_geostationary(xr_data=xr_data, center_coordinate=center)
+    location_center_idx = _get_idx_of_pixel_closest_to_poi_geostationary(
+        xr_data=xr_data, center_coordinate=center
+    )
 
-    assert location_center_idx.coordinate_system == 'idx'
+    assert location_center_idx.coordinate_system == "idx"
     assert location_center_idx.x == 2000
