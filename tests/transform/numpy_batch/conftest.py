@@ -10,7 +10,8 @@ from ocf_datapipes.convert import (
     ConvertPVToNumpyBatch,
     ConvertSatelliteToNumpyBatch,
 )
-from ocf_datapipes.load import OpenGSP, OpenNWP, OpenSatellite
+from ocf_datapipes.load import OpenGSP, OpenNWP, open_sat_data
+from ocf_datapipes.training.common import FakeIter
 from ocf_datapipes.batch import MergeNumpyModalities
 
 from ocf_datapipes.transform.xarray import (
@@ -21,7 +22,7 @@ from ocf_datapipes.transform.xarray import (
 @pytest.fixture()
 def sat_hrv_np_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "hrv_sat_data.zarr"
-    dp = OpenSatellite(zarr_path=filename)
+    dp = FakeIter(open_sat_data(zarr_path=filename))
     dp = AddT0IdxAndSamplePeriodDuration(
         dp,
         sample_period_duration=timedelta(minutes=5),
@@ -34,7 +35,7 @@ def sat_hrv_np_datapipe():
 @pytest.fixture()
 def sat_np_datapipe():
     filename = Path(ocf_datapipes.__file__).parent.parent / "tests" / "data" / "sat_data.zarr"
-    dp = OpenSatellite(zarr_path=filename)
+    dp = FakeIter(open_sat_data(zarr_path=filename))
     dp = AddT0IdxAndSamplePeriodDuration(
         dp,
         sample_period_duration=timedelta(minutes=5),
