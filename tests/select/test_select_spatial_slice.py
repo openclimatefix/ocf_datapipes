@@ -1,14 +1,16 @@
 import numpy as np
 import xarray as xr
-from ocf_datapipes.utils import Location
 
 from ocf_datapipes.select import (
     PickLocations,
     SelectSpatialSliceMeters,
     SelectSpatialSlicePixels,
 )
-
-from ocf_datapipes.select.select_spatial_slice import slice_spatial_pixel_window_from_xarray
+from ocf_datapipes.select.select_spatial_slice import (
+    _get_idx_of_pixel_closest_to_poi_geostationary,
+    slice_spatial_pixel_window_from_xarray,
+)
+from ocf_datapipes.utils import Location
 
 
 def test_slice_spatial_pixel_window_from_xarray_function():
@@ -158,3 +160,27 @@ def test_select_spatial_slice_meters_icon_global(passiv_datapipe, icon_global_da
     # ICON global has roughly 13km spacing, so this should be around 7x7 grid
     assert len(data.longitude) == 49
     assert len(data.latitude) == 49
+
+def test_get_idx_of_pixel_closest_to_poi_geostationary_lon_lat_location():
+    # Create dummy data
+    x = np.arange(5000000, -5000000, -5000)
+    y = np.arange(5000000, -5000000, -5000)[::-1]
+
+    xr_data = xr.Dataset(
+        data_vars=dict(
+            data=(["x_geostationary", "y_geostationary"], np.random.normal(size=(len(x), len(y)))),
+        ),
+        coords=dict(
+            x_geostationary=(["x_geostationary"], x),
+            y_geostationary=(["y_geostationary"], y),
+        ),
+    )
+    xr_data.attrs["area"] = 'msg_seviri_iodc_3km:\n  description: MSG SEVIRI Indian Ocean Data Coverage service area definition with\n    3 km resolution\n  projection:\n    proj: geos\n    lon_0: 41.5\n    h: 35785831\n    x_0: 0\n    y_0: 0\n    a: 6378169\n    rf: 295.488065897014\n    no_defs: null\n    type: crs\n  shape:\n    height: 3712\n    width: 3712\n  area_extent:\n    lower_left_xy: [5000000, 5000000]\n    upper_right_xy: [-5000000, -5000000]\n    units: m\n'
+
+
+    center = Location(x=77.1, y=28.6, coordinate_system="lon_lat")
+
+    location_center_idx = _get_idx_of_pixel_closest_to_poi_geostationary(xr_data=xr_data, center_coordinate=center)
+
+    assert location_center_idx.coordinate_system == 'idx'
+    assert location_center_idx.x == 2000
