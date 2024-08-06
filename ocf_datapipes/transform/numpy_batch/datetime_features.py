@@ -1,12 +1,13 @@
 """Datapipes to add Sun position to NumpyBatch"""
 
 import numpy as np
+from numpy.typing import NDArray
 from torch.utils.data import IterDataPipe, functional_datapipe
 
 from ocf_datapipes.batch import BatchKey
 
 
-def _get_date_time_in_pi(dt):
+def _get_date_time_in_pi(dt: NDArray[np.datetime64])) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     day_of_year = (dt - dt.astype("datetime64[Y]")).astype(int)
     minute_of_day = (dt - dt.astype("datetime64[D]")).astype(int)
 
