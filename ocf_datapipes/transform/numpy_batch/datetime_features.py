@@ -42,22 +42,9 @@ class AddTrigonometricDateTimeIterDataPipe(IterDataPipe):
         for np_batch in self.source_datapipe:
             time_utc = np_batch[BatchKey.wind_time_utc]
 
-            # Check if the input is batched
-            # time_utc could have shape (batch_size, n_times) or (n_times,)
-            assert len(time_utc.shape) in [1, 2]
-            is_batched = len(time_utc.shape) == 2
+            times: NDArray[np.datetime64] = time_utc.astype("datetime64[s]")
 
-            times = time_utc.astype("datetime64[s]")
-
-            if is_batched:
-                time_in_pi = np.full_like(time_utc, fill_value=np.nan).astype(np.float32)
-                date_in_pi = np.full_like(time_utc, fill_value=np.nan).astype(np.float32)
-
-                # Loop round each example to get converted time values
-                for example_idx, dt in enumerate(times):
-                    date_in_pi[example_idx], time_in_pi[example_idx] = _get_date_time_in_pi(dt)
-            else:
-                date_in_pi, time_in_pi = _get_date_time_in_pi(times)
+            date_in_pi, time_in_pi = _get_date_time_in_pi(times)
 
             # Store
             date_sin_batch_key = BatchKey[self.modality_name + "_date_sin"]
