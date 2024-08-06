@@ -213,11 +213,15 @@ class ConvertToNumpyBatchIterDataPipe(IterDataPipe):
                 numpy_modalities.append(datapipes_dict["wind"].convert_wind_to_numpy_batch())
 
             logger.debug("Combine all the data sources")
-            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
+            logger.debug("Adding trigonometric date and time")
+            combined_datapipe = MergeNumpyModalities(numpy_modalities).add_trigonometric_date_time(
                 modality_name="wind"
             )
+            # combined_datapipe = MergeNumpyModalities(numpy_modalities).add_sun_position(
+            #    modality_name="wind"
+            # )
 
-            logger.info("Filtering out samples with no data")
+            # logger.info("Filtering out samples with no data")
             # if self.check_satellite_no_zeros:
             # in production we don't want any nans in the satellite data
             #    combined_datapipe = combined_datapipe.map(check_nans_in_satellite_data)
