@@ -25,7 +25,7 @@ def test_get_date_time_in_pi():
     times = np.array([datetime.fromisoformat(time) for time in times], dtype="datetime64[s]")
 
     date_in_pi, time_in_pi = _get_date_time_in_pi(times)
-    
+
     # Note on precision: times are compared with tolerance equivalent to 1 second,
     # dates are compared with tolerance equivalent to 5 minutes
     # None of the data we use has a higher time resolution, so this is a good test of
