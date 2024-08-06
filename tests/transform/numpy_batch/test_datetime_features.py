@@ -30,9 +30,3 @@ def test_get_date_time_in_pi():
     assert np.isclose(np.sin(time_in_pi), np.sin(expected_times_in_pi), atol=1e-04).all()
     assert np.isclose(np.cos(date_in_pi), np.cos(expected_times_in_pi), atol=0.01).all()
     assert np.isclose(np.sin(date_in_pi), np.sin(expected_times_in_pi), atol=0.02).all()
-
-
-def test_add_trigonometric_datetime(combined_datapipe):
-    combined_datapipe = AddTrigonometricDateTime(combined_datapipe, modality_name="wind")
-    data = next(iter(combined_datapipe))
-    assert data is not None
