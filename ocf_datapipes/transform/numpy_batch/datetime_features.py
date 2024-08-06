@@ -1,4 +1,4 @@
-"""Datapipes to add Sun position to NumpyBatch"""
+"""Datapipes to trigonometric date and time to NumpyBatch"""
 
 import numpy as np
 from numpy.typing import NDArray
