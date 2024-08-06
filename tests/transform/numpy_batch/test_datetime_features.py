@@ -25,8 +25,12 @@ def test_get_date_time_in_pi():
     times = np.array([datetime.fromisoformat(time) for time in times], dtype="datetime64[s]")
 
     date_in_pi, time_in_pi = _get_date_time_in_pi(times)
-
-    assert np.isclose(np.cos(time_in_pi), np.cos(expected_times_in_pi), atol=1e-04).all()
-    assert np.isclose(np.sin(time_in_pi), np.sin(expected_times_in_pi), atol=1e-04).all()
-    assert np.isclose(np.cos(date_in_pi), np.cos(expected_times_in_pi), atol=0.01).all()
-    assert np.isclose(np.sin(date_in_pi), np.sin(expected_times_in_pi), atol=0.02).all()
+    
+    # Note on precision: times are compared with tolerance equivalent to 1 second,
+    # dates are compared with tolerance equivalent to 5 minutes
+    # None of the data we use has a higher time resolution, so this is a good test of
+    # whether not accounting for leap years breaks things
+    assert np.isclose(np.cos(time_in_pi), np.cos(expected_times_in_pi), atol=7.3e-05).all()
+    assert np.isclose(np.sin(time_in_pi), np.sin(expected_times_in_pi), atol=7.3e-05).all()
+    assert np.isclose(np.cos(date_in_pi), np.cos(expected_times_in_pi), atol=0.02182).all()
+    assert np.isclose(np.sin(date_in_pi), np.sin(expected_times_in_pi), atol=0.02182).all()
