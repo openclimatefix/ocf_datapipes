@@ -73,7 +73,7 @@ def _load_wind_metadata(filename: str) -> pd.DataFrame:
 
     # Add ml_id column if not in metadata already
     if "ml_id" not in df_metadata.columns:
-        df_metadata["ml_id"] = np.nan
+        df_metadata["ml_id"] = 0.0
 
     _log.info(f"Found {len(df_metadata)} Wind systems in {filename}")
 
