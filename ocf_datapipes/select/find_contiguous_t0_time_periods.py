@@ -255,5 +255,6 @@ def find_contiguous_t0_periods_nwp(
         end_this_period = dt_init + max_staleness
 
     contiguous_periods += [[start_this_period, end_this_period]]
-
-    return pd.DataFrame(contiguous_periods, columns=["start_dt", "end_dt"])
+    contiguous_time_periods = pd.DataFrame(contiguous_periods, columns=["start_dt", "end_dt"])
+    assert (contiguous_time_periods["start_dt"] <= contiguous_time_periods["end_dt"]).all()
+    return contiguous_time_periods
