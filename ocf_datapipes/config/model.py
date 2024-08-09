@@ -870,7 +870,7 @@ class Configuration(Base):
         path_attrs = [
             "pv.pv_filename",
             "pv.pv_metadata_filename",
-            "satellite.satellite_zarr_path",k
+            "satellite.satellite_zarr_path",
             "hrvsatellite.hrvsatellite_zarr_path",
             "nwp.nwp_zarr_path",
             "gsp.gsp_zarr_path",
