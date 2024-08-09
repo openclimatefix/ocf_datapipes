@@ -279,13 +279,6 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixi
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
     )
-    get_center: bool = Field(
-        False,
-        description="If the batches are centered on one Wind system (or not). "
-        "The other options is to have one GSP at the center of a batch. "
-        "Typically, get_center would be set to true if and only if "
-        "WindDataSource is used to define the geospatial positions of each example.",
-    )
 
     time_resolution_minutes: int = Field(
         15,
@@ -336,13 +329,6 @@ class PV(
     )
     pv_image_size_meters_height: int = METERS_PER_ROI
     pv_image_size_meters_width: int = METERS_PER_ROI
-    get_center: bool = Field(
-        False,
-        description="If the batches are centered on one PV system (or not). "
-        "The other options is to have one GSP at the center of a batch. "
-        "Typically, get_center would be set to true if and only if "
-        "PVDataSource is used to define the geospatial positions of each example.",
-    )
 
     pv_filename: Optional[str] = Field(
         None,
@@ -405,13 +391,6 @@ class Sensor(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
 
     sensor_image_size_meters_height: int = METERS_PER_ROI
     sensor_image_size_meters_width: int = METERS_PER_ROI
-    get_center: bool = Field(
-        False,
-        description="If the batches are centered on one Sensor system (or not). "
-        "The other options is to have one GSP at the center of a batch. "
-        "Typically, get_center would be set to true if and only if "
-        "SensorDataSource is used to define the geospatial positions of each example.",
-    )
 
     sensor_filename: str = Field(
         None,
@@ -759,12 +738,6 @@ class InputData(Base):
         ge=0,
         description="how many historic minutes are used. "
         "This sets the default for all the data sources if they are not set.",
-    )
-    data_source_which_defines_geospatial_locations: str = Field(
-        "gsp",
-        description=(
-            "The name of the DataSource which will define the geospatial position of each example."
-        ),
     )
 
     @property
