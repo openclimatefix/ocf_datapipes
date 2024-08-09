@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Union
 import git
 import numpy as np
 from pathy import Pathy
-from pydantic import BaseModel, Field, RootModel, model_validator, field_validator, ValidationInfo
+from pydantic import BaseModel, Field, RootModel, ValidationInfo, field_validator, model_validator
 
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
@@ -284,7 +284,7 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixi
         description="The temporal resolution (in minutes) of the data."
         "Note that this needs to be divisible by 5.",
     )
-    
+
     @field_validator("forecast_minutes")
     def forecast_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
         if v % info.data["time_resolution_minutes"] != 0:
@@ -399,7 +399,7 @@ class PV(
             v.pv_metadata_filename = None
 
         return v
-    
+
     @field_validator("forecast_minutes")
     def forecast_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
         if v % info.data["time_resolution_minutes"] != 0:
@@ -638,7 +638,7 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin
             logger.warning(message)
             assert Exception(message)
         return v
-    
+
     @field_validator("forecast_minutes")
     def forecast_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
         if v % info.data["time_resolution_minutes"] != 0:
