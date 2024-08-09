@@ -98,3 +98,27 @@ def test_config_git(configuration_filename):
     assert type(config.git.message) == str
     assert type(config.git.hash) == str
     assert type(config.git.committed_date) == datetime
+
+
+def test_incorrect_forecast_minutes():
+    """
+    Check a forecast length no divisible by time resolution causes error
+    """
+
+    configuration = Configuration()
+    configuration.input_data = configuration.input_data.set_all_to_defaults()
+    configuration.input_data.wind.forecast_minutes = 1111
+    with pytest.raises(Exception):
+        _ = Configuration(**configuration.dict())
+
+
+def test_incorrect_history_minutes():
+    """
+    Check a forecast length no divisible by time resolution causes error
+    """
+
+    configuration = Configuration()
+    configuration.input_data = configuration.input_data.set_all_to_defaults()
+    configuration.input_data.wind.history_minutes = 1111
+    with pytest.raises(Exception):
+        _ = Configuration(**configuration.dict())
