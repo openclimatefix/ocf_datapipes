@@ -132,6 +132,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
                         raise ValueError(
                             f"NWP data {var_name} is outside physical limits: ({lower},{upper})"
                         )
+
     def check_if_nans(self, nwp: Union[xr.DataArray, xr.Dataset]):
         """Checks if the NWP data contains NaNs"""
         if isinstance(nwp, xr.DataArray):

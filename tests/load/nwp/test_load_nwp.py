@@ -144,7 +144,8 @@ def test_check_for_zeros():
 def test_check_physical_limits():
     # positive test case
     nwp_datapipe1 = OpenNWP(
-        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits_n_nans.zarr", check_physical_limits=True
+        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits_n_nans.zarr",
+        check_physical_limits=True,
     )
     with pytest.raises(
         ValueError
@@ -156,6 +157,7 @@ def test_check_physical_limits():
     metadata = next(iter(nwp_datapipe2))
     assert metadata is not None
 
+
 def test_check_if_nans():
     # positive test case
     nwp_datapipe1 = OpenNWP(
@@ -163,7 +165,7 @@ def test_check_if_nans():
     )
     with pytest.raises(ValueError):  # checks for Error raised if NWP DataArray contains nans
         metadata = next(iter(nwp_datapipe1))
-    
+
     # negative test case
     nwp_datapipe2 = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr", check_for_nans=True)
     metadata = next(iter(nwp_datapipe2))

@@ -40,7 +40,6 @@ def _single_batch_sample(fill_value):
     return sample
 
 
-
 @pytest.fixture
 def numpy_sample_datapipe():
     dp = IterableWrapper([_single_batch_sample(i) for i in range(8)])
@@ -61,8 +60,6 @@ def test_merge_numpy_batch(numpy_sample_datapipe):
         nwp_batch = batch[BatchKey.nwp]["ukv"]
         assert (nwp_batch[NWPBatchKey.nwp][:, 0, 0, 0, 0] == np.arange(4 * i, 4 * (i + 1))).all()
         assert nwp_batch[NWPBatchKey.nwp_channel_names] == ["a", "b"]
-
-
 
 
 def test_merge_numpy_examples_to_batch(numpy_sample_datapipe):
