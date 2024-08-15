@@ -111,7 +111,7 @@ def test_check_for_zeros():
     # to generate data with zeros and limits:
     original_store_path = "tests/data/nwp_data/test.zarr"
     original_store = zarr.open(original_store_path, mode="r")
-    new_store_path = "tests/data/nwp_data/test_with_zeros_n_limits.zarr"
+    new_store_path = "tests/data/nwp_data/test_with_zeros_n_limits_n_nans.zarr"
     # Optionally, clear the destination store if it already exists
     shutil.rmtree(new_store_path, ignore_errors=True)
     with zarr.open(new_store_path, mode="w") as new_store:
@@ -120,9 +120,11 @@ def test_check_for_zeros():
 
         new_store["UKV"][0, 0, 0, 0] = 0
         new_store["UKV"][0, 0, 0, 1] = np.random.uniform(190, 360, size=(548,))
+        new_store["UKV"][0, 0, 0, 2] = np.nan
+
     shutil.copy(
         "tests/data/nwp_data/test.zarr/.zmetadata",
-        "tests/data/nwp_data/test_with_zeros_n_limits.zarr/.zmetadata",
+        "tests/data/nwp_data/test_with_zeros_n_limits_n_nans.zarr/.zmetadata",
     )
 
     # positive test case
@@ -142,7 +144,7 @@ def test_check_for_zeros():
 def test_check_physical_limits():
     # positive test case
     nwp_datapipe1 = OpenNWP(
-        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits.zarr", check_physical_limits=True
+        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits_n_nans.zarr", check_physical_limits=True
     )
     with pytest.raises(
         ValueError
@@ -154,6 +156,19 @@ def test_check_physical_limits():
     metadata = next(iter(nwp_datapipe2))
     assert metadata is not None
 
+def test_check_if_nans():
+    # positive test case
+    nwp_datapipe1 = OpenNWP(
+        zarr_path="tests/data/nwp_data/test_with_zeros_n_limits_n_nans.zarr", check_for_nans=True
+    )
+    with pytest.raises(ValueError):  # checks for Error raised if NWP DataArray contains nans
+        metadata = next(iter(nwp_datapipe1))
+    
+    # negative test case
+    nwp_datapipe2 = OpenNWP(zarr_path="tests/data/nwp_data/test.zarr", check_for_nans=True)
+    metadata = next(iter(nwp_datapipe2))
+    assert metadata is not None
+
     shutil.rmtree(
-        "tests/data/nwp_data/test_with_zeros_n_limits.zarr"
+        "tests/data/nwp_data/test_with_zeros_n_limits_n_nans.zarr"
     )  # removes the zarr file created for testing

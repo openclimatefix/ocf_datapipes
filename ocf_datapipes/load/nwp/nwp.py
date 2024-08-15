@@ -5,8 +5,9 @@ from pathlib import Path
 from typing import Union
 
 import dask
+import dask.array
+import numpy as np
 import xarray as xr
-from constants import NWP_LIMITS
 from ocf_blosc2 import Blosc2  # noqa: F401
 from torch.utils.data import IterDataPipe, functional_datapipe
 
@@ -16,6 +17,8 @@ from ocf_datapipes.load.nwp.providers.gfs import open_gfs
 from ocf_datapipes.load.nwp.providers.icon import open_icon_eu, open_icon_global
 from ocf_datapipes.load.nwp.providers.merra2 import open_merra2
 from ocf_datapipes.load.nwp.providers.ukv import open_ukv
+
+from .constants import NWP_LIMITS
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +33,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
         provider: str = "ukv",
         check_for_zeros: bool = False,
         check_physical_limits: bool = False,
+        check_for_nans: bool = False,
     ):
         """
         Opens NWP Zarr and yields it
@@ -39,10 +43,12 @@ class OpenNWPIterDataPipe(IterDataPipe):
             provider: NWP provider
             check_for_zeros: Check for zeros in the NWP data
             check_physical_limits: Check the physical limits of nwp data (e.g. -100<temperature<100)
+            check_for_nans: Check for NaNs in the NWP data
         """
         self.zarr_path = zarr_path
         self.check_for_zeros = check_for_zeros
         self.check_physical_limits = check_physical_limits
+        self.check_for_nans = check_for_nans
         self.limits = NWP_LIMITS
 
         logger.info(f"Using {provider.lower()}")
@@ -71,6 +77,8 @@ class OpenNWPIterDataPipe(IterDataPipe):
             self.check_if_zeros(nwp)
         if self.check_physical_limits:
             self.check_if_physical_limits(nwp)
+        if self.check_for_nans:
+            self.check_if_nans(nwp)
         while True:
             yield nwp
 
@@ -124,3 +132,20 @@ class OpenNWPIterDataPipe(IterDataPipe):
                         raise ValueError(
                             f"NWP data {var_name} is outside physical limits: ({lower},{upper})"
                         )
+    def check_if_nans(self, nwp: Union[xr.DataArray, xr.Dataset]):
+        """Checks if the NWP data contains NaNs"""
+        if isinstance(nwp, xr.DataArray):
+            if dask.is_dask_collection(nwp.data):
+                if dask.array.isnan(nwp.data).any().compute():
+                    raise ValueError("NWP data contains NaNs")
+            else:
+                if np.isnan(nwp.data).any():
+                    raise ValueError("NWP DataArray contains NaNs")
+        elif isinstance(nwp, xr.Dataset):
+            for var in nwp.data_vars:
+                if dask.is_dask_collection(nwp[var].data):
+                    if dask.array.isnan(nwp[var].data).any().compute():
+                        raise ValueError(f"NWP Dataset variable{var} contains NaNs")
+                else:
+                    if np.isnan(nwp[var].data).any():
+                        raise ValueError(f"NWP Dataset variable{var} contains NaNs")
