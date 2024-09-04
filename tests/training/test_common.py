@@ -14,6 +14,7 @@ from ocf_datapipes.training.common import (
     open_and_return_datapipes,
     create_t0_and_loc_datapipes,
     construct_loctime_pipelines,
+    potentially_coarsen,
 )
 
 
@@ -124,3 +125,21 @@ def test_construct_loctime_pipelines(configuration_filename):
 
     next(iter(loc_pipe))
     next(iter(t0_pipe))
+
+
+def test_potentially_coarsen(nwp_gfs_data):
+    """The nwp_gfs_data has lat and long of 0 to 9"""
+
+    assert nwp_gfs_data.si10.shape[2:] == (10, 10)
+    data = potentially_coarsen(xr_data=nwp_gfs_data, coarsen_to_deg=2)
+    print(data)
+    # should be now 0,2,4,6,8
+    assert data.si10.shape[2:] == (5, 5)
+
+    data = potentially_coarsen(xr_data=nwp_gfs_data, coarsen_to_deg=3)
+    # should be now 0,3,6,9
+    assert data.si10.shape[2:] == (4, 4)
+
+    data = potentially_coarsen(xr_data=nwp_gfs_data, coarsen_to_deg=1)
+    # should be the same
+    assert data.si10.shape[2:] == (10, 10)

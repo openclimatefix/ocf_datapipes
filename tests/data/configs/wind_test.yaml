@@ -23,7 +23,6 @@ input_data:
       - label: pvoutput.org
         pv_filename: tests/data/pv/pvoutput/test.nc
         pv_metadata_filename: tests/data/pv/pvoutput/UK_PV_metadata.csv
-    get_center: false
     pv_image_size_meters_height: 10000000
     pv_image_size_meters_width: 10000000
     n_pv_systems_per_example: 32

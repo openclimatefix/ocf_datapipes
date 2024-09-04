@@ -159,7 +159,10 @@ def open_and_return_datapipes(
                     nwp_conf.nwp_zarr_path,
                     provider=nwp_conf.nwp_provider,
                 )
-                .filter_channels(nwp_conf.nwp_channels)
+                .filter_channels(
+                    nwp_conf.nwp_channels,
+                    provider=nwp_conf.nwp_provider,
+                )
                 .add_t0_idx_and_sample_period_duration(
                     sample_period_duration=minutes(nwp_conf.time_resolution_minutes),
                     history_duration=minutes(nwp_conf.history_minutes),
@@ -1265,12 +1268,23 @@ def create_t0_and_loc_datapipes(
     return location_pipe, t0_datapipe
 
 
-def potentially_coarsen(xr_data: xr.Dataset):
-    """Coarsen the data, if it is separated by 0.05 degrees each"""
+def potentially_coarsen(xr_data: xr.Dataset, coarsen_to_deg: float = 0.1):
+    """
+    Coarsen the data, change the latitude longitude grid
+
+    Args:
+        xr_data: xarray dataset
+        coarsen_to_deg: Coarsen to this degree in lat and lon
+    """
     if "latitude" in xr_data.coords and "longitude" in xr_data.coords:
-        if np.isclose(np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0]), 0.05):
-            if np.isclose(np.round(xr_data.latitude.values[0], 1), xr_data.latitude.values[0]):
-                xr_data = xr_data.isel(latitude=slice(0, None, 2), longitude=slice(0, None, 2))
-            else:
-                xr_data = xr_data.isel(latitude=slice(1, None, 2), longitude=slice(1, None, 2))
+        step = np.abs(xr_data.latitude.values[1] - xr_data.latitude.values[0])
+        step = np.round(step, 4)
+        coarsen_factor = int(coarsen_to_deg / step)
+        if coarsen_factor > 1:
+            xr_data = xr_data.coarsen(
+                latitude=coarsen_factor, longitude=coarsen_factor, boundary="pad", coord_func="min"
+            ).mean()
+            # we use the coord_func "min", as the using "mean"
+            # results in with some fractions of coordinates (sometimes),
+            # e.g. mean of 0.05, 0.1, 0.15, 0.2 is 0.125,
     return xr_data

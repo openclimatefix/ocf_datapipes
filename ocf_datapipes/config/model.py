@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Union
 import git
 import numpy as np
 from pathy import Pathy
-from pydantic import BaseModel, Field, RootModel, model_validator, validator
+from pydantic import BaseModel, Field, RootModel, ValidationInfo, field_validator, model_validator
 
 # nowcasting_dataset imports
 from ocf_datapipes.utils.consts import (
@@ -93,8 +93,8 @@ class DataSourceMixin(Base):
 
     log_level: str = Field(
         "DEBUG",
-        description="The logging level for this data source. T"
-        "his is the default value and can be set in each data source",
+        description="The logging level for this data source. "
+        "This is the default value and can be set in each data source",
     )
 
     @property
@@ -139,16 +139,16 @@ class DropoutMixin(Base):
 
     dropout_fraction: float = Field(0, description="Chance of dropout being applied to each sample")
 
-    @validator("dropout_timedeltas_minutes")
-    def dropout_timedeltas_minutes_negative(cls, v):
+    @field_validator("dropout_timedeltas_minutes")
+    def dropout_timedeltas_minutes_negative(cls, v: List[int]) -> List[int]:
         """Validate 'dropout_timedeltas_minutes'"""
         if v is not None:
             for m in v:
                 assert m <= 0
         return v
 
-    @validator("dropout_fraction")
-    def dropout_fraction_valid(cls, v):
+    @field_validator("dropout_fraction")
+    def dropout_fraction_valid(cls, v: float) -> float:
         """Validate 'dropout_fraction'"""
         assert 0 <= v <= 1
         return v
@@ -169,8 +169,8 @@ class SystemDropoutMixin(Base):
     system_dropout_fraction_min: float = Field(0, description="Min chance of system dropout")
     system_dropout_fraction_max: float = Field(0, description="Max chance of system dropout")
 
-    @validator("system_dropout_fraction_min", "system_dropout_fraction_max")
-    def validate_system_dropout_fractions(cls, v):
+    @field_validator("system_dropout_fraction_min", "system_dropout_fraction_max")
+    def validate_system_dropout_fractions(cls, v: float):
         """Validate dropout fraction values"""
         assert 0 <= v <= 1
         return v
@@ -192,8 +192,8 @@ class TimeResolutionMixin(Base):
         "Note that this needs to be divisible by 5.",
     )
 
-    @validator("time_resolution_minutes")
-    def forecast_minutes_divide_by_5(cls, v):
+    @field_validator("time_resolution_minutes")
+    def forecast_minutes_divide_by_5(cls, v: int) -> int:
         """Validate 'forecast_minutes'"""
         assert v % 5 == 0, f"The time resolution ({v}) is not divisible by 5"
         return v
@@ -257,7 +257,6 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixi
         None,
         description="List of the ML IDs of the Wind systems you'd like to filter to.",
     )
-    time_resolution_minutes: int = Field(15, description="The temporal resolution (in minutes).")
     wind_image_size_meters_height: int = METERS_PER_ROI
     wind_image_size_meters_width: int = METERS_PER_ROI
     n_wind_systems_per_example: int = Field(
@@ -279,19 +278,30 @@ class Wind(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixi
         "values can be interpolated, and the extra minutes removed. This is "
         "because some live data takes ~1 hour to come in.",
     )
-    get_center: bool = Field(
-        False,
-        description="If the batches are centered on one Wind system (or not). "
-        "The other options is to have one GSP at the center of a batch. "
-        "Typically, get_center would be set to true if and only if "
-        "WindDataSource is used to define the geospatial positions of each example.",
-    )
 
     time_resolution_minutes: int = Field(
         15,
         description="The temporal resolution (in minutes) of the data."
         "Note that this needs to be divisible by 5.",
     )
+
+    @field_validator("forecast_minutes")
+    def forecast_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
+        """Check forecast length requested will give stable number of timesteps"""
+        if v % info.data["time_resolution_minutes"] != 0:
+            message = "Forecast duration must be divisible by time resolution"
+            logger.error(message)
+            raise Exception(message)
+        return v
+
+    @field_validator("history_minutes")
+    def history_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
+        """Check history length requested will give stable number of timesteps"""
+        if v % info.data["time_resolution_minutes"] != 0:
+            message = "History duration must be divisible by time resolution"
+            logger.error(message)
+            raise Exception(message)
+        return v
 
 
 class PVFiles(BaseModel):
@@ -312,8 +322,8 @@ class PVFiles(BaseModel):
 
     label: Optional[str] = Field(providers[0], description="Label of where the pv data came from")
 
-    @validator("label")
-    def v_label0(cls, v):
+    @field_validator("label")
+    def v_label0(cls, v: str) -> str:
         """Validate 'label'"""
         if v not in providers:
             message = f"provider {v} not in {providers}"
@@ -336,13 +346,6 @@ class PV(
     )
     pv_image_size_meters_height: int = METERS_PER_ROI
     pv_image_size_meters_width: int = METERS_PER_ROI
-    get_center: bool = Field(
-        False,
-        description="If the batches are centered on one PV system (or not). "
-        "The other options is to have one GSP at the center of a batch. "
-        "Typically, get_center would be set to true if and only if "
-        "PVDataSource is used to define the geospatial positions of each example.",
-    )
 
     pv_filename: Optional[str] = Field(
         None,
@@ -399,19 +402,30 @@ class PV(
 
         return v
 
+    @field_validator("forecast_minutes")
+    def forecast_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
+        """Check forecast length requested will give stable number of timesteps"""
+        if v % info.data["time_resolution_minutes"] != 0:
+            message = "Forecast duration must be divisible by time resolution"
+            logger.error(message)
+            raise Exception(message)
+        return v
+
+    @field_validator("history_minutes")
+    def history_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
+        """Check history length requested will give stable number of timesteps"""
+        if v % info.data["time_resolution_minutes"] != 0:
+            message = "History duration must be divisible by time resolution"
+            logger.error(message)
+            raise Exception(message)
+        return v
+
 
 class Sensor(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames):
     """PV configuration model"""
 
     sensor_image_size_meters_height: int = METERS_PER_ROI
     sensor_image_size_meters_width: int = METERS_PER_ROI
-    get_center: bool = Field(
-        False,
-        description="If the batches are centered on one Sensor system (or not). "
-        "The other options is to have one GSP at the center of a batch. "
-        "Typically, get_center would be set to true if and only if "
-        "SensorDataSource is used to define the geospatial positions of each example.",
-    )
 
     sensor_filename: str = Field(
         None,
@@ -616,13 +630,35 @@ class NWP(DataSourceMixin, TimeResolutionMixin, XYDimensionalNames, DropoutMixin
         " the maximum forecast horizon of the NWP and the requested forecast length.",
     )
 
-    @validator("nwp_provider")
-    def validate_nwp_provider(cls, v):
+    coarsen_to_degrees: Optional[float] = Field(
+        0.1, description="The number of degrees to coarsen the NWP data to"
+    )
+
+    @field_validator("nwp_provider")
+    def validate_nwp_provider(cls, v: str) -> str:
         """Validate 'nwp_provider'"""
         if v.lower() not in NWP_PROVIDERS:
             message = f"NWP provider {v} is not in {NWP_PROVIDERS}"
             logger.warning(message)
             assert Exception(message)
+        return v
+
+    @field_validator("forecast_minutes")
+    def forecast_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
+        """Check forecast length requested will give stable number of timesteps"""
+        if v % info.data["time_resolution_minutes"] != 0:
+            message = "Forecast duration must be divisible by time resolution"
+            logger.error(message)
+            raise Exception(message)
+        return v
+
+    @field_validator("history_minutes")
+    def history_minutes_divide_by_time_resolution(cls, v: int, info: ValidationInfo) -> int:
+        """Check history length requested will give stable number of timesteps"""
+        if v % info.data["time_resolution_minutes"] != 0:
+            message = "History duration must be divisible by time resolution"
+            logger.error(message)
+            raise Exception(message)
         return v
 
 
@@ -685,13 +721,13 @@ class GSP(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
         "Note that this needs to be divisible by 5.",
     )
 
-    @validator("history_minutes")
+    @field_validator("history_minutes")
     def history_minutes_divide_by_30(cls, v):
         """Validate 'history_minutes'"""
         assert v % 30 == 0  # this means it also divides by 5
         return v
 
-    @validator("forecast_minutes")
+    @field_validator("forecast_minutes")
     def forecast_minutes_divide_by_30(cls, v):
         """Validate 'forecast_minutes'"""
         assert v % 30 == 0  # this means it also divides by 5
@@ -755,12 +791,6 @@ class InputData(Base):
         ge=0,
         description="how many historic minutes are used. "
         "This sets the default for all the data sources if they are not set.",
-    )
-    data_source_which_defines_geospatial_locations: str = Field(
-        "gsp",
-        description=(
-            "The name of the DataSource which will define the geospatial position of each example."
-        ),
     )
 
     @property

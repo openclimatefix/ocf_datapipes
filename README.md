@@ -6,6 +6,8 @@
 
 OCF's DataPipes for training and inference in Pytorch.
 
+**Note this repo will soon be deprecated in favour of [`ocf-data-sampler`](https://github.com/openclimatefix/ocf-data-sampler)**
+
 ## Usage
 
 These datapipes are designed to be composable and modular, and follow the same

@@ -199,6 +199,15 @@ class BatchKey(Enum):
     wind_solar_azimuth = auto()
     wind_solar_elevation = auto()
 
+    # -------------- TIME -------------------------------------------
+    # Sine and cosine of date of year and time of day at every timestep.
+    # shape = (batch_size, n_timesteps)
+    # This is calculated for wind only inside datapipes.
+    wind_date_sin = auto()
+    wind_date_cos = auto()
+    wind_time_sin = auto()
+    wind_time_cos = auto()
+
 
 class NWPBatchKey(Enum):
     """The names of the different elements of each NWP batch.

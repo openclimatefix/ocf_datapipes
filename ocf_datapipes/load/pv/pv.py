@@ -225,7 +225,7 @@ def _load_pv_metadata(
 
     # Add ml_id column if not in metadata already
     if "ml_id" not in df_metadata.columns:
-        df_metadata["ml_id"] = np.nan
+        df_metadata["ml_id"] = -1.0
 
     if label == "solar_sheffield_passiv":
         # Add capacity in watts

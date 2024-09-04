@@ -1,0 +1,14 @@
+{
+    "Conventions": "CF-1.7",
+    "GRIB_centre": "kwbc",
+    "GRIB_centreDescription": "US National Weather Service - NCEP",
+    "GRIB_edition": 2,
+    "GRIB_subCentre": 0,
+    "description": "Global Forecast System",
+    "institution": "US National Weather Service - NCEP",
+    "local_grib": "/root/data/gfs/20230624/subset_56ef2a91__gfs.t00z.pgrb2.1p00.f000",
+    "model": "gfs",
+    "product": "pgrb2.1p00",
+    "remote_grib": "https://noaa-gfs-bdp-pds.s3.amazonaws.com/gfs.20230624/00/atmos/gfs.t00z.pgrb2.1p00.f000",
+    "search": ":[TLMH]CDC:|:[UV]GRD:(?:10|100) m|:RH:sigma|:(?:TMP|VIS|PRATE|SNOD|D[SL]WRF):surface|:RH:100 mb"
+}
