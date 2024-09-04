@@ -4,6 +4,7 @@ This is a bit of a working progress, but the idea is to visualize the batch in a
 """
 
 import os
+
 import pandas as pd
 import plotly.graph_objects as go
 import torch
