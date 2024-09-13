@@ -22,8 +22,8 @@ class NormalizeIterDataPipe(IterDataPipe):
         max_value: Optional[Union[int, float]] = None,
         calculate_mean_std_from_example: bool = False,
         normalize_fn: Optional[Callable] = None,
-        min_values: Optional[np.ndarray] = None,
-        max_values: Optional[np.ndarray] = None,
+        min_values: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]] = None,
+        max_values: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]] = None,
     ):
         """
         Normalize the data with either given mean/std,
