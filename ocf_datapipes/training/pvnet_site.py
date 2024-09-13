@@ -278,7 +278,7 @@ def construct_sliced_data_pipeline(
         scaling_methods = conf_sat.satellite_scaling_methods
         if "min_max" in scaling_methods:
             sat_datapipe = sat_datapipe.normalize(min_values=RSS_RAW_MIN, max_values=RSS_RAW_MAX)
-        if "mean_std":
+        if "mean_std" in scaling_methods:
             sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
     if "pv" in datapipes_dict:
