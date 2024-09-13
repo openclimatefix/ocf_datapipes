@@ -25,6 +25,8 @@ from ocf_datapipes.utils.consts import (
     NWP_STDS,
     RSS_MEAN,
     RSS_STD,
+    RSS_RAW_MAX,
+    RSS_RAW_MIN,
 )
 from ocf_datapipes.utils.utils import (
     combine_to_single_dataset,
@@ -273,7 +275,11 @@ def construct_sliced_data_pipeline(
             roi_height_pixels=conf_sat.satellite_image_size_pixels_height,
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
         )
-        sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
+        scaling_methods = conf_sat.scaling_methods
+        if 'min_max' in scaling_methods:
+            sat_datapipe = sat_datapipe.normalize(min_values=RSS_RAW_MIN, max_values=RSS_RAW_MAX)
+        if 'mean_std':
+            sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
     if "pv" in datapipes_dict:
         # Recombine Sensor arrays - see function doc for further explanation
