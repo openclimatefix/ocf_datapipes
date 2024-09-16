@@ -39,17 +39,6 @@ xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_site_datapipe")
 
 
-# TODO, these are used any more, but ive left them in here fo reference
-normalization_values = {
-    2019: 3185.0,
-    2020: 2678.0,
-    2021: 3196.0,
-    2022: 3575.0,
-    2023: 3773.0,
-    2024: 3773.0,
-}
-
-
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
     return x / x.nominal_capacity_wp
