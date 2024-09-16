@@ -55,7 +55,6 @@ def normalize_pv(x: xr.DataArray):
     return x / x.nominal_capacity_wp
 
 
-
 class DictDatasetIterDataPipe(IterDataPipe):
     """Create a dictionary of xr.Datasets from a dict of datapipes"""
 
