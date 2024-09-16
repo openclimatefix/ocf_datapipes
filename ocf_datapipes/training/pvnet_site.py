@@ -38,29 +38,10 @@ from ocf_datapipes.utils.utils import (
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_site_datapipe")
 
-normalization_values = {
-    2019: 3185.0,
-    2020: 2678.0,
-    2021: 3196.0,
-    2022: 3575.0,
-    2023: 3773.0,
-    2024: 3773.0,
-}
-
 
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
-    # This is after the data has been temporally sliced, so have the year
-    return x / normalization_values[2024]
-
-    year = x.time_utc.dt.year
-
-    # Add the effective_capacity_mwp to the dataset, indexed on the time_utc
-    return (
-        x / normalization_values[year]
-        if year in normalization_values
-        else x / normalization_values[2024]
-    )
+    return x / x.nominal_capacity_wp
 
 
 class DictDatasetIterDataPipe(IterDataPipe):
