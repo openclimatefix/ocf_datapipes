@@ -1,1 +1,0 @@
-"""Visualization of batch data."""

@@ -1,6 +1,6 @@
-""" The idea is visualize one of the batches
+""" The idea is visualise one of the batches
 
-This is a bit of a working progress, but the idea is to visualize the batch in a markdown file.
+This is a bit of a work in progress, but the idea is to visualise the batch in a markdown file.
 """
 
 import os
@@ -12,7 +12,7 @@ import torch
 from ocf_datapipes.batch import BatchKey, NumpyBatch, NWPBatchKey
 
 
-def visualize_batch(batch: NumpyBatch, folder=".", output_file="report.md", limit_examples=None):
+def visualise_batch(batch: NumpyBatch, folder=".", output_file="report.md", limit_examples=None):
     """Visualize the batch in a markdown file"""
 
     # create dir if it does not exist
@@ -22,7 +22,7 @@ def visualize_batch(batch: NumpyBatch, folder=".", output_file="report.md", limi
 
     with open(f"{folder}/{output_file}", "a") as f:
         # Wind
-        print("# Batch visualization", file=f)
+        print("# Batch visualisation", file=f)
 
         print("## Wind \n", file=f)
         keys = [
@@ -293,4 +293,4 @@ def visualize_batch(batch: NumpyBatch, folder=".", output_file="report.md", limi
 # with open("batch.md", "w") as f:
 #     sys.stdout = f
 #     d = torch.load("000000.pt")
-#     visualize_batch(d)
+#     visualise_batch(d)
