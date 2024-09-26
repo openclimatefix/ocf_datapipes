@@ -167,7 +167,8 @@ def visualise_batch(batch: NumpyBatch, folder=".", output_file="report.md", limi
                     for example_id in range(n_examples):
                         value_ts = pd.to_datetime(value[example_id], unit="s")
                         print(
-                            f"| {example_id} | {len(value_ts)} | {value_ts.max()} | {value_ts.min()} |",
+                            f"""| {example_id} | {len(value_ts)} |
+                                {value_ts.max()} | {value_ts.min()} |""",
                             file=f,
                         )
 
