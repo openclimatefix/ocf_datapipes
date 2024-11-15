@@ -46,6 +46,7 @@ NWP_PROVIDERS = [
     "excarta",
     "merra2",
     "merra2_uk",
+    "mo_global"
 ]
 
 # ------ UKV
@@ -130,6 +131,26 @@ UKV_MAX = {
 UKV_VARIABLE_NAMES = tuple(UKV_MEAN.keys())
 UKV_STD = _to_data_array(UKV_STD)
 UKV_MEAN = _to_data_array(UKV_MEAN)
+
+# TODO add MO Global constants
+
+# These were calculated from 200 random init times (step 0s) from the MO global data
+MO_GLOBAL_INDIA_MEAN = {
+    "temperature_sl": 298.2,
+    "wind_u_component_10m": 0.5732,
+    "wind_v_component_10m": -0.2831,
+}
+
+MO_GLOBAL_INDIA_STD = {
+    "temperature_sl": 8.473,
+    "wind_u_component_10m": 2.599,
+    "wind_v_component_10m": 2.016,
+}
+
+
+MO_GLOBAL_VARIABLE_NAMES = tuple(MO_GLOBAL_INDIA_MEAN.keys())
+MO_GLOBAL_INDIA_STD = _to_data_array(MO_GLOBAL_INDIA_STD)
+MO_GLOBAL_INDIA_MEAN = _to_data_array(MO_GLOBAL_INDIA_MEAN)
 
 
 # ------ GFS
@@ -355,6 +376,7 @@ NWP_VARIABLE_NAMES = NWPStatDict(
     excarta=EXCARTA_VARIABLE_NAMES,
     merra2=MERRA2_VARIABLE_NAMES,
     merra2_uk=UK_MERRA2_VARIABLE_NAMES,
+    mo_global=MO_GLOBAL_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
@@ -364,6 +386,7 @@ NWP_STDS = NWPStatDict(
     excarta=EXCARTA_STD,
     merra2=MERRA2_STD,
     merra2_uk=UK_MERRA2_STD,
+    mo_global=MO_GLOBAL_INDIA_STD
 )
 NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
@@ -373,6 +396,7 @@ NWP_MEANS = NWPStatDict(
     excarta=EXCARTA_MEAN,
     merra2=MERRA2_MEAN,
     merra2_uk=UK_MERRA2_MEAN,
+    mo_global=MO_GLOBAL_INDIA_MEAN
 )
 
 # --------------------------- SATELLITE ------------------------------
