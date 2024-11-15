@@ -42,7 +42,7 @@ class OpenNWPIterDataPipe(IterDataPipe):
             self.open_nwp = open_icon_eu
         elif provider.lower() == "icon-global":
             self.open_nwp = open_icon_global
-        elif provider.lower() in ("ecmwf", "mo_global"):
+        elif provider.lower() in ("ecmwf", "mo_global"): # same schema so using the same loader
             self.open_nwp = open_ifs
         elif provider.lower() == "gfs":
             self.open_nwp = open_gfs
