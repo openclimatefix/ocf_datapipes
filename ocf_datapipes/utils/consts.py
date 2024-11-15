@@ -132,8 +132,6 @@ UKV_VARIABLE_NAMES = tuple(UKV_MEAN.keys())
 UKV_STD = _to_data_array(UKV_STD)
 UKV_MEAN = _to_data_array(UKV_MEAN)
 
-# TODO add MO Global constants
-
 # These were calculated from 200 random init times (step 0s) from the MO global data
 MO_GLOBAL_INDIA_MEAN = {
     "temperature_sl": 298.2,
