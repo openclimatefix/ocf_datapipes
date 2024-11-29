@@ -46,6 +46,7 @@ NWP_PROVIDERS = [
     "excarta",
     "merra2",
     "merra2_uk",
+    "mo_global",
 ]
 
 # ------ UKV
@@ -130,6 +131,24 @@ UKV_MAX = {
 UKV_VARIABLE_NAMES = tuple(UKV_MEAN.keys())
 UKV_STD = _to_data_array(UKV_STD)
 UKV_MEAN = _to_data_array(UKV_MEAN)
+
+# These were calculated from 200 random init times (step 0s) from the MO global data
+MO_GLOBAL_INDIA_MEAN = {
+    "temperature_sl": 298.2,
+    "wind_u_component_10m": 0.5732,
+    "wind_v_component_10m": -0.2831,
+}
+
+MO_GLOBAL_INDIA_STD = {
+    "temperature_sl": 8.473,
+    "wind_u_component_10m": 2.599,
+    "wind_v_component_10m": 2.016,
+}
+
+
+MO_GLOBAL_VARIABLE_NAMES = tuple(MO_GLOBAL_INDIA_MEAN.keys())
+MO_GLOBAL_INDIA_STD = _to_data_array(MO_GLOBAL_INDIA_STD)
+MO_GLOBAL_INDIA_MEAN = _to_data_array(MO_GLOBAL_INDIA_MEAN)
 
 
 # ------ GFS
@@ -250,6 +269,10 @@ INDIA_ECMWF_MEAN = {
     "v10": 0.02332865633070469,
     "v100": -0.07577426731586456,
     "v200": -0.1255049854516983,
+    "diff_dlwrf": 1340142.4,
+    "diff_dswrf": 820569.5,
+    "diff_duvrs": 94480.24,
+    "diff_sr": 814910.1,
 }
 
 INDIA_ECMWF_STD = {
@@ -270,6 +293,10 @@ INDIA_ECMWF_STD = {
     "v10": 2.401158571243286,
     "v100": 3.5278923511505127,
     "v200": 3.974159002304077,
+    "diff_dlwrf": 292804.8,
+    "diff_dswrf": 1082344.9,
+    "diff_duvrs": 125904.18,
+    "diff_sr": 1088536.2,
 }
 
 
@@ -347,6 +374,7 @@ NWP_VARIABLE_NAMES = NWPStatDict(
     excarta=EXCARTA_VARIABLE_NAMES,
     merra2=MERRA2_VARIABLE_NAMES,
     merra2_uk=UK_MERRA2_VARIABLE_NAMES,
+    mo_global=MO_GLOBAL_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
@@ -356,6 +384,7 @@ NWP_STDS = NWPStatDict(
     excarta=EXCARTA_STD,
     merra2=MERRA2_STD,
     merra2_uk=UK_MERRA2_STD,
+    mo_global=MO_GLOBAL_INDIA_STD,
 )
 NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
@@ -365,6 +394,7 @@ NWP_MEANS = NWPStatDict(
     excarta=EXCARTA_MEAN,
     merra2=MERRA2_MEAN,
     merra2_uk=UK_MERRA2_MEAN,
+    mo_global=MO_GLOBAL_INDIA_MEAN,
 )
 
 # --------------------------- SATELLITE ------------------------------
@@ -404,6 +434,41 @@ RSS_MEAN = {
 RSS_VARIABLE_NAMES = tuple(RSS_MEAN.keys())
 RSS_STD = _to_data_array(RSS_STD)
 RSS_MEAN = _to_data_array(RSS_MEAN)
+
+# normalizing from raw values
+
+RSS_RAW_MIN = {
+    "IR_016": -2.5118103,
+    "IR_039": -64.83977,
+    "IR_087": 63.404694,
+    "IR_097": 2.844452,
+    "IR_108": 199.10002,
+    "IR_120": -17.254883,
+    "IR_134": -26.29155,
+    "VIS006": -1.1009827,
+    "VIS008": -2.4184198,
+    "WV_062": 199.57048,
+    "WV_073": 198.95093,
+    "HRV": -1.2278595,
+}
+
+RSS_RAW_MAX = {
+    "IR_016": 69.60857,
+    "IR_039": 339.15588,
+    "IR_087": 340.26526,
+    "IR_097": 317.86752,
+    "IR_108": 313.2767,
+    "IR_120": 315.99194,
+    "IR_134": 274.82297,
+    "VIS006": 93.786545,
+    "VIS008": 101.34922,
+    "WV_062": 249.91806,
+    "WV_073": 286.96323,
+    "HRV": 103.90016,
+}
+
+RSS_RAW_MIN = _to_data_array(RSS_RAW_MIN)
+RSS_RAW_MAX = _to_data_array(RSS_RAW_MAX)
 
 
 # --------------------------- SENSORS --------------------------------

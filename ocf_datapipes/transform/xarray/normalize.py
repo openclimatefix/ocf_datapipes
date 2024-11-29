@@ -22,6 +22,8 @@ class NormalizeIterDataPipe(IterDataPipe):
         max_value: Optional[Union[int, float]] = None,
         calculate_mean_std_from_example: bool = False,
         normalize_fn: Optional[Callable] = None,
+        min_values: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]] = None,
+        max_values: Optional[Union[xr.Dataset, xr.DataArray, np.ndarray]] = None,
     ):
         """
         Normalize the data with either given mean/std,
@@ -37,6 +39,8 @@ class NormalizeIterDataPipe(IterDataPipe):
             calculate_mean_std_from_example: Whether to calculate the
                 mean/std from the input data or not
             normalize_fn: Callable function to apply to the data to normalize it
+            min_values: Min values for each channel
+            max_values: Max values for each channel
         """
         self.source_datapipe = source_datapipe
         self.mean = mean
@@ -44,6 +48,8 @@ class NormalizeIterDataPipe(IterDataPipe):
         self.max_value = max_value
         self.calculate_mean_std_from_example = calculate_mean_std_from_example
         self.normalize_fn = normalize_fn
+        self.min_values = min_values
+        self.max_values = max_values
 
     def __iter__(self) -> Union[xr.Dataset, xr.DataArray]:
         """Normalize the data depending on the init arguments"""
@@ -61,6 +67,8 @@ class NormalizeIterDataPipe(IterDataPipe):
                 # For Topo data for example
                 xr_data -= xr_data.mean().item()
                 xr_data /= xr_data.std().item()
+            elif (self.min_values is not None) and (self.max_values is not None):
+                xr_data = (xr_data - self.min_values) / (self.max_values - self.min_values)
             else:
                 try:
                     logger.debug(f"Normalizing by {self.normalize_fn}")

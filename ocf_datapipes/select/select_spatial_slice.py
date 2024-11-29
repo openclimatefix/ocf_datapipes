@@ -103,24 +103,35 @@ def _get_idx_of_pixel_closest_to_poi(
 
 def _get_idx_of_pixel_closest_to_poi_geostationary(
     xr_data: xr.DataArray,
-    center_osgb: Location,
+    center_coordinate: Location,
 ) -> Location:
     """
     Return x and y index location of pixel at center of region of interest.
 
     Args:
         xr_data: Xarray dataset
-        center_osgb: Center in OSGB coordinates
+        center_coordinate: Central coordinate
 
     Returns:
         Location for the center pixel in geostationary coordinates
     """
-
     xr_coords, xr_x_dim, xr_y_dim = spatial_coord_type(xr_data)
+    if center_coordinate.coordinate_system == "osgb":
+        x, y = osgb_to_geostationary_area_coords(
+            x=center_coordinate.x, y=center_coordinate.y, xr_data=xr_data
+        )
+    elif center_coordinate.coordinate_system == "lon_lat":
+        x, y = lon_lat_to_geostationary_area_coords(
+            x=center_coordinate.x, y=center_coordinate.y, xr_data=xr_data
+        )
+    else:
+        raise NotImplementedError(
+            f"Only 'osgb' and 'lon_lat' location coordinates are \
+                                  supported in conversion to geostationary \
+                                   - not '{center_coordinate.coordinate_system}'"
+        )
 
-    x, y = osgb_to_geostationary_area_coords(x=center_osgb.x, y=center_osgb.y, xr_data=xr_data)
     center_geostationary = Location(x=x, y=y, coordinate_system="geostationary")
-
     # Check that the requested point lies within the data
     assert xr_data[xr_x_dim].min() < x < xr_data[xr_x_dim].max()
     assert xr_data[xr_y_dim].min() < y < xr_data[xr_y_dim].max()
@@ -390,7 +401,7 @@ def select_spatial_slice_pixels(
         if xr_coords == "geostationary":
             center_idx: Location = _get_idx_of_pixel_closest_to_poi_geostationary(
                 xr_data=xr_data,
-                center_osgb=location,
+                center_coordinate=location,
             )
         else:
             center_idx: Location = _get_idx_of_pixel_closest_to_poi(

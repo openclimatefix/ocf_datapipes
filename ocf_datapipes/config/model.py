@@ -502,6 +502,11 @@ class Satellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):
         description="The temporal resolution (in minutes) of the data."
         "Note that this needs to be divisible by 5.",
     )
+    satellite_scaling_methods: Optional[List[str]] = Field(
+        ["mean_std"],
+        description="There are few ways to scale the satellite data. "
+        "1. None, 2. mean_std, 3. min_max",
+    )
 
 
 class HRVSatellite(DataSourceMixin, TimeResolutionMixin, DropoutMixin):

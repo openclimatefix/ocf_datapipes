@@ -24,6 +24,8 @@ from ocf_datapipes.utils.consts import (
     NWP_MEANS,
     NWP_STDS,
     RSS_MEAN,
+    RSS_RAW_MAX,
+    RSS_RAW_MIN,
     RSS_STD,
 )
 from ocf_datapipes.utils.utils import (
@@ -36,29 +38,10 @@ from ocf_datapipes.utils.utils import (
 xr.set_options(keep_attrs=True)
 logger = logging.getLogger("pvnet_site_datapipe")
 
-normalization_values = {
-    2019: 3185.0,
-    2020: 2678.0,
-    2021: 3196.0,
-    2022: 3575.0,
-    2023: 3773.0,
-    2024: 3773.0,
-}
-
 
 def normalize_pv(x: xr.DataArray):
     """Normalize PV data"""
-    # This is after the data has been temporally sliced, so have the year
-    return x / normalization_values[2024]
-
-    year = x.time_utc.dt.year
-
-    # Add the effective_capacity_mwp to the dataset, indexed on the time_utc
-    return (
-        x / normalization_values[year]
-        if year in normalization_values
-        else x / normalization_values[2024]
-    )
+    return x / x.nominal_capacity_wp
 
 
 class DictDatasetIterDataPipe(IterDataPipe):
@@ -273,7 +256,11 @@ def construct_sliced_data_pipeline(
             roi_height_pixels=conf_sat.satellite_image_size_pixels_height,
             roi_width_pixels=conf_sat.satellite_image_size_pixels_width,
         )
-        sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
+        scaling_methods = conf_sat.satellite_scaling_methods
+        if "min_max" in scaling_methods:
+            sat_datapipe = sat_datapipe.normalize(min_values=RSS_RAW_MIN, max_values=RSS_RAW_MAX)
+        if "mean_std" in scaling_methods:
+            sat_datapipe = sat_datapipe.normalize(mean=RSS_MEAN, std=RSS_STD)
 
     if "pv" in datapipes_dict:
         # Recombine Sensor arrays - see function doc for further explanation
