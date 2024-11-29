@@ -19,8 +19,8 @@ from ocf_datapipes.load import (
     OpenNWP,
     OpenPVFromNetCDF,
     OpenPVFromPVSitesDB,
-    OpenSatellite,
     OpenWindFromNetCDF,
+    open_sat_data,
 )
 from ocf_datapipes.utils.utils import flatten_nwp_source_dict
 
@@ -36,6 +36,23 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
+
+
+@functional_datapipe("fake_iter")
+class FakeIter(IterDataPipe):
+    """This makes a fake iter datapipe
+
+    We are using this just to move away from datapipes.
+    This can be done by removing certain function to return xarray data,
+    and for the moment using this FakeIter, to make it back into a datapipe
+    """
+
+    def __init__(self, data_xr):  # noqa
+        self.data_xr = data_xr
+
+    def __iter__(self) -> xr.DataArray:  # noqa
+        while True:
+            yield self.data_xr
 
 
 def is_config_and_path_valid(
@@ -171,24 +188,28 @@ def open_and_return_datapipes(
 
     if use_sat:
         logger.debug("Opening Satellite Data")
-        sat_datapipe = (
-            OpenSatellite(configuration.input_data.satellite.satellite_zarr_path)
-            .filter_channels(configuration.input_data.satellite.satellite_channels)
-            .add_t0_idx_and_sample_period_duration(
-                sample_period_duration=minutes(
-                    configuration.input_data.satellite.time_resolution_minutes
-                ),
-                history_duration=minutes(configuration.input_data.satellite.history_minutes),
-            )
+
+        sat_xr = open_sat_data(configuration.input_data.satellite.satellite_zarr_path)
+        sat_pipe = FakeIter(sat_xr)
+
+        sat_datapipe = sat_pipe.filter_channels(
+            configuration.input_data.satellite.satellite_channels
+        ).add_t0_idx_and_sample_period_duration(
+            sample_period_duration=minutes(
+                configuration.input_data.satellite.time_resolution_minutes
+            ),
+            history_duration=minutes(configuration.input_data.satellite.history_minutes),
         )
 
         used_datapipes["sat"] = sat_datapipe
 
     if use_hrv:
         logger.debug("Opening HRV Satellite Data")
-        sat_hrv_datapipe = OpenSatellite(
-            configuration.input_data.hrvsatellite.hrvsatellite_zarr_path
-        ).add_t0_idx_and_sample_period_duration(
+
+        sat_xr = open_sat_data(configuration.input_data.satellite.satellite_zarr_path)
+        sat_pipe = FakeIter(sat_xr)
+
+        sat_hrv_datapipe = sat_pipe.add_t0_idx_and_sample_period_duration(
             sample_period_duration=minutes(
                 configuration.input_data.hrvsatellite.time_resolution_minutes
             ),
