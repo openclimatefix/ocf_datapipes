@@ -1,8 +1,8 @@
 """Create the training/validation datapipe for training the PVNet Model"""
 
 import logging
-from functools import partial
 from datetime import datetime, timedelta
+from functools import partial
 from typing import List, Optional
 
 import xarray as xr
@@ -249,7 +249,7 @@ def construct_sliced_data_pipeline(
                 normalize_provider = "gfs_india"
             else:
                 normalize_provider = conf_nwp[nwp_key].nwp_provider
-          
+
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
                 mean=NWP_MEANS[normalize_provider],
                 std=NWP_STDS[normalize_provider],

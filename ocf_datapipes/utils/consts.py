@@ -47,7 +47,7 @@ NWP_PROVIDERS = [
     "excarta",
     "merra2",
     "merra2_uk",
-    "mo_global"
+    "mo_global",
 ]
 
 # ------ UKV
@@ -133,7 +133,7 @@ UKV_VARIABLE_NAMES = tuple(UKV_MEAN.keys())
 UKV_STD = _to_data_array(UKV_STD)
 UKV_MEAN = _to_data_array(UKV_MEAN)
 
-# --- MO Global 
+# --- MO Global
 
 MO_GLOBAL_INDIA_MEAN = {
     "temperature_sl": 295.34392488,
@@ -148,7 +148,7 @@ MO_GLOBAL_INDIA_MEAN = {
     "visibility_sl": 23181.81547681,
 }
 
-MO_GLOBAL_INDIA_STD = {   
+MO_GLOBAL_INDIA_STD = {
     "temperature_sl": 12.26983825,
     "wind_u_component_10m": 3.45169835,
     "wind_v_component_10m": 2.9825603,
@@ -219,34 +219,34 @@ GFS_INDIA_STD_DICT = {
     "prate": 5.965701e-05,
     "u10": 3.4826114,
     "v10": 3.167296,
-    "u100":4.140226,
-    "v100":3.984121,
+    "u100": 4.140226,
+    "v100": 3.984121,
     "dlwrf": 79.30329,
     "dswrf": 325.58582,
     "hcc": 39.91955,
     "lcc": 23.208075,
-    "mcc": 33.283035, 
-    "r": 25.545837, 
+    "mcc": 33.283035,
+    "r": 25.545837,
     "sde": 0.10192183,
     "tcc": 42.583195,
-    "vis": 3491.437
+    "vis": 3491.437,
 }
 GFS_INDIA_MEAN_DICT = {
     "t": 298.27713,
     "prate": 1.7736e-05,
     "u10": 1.5782778,
     "v10": 0.09856875,
-    "u100":1.4558668,
-    "v100":-0.28256148,
+    "u100": 1.4558668,
+    "v100": -0.28256148,
     "dlwrf": 356.57776,
     "dswrf": 284.358,
     "hcc": 26.965801,
     "lcc": 9.2288,
-    "mcc": 17.2132, 
-    "r": 38.2474, 
+    "mcc": 17.2132,
+    "r": 38.2474,
     "sde": 0.02070413,
     "tcc": 36.962795,
-    "vis": 23386.936
+    "vis": 23386.936,
 }
 
 
@@ -444,7 +444,7 @@ NWP_STDS = NWPStatDict(
     excarta=EXCARTA_STD,
     merra2=MERRA2_STD,
     merra2_uk=UK_MERRA2_STD,
-    mo_global=MO_GLOBAL_INDIA_STD
+    mo_global=MO_GLOBAL_INDIA_STD,
 )
 NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
@@ -455,7 +455,7 @@ NWP_MEANS = NWPStatDict(
     excarta=EXCARTA_MEAN,
     merra2=MERRA2_MEAN,
     merra2_uk=UK_MERRA2_MEAN,
-    mo_global=MO_GLOBAL_INDIA_MEAN
+    mo_global=MO_GLOBAL_INDIA_MEAN,
 )
 
 # --------------------------- SATELLITE ------------------------------
