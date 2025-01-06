@@ -48,7 +48,7 @@ NWP_PROVIDERS = [
     "merra2",
     "merra2_uk",
     "mo_global",
-    "mo_global_new_india"
+    "mo_global_new_india",
 ]
 
 # ------ UKV
@@ -455,7 +455,7 @@ NWP_VARIABLE_NAMES = NWPStatDict(
     merra2=MERRA2_VARIABLE_NAMES,
     merra2_uk=UK_MERRA2_VARIABLE_NAMES,
     mo_global=MO_GLOBAL_VARIABLE_NAMES,
-    mo_global_new_india=MO_GLOBAL_NEW_VARIABLE_NAMES
+    mo_global_new_india=MO_GLOBAL_NEW_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
@@ -479,7 +479,7 @@ NWP_MEANS = NWPStatDict(
     merra2=MERRA2_MEAN,
     merra2_uk=UK_MERRA2_MEAN,
     mo_global=MO_GLOBAL_INDIA_MEAN,
-    mo_global_new_india=MO_GLOBAL_INDIA_NEW_MEAN
+    mo_global_new_india=MO_GLOBAL_INDIA_NEW_MEAN,
 )
 
 # --------------------------- SATELLITE ------------------------------

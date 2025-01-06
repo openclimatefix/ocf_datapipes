@@ -188,7 +188,7 @@ def construct_sliced_data_pipeline(
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
     production: bool = False,
-    new_normalisation_constants: bool = False
+    new_normalisation_constants: bool = False,
 ) -> dict:
     """Constructs data pipeline for the input data config file.
 
@@ -250,7 +250,7 @@ def construct_sliced_data_pipeline(
             elif new_normalisation_constants and conf_nwp[nwp_key].nwp_provider in ["mo_global"]:
                 normalize_provider = "mo_global_new_india"
             elif new_normalisation_constants and conf_nwp[nwp_key].nwp_provider in ["gfs"]:
-                    normalize_provider = "gfs_india"
+                normalize_provider = "gfs_india"
             else:
                 normalize_provider = conf_nwp[nwp_key].nwp_provider
 
