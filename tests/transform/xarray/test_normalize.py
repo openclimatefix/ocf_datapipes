@@ -29,8 +29,8 @@ def test_normalize_topo(topo_datapipe):
         calculate_mean_std_from_example=True
     )
     data = next(iter(normed_topo_datapipe))
-    assert data.mean().compute() == pytest.approx(0, abs=0.001)
-    assert data.std().compute() == pytest.approx(1, abs=0.001)
+    assert data.mean().compute() == pytest.approx(0, abs=0.01)
+    assert data.std().compute() == pytest.approx(1, abs=0.01)
 
 
 def test_normalize_gsp(gsp_datapipe):

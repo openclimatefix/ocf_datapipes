@@ -39,6 +39,7 @@ class NWPStatDict(dict):
 NWP_PROVIDERS = [
     "ukv",
     "gfs",
+    "gfs_india",
     "icon-eu",
     "icon-global",
     "ecmwf",
@@ -47,6 +48,7 @@ NWP_PROVIDERS = [
     "merra2",
     "merra2_uk",
     "mo_global",
+    "mo_global_new_india",
 ]
 
 # ------ UKV
@@ -132,7 +134,8 @@ UKV_VARIABLE_NAMES = tuple(UKV_MEAN.keys())
 UKV_STD = _to_data_array(UKV_STD)
 UKV_MEAN = _to_data_array(UKV_MEAN)
 
-# These were calculated from 200 random init times (step 0s) from the MO global data
+# --- MO Global (partial initial constants)
+
 MO_GLOBAL_INDIA_MEAN = {
     "temperature_sl": 298.2,
     "wind_u_component_10m": 0.5732,
@@ -149,6 +152,40 @@ MO_GLOBAL_INDIA_STD = {
 MO_GLOBAL_VARIABLE_NAMES = tuple(MO_GLOBAL_INDIA_MEAN.keys())
 MO_GLOBAL_INDIA_STD = _to_data_array(MO_GLOBAL_INDIA_STD)
 MO_GLOBAL_INDIA_MEAN = _to_data_array(MO_GLOBAL_INDIA_MEAN)
+
+
+# --- MO Global New
+
+MO_GLOBAL_INDIA_NEW_MEAN = {
+    "temperature_sl": 295.34392488,
+    "wind_u_component_10m": 0.83223102,
+    "wind_v_component_10m": 0.0802083,
+    "downward_shortwave_radiation_flux_gl": 225.54222068,
+    "cloud_cover_high": 0.34935897,
+    "cloud_cover_low": 0.096081,
+    "cloud_cover_medium": 0.13878676,
+    "relative_humidity_sl": 69.59633137,
+    "snow_depth_gl": 3.45158744,
+    "visibility_sl": 23181.81547681,
+}
+
+MO_GLOBAL_INDIA_NEW_STD = {
+    "temperature_sl": 12.26983825,
+    "wind_u_component_10m": 3.45169835,
+    "wind_v_component_10m": 2.9825603,
+    "downward_shortwave_radiation_flux_gl": 303.85182864,
+    "cloud_cover_high": 0.40563507,
+    "cloud_cover_low": 0.18374192,
+    "cloud_cover_medium": 0.25972151,
+    "relative_humidity_sl": 21.00264399,
+    "snow_depth_gl": 30.19116501,
+    "visibility_sl": 5385.35839715,
+}
+
+
+MO_GLOBAL_NEW_VARIABLE_NAMES = tuple(MO_GLOBAL_INDIA_NEW_MEAN.keys())
+MO_GLOBAL_INDIA_NEW_STD = _to_data_array(MO_GLOBAL_INDIA_NEW_STD)
+MO_GLOBAL_INDIA_NEW_MEAN = _to_data_array(MO_GLOBAL_INDIA_NEW_MEAN)
 
 
 # ------ GFS
@@ -195,6 +232,48 @@ GFS_MEAN = {
 GFS_VARIABLE_NAMES = tuple(GFS_MEAN.keys())
 GFS_STD = _to_data_array(GFS_STD)
 GFS_MEAN = _to_data_array(GFS_MEAN)
+
+
+# ------ GFS India
+GFS_INDIA_STD_DICT = {
+    "t": 14.93798,
+    "prate": 5.965701e-05,
+    "u10": 3.4826114,
+    "v10": 3.167296,
+    "u100": 4.140226,
+    "v100": 3.984121,
+    "dlwrf": 79.30329,
+    "dswrf": 325.58582,
+    "hcc": 39.91955,
+    "lcc": 23.208075,
+    "mcc": 33.283035,
+    "r": 25.545837,
+    "sde": 0.10192183,
+    "tcc": 42.583195,
+    "vis": 3491.437,
+}
+GFS_INDIA_MEAN_DICT = {
+    "t": 298.27713,
+    "prate": 1.7736e-05,
+    "u10": 1.5782778,
+    "v10": 0.09856875,
+    "u100": 1.4558668,
+    "v100": -0.28256148,
+    "dlwrf": 356.57776,
+    "dswrf": 284.358,
+    "hcc": 26.965801,
+    "lcc": 9.2288,
+    "mcc": 17.2132,
+    "r": 38.2474,
+    "sde": 0.02070413,
+    "tcc": 36.962795,
+    "vis": 23386.936,
+}
+
+
+GFS_INDIA_VARIABLE_NAMES = tuple(GFS_INDIA_MEAN_DICT.keys())
+GFS_INDIA_STD = _to_data_array(GFS_INDIA_STD_DICT)
+GFS_INDIA_MEAN = _to_data_array(GFS_INDIA_MEAN_DICT)
 
 
 # ------ ECMWF
@@ -369,32 +448,38 @@ UK_MERRA2_MEAN = _to_data_array(UK_MERRA2_MEAN)
 NWP_VARIABLE_NAMES = NWPStatDict(
     ukv=UKV_VARIABLE_NAMES,
     gfs=GFS_VARIABLE_NAMES,
+    gfs_india=GFS_INDIA_VARIABLE_NAMES,
     ecmwf=ECMWF_VARIABLE_NAMES,
     ecmwf_india=INDIA_ECMWF_VARIABLE_NAMES,
     excarta=EXCARTA_VARIABLE_NAMES,
     merra2=MERRA2_VARIABLE_NAMES,
     merra2_uk=UK_MERRA2_VARIABLE_NAMES,
     mo_global=MO_GLOBAL_VARIABLE_NAMES,
+    mo_global_new_india=MO_GLOBAL_NEW_VARIABLE_NAMES,
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
     gfs=GFS_STD,
+    gfs_india=GFS_INDIA_STD,
     ecmwf=ECMWF_STD,
     ecmwf_india=INDIA_ECMWF_STD,
     excarta=EXCARTA_STD,
     merra2=MERRA2_STD,
     merra2_uk=UK_MERRA2_STD,
     mo_global=MO_GLOBAL_INDIA_STD,
+    mo_global_new_india=MO_GLOBAL_INDIA_NEW_STD,
 )
 NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
     gfs=GFS_MEAN,
+    gfs_india=GFS_INDIA_MEAN,
     ecmwf=ECMWF_MEAN,
     ecmwf_india=INDIA_ECMWF_MEAN,
     excarta=EXCARTA_MEAN,
     merra2=MERRA2_MEAN,
     merra2_uk=UK_MERRA2_MEAN,
     mo_global=MO_GLOBAL_INDIA_MEAN,
+    mo_global_new_india=MO_GLOBAL_INDIA_NEW_MEAN,
 )
 
 # --------------------------- SATELLITE ------------------------------

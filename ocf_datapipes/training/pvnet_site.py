@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta
+from functools import partial
 from typing import List, Optional
 
 import xarray as xr
@@ -187,6 +188,7 @@ def construct_sliced_data_pipeline(
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
     production: bool = False,
+    new_normalisation_constants: bool = False,
 ) -> dict:
     """Constructs data pipeline for the input data config file.
 
@@ -197,6 +199,7 @@ def construct_sliced_data_pipeline(
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
         production: Whether constucting pipeline for production inference.
+        new_normalisation_constants: whether new normalisation constants are used.
     """
 
     datapipes_dict = _get_datapipes_dict(
@@ -237,12 +240,20 @@ def construct_sliced_data_pipeline(
                 roi_width_pixels=conf_nwp[nwp_key].nwp_image_size_pixels_width,
             )
             # Coarsen the data, if it is separated by 0.05 degrees each
-            nwp_datapipe = nwp_datapipe.map(potentially_coarsen)
+            potentially_coarsen_partial = partial(
+                potentially_coarsen, coarsen_to_deg=conf_nwp[nwp_key].coarsen_to_degrees
+            )
+            nwp_datapipe = nwp_datapipe.map(potentially_coarsen_partial)
             # Somewhat hacky way for India specifically, need different mean/std for ECMWF data
             if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
                 normalize_provider = "ecmwf_india"
+            elif new_normalisation_constants and conf_nwp[nwp_key].nwp_provider in ["mo_global"]:
+                normalize_provider = "mo_global_new_india"
+            elif new_normalisation_constants and conf_nwp[nwp_key].nwp_provider in ["gfs"]:
+                normalize_provider = "gfs_india"
             else:
                 normalize_provider = conf_nwp[nwp_key].nwp_provider
+
             nwp_datapipes_dict[nwp_key] = nwp_datapipe.normalize(
                 mean=NWP_MEANS[normalize_provider],
                 std=NWP_STDS[normalize_provider],
