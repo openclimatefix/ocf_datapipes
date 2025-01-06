@@ -188,6 +188,7 @@ def construct_sliced_data_pipeline(
     location_pipe: IterDataPipe,
     t0_datapipe: IterDataPipe,
     production: bool = False,
+    new_normalisation_constants: bool = False
 ) -> dict:
     """Constructs data pipeline for the input data config file.
 
@@ -198,6 +199,7 @@ def construct_sliced_data_pipeline(
         location_pipe: Datapipe yielding locations.
         t0_datapipe: Datapipe yielding times.
         production: Whether constucting pipeline for production inference.
+        new_normalisation_constants: whether new normalisation constants are used.
     """
 
     datapipes_dict = _get_datapipes_dict(
@@ -245,8 +247,10 @@ def construct_sliced_data_pipeline(
             # Somewhat hacky way for India specifically, need different mean/std for ECMWF data
             if conf_nwp[nwp_key].nwp_provider in ["ecmwf"]:
                 normalize_provider = "ecmwf_india"
-            elif conf_nwp[nwp_key].nwp_provider in ["gfs"]:
-                normalize_provider = "gfs_india"
+            elif new_normalisation_constants and conf_nwp[nwp_key].nwp_provider in ["mo_global"]:
+                normalize_provider = "mo_global_new_india"
+            elif new_normalisation_constants and conf_nwp[nwp_key].nwp_provider in ["gfs"]:
+                    normalize_provider = "gfs_india"
             else:
                 normalize_provider = conf_nwp[nwp_key].nwp_provider
 

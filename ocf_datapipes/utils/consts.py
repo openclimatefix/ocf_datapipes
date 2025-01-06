@@ -48,6 +48,7 @@ NWP_PROVIDERS = [
     "merra2",
     "merra2_uk",
     "mo_global",
+    "mo_global_new_india"
 ]
 
 # ------ UKV
@@ -133,9 +134,29 @@ UKV_VARIABLE_NAMES = tuple(UKV_MEAN.keys())
 UKV_STD = _to_data_array(UKV_STD)
 UKV_MEAN = _to_data_array(UKV_MEAN)
 
-# --- MO Global
+# --- MO Global (partial initial constants)
 
 MO_GLOBAL_INDIA_MEAN = {
+    "temperature_sl": 298.2,
+    "wind_u_component_10m": 0.5732,
+    "wind_v_component_10m": -0.2831,
+}
+
+MO_GLOBAL_INDIA_STD = {
+    "temperature_sl": 8.473,
+    "wind_u_component_10m": 2.599,
+    "wind_v_component_10m": 2.016,
+}
+
+
+MO_GLOBAL_VARIABLE_NAMES = tuple(MO_GLOBAL_INDIA_MEAN.keys())
+MO_GLOBAL_INDIA_STD = _to_data_array(MO_GLOBAL_INDIA_STD)
+MO_GLOBAL_INDIA_MEAN = _to_data_array(MO_GLOBAL_INDIA_MEAN)
+
+
+# --- MO Global New
+
+MO_GLOBAL_INDIA_NEW_MEAN = {
     "temperature_sl": 295.34392488,
     "wind_u_component_10m": 0.83223102,
     "wind_v_component_10m": 0.0802083,
@@ -148,7 +169,7 @@ MO_GLOBAL_INDIA_MEAN = {
     "visibility_sl": 23181.81547681,
 }
 
-MO_GLOBAL_INDIA_STD = {
+MO_GLOBAL_INDIA_NEW_STD = {
     "temperature_sl": 12.26983825,
     "wind_u_component_10m": 3.45169835,
     "wind_v_component_10m": 2.9825603,
@@ -162,9 +183,9 @@ MO_GLOBAL_INDIA_STD = {
 }
 
 
-MO_GLOBAL_VARIABLE_NAMES = tuple(MO_GLOBAL_INDIA_MEAN.keys())
-MO_GLOBAL_INDIA_STD = _to_data_array(MO_GLOBAL_INDIA_STD)
-MO_GLOBAL_INDIA_MEAN = _to_data_array(MO_GLOBAL_INDIA_MEAN)
+MO_GLOBAL_NEW_VARIABLE_NAMES = tuple(MO_GLOBAL_INDIA_NEW_MEAN.keys())
+MO_GLOBAL_INDIA_NEW_STD = _to_data_array(MO_GLOBAL_INDIA_NEW_STD)
+MO_GLOBAL_INDIA_NEW_MEAN = _to_data_array(MO_GLOBAL_INDIA_NEW_MEAN)
 
 
 # ------ GFS
@@ -213,7 +234,7 @@ GFS_STD = _to_data_array(GFS_STD)
 GFS_MEAN = _to_data_array(GFS_MEAN)
 
 
-# ------ GFS
+# ------ GFS India
 GFS_INDIA_STD_DICT = {
     "t": 14.93798,
     "prate": 5.965701e-05,
@@ -434,6 +455,7 @@ NWP_VARIABLE_NAMES = NWPStatDict(
     merra2=MERRA2_VARIABLE_NAMES,
     merra2_uk=UK_MERRA2_VARIABLE_NAMES,
     mo_global=MO_GLOBAL_VARIABLE_NAMES,
+    mo_global_new_india=MO_GLOBAL_NEW_VARIABLE_NAMES
 )
 NWP_STDS = NWPStatDict(
     ukv=UKV_STD,
@@ -445,6 +467,7 @@ NWP_STDS = NWPStatDict(
     merra2=MERRA2_STD,
     merra2_uk=UK_MERRA2_STD,
     mo_global=MO_GLOBAL_INDIA_STD,
+    mo_global_new_india=MO_GLOBAL_INDIA_NEW_STD,
 )
 NWP_MEANS = NWPStatDict(
     ukv=UKV_MEAN,
@@ -456,6 +479,7 @@ NWP_MEANS = NWPStatDict(
     merra2=MERRA2_MEAN,
     merra2_uk=UK_MERRA2_MEAN,
     mo_global=MO_GLOBAL_INDIA_MEAN,
+    mo_global_new_india=MO_GLOBAL_INDIA_NEW_MEAN
 )
 
 # --------------------------- SATELLITE ------------------------------
