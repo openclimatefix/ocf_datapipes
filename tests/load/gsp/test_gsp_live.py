@@ -17,10 +17,10 @@ def test_get_gsp_power_from_database(gsp_yields, db_session):
     """Get GSP power from database"""
 
     gsp_power, gsp_nominal_capacity, gsp_effective_capacity = get_gsp_power_from_database(
-        history_duration=timedelta(hours=1), interpolate_minutes=30, load_extra_minutes=0
+        history_duration=timedelta(hours=10), interpolate_minutes=30, load_extra_minutes=0
     )
 
-    assert len(gsp_power) == 3  # 1 hours at 30 mins + 1
+    assert len(gsp_power) == 21  # 1 hours at 30 mins + 1
     assert len(gsp_power.columns) == 5
     assert gsp_power.columns[0] == 1
     assert (
