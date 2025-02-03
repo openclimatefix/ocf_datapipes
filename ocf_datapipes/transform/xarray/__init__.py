@@ -17,8 +17,6 @@ from .normalize import NormalizeIterDataPipe as Normalize
 from .pv.assign_daynight_status import (
     AssignDayNightStatusIterDataPipe as AssignDayNightStatus,
 )
-from .pv.create_pv_image import CreatePVImageIterDataPipe as CreatePVImage
-from .pv.create_pv_meta_image import CreatePVMetadataImageIterDataPipe as CreatePVMetadataImage
 from .pv.ensure_n_pv_systems_per_example import (
     EnsureNPVSystemsPerExampleIterDataPipe as EnsureNPVSystemsPerExample,
 )
