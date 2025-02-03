@@ -35,7 +35,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
 
     def __init__(
         self,
-        history_minutes: int = 90,
+        history_minutes: int = 600,
         interpolate_minutes: int = 60,
         load_extra_minutes: int = 60,
         national_only: bool = False,
