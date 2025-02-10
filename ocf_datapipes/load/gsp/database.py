@@ -114,7 +114,7 @@ def get_gsp_power_from_database(
     interpolate_minutes: int,
     load_extra_minutes: int,
     gsp_ids: Optional[List[int]] = None,
-) -> (pd.DataFrame, pd.DataFrame):
+) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
     """
     Get gsp power from database
 
@@ -185,12 +185,24 @@ def get_gsp_power_from_database(
         logger.debug(gsp_yields_df.columns)
 
     if len(gsp_yields_df) == 0:
-        logger.warning("Found no gsp yields, this might cause an error")
+        logger.warning(
+            "Found no gsp yields, this might cause an error. "
+            "We will fill these valyes with 0s for the moment. "
+            "We also set the nominal_capacity effective_capacity data frames to zero too."
+            "These shouldn't get used in pvnet_app. "
+        )
+
+        # create a dataframe of zeros, with index datetimes, and columns gsp_ids
+        data_zeros = pd.DataFrame(
+            np.zeros((len(empty_df), len(gsp_ids))),
+            index=pd.date_range(start=start_utc_extra, end=now, freq="30min", tz=timezone.utc),
+            columns=gsp_ids,
+        )
+
+        return data_zeros, data_zeros, data_zeros
+
     else:
         logger.debug(f"Found {len(gsp_yields_df)} gsp yields")
-
-    if len(gsp_yields_df) == 0:
-        return pd.DataFrame(columns=["gsp_id"]), pd.DataFrame(columns=["gsp_id"])
 
     # pivot on
     gsp_yields_df = gsp_yields_df[
