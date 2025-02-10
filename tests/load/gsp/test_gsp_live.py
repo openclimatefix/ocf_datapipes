@@ -45,4 +45,4 @@ def test_open_gsp_datasource_from_database_no_data():
     assert data is not None
     assert len(data.time_utc.values) == 6
     assert len(data.gsp_id.values) == 317
-    assert np.shape(data.values) == (6,317)
+    assert np.shape(data.values) == (6, 317)
