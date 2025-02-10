@@ -1,4 +1,4 @@
-""" Make fake Satellite data """
+"""Make fake Satellite data"""
 
 from datetime import datetime
 

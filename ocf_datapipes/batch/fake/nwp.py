@@ -1,4 +1,4 @@
-""" Make fake NWP data """
+"""Make fake NWP data"""
 
 from datetime import datetime
 

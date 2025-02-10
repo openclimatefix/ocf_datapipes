@@ -1,4 +1,4 @@
-""" Util functions for PV data source"""
+"""Util functions for PV data source"""
 
 from typing import Optional
 

@@ -1,4 +1,4 @@
-""" Save functions for the configuration model"""
+"""Save functions for the configuration model"""
 
 import json
 import logging
