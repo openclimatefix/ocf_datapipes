@@ -1,1 +1,1 @@
-""" Load GSP data from file or database """
+"""Load GSP data from file or database"""

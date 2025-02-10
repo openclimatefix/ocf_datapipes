@@ -1,4 +1,4 @@
-""" Usual setup file for package """
+"""Usual setup file for package"""
 
 # read the contents of your README file
 from pathlib import Path

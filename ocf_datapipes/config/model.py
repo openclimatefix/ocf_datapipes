@@ -1,4 +1,4 @@
-""" Configuration model for the dataset.
+"""Configuration model for the dataset.
 
 All paths must include the protocol prefix.  For local files,
 it's sufficient to just start with a '/'.  For aws, start with 's3://',

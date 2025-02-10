@@ -1,4 +1,4 @@
-""" Loading satellite tests
+"""Loading satellite tests
 
 1. Open HRV data
 2. Open data
