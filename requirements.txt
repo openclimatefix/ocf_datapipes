@@ -1,7 +1,7 @@
 torch>=2.0.0, <2.5.0
 Cartopy>=0.20.3
 xarray
-zarr==2.18.3
+zarr
 fsspec
 einops
 numpy
