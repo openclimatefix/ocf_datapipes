@@ -239,13 +239,30 @@ def get_gsp_power_from_database(
     gsp_nominal_capacity_df = empty_df.join(gsp_nominal_capacity_df)
     gsp_effective_capacity_df = empty_df.join(gsp_effective_capacity_df)
 
-    # interpolate in between, maximum 'live_interpolate_minutes' mins
-    # note data is in 30 minutes chunks
-    limit = int(interpolate_minutes / 30)
-    if limit > 0:
-        gsp_power_df.interpolate(limit=limit, inplace=True, method="cubic")
-        gsp_nominal_capacity_df.interpolate(limit=limit, inplace=True, method="cubic")
-        gsp_effective_capacity_df.interpolate(limit=limit, inplace=True, method="cubic")
+    try:
+        # interpolate in between, maximum 'live_interpolate_minutes' mins
+        # note data is in 30 minutes chunks
+        limit = int(interpolate_minutes / 30)
+        if limit > 0:
+            gsp_power_df.interpolate(limit=limit, inplace=True, method="cubic")
+            gsp_nominal_capacity_df.interpolate(limit=limit, inplace=True, method="cubic")
+            gsp_effective_capacity_df.interpolate(limit=limit, inplace=True, method="cubic")
+    except Exception as e:
+        logger.warning(
+            f"Tried to interpolate the data, but failed ({e}). "
+            "We will fill these values with 0s for the moment. "
+            "We also set the nominal_capacity and effective_capacity data frames to zero too."
+            "These shouldn't get used in pvnet_app, so its ok. "
+        )
+
+        # create a dataframe of zeros, with index datetimes, and columns gsp_ids
+        data_zeros = pd.DataFrame(
+            np.zeros((len(empty_df), len(gsp_ids))),
+            index=pd.date_range(start=start_utc_extra, end=now, freq="30min", tz=timezone.utc),
+            columns=gsp_ids,
+        )
+
+        return data_zeros, data_zeros, data_zeros
 
     # filter out the extra minutes loaded
     logger.debug(f"{len(gsp_power_df)} of datetimes before filter on {start_utc}")
