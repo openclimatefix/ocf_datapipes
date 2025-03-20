@@ -7,6 +7,4 @@ below.
 
 ## DataPipes that return non-Xarray objects
 
-- `metnet_preprocessor` returns a numpy array of the processed Xarray inputs following the description in the MetNet
-  2021 paper.
 - `find_contiguous_t0_time_periods` returns pandas DataFrames that contains the contiguous time periods

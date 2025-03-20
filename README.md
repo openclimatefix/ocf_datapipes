@@ -54,7 +54,6 @@ Modules have their own README's as well to go into further detail. This is part 
     ├── training/
     │   ├── common.py
     │   ├── example/
-    │   ├── metnet/
     │   ├── pseudo_irradience.py
     │   ├── pvnet.py
     │   ├── pvnet_site.py
