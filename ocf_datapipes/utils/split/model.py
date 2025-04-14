@@ -1,4 +1,4 @@
-""" Model for splitting data """
+"""Model for splitting data"""
 
 from typing import List
 

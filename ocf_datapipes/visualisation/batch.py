@@ -1,4 +1,4 @@
-""" The idea is visualise one of the batches
+"""The idea is visualise one of the batches
 
 This is a bit of a work in progress, but the idea is to visualise the batch in a markdown file.
 """
