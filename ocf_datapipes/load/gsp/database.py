@@ -1,4 +1,4 @@
-""" Function to get data from live database """
+"""Function to get data from live database"""
 
 import logging
 import os
