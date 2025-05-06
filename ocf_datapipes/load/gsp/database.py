@@ -59,7 +59,7 @@ class OpenGSPFromDatabaseIterDataPipe(IterDataPipe):
             # This is becasue national is stored as '0' in PVLive
             self.gsp_ids = [0]
         else:
-            self.gsp_ids = list(range(1, N_GSP + 1))
+            self.gsp_ids = list(range(1, 318))
 
     def __iter__(self) -> xr.DataArray:
         """Get and return GSP data"""
