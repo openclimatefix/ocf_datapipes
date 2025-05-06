@@ -26,3 +26,4 @@ pytorch_lightning
 pvlive-api
 pydantic
 cftime
+numcodecs==0.15.1
