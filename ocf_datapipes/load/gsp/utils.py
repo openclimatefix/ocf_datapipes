@@ -1,4 +1,4 @@
-""" Utils for GSP loading"""
+"""Utils for GSP loading"""
 
 from typing import Optional
 

@@ -1,4 +1,4 @@
-""" Make fake Sun data """
+"""Make fake Sun data"""
 
 import numpy as np
 
