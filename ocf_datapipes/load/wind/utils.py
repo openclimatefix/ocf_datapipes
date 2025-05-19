@@ -1,4 +1,4 @@
-""" Util functions for Wind data source"""
+"""Util functions for Wind data source"""
 
 import numpy as np
 import pandas as pd

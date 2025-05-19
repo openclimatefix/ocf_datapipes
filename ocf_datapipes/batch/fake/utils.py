@@ -1,4 +1,4 @@
-""" Utils Functions to for fake data """
+"""Utils Functions to for fake data"""
 
 from datetime import timedelta
 

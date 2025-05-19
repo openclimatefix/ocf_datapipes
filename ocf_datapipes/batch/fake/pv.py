@@ -1,4 +1,4 @@
-""" Make fake PV data """
+"""Make fake PV data"""
 
 from datetime import datetime
 

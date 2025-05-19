@@ -1,4 +1,4 @@
-""" Functions used to query the PVlive api """
+"""Functions used to query the PVlive api"""
 
 import logging
 from concurrent import futures
