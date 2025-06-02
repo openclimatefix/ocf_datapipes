@@ -122,8 +122,8 @@ def get_gsp_shape_from_eso(
         # call ESO website. There is a possibility that this API will be replaced and its unclear
         # if this original API will stay operational.
         url = (
-            "https://data.nationalgrideso.com/backend/dataset/2810092e-d4b2-472f-b955-d8bea01f9ec0/"
-            "resource/08534dae-5408-4e31-8639-b579c8f1c50b/download/gsp_regions_20220314.geojson"
+            "https://api.neso.energy/dataset/2810092e-d4b2-472f-b955-d8bea01f9ec0/resource/"
+            "08534dae-5408-4e31-8639-b579c8f1c50b/download/gsp_regions_20220314.geojson"
         )
 
         with requests.get(url) as response:
