@@ -1,4 +1,4 @@
-""" Make fake GSP data """
+"""Make fake GSP data"""
 
 from datetime import datetime
 

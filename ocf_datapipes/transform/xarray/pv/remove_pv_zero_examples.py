@@ -1,4 +1,4 @@
-"""Remove PV data """
+"""Remove PV data"""
 
 import logging
 from datetime import timedelta

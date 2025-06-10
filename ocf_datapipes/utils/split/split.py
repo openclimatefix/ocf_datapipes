@@ -1,4 +1,4 @@
-""" Function to split datasets up """
+"""Function to split datasets up"""
 
 import logging
 from collections import namedtuple

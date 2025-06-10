@@ -1,4 +1,4 @@
-""" Test for loading pv data from database """
+"""Test for loading pv data from database"""
 
 from datetime import datetime, timedelta, timezone
 
